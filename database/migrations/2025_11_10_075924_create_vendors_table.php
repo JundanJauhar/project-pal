@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::create('vendors', function (Blueprint $table) {
             $table->id('id_vendor');
             $table->string('name_vendor', 100);
+            $table->text('address')->nullable();
+            $table->string('phone_number', 20)->nullable();
+            $table->string('email', 100)->nullable();
+            $table->enum('legal_status', ['pending', 'verified', 'rejected'])->default('pending');
             $table->boolean('is_importer')->default(false);
             $table->timestamps();
         });

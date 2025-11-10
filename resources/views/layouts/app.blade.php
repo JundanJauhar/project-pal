@@ -12,6 +12,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <!-- Custom CSS -->
     <style>
+        html {
+            overflow-y: scroll;
+        }
         :root {
             --pal-primary: #003d82;
             --pal-secondary: #0056b3;

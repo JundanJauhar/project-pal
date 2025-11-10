@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             DivisionSeeder::class,
             CheckpointSeeder::class,
             UserSeeder::class,
+            ProjectSeeder::class,
         ]);
     }
 }

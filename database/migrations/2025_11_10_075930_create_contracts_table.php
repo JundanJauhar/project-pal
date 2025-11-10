@@ -16,7 +16,11 @@ return new class extends Migration
             $table->unsignedBigInteger('project_id');
             $table->unsignedBigInteger('vendor_id');
             $table->string('contract_number', 50);
+            $table->bigInteger('contract_value');
+            $table->dateTime('start_date');
+            $table->dateTime('end_date');
             $table->enum('status', ['draft', 'active', 'completed', 'terminated'])->default('draft');
+            $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
 
             $table->foreign('project_id')->references('project_id')->on('projects')->onDelete('cascade');
