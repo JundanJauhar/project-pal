@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'PT PAL Indonesia')</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --pal-primary: #003d82;
+            --pal-secondary: #0056b3;
+            --pal-light: #e8f0fe;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+        }
+
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--pal-primary) 0%, var(--pal-secondary) 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        }
+
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            padding: 20px 0;
+        }
+
+        .sidebar .nav-link {
+            color: #333;
+            padding: 12px 20px;
+            margin: 2px 10px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: var(--pal-light);
+            color: var(--pal-primary);
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .stat-card {
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,.1);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-total { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-progress { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stat-success { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .stat-rejected { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+
+        .card-custom {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            margin-bottom: 20px;
+        }
+
+        .card-header-custom {
+            background: linear-gradient(135deg, var(--pal-primary) 0%, var(--pal-secondary) 100%);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 15px 20px;
+        }
+
+        .timeline-progress {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 10px;
+            overflow-x: auto;
+        }
+
+        .timeline-step {
+            text-align: center;
+            flex: 1;
+            min-width: 100px;
+            position: relative;
+        }
+
+        .timeline-step::after {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 60%;
+            width: 80%;
+            height: 2px;
+            background: #ddd;
+            z-index: 0;
+        }
+
+        .timeline-step:last-child::after {
+            display: none;
+        }
+
+        .timeline-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .timeline-step.completed .timeline-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .timeline-step.active .timeline-icon {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(240, 147, 251, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(240, 147, 251, 0); }
+        }
+
+        .timeline-label {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .badge-priority {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-rendah { background-color: #28a745; color: white; }
+        .badge-sedang { background-color: #ffc107; color: #000; }
+        .badge-tinggi { background-color: #dc3545; color: white; }
+
+        .badge-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .table-custom {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table-custom thead th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .btn-custom {
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-weight: 500;
+        }
+
+        .notification-badge {
+            position: relative;
+        }
+
+        .notification-badge .badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+        }
+
+        .logo-pal {
+            height: 40px;
+            margin-right: 15px;
+        }
+    </style>
+    @stack('styles')
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{{ route('dashboard') }}">
+                <i class="bi bi-building" style="font-size: 24px; margin-right: 10px;"></i>
+                <strong>PT PAL INDONESIA</strong>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link notification-badge" href="{{ route('notifications.index') }}">
+                            <i class="bi bi-bell-fill" style="font-size: 20px;"></i>
+                            <span class="badge bg-danger" id="notif-count">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i>
+                            <span class="ms-2">{{ Auth::user()->name }}</span>
+                            <span class="badge bg-light text-dark ms-2">{{ ucfirst(Auth::user()->roles) }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-2 d-md-block sidebar">
+                <div class="position-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                                <i class="bi bi-speedometer2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+
+                        @if(in_array(Auth::user()->roles, ['user', 'supply_chain', 'sekretaris_direksi']))
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
+                                <i class="bi bi-folder"></i>
+                                Projects
+                            </a>
+                        </li>
+                        @endif
+
+                        @if(Auth::user()->roles === 'supply_chain')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('supply-chain*') ? 'active' : '' }}" href="{{ route('supply-chain.dashboard') }}">
+                                <i class="bi bi-truck"></i>
+                                Supply Chain
+                            </a>
+                        </li>
+                        @endif
+
+                        @if(in_array(Auth::user()->roles, ['treasury', 'accounting']))
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('payments*') ? 'active' : '' }}" href="{{ route('payments.index') }}">
+                                <i class="bi bi-credit-card"></i>
+                                Payments
+                            </a>
+                        </li>
+                        @endif
+
+                        @if(Auth::user()->roles === 'qa')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('inspections*') ? 'active' : '' }}" href="{{ route('inspections.index') }}">
+                                <i class="bi bi-clipboard-check"></i>
+                                Inspections
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('inspections.ncr*') ? 'active' : '' }}" href="{{ route('inspections.ncr.index') }}">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                NCR Reports
+                            </a>
+                        </li>
+                        @endif
+
+                        <li class="nav-item mt-3">
+                            <hr>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="bi bi-file-earmark-text"></i>
+                                Reports
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="bi bi-gear"></i>
+                                Settings
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-10 ms-sm-auto main-content">
+                @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill"></i> {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                @endif
+
+                @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-circle-fill"></i> {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                @endif
+
+                @yield('content')
+            </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // Setup CSRF token for AJAX
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+        // Load notification count
+        function loadNotificationCount() {
+            $.get('/notifications/unread-count', function(data) {
+                $('#notif-count').text(data.count);
+                if (data.count > 0) {
+                    $('#notif-count').show();
+                } else {
+                    $('#notif-count').hide();
+                }
+            });
+        }
+
+        // Load on page load
+        $(document).ready(function() {
+            loadNotificationCount();
+
+            // Refresh every 30 seconds
+            setInterval(loadNotificationCount, 30000);
+        });
+    </script>
+
+    @stack('scripts')
+</body>
+</html>
