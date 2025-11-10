@@ -24,38 +24,31 @@
         }
 
         .navbar-custom {
-            background: linear-gradient(135deg, var(--pal-primary) 0%, var(--pal-secondary) 100%);
+            background: #ffffff;
+            height: 70px;
             box-shadow: 0 2px 4px rgba(0,0,0,.1);
         }
 
-        .sidebar {
-            min-height: calc(100vh - 56px);
-            background: white;
-            border-right: 1px solid #e0e0e0;
-            padding: 20px 0;
+        /* sidebar removed in favor of top navbar */
+        .nav-center .nav-link {
+            color: #000000;
+            padding: 10px 25px;
+            margin: 0 10px;
+            font-weight: 600;
+            letter-spacing: .2px;
         }
 
-        .sidebar .nav-link {
-            color: #333;
-            padding: 12px 20px;
-            margin: 2px 10px;
-            border-radius: 8px;
-            transition: all 0.3s;
+        .nav-center .nav-link.active,
+        .nav-center {
+            color: #000000;
         }
 
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            background-color: var(--pal-light);
-            color: var(--pal-primary);
-        }
-
-        .sidebar .nav-link i {
-            margin-right: 10px;
-            width: 20px;
+        .nav-link.hover {
+            color: #000000;
         }
 
         .main-content {
-            padding: 30px;
+            padding: 60px;
         }
 
         .stat-card {
@@ -204,8 +197,13 @@
         }
 
         .logo-pal {
-            height: 40px;
+            height: 100px;
             margin-right: 15px;
+        }
+
+        /* center menu in navbar */
+        @media (min-width: 768px) {
+            .navbar .nav-center { position: absolute; left: 50%; transform: translateX(-50%); }
         }
     </style>
     @stack('styles')
@@ -215,8 +213,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="{{ route('dashboard') }}">
-                <i class="bi bi-building" style="font-size: 24px; margin-right: 10px;"></i>
-                <strong>PT PAL INDONESIA</strong>
+                <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo">
             </a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -224,47 +221,10 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link notification-badge" href="{{ route('notifications.index') }}">
-                            <i class="bi bi-bell-fill" style="font-size: 20px;"></i>
-                            <span class="badge bg-danger" id="notif-count">0</span>
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle"></i>
-                            <span class="ms-2">{{ Auth::user()->name }}</span>
-                            <span class="badge bg-light text-dark ms-2">{{ ucfirst(Auth::user()->roles) }}</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Profile</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Settings</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form method="POST" action="{{ route('logout') }}" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item">
-                                        <i class="bi bi-box-arrow-right"></i> Logout
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-2 d-md-block sidebar">
-                <div class="position-sticky">
-                    <ul class="nav flex-column">
+                {{-- center nav items --}}
+                <ul class="navbar-nav nav-center mx-auto padding align-items-center">
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-                                <i class="bi bi-speedometer2"></i>
                                 Dashboard
                             </a>
                         </li>
@@ -272,7 +232,6 @@
                         @if(in_array(Auth::user()->roles, ['user', 'supply_chain', 'sekretaris_direksi']))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
-                                <i class="bi bi-folder"></i>
                                 Projects
                             </a>
                         </li>
@@ -310,29 +269,41 @@
                             </a>
                         </li>
                         @endif
-
-                        <li class="nav-item mt-3">
-                            <hr>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="bi bi-file-earmark-text"></i>
-                                Reports
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="bi bi-gear"></i>
-                                Settings
-                            </a>
-                        </li>
                     </ul>
-                </div>
-            </nav>
 
-            <!-- Main Content -->
-            <main class="col-md-10 ms-sm-auto main-content">
+                {{-- right side notifications + user --}}
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-2">
+                        <a class="nav-link notification-badge text-dark" href="{{ route('notifications.index') }}">
+                            <i class="bi bi-bell-fill" style="font-size: 20px; color: #000000;"></i>
+                            <span class="badge bg-danger" id="notif-count">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link d-flex align-items-center text-dark" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle" style="font-size:22px; color: #000000;"></i>
+                            <span class="ms-2">{{ Auth::user()->name }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <!-- Main Content (full width) -->
+            <main class="col-12 main-content">
                 @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="bi bi-check-circle-fill"></i> {{ session('success') }}

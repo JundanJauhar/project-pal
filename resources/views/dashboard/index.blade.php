@@ -37,12 +37,6 @@
 @endpush
 
 @section('content')
-<div class="row mb-4">
-    <div class="col-12">
-        <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
-        <p class="text-muted">Selamat datang, {{ Auth::user()->name }}</p>
-    </div>
-</div>
 
         <!-- Statistics Cards -->
         <div class="row">
