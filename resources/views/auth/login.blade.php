@@ -11,7 +11,7 @@
 
     <style>
         body {
-            background: linear-gradient(135deg, #003d82 0%, #0056b3 100%);
+            background: #ffffff;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -19,28 +19,44 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        .login-wrapper {   
+            height:auto;
+            width: 500px;
+            display:flex; 
+            flex-direction:column;
+            align-items:center; 
+            margin-top:-100px;
+        }
+
         .login-container {
-            background: white;
+            background: #c1c1c1;
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            
             overflow: hidden;
-            max-width: 450px;
+            max-width: 500px;
             width: 100%;
+            height: auto;
+            position:relative; z-index:1; 
         }
 
         .login-header {
-            background: white;
-            padding: 40px;
+            background: #c1c1c1;
+            padding: 10px;
             text-align: center;
         }
 
         .logo-container {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+            margin-top:10px;
         }
 
         .logo-pal {
-            height: 80px;
-            margin-bottom: 10px;
+            height: 250px;
+            ;
+        }
+
+        .logo {
+            translate= z-2;
         }
 
         .company-name {
@@ -51,15 +67,17 @@
         }
 
         .login-body {
-            background: #f5f7fa;
-            padding: 40px;
+            background: #c1c1c1;
+            padding: 20px;
+            padding-top: 0
         }
 
         .form-control {
             padding: 12px 15px;
             border-radius: 10px;
             border: 1px solid #ddd;
-            margin-bottom: 15px;
+            margin-bottom: 5px;
+            margin-top: 5px;
         }
 
         .form-control:focus {
@@ -68,13 +86,14 @@
         }
 
         .form-label {
-            font-weight: 600;
-            color: #333;
+            font-weight: 700;
+            font: bold
+            color: #000000;
             margin-bottom: 8px;
         }
 
         .btn-login {
-            background: linear-gradient(135deg, #003d82 0%, #0056b3 100%);
+            background: #03418C;
             color: white;
             padding: 12px;
             border-radius: 10px;
@@ -105,7 +124,7 @@
         }
 
         .forgot-password {
-            color: #003d82;
+            color: #03418C;
             font-size: 14px;
             text-decoration: none;
         }
@@ -116,13 +135,13 @@
     </style>
 </head>
 <body>
+    <div class=login-wrapper>
+    <div class=logo>                {{-- asset() mengacu ke folder public/, jangan sertakan 'public/' di path --}}
+                <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo"></div>
     <div class="login-container">
         <div class="login-header">
             <div class="logo-container">
-                <i class="bi bi-building" style="font-size: 60px; color: #003d82;"></i>
             </div>
-            <h1 class="company-name">PT PAL</h1>
-            <p style="color: #003d82; font-weight: 600; margin: 0;">INDONESIA</p>
         </div>
 
         <div class="login-body">
@@ -162,7 +181,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
+                    <label for="password" class="form-label text=mute">Password</label>
                     <div style="position: relative;">
                         <input type="password"
                                class="form-control @error('password') is-invalid @enderror"
@@ -193,17 +212,8 @@
                     SIGN IN
                 </button>
             </form>
-
-            <div class="mt-4 text-center">
-                <small class="text-muted">
-                    Demo Accounts:<br>
-                    <strong>supplychain@pal.com</strong> |
-                    <strong>treasury@pal.com</strong> |
-                    <strong>qa@pal.com</strong><br>
-                    Password: <strong>password</strong>
-                </small>
-            </div>
         </div>
+    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
