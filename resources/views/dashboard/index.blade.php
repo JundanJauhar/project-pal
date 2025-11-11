@@ -46,45 +46,53 @@
         <div class="row">
             <div class="col-md-3">
                 <div class="stat-card stat-total">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="mb-0">{{ $stats['total_pengadaan'] }}</h3>
-                            <p class="mb-0">Total Pengadaan</p>
+                    <div class="stat-content">
+                        <div class="stat-title">Total Pengadaan</div>
+                        <div class="stat-value">{{ $stats['total_pengadaan'] }}</div>
+                    </div>
+                    <div class="stat-icon">
+                        <div class="stat-icon-inner">
+                            <i class="bi bi-check-lg"></i>
                         </div>
-                        <i class="bi bi-box-seam" style="font-size: 48px; opacity: 0.5;"></i>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card stat-progress">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="mb-0">{{ $stats['sedang_proses'] }}</h3>
-                            <p class="mb-0">Sedang Proses</p>
+                    <div class="stat-content">
+                        <div class="stat-title">Sedang Proses</div>
+                        <div class="stat-value">{{ $stats['sedang_proses'] }}</div>
+                    </div>
+                    <div class="stat-icon">
+                        <div class="stat-icon-inner">
+                            <i class="bi bi-box"></i>
                         </div>
-                        <i class="bi bi-clock-history" style="font-size: 48px; opacity: 0.5;"></i>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card stat-success">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="mb-0">{{ $stats['selesai'] }}</h3>
-                            <p class="mb-0">Selesai</p>
+                    <div class="stat-content">
+                        <div class="stat-title">Selesai</div>
+                        <div class="stat-value">{{ $stats['selesai'] }}</div>
+                    </div>
+                    <div class="stat-icon">
+                        <div class="stat-icon-inner">
+                            <i class="bi bi-check-lg"></i>
                         </div>
-                        <i class="bi bi-check-circle-fill" style="font-size: 48px; opacity: 0.5;"></i>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card stat-rejected">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="mb-0">{{ $stats['ditolak'] }}</h3>
-                            <p class="mb-0">Ditolak</p>
+                    <div class="stat-content">
+                        <div class="stat-title">Ditolak</div>
+                        <div class="stat-value">{{ $stats['ditolak'] }}</div>
+                    </div>
+                    <div class="stat-icon">
+                        <div class="stat-icon-inner">
+                            <i class="bi bi-x"></i>
                         </div>
-                        <i class="bi bi-x-circle-fill" style="font-size: 48px; opacity: 0.5;"></i>
                     </div>
                 </div>
             </div>
