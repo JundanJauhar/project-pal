@@ -230,7 +230,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="{{ route('dashboard') }}">
+            <a class="navbar-brand d-flex align-items-center ms-4" href="{{ route('dashboard') }}">
                 <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo">
             </a>
 
@@ -290,7 +290,7 @@
                     </ul>
 
                 {{-- right side notifications + user --}}
-                <ul class="navbar-nav ms-auto align-items-center">
+                <ul class="navbar-nav ms-auto align-items-center me-5">
                     <li class="nav-item dropdown">
                         <a class="nav-link d-flex align-items-center text-dark profile-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                             <span class="ms-2">{{ Auth::user()->name }}</span>
