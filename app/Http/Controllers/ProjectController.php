@@ -186,15 +186,56 @@ class ProjectController extends Controller{
      */
     public function search(Request $request)
     {
-        $query = $request->get('q');
+        $q = $request->get('q');
+        $status = $request->get('status');
+        $priority = $request->get('priority');
+        $page = $request->get('page', 1);
 
-        $projects = Project::where('name_project', 'LIKE', "%{$query}%")
-            ->orWhere('code_project', 'LIKE', "%{$query}%")
-            ->with(['ownerDivision'])
-            ->limit(10)
-            ->get();
+        $projectsQuery = Project::with(['ownerDivision', 'contracts.vendor']);
 
-        return response()->json($projects);
+        if ($q) {
+            $projectsQuery->where(function ($sub) use ($q) {
+                $sub->where('name_project', 'LIKE', "%{$q}%")
+                    ->orWhere('code_project', 'LIKE', "%{$q}%");
+            });
+        }
+
+        if ($status) {
+            $projectsQuery->where('status_project', $status);
+        }
+
+        if ($priority) {
+            $projectsQuery->where('priority', $priority);
+        }
+
+        $projects = $projectsQuery->orderBy('created_at', 'desc')->paginate(10, ['*'], 'page', $page);
+
+        // Map to simpler structure for frontend
+        $items = $projects->map(function ($p) {
+            $vendor = $p->contracts->first()->vendor->name_vendor ?? null;
+            return [
+                'project_id' => $p->project_id,
+                'code_project' => $p->code_project,
+                'name_project' => $p->name_project,
+                'owner_division' => $p->ownerDivision->nama_divisi ?? '-',
+                'start_date' => optional($p->start_date)->format('d/m/Y'),
+                'end_date' => optional($p->end_date)->format('d/m/Y'),
+                'vendor' => $vendor ?? '-',
+                'priority' => $p->priority,
+                'status_project' => $p->status_project,
+            ];
+        });
+
+        return response()->json([
+            'data' => $items,
+            'pagination' => [
+                'current_page' => $projects->currentPage(),
+                'per_page' => $projects->perPage(),
+                'total' => $projects->total(),
+                'last_page' => $projects->lastPage(),
+                'has_more' => $projects->hasMorePages(),
+            ]
+        ]);
     }
 
     /**

@@ -30,9 +30,13 @@
             font-size: 12px;
             font-weight: bold;
         }
-        .priority-rendah { background-color: #28a745; color: white; }
-        .priority-sedang { background-color: #ffc107; color: black; }
-        .priority-tinggi { background-color: #dc3545; color: white; }
+        .priority-rendah { background-color: #28AC00; color: white; }
+        .priority-sedang { background-color: #FFBB00; color: black; }
+        .priority-tinggi { background-color: #BD0000; color: white; }
+
+        .card-header {
+            background-color: #ffffff;
+        }
     </style>
 @endpush
 
@@ -90,7 +94,7 @@
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header text-black">
                         <h5 class="mb-0">Daftar Pengadaan</h5>
                     </div>
                     <div class="card-body">

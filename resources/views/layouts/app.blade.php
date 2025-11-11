@@ -219,10 +219,15 @@
             margin-right: 15px;
         }
 
+        .navbar-nav{
+            margin-left: 100px;
+        }
+
         /* center menu in navbar */
         @media (min-width: 768px) {
             .navbar .nav-center { position: absolute; left: 50%; transform: translateX(-50%); }
         }
+    
     </style>
     @stack('styles')
 </head>
