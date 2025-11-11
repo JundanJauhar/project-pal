@@ -10,8 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-class ProjectController extends Controller
-{
+class ProjectController extends Controller{
     /**
      * Display a listing of projects
      */
@@ -62,24 +61,45 @@ class ProjectController extends Controller
     /**
      * Display the specified project
      */
-    public function show($id)
-    {
-        $project = Project::with([
-            'ownerDivision',
-            'contracts',
-            'hps',
-            'evaluations',
-            'requestProcurements.items'
-        ])->findOrFail($id);
+    public function show($id){
+    $project = Project::with([
+        'ownerDivision',
+        'contracts',
+        'hps',
+        'evaluations',
+        'requestProcurements.items'
+    ])->findOrFail($id);
 
-        // Get procurement progress
-        $progress = ProcurementProgress::where('permintaan_pengadaan_id', $id)
-            ->with('checkpoint')
-            ->orderBy('titik_id')
-            ->get();
+    // Daftar stage untuk timeline tampilan di Blade
+    $stages = [
+        'draft',
+        'review_sc',
+        'persetujuan_sekretaris',
+        'pemilihan_vendor',
+        'pengecekan_legalitas',
+        'pemesanan',
+        'pembayaran',
+        'selesai'
+    ];
 
-        return view('projects.show', compact('project', 'progress'));
+    // Cari posisi stage berdasarkan status_project dari database
+    $currentStageIndex = array_search($project->status_project, $stages);
+
+    // Kalau tidak ditemukan, set 0 agar tidak error
+    if ($currentStageIndex === false) {
+        $currentStageIndex = 0;
     }
+
+    // Get procurement progress (kalau masih dipakai untuk table lain)
+    $progress = ProcurementProgress::where('permintaan_pengadaan_id', $id)
+        ->with('checkpoint')
+        ->orderBy('titik_id')
+        ->get();
+
+    return view('projects.show', compact('project', 'progress', 'stages', 'currentStageIndex'));
+}
+
+
 
     /**
      * Show the form for editing the specified project

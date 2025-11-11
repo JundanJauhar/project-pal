@@ -86,50 +86,6 @@
             </div>
         </div>
 
-        <!-- Timeline -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div class="timeline-step">
-                                <i class="bi bi-file-text"></i>
-                                <div>Diajukan</div>
-                            </div>
-                            <div class="timeline-step">
-                                <i class="bi bi-search"></i>
-                                <div>Review SC</div>
-                            </div>
-                            <div class="timeline-step">
-                                <i class="bi bi-person-check"></i>
-                                <div>Persetujuan Sekretaris</div>
-                            </div>
-                            <div class="timeline-step">
-                                <i class="bi bi-people"></i>
-                                <div>Pemilihan Vendor</div>
-                            </div>
-                            <div class="timeline-step">
-                                <i class="bi bi-shield-check"></i>
-                                <div>Pengecekan Legalitas</div>
-                            </div>
-                            <div class="timeline-step">
-                                <i class="bi bi-cart"></i>
-                                <div>Pemesanan</div>
-                            </div>
-                            <div class="timeline-step">
-                                <i class="bi bi-credit-card"></i>
-                                <div>Pembayaran</div>
-                            </div>
-                            <div class="timeline-step">
-                                <i class="bi bi-check-circle"></i>
-                                <div>Selesai</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Projects Table -->
         <div class="row">
             <div class="col-12">
