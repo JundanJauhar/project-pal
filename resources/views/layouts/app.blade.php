@@ -199,6 +199,21 @@
             right: -8px;
         }
 
+        .profile-toggle {
+            position: relative;
+        }
+
+        .notif-dot {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 8px;
+            background: #dc3545;
+            border-radius: 50%;
+            display: none;
+        }
+
         .logo-pal {
             height: 100px;
             margin-right: 15px;
@@ -276,18 +291,20 @@
 
                 {{-- right side notifications + user --}}
                 <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item me-2">
-                        <a class="nav-link notification-badge text-dark" href="{{ route('notifications.index') }}">
-                            <i class="bi bi-bell-fill" style="font-size: 20px; color: #000000;"></i>
-                            <span class="badge bg-danger" id="notif-count">0</span>
-                        </a>
-                    </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link d-flex align-items-center text-dark" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle" style="font-size:22px; color: #000000;"></i>
+                        <a class="nav-link d-flex align-items-center text-dark profile-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                             <span class="ms-2">{{ Auth::user()->name }}</span>
+                            <i class="bi bi-person-circle ms-3" style="font-size:22px; color: #000000;"></i>
+                            <span class="notif-dot" id="notif-dot"></span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center justify-content-between" href="{{ route('notifications.index') }}">
+                                    <span><i class="bi bi-bell-fill me-2"></i> Notifikasi</span>
+                                    <span class="badge rounded-pill bg-danger" id="notif-count-dd" style="display:none;">0</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}" class="d-inline">
                                     @csrf
@@ -342,12 +359,13 @@
         // Load notification count
         function loadNotificationCount() {
             $.get('/notifications/unread-count', function(data) {
-                $('#notif-count').text(data.count);
-                if (data.count > 0) {
-                    $('#notif-count').show();
-                } else {
-                    $('#notif-count').hide();
-                }
+                const count = data.count || 0;
+                const $ddBadge = $('#notif-count-dd');
+                const $dot = $('#notif-dot');
+
+                $ddBadge.text(count);
+                if (count > 0) { $ddBadge.show(); } else { $ddBadge.hide(); }
+                if (count > 0) { $dot.show(); } else { $dot.hide(); }
             });
         }
 
