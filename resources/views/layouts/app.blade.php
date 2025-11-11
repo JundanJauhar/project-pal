@@ -489,8 +489,8 @@
         }
 
         .logo-pal {
-            height: 60px;
-            max-height: 60px; /* keep within 60px navbar */
+            height: 100%;
+            max-height: 120px; /* keep within 60px navbar */
             object-fit: contain;
             margin-right: 15px;
             margin-top: 0;
