@@ -4,36 +4,35 @@
 
 @push('styles')
 <style>
-        .stat-card {
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            color: white;
-        }
-        .stat-total { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .stat-progress { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-        .stat-success { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-        .stat-rejected { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
-        .timeline-step {
-            padding: 10px;
-            text-align: center;
-            border-radius: 5px;
-            font-size: 12px;
-        }
-        .timeline-step.active {
-            background-color: #667eea;
-            color: white;
-        }
-        .priority-badge {
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .priority-rendah { background-color: #28a745; color: white; }
-        .priority-sedang { background-color: #ffc107; color: black; }
-        .priority-tinggi { background-color: #dc3545; color: white; }
-    </style>
+    .stat-card {
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: none;
+    }
+    .stat-progress { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .stat-success { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .stat-rejected { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .timeline-step {
+        padding: 10px;
+        text-align: center;
+        border-radius: 5px;
+        font-size: 12px;
+    }
+    .timeline-step.active {
+        background-color: #667eea;
+        color: white;
+    }
+    .priority-badge {
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .priority-rendah { background-color: #28a745; color: white; }
+    .priority-sedang { background-color: #ffc107; color: black; }
+    .priority-tinggi { background-color: #dc3545; color: white; }
+</style>
 @endpush
 
 @section('content')
@@ -42,45 +41,53 @@
         <div class="row">
             <div class="col-md-3">
                 <div class="stat-card stat-total">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="mb-0">{{ $stats['total_pengadaan'] }}</h3>
-                            <p class="mb-0">Total Pengadaan</p>
+                    <div class="stat-content">
+                        <div class="stat-title">Total Pengadaan</div>
+                        <div class="stat-value">{{ $stats['total_pengadaan'] }}</div>
+                    </div>
+                    <div class="stat-icon">
+                        <div class="stat-icon-inner">
+                            <i class="bi bi-check-lg"></i>
                         </div>
-                        <i class="bi bi-box-seam" style="font-size: 48px; opacity: 0.5;"></i>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card stat-progress">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="mb-0">{{ $stats['sedang_proses'] }}</h3>
-                            <p class="mb-0">Sedang Proses</p>
+                    <div class="stat-content">
+                        <div class="stat-title">Sedang Proses</div>
+                        <div class="stat-value">{{ $stats['sedang_proses'] }}</div>
+                    </div>
+                    <div class="stat-icon">
+                        <div class="stat-icon-inner">
+                            <i class="bi bi-box"></i>
                         </div>
-                        <i class="bi bi-clock-history" style="font-size: 48px; opacity: 0.5;"></i>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card stat-success">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="mb-0">{{ $stats['selesai'] }}</h3>
-                            <p class="mb-0">Selesai</p>
+                    <div class="stat-content">
+                        <div class="stat-title">Selesai</div>
+                        <div class="stat-value">{{ $stats['selesai'] }}</div>
+                    </div>
+                    <div class="stat-icon">
+                        <div class="stat-icon-inner">
+                            <i class="bi bi-check-lg"></i>
                         </div>
-                        <i class="bi bi-check-circle-fill" style="font-size: 48px; opacity: 0.5;"></i>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card stat-rejected">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="mb-0">{{ $stats['ditolak'] }}</h3>
-                            <p class="mb-0">Ditolak</p>
+                    <div class="stat-content">
+                        <div class="stat-title">Ditolak</div>
+                        <div class="stat-value">{{ $stats['ditolak'] }}</div>
+                    </div>
+                    <div class="stat-icon">
+                        <div class="stat-icon-inner">
+                            <i class="bi bi-x"></i>
                         </div>
-                        <i class="bi bi-x-circle-fill" style="font-size: 48px; opacity: 0.5;"></i>
                     </div>
                 </div>
             </div>
