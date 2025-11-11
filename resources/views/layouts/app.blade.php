@@ -28,22 +28,32 @@
 
         .navbar-custom {
             background: #ffffff;
-            height: 70px;
+            height: 60px;
             box-shadow: 0 2px 4px rgba(0,0,0,.1);
         }
 
         /* sidebar removed in favor of top navbar */
         .nav-center .nav-link {
-            color: #000000;
+            color: #6c757d;
             padding: 10px 25px;
             margin: 0 10px;
             font-weight: 600;
             letter-spacing: .2px;
+            border-bottom: 2px solid transparent;
         }
 
-        .nav-center .nav-link.active,
-        .nav-center {
+        /* make links full navbar height so underline sits on navbar bottom */
+        .navbar-custom .nav-link {
+            height: 60px; /* match navbar height */
+            display: flex;
+            align-items: center;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .nav-center .nav-link.active {
             color: #000000;
+            border-bottom: 2px solid #000000;
         }
 
         .nav-link.hover {
@@ -215,13 +225,22 @@
         }
 
         .logo-pal {
-            height: 100px;
+            height: 60px;
+            max-height: 60px; /* keep within 60px navbar */
+            object-fit: contain;
             margin-right: 15px;
+            margin-top: 0;
+            margin-bottom: 0;
+            display: block;
         }
 
         /* center menu in navbar */
         @media (min-width: 768px) {
-            .navbar .nav-center { position: absolute; left: 50%; transform: translateX(-50%); }
+            .navbar .nav-center {
+                position: static;
+                transform: none;
+                margin-left: auto; /* push nav group to the right side */
+            }
         }
     </style>
     @stack('styles')
@@ -239,8 +258,8 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                {{-- center nav items --}}
-                <ul class="navbar-nav nav-center mx-auto padding align-items-center">
+                {{-- nav items placed to the left of user menu --}}
+                <ul class="navbar-nav nav-center ms-auto me-3 padding align-items-center">
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                                 Dashboard
@@ -290,7 +309,7 @@
                     </ul>
 
                 {{-- right side notifications + user --}}
-                <ul class="navbar-nav ms-auto align-items-center me-5">
+                <ul class="navbar-nav align-items-center me-5">
                     <li class="nav-item dropdown">
                         <a class="nav-link d-flex align-items-center text-dark profile-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                             <span class="ms-2">{{ Auth::user()->name }}</span>
