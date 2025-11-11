@@ -54,9 +54,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/timeline/{projectId}', [DashboardController::class, 'getProcurementTimeline'])->name('dashboard.timeline');
 
     // Project Routes
+    Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
     Route::resource('projects', ProjectController::class);
     Route::post('/projects/{id}/status', [ProjectController::class, 'updateStatus'])->name('projects.update-status');
-    Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
 
     // Notification Routes
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
