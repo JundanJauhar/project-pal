@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('name_project', 100);
             $table->text('description')->nullable();
             $table->unsignedBigInteger('owner_division_id');
-            $table->enum('priority', ['low', 'medium', 'high'])->default('medium');
+            $table->enum('priority', ['rendah', 'sedang', 'tinggi'])->default('sedang');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->enum('status_project', [
