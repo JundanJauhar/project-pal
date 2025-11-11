@@ -36,7 +36,7 @@
         .nav-center .nav-link {
             color: #6c757d;
             padding: 10px 25px;
-            margin: 0 10px;
+            margin: 0 50px;
             font-weight: 600;
             letter-spacing: .2px;
             border-bottom: 2px solid transparent;
