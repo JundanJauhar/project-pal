@@ -47,13 +47,13 @@
     }
 
     .timeline-step.active .timeline-icon {
-        background: #0EB04A;
+        background: #ECAD02;
         color: white;
         font-weight: bold;
     }
 
     .timeline-step.completed .timeline-icon {
-        background: #198754;
+        background: #28AC00;
         color: white;
     }
 
@@ -67,6 +67,11 @@
         border-radius: 10px;
         padding: 15px 18px;
         margin-bottom: 20px;
+    }
+    .bi-x-circle {
+        font-size: 24px;
+        color: #dc3545;
+        margin-bottom: 30px;
     }
 </style>
 
@@ -82,7 +87,7 @@
         </div>
 
         <div class="text-end">
-            <img src="/img/logo-pal.png" style="height: 50px;">
+            <i class="bi bi-x-circle"></i>
             <p><strong>Prioritas:</strong> {{ strtoupper($project->priority) }}</p>
             <p><strong>Tanggal Dibuat:</strong> {{ $project->created_at->format('d/m/Y') }}</p>
             <p><strong>Tanggal Target:</strong> {{ $project->end_date->format('d/m/Y') }}</p>
