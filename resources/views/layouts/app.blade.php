@@ -19,6 +19,21 @@
             --pal-primary: #003d82;
             --pal-secondary: #0056b3;
             --pal-light: #e8f0fe;
+            --priority-text-size: 20px;
+            --priority-rendah: #;
+            --priority-rendah-text: #6F6F6F;
+            --priority-sedang: #;
+            --priority-sedang-text: #ECAD02;
+            --priority-tinggi: #;
+            --priority-tinggi-text: #BD0000;
+            --vendor-process: #ffc107;
+            --vendor-process-text: #000000;
+            --vendor-completed: #28a745;
+            --vendor-completed-text: #ffffff;
+            --vendor-rejected: #dc3545;
+            --vendor-rejected-text: #ffffff;
+            --vendor-neutral: #f5f7fa;
+            --vendor-neutral-text: #333333;
         }
 
         body {
@@ -430,13 +445,38 @@
         .badge-priority {
             padding: 6px 12px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: var(--priority-text-size, 20px);
             font-weight: 600;
+            display: inline-block;
         }
 
-        .badge-rendah { background-color: #28a745; color: white; }
-        .badge-sedang { background-color: #ffc107; color: #000; }
-        .badge-tinggi { background-color: #dc3545; color: white; }
+        /* Priority color variants use CSS variables so user can edit them */
+        .badge-priority.badge-rendah { 
+            background: var(--priority-rendah); 
+            color: var(--priority-rendah-text);
+        }
+        .badge-priority.badge-sedang { 
+            background: var(--priority-sedang); 
+            color: var(--priority-sedang-text);
+        }
+        .badge-priority.badge-tinggi { 
+            background: var(--priority-tinggi); 
+            color: var(--priority-tinggi-text); 
+        }
+
+        /* Vendor pill styles */
+        .vendor-pill {
+            padding: 6px 12px;
+            border-radius: 16px;
+            display: inline-block;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .vendor-status-process { background: var(--vendor-process); color: var(--vendor-process-text); }
+        .vendor-status-completed { background: var(--vendor-completed); color: var(--vendor-completed-text); }
+        .vendor-status-rejected { background: var(--vendor-rejected); color: var(--vendor-rejected-text); }
+        .vendor-status-neutral { background: var(--vendor-neutral); color: var(--vendor-neutral-text); }
 
         .badge-status {
             padding: 6px 12px;

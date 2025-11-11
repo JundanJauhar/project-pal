@@ -61,100 +61,96 @@
 <!-- Projects Table -->
 <div class="row">
     <div class="col-12">
-        <div class="card card-custom">
-            <div class="card-header-custom">
-                <h5 class="mb-0"><i class="bi bi-table"></i> Daftar Pengadaan</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover table-custom">
-                        <thead>
-                            <tr>
-                                <th>Kode Project</th>
-                                <th>Nama Project</th>
-                                <th>Department</th>
-                                <th>Tanggal Mulai</th>
-                                <th>Tanggal Selesai</th>
-                                <th>Vendor</th>
-                                <th>Prioritas</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="projects-tbody">
-                            @forelse($projects as $project)
-                            <tr>
-                                <td><strong>{{ $project->code_project }}</strong></td>
-                                <td>{{ Str::limit($project->name_project, 40) }}</td>
-                                <td>{{ $project->ownerDivision->nama_divisi ?? '-' }}</td>
-                                <td>{{ $project->start_date->format('d/m/Y') }}</td>
-                                <td>{{ $project->end_date->format('d/m/Y') }}</td>
-                                <td>
-                                    @if($project->contracts->first())
-                                        {{ Str::limit($project->contracts->first()->vendor->name_vendor ?? '-', 20) }}
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <span class="badge-priority badge-{{ strtolower($project->priority) }}">
-                                        {{ strtoupper($project->priority) }}
-                                    </span>
-                                </td>
-                                <td>
-                                    @php
-                                        $statusClass = match($project->status_project) {
-                                            'completed', 'selesai' => 'success',
-                                            'rejected' => 'danger',
-                                            'review_sc', 'persetujuan_sekretaris' => 'warning',
-                                            'draft' => 'secondary',
-                                            default => 'info'
-                                        };
-                                        $statusText = match($project->status_project) {
-                                            'review_sc' => 'Review SC',
-                                            'persetujuan_sekretaris' => 'Review Sekretaris',
-                                            'pemilihan_vendor' => 'Pemilihan Vendor',
-                                            'selesai', 'completed' => 'Success',
-                                            'rejected' => 'Denied',
-                                            default => ucfirst($project->status_project)
-                                        };
-                                    @endphp
-                                    <span class="badge bg-{{ $statusClass }}">{{ $statusText }}</span>
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ route('projects.show', $project->project_id) }}"
-                                           class="btn btn-sm btn-primary btn-custom"
-                                           title="Lihat Detail">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
-                                        <a href="{{ route('projects.edit', $project->project_id) }}"
-                                           class="btn btn-sm btn-warning btn-custom"
-                                           title="Edit">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="9" class="text-center py-4">
-                                    <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
-                                    <p class="text-muted mt-2">Tidak ada data project</p>
-                                </td>
-                            </tr>
-                            @endforelse
-                                    </tbody>
-                    </table>
-                </div>
+        <div style="background: #EBEBEB; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08);">
+            <h3 style="margin-bottom: 15px; font-weight: 600; border-bottom: 2px solid #0000; padding-bottom: 15px;">
+                <i class=""></i> Daftar Pengadaan
+            </h3>
 
-                <!-- Pagination -->
-                <div class="mt-3">
-                    <div id="projects-pagination">
-                        {{ $projects->links() }}
-                    </div>
+            <div class="table-responsive">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #000;">
+                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode Project</th>
+                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Project</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
+                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Vendor</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projects-tbody">
+                        @forelse($projects as $project)
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 12px 8px;"><strong>{{ $project->code_project }}</strong></td>
+                            <td style="padding: 12px 8px;">{{ Str::limit($project->name_project, 40) }}</td>
+                            <td style="padding: 12px 8px; text-align: center;">{{ $project->ownerDivision->nama_divisi ?? '-' }}</td>
+                            <td style="padding: 12px 8px; text-align: center;">{{ $project->start_date->format('d/m/Y') }}</td>
+                            <td style="padding: 12px 8px; text-align: center;">{{ $project->end_date->format('d/m/Y') }}</td>
+                            <td style="padding: 12px 8px; text-align: left;">
+                                @php
+                                    $contract = $project->contracts->first();
+                                    $vendorName = $contract->vendor->name_vendor ?? '-';
+                                    $vendorStatus = match($project->status_project) {
+                                        'pemilihan_vendor', 'in_progress', 'ongoing', 'proses' => 'process',
+                                        'selesai', 'completed' => 'completed',
+                                        'rejected', 'ditolak' => 'rejected',
+                                        default => 'neutral'
+                                    };
+                                @endphp
+                                @if($contract)
+                                    <span class="vendor-pill vendor-status-{{ $vendorStatus }}">{{ Str::limit($vendorName, 20) }}</span>
+                                @else
+                                    <span class="vendor-pill vendor-status-neutral">-</span>
+                                @endif
+                            </td>
+                            <td style="padding: 12px 8px; text-align: center;">
+                                <span class="badge-priority badge-{{ strtolower($project->priority) }}"
+                                      style="padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">
+                                    {{ strtoupper($project->priority) }}
+                                </span>
+                            </td>
+                            <td style="padding: 12px 8px; text-align: center;">
+                                @php
+                                    $statusClass = match($project->status_project) {
+                                        'completed', 'selesai' => 'success',
+                                        'rejected' => 'danger',
+                                        'review_sc', 'persetujuan_sekretaris' => 'warning',
+                                        'draft' => 'secondary',
+                                        default => 'info'
+                                    };
+                                    $statusText = match($project->status_project) {
+                                        'review_sc' => 'Review SC',
+                                        'persetujuan_sekretaris' => 'Review Sekretaris',
+                                        'pemilihan_vendor' => 'Pemilihan Vendor',
+                                        'selesai', 'completed' => 'Success',
+                                        'rejected' => 'Denied',
+                                        default => ucfirst($project->status_project)
+                                    };
+                                @endphp
+                                <span class="badge bg-{{ $statusClass }}"
+                                      style="padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">
+                                    {{ $statusText }}
+                                </span>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                                <p class="text-muted mt-2">Tidak ada data project</p>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-3">
+                <div id="projects-pagination">
+                    {{ $projects->links() }}
                 </div>
             </div>
         </div>
@@ -199,20 +195,15 @@
             }
 
             tbody.innerHTML = items.map(p => `
-                <tr>
-                    <td><strong>${p.code_project}</strong></td>
-                    <td>${p.name_project.length > 40 ? p.name_project.substring(0,40) + '...' : p.name_project}</td>
-                    <td>${p.owner_division}</td>
-                    <td>${p.start_date ?? '-'}</td>
-                    <td>${p.end_date ?? '-'}</td>
-                    <td>${p.vendor ?? '-'}</td>
-                    <td><span class="badge-priority badge-${(p.priority || '').toLowerCase()}">${(p.priority || '').toUpperCase()}</span></td>
-                    <td><span class="badge bg-info">${(p.status_project || '').replace('_',' ')}</span></td>
-                    <td>
-                        <div class="btn-group" role="group">
-                            <a href="/projects/${p.project_id}" class="btn btn-sm btn-primary btn-custom" title="Lihat Detail"><i class="bi bi-eye"></i></a>
-                        </div>
-                    </td>
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <td style="padding: 12px 8px;"><strong>${p.code_project}</strong></td>
+                    <td style="padding: 12px 8px;">${p.name_project.length > 40 ? p.name_project.substring(0,40) + '...' : p.name_project}</td>
+                    <td style="padding: 12px 8px; text-align: center;">${p.owner_division}</td>
+                    <td style="padding: 12px 8px; text-align: center;">${p.start_date ?? '-'}</td>
+                    <td style="padding: 12px 8px; text-align: center;">${p.end_date ?? '-'}</td>
+                    <td style="padding: 12px 8px;">${p.vendor ?? '-'}</td>
+                    <td style="padding: 12px 8px; text-align: center;"><span class="badge-priority badge-${(p.priority || '').toLowerCase()}" style="padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">${(p.priority || '').toUpperCase()}</span></td>
+                    <td style="padding: 12px 8px; text-align: center;"><span class="badge bg-info" style="padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">${(p.status_project || '').replace(/_/g,' ')}</span></td>
                 </tr>
             `).join('');
 
