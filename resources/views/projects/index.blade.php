@@ -3,16 +3,19 @@
 @section('title', 'Projects - PT PAL Indonesia')
 
 @section('content')
+
+<style>
+    .tambah .btn{
+        background: #003d82;
+        border-color: #003d82;
+    }
+
+</style>
+
+
 <div class="row mb-4">
     <div class="col-md-8">
         <h2><i class="bi bi-folder-fill"></i> Daftar Projects</h2>
-    </div>
-    <div class="col-md-4 text-end">
-        @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
-        <a href="{{ route('projects.create') }}" class="btn btn-primary btn-custom">
-            <i class="bi bi-plus-circle"></i> Tambah Project Baru
-        </a>
-        @endif
     </div>
 </div>
 
@@ -21,7 +24,7 @@
     <div class="col-12">
         <div class="card card-custom">
             <div class="card-body">
-                <form method="GET" action="{{ route('projects.index') }}" class="row g-3">
+                <form method="GET" action="{{ route('projects.index') }}" class="row g-3 align-items-end">
                     <div class="col-md-4">
                         <input type="text" class="form-control" name="search" placeholder="Cari project..." value="{{ request('search') }}">
                     </div>
@@ -42,10 +45,12 @@
                             <option value="tinggi" {{ request('priority') === 'tinggi' ? 'selected' : '' }}>Tinggi</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100 btn-custom">
-                            <i class="bi bi-search"></i> Filter
-                        </button>
+                    <div class="tambah col-md-2 text-end">
+                        @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
+                        <a href="{{ route('projects.create') }}" class="btn btn-primary w-100 btn-custom">
+                            <i class="bi bi-plus-circle"></i> Tambah
+                        </a>
+                        @endif
                     </div>
                 </form>
             </div>
