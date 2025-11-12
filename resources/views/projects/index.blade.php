@@ -9,79 +9,193 @@
         background: #003d82;
         border-color: #003d82;
     }
-
+    .search-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 20px;
+    }
+    .search-input {
+        position: relative;
+        width: 300px;
+    }
+    .search-input input {
+        padding-right: 40px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+    }
+    .search-input i {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+    }
 </style>
 
-
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h2><i class="bi bi-folder-fill"></i> Daftar Projects</h2>
-    </div>
-</div>
-
-<!-- Filter and Search -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card card-custom">
-            <div class="card-body">
-                <form method="GET" action="{{ route('projects.index') }}" class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <input type="text" class="form-control" name="search" placeholder="Cari project..." value="{{ request('search') }}">
-                    </div>
-                    <div class="col-md-3">
-                        <select class="form-select" name="status">
-                            <option value="">Semua Status</option>
-                            <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Draft</option>
-                            <option value="review_sc" {{ request('status') === 'review_sc' ? 'selected' : '' }}>Review SC</option>
-                            <option value="persetujuan_sekretaris" {{ request('status') === 'persetujuan_sekretaris' ? 'selected' : '' }}>Persetujuan Sekretaris</option>
-                            <option value="selesai" {{ request('status') === 'selesai' ? 'selected' : '' }}>Selesai</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <select class="form-select" name="priority">
-                            <option value="">Semua Prioritas</option>
-                            <option value="rendah" {{ request('priority') === 'rendah' ? 'selected' : '' }}>Rendah</option>
-                            <option value="sedang" {{ request('priority') === 'sedang' ? 'selected' : '' }}>Sedang</option>
-                            <option value="tinggi" {{ request('priority') === 'tinggi' ? 'selected' : '' }}>Tinggi</option>
-                        </select>
-                    </div>
-                    <div class="tambah col-md-2 text-end">
-                        @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
-                        <a href="{{ route('projects.create') }}" class="btn btn-primary w-100 btn-custom">
-                            <i class="bi bi-plus-circle"></i> Tambah
-                        </a>
-                        @endif
-                    </div>
-                </form>
+@if(Auth::user()->roles === 'desain')
+    <!-- View for Desain User -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2 style="font-weight: 600; margin: 0;">Daftar Pengadaan</h2>
+        </div>
+        <div class="col-md-6">
+            <div class="search-container">
+                <div class="search-input">
+                    <input type="text" class="form-control" id="search-procurement" placeholder="Cari...">
+                    <i class="bi bi-search"></i>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Projects Table -->
-<div class="row">
-    <div class="col-12">
-        <div style="background: #EBEBEB; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08);">
-            <h3 style="margin-bottom: 15px; font-weight: 600; border-bottom: 2px solid #0000; padding-bottom: 15px;">
-                <i class=""></i> Daftar Pengadaan
-            </h3>
+    <!-- Procurement Table -->
+    <div class="row">
+        <div class="col-12">
+            <div style="background: #EBEBEB; padding: 20px; border-radius: 8px;">
+                <div class="table-responsive">
+                    <table style="width: 100%; border-collapse: collapse; background: white;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #000;">
+                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000; border-bottom: 2px solid #000;">Nama Project</th>
+                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000; border-bottom: 2px solid #000;">Deskripsi Pengadaan</th>
+                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000; border-bottom: 2px solid #000;">Department</th>
+                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000; border-bottom: 2px solid #000;">Tanggal Pengadaan</th>
+                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000; border-bottom: 2px solid #000;">Tanggal Target</th>
+                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000; border-bottom: 2px solid #000;">Tanggal Keluar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($procurements ?? [] as $procurement)
+                            <tr style="border-bottom: 1px solid #ddd;">
+                                <td style="padding: 12px 8px;">{{ $procurement->project->name_project ?? '-' }}</td>
+                                <td style="padding: 12px 8px;">{{ $procurement->request_name ?? '-' }}</td>
+                                <td style="padding: 12px 8px;">
+                                    @if($procurement->applicantDivision)
+                                        {{ $procurement->applicantDivision->nama_divisi }}
+                                    @elseif($procurement->project && $procurement->project->ownerDivision)
+                                        {{ $procurement->project->ownerDivision->nama_divisi }}
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                                <td style="padding: 12px 8px;">{{ $procurement->created_date ? $procurement->created_date->format('d/m/Y') : '-' }}</td>
+                                <td style="padding: 12px 8px;">{{ $procurement->deadline_date ? $procurement->deadline_date->format('d/m/Y') : '-' }}</td>
+                                <td style="padding: 12px 8px;">{{ $procurement->deadline_date ? $procurement->deadline_date->format('d/m/Y') : '-' }}</td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                                    <p class="text-muted mt-2">Tidak ada data pengadaan</p>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
 
-            <div class="table-responsive">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="border-bottom: 2px solid #000;">
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode Project</th>
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Project</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Vendor</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="projects-tbody">
-                        @forelse($projects as $project)
+                <!-- Pagination -->
+                @if(isset($procurements) && $procurements->hasPages())
+                <div class="mt-3">
+                    {{ $procurements->links() }}
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-procurement');
+            const tableRows = document.querySelectorAll('tbody tr');
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    
+                    tableRows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+@else
+    <!-- View for Other Roles -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-folder-fill"></i> Daftar Projects</h2>
+        </div>
+    </div>
+
+    <!-- Filter and Search -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card card-custom">
+                <div class="card-body">
+                    <form method="GET" action="{{ route('projects.index') }}" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="search" placeholder="Cari project..." value="{{ request('search') }}">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="status">
+                                <option value="">Semua Status</option>
+                                <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Draft</option>
+                                <option value="review_sc" {{ request('status') === 'review_sc' ? 'selected' : '' }}>Review SC</option>
+                                <option value="persetujuan_sekretaris" {{ request('status') === 'persetujuan_sekretaris' ? 'selected' : '' }}>Persetujuan Sekretaris</option>
+                                <option value="selesai" {{ request('status') === 'selesai' ? 'selected' : '' }}>Selesai</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="priority">
+                                <option value="">Semua Prioritas</option>
+                                <option value="rendah" {{ request('priority') === 'rendah' ? 'selected' : '' }}>Rendah</option>
+                                <option value="sedang" {{ request('priority') === 'sedang' ? 'selected' : '' }}>Sedang</option>
+                                <option value="tinggi" {{ request('priority') === 'tinggi' ? 'selected' : '' }}>Tinggi</option>
+                            </select>
+                        </div>
+                        <div class="tambah col-md-2 text-end">
+                            @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
+                            <a href="{{ route('projects.create') }}" class="btn btn-primary w-100 btn-custom">
+                                <i class="bi bi-plus-circle"></i> Tambah
+                            </a>
+                            @endif
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="row">
+        <div class="col-12">
+            <div style="background: #EBEBEB; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08);">
+                <h3 style="margin-bottom: 15px; font-weight: 600; border-bottom: 2px solid #0000; padding-bottom: 15px;">
+                    <i class=""></i> Daftar Pengadaan
+                </h3>
+
+                <div class="table-responsive">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #000;">
+                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode Project</th>
+                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Project</th>
+                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
+                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
+                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
+                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Vendor</th>
+                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
+                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projects-tbody">
+                            @forelse($projects ?? [] as $project)
                         <tr style="border-bottom: 1px solid #ddd;">
                             <td style="padding: 12px 8px;"><strong>{{ $project->code_project }}</strong></td>
                             <td style="padding: 12px 8px;">{{ Str::limit($project->name_project, 40) }}</td>
@@ -155,10 +269,11 @@
             </div>
         </div>
     </div>
-</div>
+@endif
 @endsection
 
 @push('scripts')
+@if(Auth::user()->roles !== 'desain')
 <script>
     // Debounce helper
     function debounce(fn, delay) {
@@ -309,4 +424,5 @@
         }
     });
 </script>
+@endif
 @endpush

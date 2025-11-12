@@ -20,11 +20,11 @@
             --pal-secondary: #0056b3;
             --pal-light: #e8f0fe;
             --priority-text-size: 20px;
-            --priority-rendah: #;
+            --priority-rendah: transparent; /* Background untuk prioritas rendah (transparent karena hanya text) */
             --priority-rendah-text: #6F6F6F;
-            --priority-sedang: #;
+            --priority-sedang: transparent; /* Background untuk prioritas sedang (transparent karena hanya text) */
             --priority-sedang-text: #ECAD02;
-            --priority-tinggi: #;
+            --priority-tinggi: transparent; /* Background untuk prioritas tinggi (transparent karena hanya text) */
             --priority-tinggi-text: #BD0000;
             --vendor-process: #ffc107;
             --vendor-process-text: #000000;
@@ -158,7 +158,7 @@
             font-size: 24px;
             color: #056ce8;
         }
-        .stat-progress { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        
         /* Modern minimal style for stat-success (green theme) */
         .stat-success {
             background: #f2f2f2 !important;
@@ -590,7 +590,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
+                            <a class="nav-link {{ request()->routeIs('procurements*') ? 'active' : '' }}" href="{{ route('procurements.create') }}">
                                 Pengadaan
                             </a>
                         </li>
