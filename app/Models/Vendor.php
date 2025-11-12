@@ -12,7 +12,12 @@ class Vendor extends Model
 
     protected $fillable = [
         'name_vendor',
+        'address',
+        'phone_number',
+        'email',
+        'legal_status',
         'is_importer',
+        'status',
     ];
 
     protected $casts = [

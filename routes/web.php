@@ -17,11 +17,11 @@ Route::get('/', function () {
 });
 
 // Auth routes
-Route::get('/login', function() {
+Route::get('/login', function () {
     return view('auth.login');
 })->name('login')->middleware('guest');
 
-Route::post('/login', function(\Illuminate\Http\Request $request) {
+Route::post('/login', function (\Illuminate\Http\Request $request) {
     $credentials = $request->validate([
         'email' => 'required|email',
         'password' => 'required',
@@ -37,7 +37,7 @@ Route::post('/login', function(\Illuminate\Http\Request $request) {
     ])->onlyInput('email');
 })->middleware('guest');
 
-Route::post('/logout', function(\Illuminate\Http\Request $request) {
+Route::post('/logout', function (\Illuminate\Http\Request $request) {
     Auth::logout();
     $request->session()->invalidate();
     $request->session()->regenerateToken();
@@ -82,6 +82,11 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/material-shipping', [SupplyChainController::class, 'materialShipping'])->name('material-shipping');
         Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])->name('material-arrival');
+
+        Route::get('/vendor/pilih', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
+        Route::get('/vendor/create', [SupplyChainController::class, 'createVendor'])->name('vendor.create');
+        Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])->name('vendor.store');
+
     });
 
     // Payment Routes (Treasury & Accounting)
