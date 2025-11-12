@@ -47,12 +47,7 @@ Route::get('/login', function() {
     return view('auth.login');
 })->name('login')->middleware('guest');
 
-/**
- * Route untuk memproses login
- * Validasi email dan password, kemudian redirect ke dashboard jika berhasil
- */
 Route::post('/login', function(\Illuminate\Http\Request $request) {
-    // Validasi input email dan password
     $credentials = $request->validate([
         'email' => 'required|email', // Email wajib diisi dan harus format email valid
         'password' => 'required', // Password wajib diisi
@@ -73,12 +68,7 @@ Route::post('/login', function(\Illuminate\Http\Request $request) {
     ])->onlyInput('email'); // Hanya kembalikan input email (untuk UX yang lebih baik)
 })->middleware('guest'); // Hanya bisa diakses oleh guest
 
-/**
- * Route untuk logout
- * Menghapus session dan redirect ke halaman login
- */
 Route::post('/logout', function(\Illuminate\Http\Request $request) {
-    // Logout user
     Auth::logout();
     // Invalidate session (hapus semua data session)
     $request->session()->invalidate();
@@ -274,6 +264,11 @@ Route::middleware(['auth'])->group(function () {
          * Route untuk update status material arrival
          */
         Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])->name('material-arrival');
+
+        Route::get('/vendor/pilih', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
+        Route::get('/vendor/create', [SupplyChainController::class, 'createVendor'])->name('vendor.create');
+        Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])->name('vendor.store');
+
     });
 
     // ========================================================================
