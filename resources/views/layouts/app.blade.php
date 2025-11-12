@@ -20,7 +20,7 @@
             --pal-secondary: #0056b3;
             --pal-light: #e8f0fe;
             --stat-value-size: 30px;
-            --priority-text-size: 20px;
+            --priority-text-size: 16px;
             --priority-rendah: #;
             --priority-rendah-text: #6F6F6F;
             --priority-sedang: #;
@@ -551,6 +551,18 @@
                 margin-left: auto; /* push nav group to the right side */
             }
         }
+            /* Paksa agar badge tidak bisa ditimpa oleh JS/Bootstrap */
+            .status-badge {
+                background-color: var(--badge-color) !important;
+                color: #fff !important;
+                padding: 6px 12px !important;
+                font-weight: 600 !important;
+                font-size: 12px !important;
+                border-radius: 8px !important;
+                min-width: 110px;
+                text-align: center;
+            }
+
     
     </style>
     @stack('styles')
@@ -580,6 +592,14 @@
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
                                 Projects
+                            </a>
+                        </li>
+                        @endif
+
+                        @if(Auth::user()->roles === 'sekretaris_direksi')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('sekdir.approvals*') ? 'active' : '' }}" href="{{ route('sekdir.approvals') }}">
+                                Persetujuan Pengadaan
                             </a>
                         </li>
                         @endif

@@ -10,6 +10,7 @@ use App\Http\Controllers\QualityAssuranceController;
 use App\Http\Controllers\InspectionController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\SekdirController;
 
 // Public routes
 Route::get('/', function () {
@@ -119,5 +120,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/ncr/{id}', [InspectionController::class, 'showNcr'])->name('ncr.show');
         Route::put('/ncr/{id}', [InspectionController::class, 'updateNcr'])->name('ncr.update');
         Route::post('/ncr/{id}/verify', [InspectionController::class, 'verifyNcr'])->name('ncr.verify');
+    });
+
+    // Sekretaris Direktur Routes
+    Route::prefix('sekdir')->name('sekdir.')->group(function () {
+        Route::get('/dashboard', [SekdirController::class, 'dashboard'])->name('dashboard');
+        Route::get('/approvals', [SekdirController::class, 'approvals'])->name('approvals');
+        Route::get('/approvals/{projectId}', [SekdirController::class, 'approvalDetail'])->name('approval-detail');
+        Route::post('/approvals/{projectId}', [SekdirController::class, 'approve'])->name('approve');
     });
 });

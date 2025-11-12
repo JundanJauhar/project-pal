@@ -129,6 +129,15 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+
+                        <div class="col-md-4 mb-3 d-flex align-items-end gap-2">
+                            <a href="{{ route('projects.index') }}" class="btn btn-secondary btn-custom flex-grow-1">
+                                <i class="bi bi-x-circle"></i> Batal
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-custom flex-grow-1">
+                                <i class="bi bi-save"></i> {{ isset($project) ? 'Update' : 'Simpan' }} Project
+                            </button>
+                        </div>
                     </div>
 
                     @if(isset($project))
@@ -152,15 +161,6 @@
                         @enderror
                     </div>
                     @endif
-
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{{ route('projects.index') }}" class="btn btn-secondary btn-custom">
-                            <i class="bi bi-x-circle"></i> Batal
-                        </a>
-                        <button type="submit" class="btn btn-primary btn-custom">
-                            <i class="bi bi-save"></i> {{ isset($project) ? 'Update' : 'Simpan' }} Project
-                        </button>
-                    </div>
                 </form>
             </div>
         </div>

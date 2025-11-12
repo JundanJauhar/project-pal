@@ -106,34 +106,33 @@
                                 @endif
                             </td>
                             <td style="padding: 12px 8px; text-align: center;">
-                                <span class="badge-priority badge-{{ strtolower($project->priority) }}"
-                                      style="padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">
+                                <span class="badge-priority badge-{{ strtolower($project->priority) }}">
                                     {{ strtoupper($project->priority) }}
                                 </span>
                             </td>
                             <td style="padding: 12px 8px; text-align: center;">
-                                @php
-                                    $statusClass = match($project->status_project) {
-                                        'completed', 'selesai' => 'success',
-                                        'rejected' => 'danger',
-                                        'review_sc', 'persetujuan_sekretaris' => 'warning',
-                                        'draft' => 'secondary',
-                                        default => 'info'
-                                    };
-                                    $statusText = match($project->status_project) {
-                                        'review_sc' => 'Review SC',
-                                        'persetujuan_sekretaris' => 'Review Sekretaris',
-                                        'pemilihan_vendor' => 'Pemilihan Vendor',
-                                        'selesai', 'completed' => 'Success',
-                                        'rejected' => 'Denied',
-                                        default => ucfirst($project->status_project)
-                                    };
-                                @endphp
-                                <span class="badge bg-{{ $statusClass }}"
-                                      style="padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">
-                                    {{ $statusText }}
-                                </span>
-                            </td>
+                            @php
+                                $statusMap = [
+                                    'draft'                 => ['Draft', '#555555'],
+                                    'completed'             => ['Completed', '#28AC00'],
+                                    'decline'               => ['Declined', '#BD0000'],
+                                    'review_sc'             => ['Review SC', '#ECAD02'],
+                                    'persetujuan_sekretaris'=> ['Persetujuan Sekdir', '#ECAD02'],
+                                    'pemilihan_vendor'      => ['Pemilihan Vendor', '#ECAD02'],
+                                    'in_progress'           => ['Sedang Diproses', '#ECAD02'],
+                                ];
+
+                                [$statusText, $badgeColor] = $statusMap[$project->status_project] ?? [ucfirst($project->status_project), '#ECAD02'];
+                            @endphp
+
+                            <span class="status-badge"
+                                style="background-color: {{ $badgeColor }} !important; color:white; padding:6px 12px; font-weight:600; border-radius:6px;">
+                                {{ $statusText }}
+                            </span>
+
+
+                        </td>
+
                         </tr>
                         @empty
                         <tr>
@@ -180,32 +179,63 @@
         let currentPage = 1;
         let lastPagination = null;
 
-        // Render rows helper
         function renderRows(items) {
-            if (!Array.isArray(items) || items.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="9" class="text-center py-4">
-                            <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
-                            <p class="text-muted mt-2">Tidak ada data project</p>
-                        </td>
-                    </tr>`;
-                paginationWrap.innerHTML = '';
-                return;
-            }
+    const statusMap = {
+        draft: ['Draft', '#555555'],
+        completed: ['Completed', '#28AC00'],
+        selesai: ['Selesai', '#28AC00'],
+        decline: ['Declined', '#BD0000'],
+        ditolak: ['Ditolak', '#BD0000'],
+        rejected: ['Rejected', '#BD0000'],
+        review_sc: ['Review SC', '#ECAD02'],
+        persetujuan_sekretaris: ['Persetujuan Sekdir', '#ECAD02'],
+        pemilihan_vendor: ['Pemilihan Vendor', '#ECAD02'],
+        pengecekan_legalitas: ['Pengecekan Legalitas', '#ECAD02'],
+        pemesanan: ['Pemesanan', '#ECAD02'],
+        pembayaran: ['Pembayaran', '#ECAD02'],
+        in_progress: ['Sedang Diproses', '#ECAD02'],
+        ongoing: ['Sedang Berjalan', '#ECAD02'],
+        proses: ['Dalam Proses', '#ECAD02'],
+    };
 
-            tbody.innerHTML = items.map(p => `
-                <tr style="border-bottom: 1px solid #ddd;">
-                    <td style="padding: 12px 8px;"><strong>${p.code_project}</strong></td>
-                    <td style="padding: 12px 8px;">${p.name_project.length > 40 ? p.name_project.substring(0,40) + '...' : p.name_project}</td>
-                    <td style="padding: 12px 8px; text-align: center;">${p.owner_division}</td>
-                    <td style="padding: 12px 8px; text-align: center;">${p.start_date ?? '-'}</td>
-                    <td style="padding: 12px 8px; text-align: center;">${p.end_date ?? '-'}</td>
-                    <td style="padding: 12px 8px;">${p.vendor ?? '-'}</td>
-                    <td style="padding: 12px 8px; text-align: center;"><span class="badge-priority badge-${(p.priority || '').toLowerCase()}" style="padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">${(p.priority || '').toUpperCase()}</span></td>
-                    <td style="padding: 12px 8px; text-align: center;"><span class="badge bg-info" style="padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">${(p.status_project || '').replace(/_/g,' ')}</span></td>
-                </tr>
-            `).join('');
+    if (!Array.isArray(items) || items.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-4">
+                    <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                    <p class="text-muted mt-2">Tidak ada data project</p>
+                </td>
+            </tr>`;
+        paginationWrap.innerHTML = "";
+        return;
+    }
+
+    tbody.innerHTML = items.map(p => {
+        const [statusText, badgeColor] = statusMap[p.status_project] ?? [
+            p.status_project?.replace(/_/g, " ").toUpperCase(),
+            "#ECAD02"
+        ];
+
+        return `
+        <tr style="border-bottom: 1px solid #ddd;">
+            <td style="padding: 12px 8px;"><strong>${p.code_project}</strong></td>
+            <td style="padding: 12px 8px;">${p.name_project.substring(0, 40)}</td>
+            <td style="padding: 12px 8px; text-align: center;">${p.owner_division}</td>
+            <td style="padding: 12px 8px; text-align: center;">${p.start_date ?? "-"}</td>
+            <td style="padding: 12px 8px; text-align: center;">${p.end_date ?? "-"}</td>
+            <td style="padding: 12px 8px;">${p.vendor ?? "-"}</td>
+            <td style="padding: 12px 8px; text-align: center;">
+                <span class="badge-priority badge-${(p.priority || "").toLowerCase()}">
+                    ${(p.priority || "").toUpperCase()}
+                </span>
+            </td>
+            <td style="padding: 12px 8px; text-align: center;">
+                <span class="status-badge" style="background-color: ${badgeColor} !important; color: white !important; padding: 6px 12px !important; font-weight: 600 !important; border-radius: 6px !important;">
+                    ${statusText}
+                </span>
+            </td>
+        </tr>`;
+    }).join("");
 
             // Render pagination
             renderPagination();
