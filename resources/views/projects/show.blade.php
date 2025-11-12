@@ -73,10 +73,48 @@
         color: #dc3545;
         margin-bottom: 30px;
     }
+    .logo {
+    height: 100px;
+    
+    ;
+    }
+    /* Posisikan logo ke tengah */
+.header-logo-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: -80px;
+    margin-bottom: 15px;
+}
+
+.logo {
+    height: 220px;
+    object-fit: contain;
+}
+
+/* Tanda X ke kiri mengikuti margin konten */
+.close-btn {
+    position: absolute;
+    right: 90px; /* Geser ke kiri sesuai kebutuhan */
+    top: 110px;  /* Sejajarkan dengan konten berikutnya */
+    font-size: 28px;
+    color: #DA3B3B;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    opacity: 0.7;
+}
+
+
 </style>
-
+<div class="header-logo-wrapper">
+    <img src="{{ asset('images/logo-pal.png') }}" alt="Logo PAL" class="logo">
+</div>
+<a href="javascript:history.back()" class="close-btn">
+    <i class="bi bi-x-circle"></i>
+</a>
 <div class="procurement-header">
-
     {{-- Header Project --}}
     <div class="d-flex justify-content-between align-items-start">
         <div>
@@ -87,7 +125,6 @@
         </div>
 
         <div class="text-end">
-            <i class="bi bi-x-circle"></i>
             <p><strong>Prioritas:</strong> {{ strtoupper($project->priority) }}</p>
             <p><strong>Tanggal Dibuat:</strong> {{ $project->created_at->format('d/m/Y') }}</p>
             <p><strong>Tanggal Target:</strong> {{ $project->end_date->format('d/m/Y') }}</p>

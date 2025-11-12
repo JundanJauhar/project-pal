@@ -9,8 +9,10 @@ use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon; // ✅ sudah dipindah ke atas
 
-class ProjectController extends Controller{
+class ProjectController extends Controller
+{
     /**
      * Display a listing of projects
      */
@@ -43,15 +45,14 @@ class ProjectController extends Controller{
             'description' => 'nullable|string',
             'owner_division_id' => 'required|exists:divisions,divisi_id',
             'priority' => 'required|in:rendah,sedang,tinggi',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
+            'end_date' => 'required|date|after:today',
         ]);
 
+        $validated['start_date'] = Carbon::now()->format('Y-m-d');
         $validated['status_project'] = 'draft';
 
         $project = Project::create($validated);
 
-        // Send notification to Supply Chain
         $this->notifySupplyChain($project, 'Proyek baru telah dibuat dan menunggu review');
 
         return redirect()->route('projects.show', $project->project_id)
@@ -61,45 +62,36 @@ class ProjectController extends Controller{
     /**
      * Display the specified project
      */
-    public function show($id){
-    $project = Project::with([
-        'ownerDivision',
-        'contracts',
-        'hps',
-        'evaluations',
-        'requestProcurements.items'
-    ])->findOrFail($id);
+    public function show($id)
+    {
+        $project = Project::with([
+            'ownerDivision',
+            'contracts',
+            'hps',
+            'evaluations',
+            'requestProcurements.items'
+        ])->findOrFail($id);
 
-    // Daftar stage untuk timeline tampilan di Blade
-    $stages = [
-        'draft',
-        'review_sc',
-        'persetujuan_sekretaris',
-        'pemilihan_vendor',
-        'pengecekan_legalitas',
-        'pemesanan',
-        'pembayaran',
-        'selesai'
-    ];
+        $stages = [
+            'draft',
+            'review_sc',
+            'persetujuan_sekretaris',
+            'pemilihan_vendor',
+            'pengecekan_legalitas',
+            'pemesanan',
+            'pembayaran',
+            'selesai'
+        ];
 
-    // Cari posisi stage berdasarkan status_project dari database
-    $currentStageIndex = array_search($project->status_project, $stages);
+        $currentStageIndex = array_search($project->status_project, $stages) ?? 0;
 
-    // Kalau tidak ditemukan, set 0 agar tidak error
-    if ($currentStageIndex === false) {
-        $currentStageIndex = 0;
+        $progress = ProcurementProgress::where('permintaan_pengadaan_id', $id)
+            ->with('checkpoint')
+            ->orderBy('titik_id')
+            ->get();
+
+        return view('projects.show', compact('project', 'progress', 'stages', 'currentStageIndex'));
     }
-
-    // Get procurement progress (kalau masih dipakai untuk table lain)
-    $progress = ProcurementProgress::where('permintaan_pengadaan_id', $id)
-        ->with('checkpoint')
-        ->orderBy('titik_id')
-        ->get();
-
-    return view('projects.show', compact('project', 'progress', 'stages', 'currentStageIndex'));
-}
-
-
 
     /**
      * Show the form for editing the specified project
@@ -109,7 +101,6 @@ class ProjectController extends Controller{
         $project = Project::findOrFail($id);
         $divisions = Division::all();
 
-        // Check authorization
         $this->authorize('update', $project);
 
         return view('projects.edit', compact('project', 'divisions'));
@@ -122,16 +113,15 @@ class ProjectController extends Controller{
     {
         $project = Project::findOrFail($id);
 
-        // Check authorization
         $this->authorize('update', $project);
 
         $validated = $request->validate([
+            'code_project' => "required|string|unique:projects,code_project,{$id},project_id",
             'name_project' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'owner_division_id' => 'required|exists:divisions,divisi_id',
             'priority' => 'required|in:rendah,sedang,tinggi',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
-            'status_project' => 'nullable|in:draft,review_sc,persetujuan_sekretaris,pemilihan_vendor,pengecekan_legalitas,pemesanan,pembayaran,selesai,rejected',
+            'end_date' => 'required|date|after:today',
         ]);
 
         $project->update($validated);
@@ -147,6 +137,8 @@ class ProjectController extends Controller{
     {
         $project = Project::findOrFail($id);
 
+        $this->authorize('update', $project); // ✅ Tambahkan authorization
+
         $validated = $request->validate([
             'status_project' => 'required|in:draft,review_sc,persetujuan_sekretaris,pemilihan_vendor,pengecekan_legalitas,pemesanan,pembayaran,selesai,rejected',
             'notes' => 'nullable|string',
@@ -155,7 +147,6 @@ class ProjectController extends Controller{
         $oldStatus = $project->status_project;
         $project->update(['status_project' => $validated['status_project']]);
 
-        // Create notification based on status change
         $this->handleStatusChangeNotification($project, $oldStatus, $validated['status_project']);
 
         return response()->json([
@@ -172,7 +163,6 @@ class ProjectController extends Controller{
     {
         $project = Project::findOrFail($id);
 
-        // Check authorization
         $this->authorize('delete', $project);
 
         $project->delete();
@@ -194,10 +184,9 @@ class ProjectController extends Controller{
         $projectsQuery = Project::with(['ownerDivision', 'contracts.vendor']);
 
         if ($q) {
-            $projectsQuery->where(function ($sub) use ($q) {
-                $sub->where('name_project', 'LIKE', "%{$q}%")
-                    ->orWhere('code_project', 'LIKE', "%{$q}%");
-            });
+            $projectsQuery->where(fn($sub) => $sub
+                ->where('name_project', 'LIKE', "%{$q}%")
+                ->orWhere('code_project', 'LIKE', "%{$q}%"));
         }
 
         if ($status) {
@@ -210,9 +199,9 @@ class ProjectController extends Controller{
 
         $projects = $projectsQuery->orderBy('created_at', 'desc')->paginate(10, ['*'], 'page', $page);
 
-        // Map to simpler structure for frontend
         $items = $projects->map(function ($p) {
-            $vendor = $p->contracts->first()->vendor->name_vendor ?? null;
+            $vendor = optional(optional($p->contracts->first())->vendor)->name_vendor ?? '-'; // ✅ null safe
+
             return [
                 'project_id' => $p->project_id,
                 'code_project' => $p->code_project,
@@ -220,7 +209,7 @@ class ProjectController extends Controller{
                 'owner_division' => $p->ownerDivision->nama_divisi ?? '-',
                 'start_date' => optional($p->start_date)->format('d/m/Y'),
                 'end_date' => optional($p->end_date)->format('d/m/Y'),
-                'vendor' => $vendor ?? '-',
+                'vendor' => $vendor,
                 'priority' => $p->priority,
                 'status_project' => $p->status_project,
             ];
@@ -288,3 +277,4 @@ class ProjectController extends Controller{
         }
     }
 }
+

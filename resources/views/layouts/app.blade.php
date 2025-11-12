@@ -19,6 +19,7 @@
             --pal-primary: #003d82;
             --pal-secondary: #0056b3;
             --pal-light: #e8f0fe;
+            --stat-value-size: 30px;
             --priority-text-size: 20px;
             --priority-rendah: #;
             --priority-rendah-text: #6F6F6F;
@@ -129,7 +130,7 @@
         }
         .stat-total .stat-value {
             color: #000000;
-            font-size: 40px;
+            font-size: var(--stat-value-size, 40px);
             font-weight: 800;
             line-height: 1;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -197,7 +198,7 @@
         }
         .stat-success .stat-value {
             color: #000000;
-            font-size: 40px;
+            font-size: var(--stat-value-size, 40px);
             font-weight: 800;
             line-height: 1;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -264,7 +265,7 @@
         }
         .stat-rejected .stat-value {
             color: #000000;
-            font-size: 40px;
+            font-size: var(--stat-value-size, 40px);
             font-weight: 800;
             line-height: 1;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -332,7 +333,7 @@
         }
         .stat-progress .stat-value {
             color: #000000;
-            font-size: 40px;
+            font-size: var(--stat-value-size, 40px);
             font-weight: 800;
             line-height: 1;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
