@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SupplyChainController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\QualityAssuranceController;
 use App\Http\Controllers\InspectionController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\DesainController;
 
 // Public routes
 Route::get('/', function () {
@@ -119,5 +121,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/ncr/{id}', [InspectionController::class, 'showNcr'])->name('ncr.show');
         Route::put('/ncr/{id}', [InspectionController::class, 'updateNcr'])->name('ncr.update');
         Route::post('/ncr/{id}/verify', [InspectionController::class, 'verifyNcr'])->name('ncr.verify');
+    });
+
+    // Desain Routes
+    Route::prefix('desain')->name('desain.')->group(function () {
+        Route::get('/dashboard', [DesainController::class, 'dashboard'])->name('dashboard');
+        Route::get('/input-equipment', [DesainController::class, 'inputEquipment'])->name('input-equipment');
+        Route::get('/status-evatek/{projectId}', [DesainController::class, 'statusEvatek'])->name('status-evatek');
     });
 });
