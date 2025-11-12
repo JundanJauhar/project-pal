@@ -588,7 +588,7 @@
                             </a>
                         </li>
 
-                        @if(in_array(Auth::user()->roles, ['user', 'supply_chain', 'sekretaris_direksi']))
+                        @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
                                 Projects
