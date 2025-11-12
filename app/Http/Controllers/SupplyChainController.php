@@ -37,6 +37,43 @@ class SupplyChainController extends Controller
         return view('supply_chain.dashboard', compact('stats', 'projects'));
     }
 
+    public function pilihVendor()
+    {
+        $vendors = Vendor::orderBy('name_vendor')->get();
+        return view('supply_chain.vendor.pilih', compact('vendors'));
+    }
+
+    public function createVendor()
+    {
+        return view('supply_chain.vendor.create');
+    }
+
+    public function storeVendor(Request $request)
+    {
+        $validated = $request->validate([
+            'name_vendor' => 'required|string|unique:vendors,name_vendor',
+            'address' => 'nullable|string',
+            'phone_number' => 'nullable|string',
+            'email' => 'nullable|email',
+            'legal_status' => 'nullable|string',
+            'is_importer' => 'nullable|boolean',
+        ]);
+
+        Vendor::create([
+            'name_vendor' => $validated['name_vendor'],
+            'address' => $validated['address'] ?? null,
+            'phone_number' => $validated['phone_number'] ?? null,
+            'email' => $validated['email'] ?? null,
+            'legal_status' => $validated['legal_status'] ?? null,
+            'is_importer' => $validated['is_importer'] ?? false,
+            'status' => 'pending',
+        ]);
+
+        return redirect()->route('supply-chain.vendor.pilih')->with('success', 'Vendor berhasil ditambahkan');
+    }
+
+
+
     /**
      * Review project for SC
      */

@@ -153,7 +153,7 @@
                                         <i class="bi bi-eye"></i> Review
                                     </a>
                                     @elseif($project->status_project === 'pemilihan_vendor')
-                                    <a href="{{ route('supply-chain.vendors') }}"
+                                    <a href="{{ route('supply-chain.vendor.pilih') }}"
                                        class="btn btn-sm btn-success btn-custom">
                                         <i class="bi bi-people"></i> Pilih Vendor
                                     </a>
