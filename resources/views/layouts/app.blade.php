@@ -588,7 +588,11 @@
                             </a>
                         </li>
 
+<<<<<<< HEAD
                         @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
+=======
+                        @if(in_array(Auth::user()->roles, ['user', 'supply_chain', 'sekretaris_direksi', 'desain']))
+>>>>>>> 33e26e69ad923f18bb24c1dc807c4376efed6ac0
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
                                 Projects
@@ -618,6 +622,14 @@
                             <a class="nav-link {{ request()->routeIs('payments*') ? 'active' : '' }}" href="{{ route('payments.index') }}">
                                 <i class="bi bi-credit-card"></i>
                                 Payments
+                            </a>
+                        </li>
+                        @endif
+
+                        @if(Auth::user()->roles === 'desain')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('desain*') ? 'active' : '' }}" href="{{ route('desain.dashboard') }}">
+                                Pengadaan
                             </a>
                         </li>
                         @endif

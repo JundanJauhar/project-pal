@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Project extends Model
 {
@@ -41,6 +43,30 @@ class Project extends Model
     public function contracts(): HasMany
     {
         return $this->hasMany(Contract::class, 'project_id', 'project_id');
+    }
+
+    /**
+     * Get the latest Evatek record for this project
+     */
+    public function evatek(): HasOne
+    {
+        return $this->hasOne(Evatek::class, 'project_id', 'project_id')
+            ->latestOfMany('evatek_id');
+    }
+
+    /**
+     * Get the primary vendor associated through contracts
+     */
+    public function vendor(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Vendor::class,
+            Contract::class,
+            'project_id',    // Foreign key on contracts table...
+            'id_vendor',     // Foreign key on vendors table...
+            'project_id',    // Local key on projects table...
+            'vendor_id'      // Local key on contracts table...
+        );
     }
 
     /**
