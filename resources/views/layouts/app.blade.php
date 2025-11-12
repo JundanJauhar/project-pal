@@ -583,6 +583,19 @@
                         </li>
                         @endif
 
+                        @if(Auth::user()->roles === 'desain')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
+                                Project
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
+                                Pengadaan
+                            </a>
+                        </li>
+                        @endif
+
                         @if(Auth::user()->roles === 'supply_chain')
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('supply-chain*') ? 'active' : '' }}" href="{{ route('supply-chain.dashboard') }}">
