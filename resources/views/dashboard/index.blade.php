@@ -20,10 +20,6 @@
             border-radius: 5px;
             font-size: 12px;
         }
-        .timeline-step.active {
-            background-color: #667eea;
-            color: white;
-        }
         .priority-badge {
             padding: 5px 10px;
             border-radius: 5px;
@@ -109,23 +105,25 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Nama Project</th>
-                                    <th>Department</th>
-                                    <th>Tanggal Mulai</th>
-                                    <th>Tanggal Selesai</th>
-                                    <th>Vendor</th>
-                                    <th>Prioritas</th>
-                                    <th>Status</th>
-                                    <th>Aksi</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode Project</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Project</th>
+                                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
+                                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
+                                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
+                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Vendor</th>
+                                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
+                                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
+                                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($projects as $project)
                                 <tr>
-                                    <td>{{ $project->code_project }}</td>
-                                    <td>{{ $project->ownerDivision->nama_divisi ?? '-' }}</td>
-                                    <td>{{ $project->start_date->format('d/m/Y') }}</td>
-                                    <td>{{ $project->end_date->format('d/m/Y') }}</td>
+                                    <td style="padding: 12px 8px;"><strong>{{ $project->code_project }}</strong></td>
+                                    <td style="padding: 12px 8px;">{{ Str::limit($project->name_project, 40) }}</td>
+                                    <td style="padding: 12px 8px; text-align: center;">{{ $project->ownerDivision->nama_divisi ?? '-' }}</td>
+                                    <td style="padding: 12px 8px; text-align: center;">{{ $project->start_date->format('d/m/Y') }}</td>
+                                    <td style="padding: 12px 8px; text-align: center;">{{ $project->end_date->format('d/m/Y') }}</td>
                                     <td>
                                         @if($project->contracts->first())
                                             {{ $project->contracts->first()->vendor->name_vendor ?? '-' }}
@@ -133,12 +131,13 @@
                                             -
                                         @endif
                                     </td>
-                                    <td>
-                                        <span class="priority-badge priority-{{ strtolower($project->priority) }}">
+                                    <td style="padding: 12px 8px; text-align: center;">
+                                        <span class="priority-badge priority-{{ strtolower($project->priority) }}"
+                                        style="padding: 5px 12px; font-size: 11px; font-weight: 600;">
                                             {{ strtoupper($project->priority) }}
                                         </span>
                                     </td>
-                                    <td>
+                                    <td style="padding: 12px 8px; text-align: center;">
                                         @php
                                             $statusClass = match($project->status_project) {
                                                 'completed', 'selesai' => 'success',
@@ -158,7 +157,7 @@
                                         @endphp
                                         <span class="badge bg-{{ $statusClass }}">{{ $statusText }}</span>
                                     </td>
-                                    <td>
+                                    <td style="padding: 12px 8px; text-align: center;">
                                         <a href="{{ route('projects.show', $project->project_id) }}" class="btn btn-sm btn-primary">
                                             <i class="bi bi-eye"></i> Detail
                                         </a>
