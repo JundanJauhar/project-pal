@@ -135,149 +135,180 @@
             <div class="col-lg-6">
                 <h2 class="panel-title">Informasi Umum</h2>
 
-                <div class="field-group">
-                    <label for="name_project">Judul Pengadaan *</label>
-                    <input type="text"
-                           id="name_project"
-                           name="name_project"
-                           placeholder="Masukkan judul pengadaan"
-                           value="{{ old('name_project') }}"
-                           required>
-                    @error('name_project')
-                    <small class="text-danger">{{ $message }}</small>
-                    @enderror
-                </div>
-
-                <div class="field-group">
-                    <label for="priority">Prioritas *</label>
-                    <select id="priority" name="priority" required>
-                        <option value="" disabled {{ old('priority') ? '' : 'selected' }}>Pilih prioritas</option>
-                        <option value="rendah" {{ old('priority') === 'rendah' ? 'selected' : '' }}>Rendah</option>
-                        <option value="sedang" {{ old('priority') === 'sedang' ? 'selected' : '' }}>Sedang</option>
-                        <option value="tinggi" {{ old('priority') === 'tinggi' ? 'selected' : '' }}>Tinggi</option>
-                    </select>
-                    @error('priority')
-                    <small class="text-danger">{{ $message }}</small>
-                    @enderror
-                </div>
-
-                <div class="field-group">
-                    <label for="description">Deskripsi *</label>
-                    <textarea id="description"
-                              name="description"
-                              placeholder="Tuliskan deskripsi pengadaan secara singkat"
-                              required>{{ old('description') }}</textarea>
-                    @error('description')
-                    <small class="text-danger">{{ $message }}</small>
-                    @enderror
-                </div>
-            </div>
-
-            <div class="col-lg-6">
-                <div class="items-wrapper">
-                    <div class="items-toolbar">
-                        <h2 class="panel-title" style="margin:0;">Daftar Barang</h2>
-                        <button type="button" class="btn-add-item" id="add-item-btn">Tambah Item</button>
-                    </div>
-
-                    <div class="items-grid">
-                        <div class="field-group">
-                            <label for="item_name">Nama Barang *</label>
-                            <input type="text" id="item_name" placeholder="Masukkan nama barang">
-                        </div>
-                        <div class="field-group">
-                            <label for="item_unit">Satuan</label>
-                            <input type="text" id="item_unit" placeholder="Misal: unit, pcs, set">
-                        </div>
-                        <div class="field-group wide">
-                            <label for="item_spec">Spesifikasi *</label>
-                            <textarea id="item_spec" placeholder="Tuliskan spesifikasi barang"></textarea>
-                        </div>
-                        <div class="field-group">
-                            <label for="item_price">Harga</label>
-                            <input type="number" id="item_price" placeholder="0">
-                        </div>
-                        <div class="field-group">
-                            <label for="item_estimation">Harga Estimasi</label>
-                            <input type="number" id="item_estimation" placeholder="0">
+                <!-- Versi dari branch main (theirs) -->
+                        <div class="col-md-6 mb-3">
+                            <label for="owner_division_id" class="form-label">Department <span class="text-danger">*</span></label>
+                            <select class="form-select @error('owner_division_id') is-invalid @enderror"
+                                    id="owner_division_id"
+                                    name="owner_division_id"
+                                    required>
+                                <option value="">Pilih Department</option>
+                                @foreach($divisions as $division)
+                                <option value="{{ $division->divisi_id }}"
+                                        {{ old('owner_division_id', $project->owner_division_id ?? '') == $division->divisi_id ? 'selected' : '' }}>
+                                    {{ $division->nama_divisi }}
+                                </option>
+                                @endforeach
+                            </select>
+                            @error('owner_division_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
 
-                    <div class="items-list" id="items-list"></div>
-                </div>
-            </div>
-        </div>
+                    <div class="mb-3">
+                        <label for="name_project" class="form-label">Nama Project <span class="text-danger">*</span></label>
+                        <input type="text"
+                               class="form-control @error('name_project') is-invalid @enderror"
+                               id="name_project"
+                               name="name_project"
+                               value="{{ old('name_project', $project->name_project ?? '') }}"
+                               placeholder="Desain Struktur dan Perlengkapan Lambung"
+                               required>
+                        @error('name_project')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-        <div class="mt-5 d-flex justify-content-start">
-            <button type="submit" class="btn-submit-procurement">Kirim Pengadaan</button>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Deskripsi</label>
+                        <textarea class="form-control @error('description') is-invalid @enderror"
+                                  id="description"
+                                  name="description"
+                                  rows="4"
+                                  placeholder="Pengadaan Deck Light bertujuan untuk meningkatkan visibilitas dan keamanan di area dek kapal...">{{ old('description', $project->description ?? '') }}</textarea>
+                        @error('description')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="end_date" class="form-label">Tanggal Selesai <span class="text-danger">*</span></label>
+                            <input type="date"
+                                   class="form-control @error('end_date') is-invalid @enderror"
+                                   id="end_date"
+                                   name="end_date"
+                                   value="{{ old('end_date', isset($project) ? $project->end_date->format('Y-m-d') : '') }}"
+                                   required>
+                            @error('end_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="priority" class="form-label">Prioritas <span class="text-danger">*</span></label>
+                            <select class="form-select @error('priority') is-invalid @enderror"
+                                    id="priority"
+                                    name="priority"
+                                    required>
+                                <option value="">Pilih Prioritas</option>
+                                <option value="rendah" {{ old('priority', $project->priority ?? '') === 'rendah' ? 'selected' : '' }}>
+                                    RENDAH
+                                </option>
+                                <option value="sedang" {{ old('priority', $project->priority ?? '') === 'sedang' ? 'selected' : '' }}>
+                                    SEDANG
+                                </option>
+                                <option value="tinggi" {{ old('priority', $project->priority ?? '') === 'tinggi' ? 'selected' : '' }}>
+                                    TINGGI
+                                </option>
+                            </select>
+                            @error('priority')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4 mb-3 d-flex align-items-end gap-2">
+                            <a href="{{ route('projects.index') }}" class="btn btn-secondary btn-custom flex-grow-1">
+                                <i class="bi bi-x-circle"></i> Batal
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-custom flex-grow-1">
+                                <i class="bi bi-save"></i> {{ isset($project) ? 'Update' : 'Simpan' }} Project
+                            </button>
+                        </div>
+                    </div>
+
+                    @if(isset($project))
+                    <div class="mb-3">
+                        <label for="status_project" class="form-label">Status Project</label>
+                        <select class="form-select @error('status_project') is-invalid @enderror"
+                                id="status_project"
+                                name="status_project">
+                            <option value="draft" {{ old('status_project', $project->status_project) === 'draft' ? 'selected' : '' }}>Draft</option>
+                            <option value="review_sc" {{ old('status_project', $project->status_project) === 'review_sc' ? 'selected' : '' }}>Review SC</option>
+                            <option value="persetujuan_sekretaris" {{ old('status_project', $project->status_project) === 'persetujuan_sekretaris' ? 'selected' : '' }}>Persetujuan Sekretaris</option>
+                            <option value="pemilihan_vendor" {{ old('status_project', $project->status_project) === 'pemilihan_vendor' ? 'selected' : '' }}>Pemilihan Vendor</option>
+                            <option value="pengecekan_legalitas" {{ old('status_project', $project->status_project) === 'pengecekan_legalitas' ? 'selected' : '' }}>Pengecekan Legalitas</option>
+                            <option value="pemesanan" {{ old('status_project', $project->status_project) === 'pemesanan' ? 'selected' : '' }}>Pemesanan</option>
+                            <option value="pembayaran" {{ old('status_project', $project->status_project) === 'pembayaran' ? 'selected' : '' }}>Pembayaran</option>
+                            <option value="selesai" {{ old('status_project', $project->status_project) === 'selesai' ? 'selected' : '' }}>Selesai</option>
+                            <option value="rejected" {{ old('status_project', $project->status_project) === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                        </select>
+                        @error('status_project')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    @endif
+                </form>
+            </div>
         </div>
     </div>
-</form>
+
+    <div class="col-md-4">
+        <div class="card card-custom">
+            <div class="card-header-custom">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi</h5>
+            </div>
+            <div class="card-body">
+                <h6>Petunjuk Pengisian:</h6>
+                <ul class="small">
+                    <li><strong>Kode Project:</strong> Format KCJ-YYYYMMM-XXX</li>
+                    <li><strong>Nama Project:</strong> Deskripsi singkat project</li>
+                    <li><strong>Department:</strong> Divisi yang mengajukan</li>
+                    <li><strong>Prioritas:</strong>
+                        <ul>
+                            <li>Rendah: Tidak urgent</li>
+                            <li>Sedang: Perlu perhatian</li>
+                            <li>Tinggi: Urgent & critical</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                @if(!isset($project))
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-lightbulb"></i>
+                    <small>Setelah project dibuat, status akan otomatis "Draft" dan akan dikirim notifikasi ke tim Supply Chain untuk review.</small>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    // Auto-generate project code suggestion
+    document.addEventListener('DOMContentLoaded', function() {
+        @if(!isset($project))
         const codeInput = document.getElementById('code_project');
-        if (!codeInput.value) {
+        if (codeInput && !codeInput.value) {
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const random = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-            codeInput.value = `KCJ-${year}${month}-DES${random}`;
+            codeInput.value = `KCJ-${year}${month}987-${random}`;
         }
+        @endif
 
-        const endDateInput = document.getElementById('end_date');
-        const minEndDate = new Date();
-        minEndDate.setDate(minEndDate.getDate() + 14);
-        endDateInput.value = minEndDate.toISOString().slice(0, 10);
-
-        const itemsList = document.getElementById('items-list');
-        const addItemBtn = document.getElementById('add-item-btn');
-        const form = document.getElementById('procurement-form');
-        let itemIndex = 0;
-
-        addItemBtn.addEventListener('click', function () {
-            const name = document.getElementById('item_name').value.trim();
-            const unit = document.getElementById('item_unit').value.trim();
-            const spec = document.getElementById('item_spec').value.trim();
-            const price = document.getElementById('item_price').value.trim();
-            const estimation = document.getElementById('item_estimation').value.trim();
-
-            if (!name || !spec) {
-                alert('Nama barang dan spesifikasi wajib diisi.');
-                return;
-            }
-
-            const card = document.createElement('div');
-            card.className = 'items-list-card';
-            card.innerHTML = `
-                <div>
-                    <h6>${name}</h6>
-                    <p><strong>Spesifikasi:</strong> ${spec}</p>
-                    <p><strong>Satuan:</strong> ${unit || '-'} | <strong>Harga:</strong> ${price || '-'} | <strong>Estimasi:</strong> ${estimation || '-'}</p>
-                </div>
-                <button type="button" class="items-remove">Hapus</button>
-                <input type="hidden" name="items[${itemIndex}][name]" value="${name}">
-                <input type="hidden" name="items[${itemIndex}][unit]" value="${unit}">
-                <input type="hidden" name="items[${itemIndex}][spec]" value="${spec}">
-                <input type="hidden" name="items[${itemIndex}][price]" value="${price}">
-                <input type="hidden" name="items[${itemIndex}][estimation]" value="${estimation}">
-            `;
-
-            card.querySelector('.items-remove').addEventListener('click', () => {
-                card.remove();
+        // Validate end date > start date (if start_date exists)
+        const startDate = document.getElementById('start_date');
+        const endDate = document.getElementById('end_date');
+        if (startDate && endDate) {
+            startDate.addEventListener('change', function() {
+                endDate.min = this.value;
             });
-
-            itemsList.appendChild(card);
-            itemIndex++;
-
-            document.getElementById('item_name').value = '';
-            document.getElementById('item_unit').value = '';
-            document.getElementById('item_spec').value = '';
-            document.getElementById('item_price').value = '';
-            document.getElementById('item_estimation').value = '';
-        });
+        }
     });
-</script>
+    </script>
 @endpush
