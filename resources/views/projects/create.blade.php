@@ -1,53 +1,141 @@
 @extends('layouts.app')
 
-@section('title', isset($project) ? 'Edit Project' : 'Tambah Project Baru')
+@section('title', 'Pengadaan Baru')
+
+@php
+    $defaultDivision = old('owner_division_id', Auth::user()->division_id ?? ($divisions->first()->divisi_id ?? ''));
+    $defaultEndDate = old('end_date', \Carbon\Carbon::now()->addWeeks(2)->format('Y-m-d'));
+@endphp
 
 @section('content')
-<div class="row mb-4">
-    <div class="col-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('projects.index') }}">Projects</a></li>
-                <li class="breadcrumb-item active">{{ isset($project) ? 'Edit' : 'Tambah Baru' }}</li>
-            </ol>
-        </nav>
-        <h2>
-            <i class="bi bi-{{ isset($project) ? 'pencil' : 'plus-circle' }}"></i>
-            {{ isset($project) ? 'Edit Project' : 'Tambah Project Baru' }}
-        </h2>
-    </div>
-</div>
+<style>
+    .procurement-wrapper {
+        background: #f7f7f7;
+        padding: 32px 40px;
+        border-radius: 18px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+    .procurement-section-title {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 24px;
+    }
+    .panel-title {
+        font-size: 26px;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+    .field-group {
+        margin-bottom: 20px;
+    }
+    .field-group label {
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+    .field-group input,
+    .field-group textarea,
+    .field-group select {
+        background: #efefef;
+        border: none;
+        border-radius: 14px;
+        padding: 14px 18px;
+        width: 100%;
+        font-size: 15px;
+        box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .field-group textarea {
+        min-height: 160px;
+        resize: vertical;
+    }
+    .items-wrapper {
+        background: transparent;
+        border-radius: 18px;
+        padding: 0;
+    }
+    .items-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+    }
+    .btn-add-item,
+    .btn-submit-procurement {
+        background: #0d3f96;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-weight: 600;
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .btn-add-item:hover,
+    .btn-submit-procurement:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(13, 63, 150, 0.35);
+    }
+    .items-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+    .items-grid .wide {
+        grid-column: span 2;
+    }
+    .items-list {
+        margin-top: 24px;
+    }
+    .items-list-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 16px 18px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    .items-list-card h6 {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 0 0 6px 0;
+    }
+    .items-list-card p {
+        margin: 0;
+        font-size: 14px;
+        color: #555;
+    }
+    .items-remove {
+        background: transparent;
+        border: none;
+        color: #c0392b;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    @media (max-width: 992px) {
+        .items-grid {
+            grid-template-columns: 1fr;
+        }
+        .items-grid .wide {
+            grid-column: span 1;
+        }
+    }
+</style>
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card card-custom">
-            <div class="card-header-custom">
-                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi Project</h5>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{{ isset($project) ? route('projects.update', $project->project_id) : route('projects.store') }}">
-                    @csrf
-                    @if(isset($project))
-                        @method('PUT')
-                    @endif
+<form method="POST" action="{{ route('projects.store') }}" id="procurement-form">
+    @csrf
+    <input type="hidden" name="code_project" id="code_project" value="{{ old('code_project') }}">
+    <input type="hidden" name="owner_division_id" value="{{ $defaultDivision }}">
+    <input type="hidden" name="end_date" id="end_date" value="{{ $defaultEndDate }}">
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="code_project" class="form-label">Kode Project <span class="text-danger">*</span></label>
-                            <input type="text"
-                                   class="form-control @error('code_project') is-invalid @enderror"
-                                   id="code_project"
-                                   name="code_project"
-                                   value="{{ old('code_project', $project->code_project ?? '') }}"
-                                   placeholder="KCJ-2025987-308"
-                                   {{ isset($project) ? 'readonly' : 'required' }}>
-                            @error('code_project')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="text-muted">Format: KCJ-YYYYMMM-XXX</small>
-                        </div>
+    <div class="procurement-wrapper">
+        <div class="row g-5">
+            <div class="col-lg-6">
+                <h2 class="panel-title">Informasi Umum</h2>
 
+                <!-- Versi dari branch main (theirs) -->
                         <div class="col-md-6 mb-3">
                             <label for="owner_division_id" class="form-label">Department <span class="text-danger">*</span></label>
                             <select class="form-select @error('owner_division_id') is-invalid @enderror"
@@ -213,13 +301,14 @@
         }
         @endif
 
-        // Validate end date > start date
+        // Validate end date > start date (if start_date exists)
         const startDate = document.getElementById('start_date');
         const endDate = document.getElementById('end_date');
-
-        startDate.addEventListener('change', function() {
-            endDate.min = this.value;
-        });
+        if (startDate && endDate) {
+            startDate.addEventListener('change', function() {
+                endDate.min = this.value;
+            });
+        }
     });
-</script>
+    </script>
 @endpush
