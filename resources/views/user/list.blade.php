@@ -158,16 +158,6 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-<<<<<<< HEAD
-        const search = document.getElementById('search-projects');
-        const rows = Array.from(document.querySelectorAll('#projects-tbody tr'));
-        if (!search) return;
-        search.addEventListener('input', function () {
-            const q = this.value.toLowerCase().trim();
-            rows.forEach(tr => {
-                const text = tr.innerText.toLowerCase();
-                tr.style.display = text.includes(q) ? '' : 'none';
-=======
         const searchInput = document.querySelector('input[name="search"]');
         const statusSelect = document.querySelector('select[name="status"]');
         const prioritySelect = document.querySelector('select[name="priority"]');
@@ -176,7 +166,7 @@
 
         let currentPage = 1;
         let lastPagination = null;
-
+    }
         function renderRows(items) {
     const statusMap = {
         draft: ['Draft', '#555555'],
@@ -333,7 +323,6 @@
                 e.preventDefault();
                 currentPage = 1;
                 fetchProjects();
->>>>>>> fe2de0d9e2321316174eced72f456fe5e5c23402
             });
         });
     });

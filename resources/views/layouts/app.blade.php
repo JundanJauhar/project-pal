@@ -19,7 +19,7 @@
             --pal-primary: #003d82;
             --pal-secondary: #0056b3;
             --pal-light: #e8f0fe;
-            --stat-value-size: 30px;
+            --stat-value-size: 20px;
             --priority-text-size: 16px;
             --priority-rendah: #;
             --priority-rendah-text: #6F6F6F;
@@ -29,8 +29,8 @@
             --priority-tinggi-text: #BD0000;
             --vendor-process: #ffc107;
             --vendor-process-text: #000000;
-            --vendor-completed: #28a745;
-            --vendor-completed-text: #ffffff;
+            --vendor-completed: #2;
+            --vendor-completed-text: #000;
             --vendor-rejected: #dc3545;
             --vendor-rejected-text: #ffffff;
             --vendor-neutral: #f5f7fa;
@@ -588,7 +588,23 @@
                             </a>
                         </li>
 
-                        @if(in_array(Auth::user()->roles, ['user', 'supply_chain', 'sekretaris_direksi', 'desain']))
+                        @if(Auth::user()->roles === 'user')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('user.*') ? 'active' : '' }}" href="{{ route('user.list') }}">
+                                Projects
+                            </a>
+                        </li>
+                        @endif
+
+                        @if(in_array(Auth::user()->roles, ['supply_chain', 'sekretaris_direksi']))
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
+                                Projects
+                            </a>
+                        </li>
+                        @endif
+
+                        @if(Auth::user()->roles === 'desain')
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
                                 Projects
