@@ -38,11 +38,22 @@ class SupplyChainController extends Controller
         return view('supply_chain.dashboard', compact('stats', 'projects'));
     }
 
-    public function kelolaVendor()
+    public function kelolaVendor(Request $request)
     {
-        $vendors = Vendor::orderBy('name_vendor')->get();
+        $search = $request->query('search');
 
-        // ✅ FIXED: Tambahkan ->get() untuk menjalankan query
+         $vendors = Vendor::where('legal_status', 'verified')
+            ->when($search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('name_vendor', 'LIKE', "%{$search}%")
+                      ->orWhere('address', 'LIKE', "%{$search}%")
+                      ->orWhere('phone_number', 'LIKE', "%{$search}%")
+                      ->orWhere('email', 'LIKE', "%{$search}%");
+                });
+            })
+            ->orderBy('name_vendor')
+            ->get();
+
         $projects = Project::whereIn('status_project', ['pemilihan_vendor'])
             ->with(['ownerDivision'])
             ->get();
@@ -69,13 +80,15 @@ class SupplyChainController extends Controller
             ->with(['ownerDivision'])
             ->get();
 
-        return view('supply_chain.vendor.pilih', compact('vendors', 'projects'));
+        return view('supply_chain.vendor.pilih', compact('vendors', 'projects'))
+            ->with('hideNavbar', true);
     }
 
-    public function createVendor(Request $request)
+    public function formVendor(Request $request)
     {
         $redirect = $request->query('redirect', 'kelola');
-        return view('supply_chain.vendor.create', compact('redirect'));
+        return view('supply_chain.vendor.form', compact('redirect'))
+            ->with('hideNavbar', true);
     }
 
     public function detailVendor(Request $request)
