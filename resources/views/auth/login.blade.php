@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,24 +20,25 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        .login-wrapper {   
-            height:auto;
+        .login-wrapper {
+            height: auto;
             width: 500px;
-            display:flex; 
-            flex-direction:column;
-            align-items:center; 
-            margin-top:-100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: -100px;
         }
 
         .login-container {
             background: #c1c1c1;
             border-radius: 20px;
-            
+
             overflow: hidden;
             max-width: 500px;
             width: 100%;
             height: auto;
-            position:relative; z-index:1; 
+            position: relative;
+            z-index: 1;
         }
 
         .login-header {
@@ -47,7 +49,7 @@
 
         .logo-container {
             margin-bottom: 10px;
-            margin-top:10px;
+            margin-top: 10px;
         }
 
         .logo-pal {
@@ -56,7 +58,7 @@
         }
 
         .logo {
-            translate= z-2;
+            translate=z-2;
         }
 
         .company-name {
@@ -82,13 +84,12 @@
 
         .form-control:focus {
             border-color: #003d82;
-            box-shadow: 0 0 0 0.2rem rgba(0,61,130,0.15);
+            box-shadow: 0 0 0 0.2rem rgba(0, 61, 130, 0.15);
         }
 
         .form-label {
             font-weight: 700;
-            font: bold
-            color: #000000;
+            font: bold color: #000000;
             margin-bottom: 8px;
         }
 
@@ -106,7 +107,7 @@
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,61,130,0.3);
+            box-shadow: 0 5px 15px rgba(0, 61, 130, 0.3);
         }
 
         .password-toggle {
@@ -134,86 +135,79 @@
         }
     </style>
 </head>
+
 <body>
     <div class=login-wrapper>
-    <div class=logo>                {{-- asset() mengacu ke folder public/, jangan sertakan 'public/' di path --}}
-                <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo"></div>
-    <div class="login-container">
-        <div class="login-header">
-            <div class="logo-container">
+        <div class=logo> {{-- asset() mengacu ke folder public/, jangan sertakan 'public/' di path --}}
+            <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo">
+        </div>
+        <div class="login-container">
+            <div class="login-header">
+                <div class="logo-container">
+                </div>
+            </div>
+
+            <div class="login-body">
+                @if($errors->any())
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-circle"></i>
+                        @foreach($errors->all() as $error)
+                            {{ $error }}<br>
+                        @endforeach
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
+                @if(session('status'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('status') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('login') }}">
+                    @csrf
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control @error('email') is-invalid @enderror" id="email"
+                            name="email" value="{{ old('email') }}" placeholder="supplychain@gmail.com" required
+                            autofocus>
+                        @error('email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label text=mute">Password</label>
+                        <div style="position: relative;">
+                            <input type="password" class="form-control @error('password') is-invalid @enderror"
+                                id="password" name="password" placeholder="••••••••••••" required>
+                            <span class="password-toggle" onclick="togglePassword()">
+                                <i class="bi bi-eye-slash" id="toggleIcon"></i>
+                            </span>
+                        </div>
+                        @error('password')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="text-end mt-2">
+                            <a href="#" class="forgot-password">Forgot Password</a>
+                        </div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <label class="form-check-label" for="remember">
+                            Remember Me
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-login">
+                        SIGN IN
+                    </button>
+                </form>
             </div>
         </div>
-
-        <div class="login-body">
-            @if($errors->any())
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-circle"></i>
-                @foreach($errors->all() as $error)
-                    {{ $error }}<br>
-                @endforeach
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            @endif
-
-            @if(session('status'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('status') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            @endif
-
-            <form method="POST" action="{{ route('login') }}">
-                @csrf
-
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email"
-                           class="form-control @error('email') is-invalid @enderror"
-                           id="email"
-                           name="email"
-                           value="{{ old('email') }}"
-                           placeholder="supplychain@gmail.com"
-                           required
-                           autofocus>
-                    @error('email')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="mb-3">
-                    <label for="password" class="form-label text=mute">Password</label>
-                    <div style="position: relative;">
-                        <input type="password"
-                               class="form-control @error('password') is-invalid @enderror"
-                               id="password"
-                               name="password"
-                               placeholder="••••••••••••"
-                               required>
-                        <span class="password-toggle" onclick="togglePassword()">
-                            <i class="bi bi-eye-slash" id="toggleIcon"></i>
-                        </span>
-                    </div>
-                    @error('password')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                    <div class="text-end mt-2">
-                        <a href="#" class="forgot-password">Forgot Password</a>
-                    </div>
-                </div>
-
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                    <label class="form-check-label" for="remember">
-                        Remember Me
-                    </label>
-                </div>
-
-                <button type="submit" class="btn btn-login">
-                    SIGN IN
-                </button>
-            </form>
-        </div>
-    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -232,4 +226,5 @@
         }
     </script>
 </body>
+
 </html>

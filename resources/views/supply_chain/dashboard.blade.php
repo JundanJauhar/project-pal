@@ -3,6 +3,8 @@
 @section('title', 'Supply Chain Dashboard')
 
 @section('content')
+
+
 <div class="row mb-4">
     <div class="col-12">
         <h2><i class="bi bi-truck"></i> Supply Chain Dashboard</h2>

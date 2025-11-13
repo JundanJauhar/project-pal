@@ -452,17 +452,17 @@
         }
 
         /* Priority color variants use CSS variables so user can edit them */
-        .badge-priority.badge-rendah { 
-            background: var(--priority-rendah); 
+        .badge-priority.badge-rendah {
+            background: var(--priority-rendah);
             color: var(--priority-rendah-text);
         }
-        .badge-priority.badge-sedang { 
-            background: var(--priority-sedang); 
+        .badge-priority.badge-sedang {
+            background: var(--priority-sedang);
             color: var(--priority-sedang-text);
         }
-        .badge-priority.badge-tinggi { 
-            background: var(--priority-tinggi); 
-            color: var(--priority-tinggi-text); 
+        .badge-priority.badge-tinggi {
+            background: var(--priority-tinggi);
+            color: var(--priority-tinggi-text);
         }
 
         /* Vendor pill styles */
@@ -551,7 +551,7 @@
                 margin-left: auto; /* push nav group to the right side */
             }
         }
-    
+
     </style>
     @stack('styles')
 </head>
@@ -576,7 +576,7 @@
                             </a>
                         </li>
 
-                        @if(in_array(Auth::user()->roles, ['user', 'supply_chain', 'sekretaris_direksi']))
+                        @if(in_array(Auth::user()->roles, ['user', 'sekretaris_direksi']))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
                                 Projects
@@ -587,7 +587,6 @@
                         @if(Auth::user()->roles === 'supply_chain')
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('supply-chain*') ? 'active' : '' }}" href="{{ route('supply-chain.dashboard') }}">
-                                <i class="bi bi-truck"></i>
                                 Supply Chain
                             </a>
                         </li>

@@ -8,13 +8,13 @@
             background: white;
             border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
         }
 
         .stat-card.border-blue {
@@ -110,6 +110,13 @@
 @endpush
 
 @section('content')
+
+    <div class="mb-4 px-4">
+        <a href="{{ route('supply-chain.dashboard') }}" class="text-decoration-none text-primary">
+
+                <h4><i class="bi bi-arrow-left"></i> </h4>
+        </a>
+    </div>
     <div class="container-fluid px-4">
 
         <!-- Page Header -->
