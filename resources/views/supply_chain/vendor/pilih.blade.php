@@ -81,7 +81,7 @@
         }
 
         .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #003d82;
             color: white;
         }
 
@@ -106,7 +106,19 @@
             background-color: #FFBB00;
             color: black;
         }
+
+        .tambah .btn{
+        background: #003d82;
+        border-color: #003d82;
+        }
+
+        .cari .btn{
+        background: #003d82;
+        border-color: #003d82;
+        }
+
     </style>
+
 @endpush
 
 @section('content')
@@ -144,7 +156,7 @@
                     <div class="col-md-4">
                         <input type="text" class="form-control" name="search" placeholder="Cari Vendor..." value="{{ request('search') }}">
                     </div>
-                    <div class="col-md-3">
+                    <div class="cari col-md-3">
                          <button type="submit" class="btn btn-primary w-flex btn-custom">
                     <i class="bi bi-search"></i> Cari
                 </button>
@@ -165,27 +177,27 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>ID Vendor</th>
-                                        <th>Nama Vendor</th>
-                                        <th>Alamat</th>
-                                        <th>Kontak</th>
-                                        <th>Email</th>
-                                        <th>Status Legal</th>
-                                        <th>Importer</th>
-                                        <th>Status</th>
-                                        <th>Aksi</th>
+                                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">ID Vendor</th>
+                                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Vendor</th>
+                                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Alamat</th>
+                                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kontak</th>
+                                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Email</th>
+                                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status Legal</th>
+                                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Importer</th>
+                                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
+                                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($vendors as $vendor)
                                         <tr>
-                                            <td><strong>{{ $vendor->id_vendor }}</strong></td>
-                                            <td>{{ $vendor->name_vendor }}</td>
-                                            <td>{{ Str::limit($vendor->address ?? '-', 30) }}</td>
-                                            <td>{{ $vendor->phone_number ?? '-' }}</td>
-                                            <td>{{ $vendor->email ?? '-' }}</td>
-                                            <td>{{ $vendor->legal_status ?? '-' }}</td>
-                                            <td>
+                                            <td style="padding: 12px 8px;"><strong>{{ $vendor->id_vendor }}</strong></td>
+                                            <td style="padding: 12px 8px;">{{ $vendor->name_vendor }}</td>
+                                            <td style="padding: 12px 8px;">{{ Str::limit($vendor->address ?? '-', 30) }}</td>
+                                            <td style="padding: 12px 8px;">{{ $vendor->phone_number ?? '-' }}</td>
+                                            <td style="padding: 12px 8px;">{{ $vendor->email ?? '-' }}</td>
+                                            <td style="padding: 12px 8px; text-align: center;">{{ $vendor->legal_status ?? '-' }}</td>
+                                            <td style="padding: 12px 8px; text-align: center;">
                                                 @if($vendor->is_importer)
                                                     <span class="badge bg-success">
                                                         <i class="bi bi-globe"></i> Ya
@@ -194,7 +206,7 @@
                                                     <span class="badge bg-secondary">Tidak</span>
                                                 @endif
                                             </td>
-                                            <td>
+                                            <td style="padding: 12px 8px; text-align: center;">
                                                 @php
                                                     $statusClass = match ($vendor->status ?? 'pending') {
                                                         'approved' => 'status-active',
@@ -213,7 +225,7 @@
                                                     {{ $statusText }}
                                                 </span>
                                             </td>
-                                            <td>
+                                            <td style="padding: 12px 8px; text-align: center;">
                                                 <div class="btn-group" role="group">
                                                     <button type="button" class="btn btn-sm btn-primary"
                                                         onclick="selectVendor({{ $vendor->id_vendor }}, '{{ $vendor->name_vendor }}')">

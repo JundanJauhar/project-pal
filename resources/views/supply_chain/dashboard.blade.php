@@ -75,7 +75,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="card card-custom">
-            <div class="card-header-custom">
+            <div class="card-header-custom" style="background: #003d82;">
                 <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
             </div>
             <div class="card-body">
@@ -110,7 +110,7 @@
 <div class="row">
     <div class="col-12">
         <div class="card card-custom">
-            <div class="card-header-custom">
+            <div class="card-header-custom" style="background: #003d82;">
                 <h5 class="mb-0"><i class="bi bi-exclamation-circle"></i> Projects Needing Attention</h5>
             </div>
             <div class="card-body">

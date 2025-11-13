@@ -80,8 +80,12 @@
             margin-bottom: 20px;
         }
 
+        .tambah .btn {
+            background-color: #003d82;
+        }
+
         .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #003d82;
             color: white;
         }
 
@@ -220,13 +224,13 @@
                                 <tbody>
                                     @forelse($vendors as $vendor)
                                         <tr>
-                                            <td><strong>{{ $vendor->id_vendor }}</strong></td>
-                                            <td>{{ $vendor->name_vendor }}</td>
-                                            <td>{{ Str::limit($vendor->address ?? '-', 30) }}</td>
-                                            <td>{{ $vendor->phone_number ?? '-' }}</td>
-                                            <td>{{ $vendor->email ?? '-' }}</td>
-                                            <td>{{ $vendor->legal_status ?? '-' }}</td>
-                                            <td>
+                                            <td style="padding: 12px 8px; text-align: left;"><strong>{{ $vendor->id_vendor }}</strong></td>
+                                            <td style="padding: 12px 8px; text-align: left;">{{ $vendor->name_vendor }}</td>
+                                            <td style="padding: 12px 8px; text-align: left;">{{ Str::limit($vendor->address ?? '-', 30) }}</td>
+                                            <td style="padding: 12px 8px; text-align: left;">{{ $vendor->phone_number ?? '-' }}</td>
+                                            <td style="padding: 12px 8px; text-align: left;">{{ $vendor->email ?? '-' }}</td>
+                                            <td style="padding: 12px 8px; text-align: center;">{{ $vendor->legal_status ?? '-' }}</td>
+                                            <td style="padding: 12px 8px; text-align: center;">
                                                 @if($vendor->is_importer)
                                                     <span class="badge bg-success">
                                                         <i class="bi bi-globe"></i> Ya
@@ -235,7 +239,7 @@
                                                     <span class="badge bg-secondary">Tidak</span>
                                                 @endif
                                             </td>
-                                            <td>
+                                            <td style="padding: 12px 8px; text-align: center;">
                                                 @php
                                                     $statusClass = match ($vendor->status ?? 'pending') {
                                                         'approved' => 'status-active',
@@ -254,7 +258,7 @@
                                                     {{ $statusText }}
                                                 </span>
                                             </td>
-                                            <td>
+                                            <td style="padding: 12px 8px; text-align: center;">
                                                 <div class="btn-group" role="group">
                                                     <a href="#" class="btn btn-sm btn-info text-white">
                                                         <i class="bi bi-pencil"></i> Edit
