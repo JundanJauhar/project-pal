@@ -95,6 +95,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/vendor/pilih', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
         Route::get('/vendor/create', [SupplyChainController::class, 'createVendor'])->name('vendor.create');
         Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])->name('vendor.store');
+        
 
     });
 

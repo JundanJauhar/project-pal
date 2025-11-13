@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', isset($vendor) ? 'Edit Vendor' : 'Tambah Vendor Baru  ')
+@section('title', 'Tambah Vendor Baru ')
 
 @section('content')
 <div class="row " style="justify-content: center; align-items: center; ">
@@ -10,38 +10,34 @@
                 <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi Vendor</h5>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ isset($vendor) ? route('projects.update', $vendor->vendor_id) : route('projects.store') }}">
+                <form method="POST" action="{{ route('supply-chain.vendor.store') }}">
                     @csrf
-                    @if(isset($vendor))
-                        @method('PUT')
-                    @endif
-
-                     <div class="mb-3">
-                        <label for="name_project" class="form-label">Nama Perusahaan <span class="text-danger">*</span></label>
+                    <div class="mb-3">
+                        <label for="name_vendor" class="form-label">Nama Perusahaan <span class="text-danger">*</span></label>
                         <input type="text"
-                               class="form-control @error('name_project') is-invalid @enderror"
-                               id="nama_perusahaan"
-                               name="Nama_Perusahaan"
-                               value=""
-                               placeholder=""
-                               required>
-                        @error('name_project')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            class="form-control @error('name_vendor') is-invalid @enderror"
+                            id="name_vendor"
+                            name="name_vendor"
+                            value=""
+                            placeholder="PT Vendor Contoh"
+                            required>
+                        @error('name_vendor')
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="code_project" class="form-label">No Telepon <span class="text-danger">*</span></label>
+                            <label for="phone_number" class="form-label">No Telepon <span class="text-danger">*</span></label>
                             <input type="text"
-                                   class="form-control @error('code_project') is-invalid @enderror"
-                                   id="no_telepon"
-                                   name="no_telepon"
-                                   value="no_telepon"
-                                   placeholder="+62 812-3456-7890"
-                                   {{ isset($project) ? 'readonly' : 'required' }}>
-                            @error('code_project')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                class="form-control @error('phone_number') is-invalid @enderror"
+                                id="phone_number"
+                                name="phone_number"
+                                value=""
+                                placeholder="+62 812 3456 7890"
+                                {{ isset($project) ? 'readonly' : 'required' }}>
+                            @error('phone_number')
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
 
                         </div>
@@ -49,51 +45,66 @@
                         <div class="col-md-6 mb-3">
                             <label for="owner_division_id" class="form-label">Email <span class="text-danger">*</span></label>
                             <input type="text"
-                                   class="form-control @error('code_project') is-invalid @enderror"
-                                   id="code_project"
-                                   name="code_project"
-                                   value=""
-                                   placeholder="example@gmail.com"
-                                   {{ isset($project) ? 'readonly' : 'required' }}>
-                            @error('owner_division_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                class="form-control @error('email') is-invalid @enderror"
+                                id="email"
+                                name="email"
+                                value=""
+                                placeholder="example@gmail.com"
+                                {{ isset($project) ? 'readonly' : 'required' }}>
+                            @error('email')
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="description" class="form-label">Alamat Perusahaan</label>
-                        <textarea class="form-control @error('description') is-invalid @enderror"
-                                  id="description"
-                                  name="description"
-                                  rows="4"
-                                  placeholder="Pengadaan Deck Light bertujuan untuk meningkatkan visibilitas dan keamanan di area dek kapal...">{{ old('description', $project->description ?? '') }}</textarea>
-                        @error('description')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                        <textarea class="form-control @error('address') is-invalid @enderror"
+                            id="address"
+                            name="address"
+                            rows="4"
+                            placeholder="">{{ old('description', $project->description ?? '') }}</textarea>
+                        @error('address')
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="legal_status" class="form-label">Status Legal</label>
+                        <select class="form-select @error('legal_status') is-invalid @enderror"
+                            id="legal_status"
+                            name="legal_status">
+                            <option value="">Pilih Status Legal</option>
+                            <option value="verified" {{ old('legal_status') == 'verified' ? 'selected' : '' }}>Verified (Terverifikasi)</option>
+                            <option value="pending" {{ old('legal_status') == 'pending' ? 'selected' : '' }}>Pending (Menunggu Verifikasi)</option>
+                            <option value="rejected" {{ old('legal_status') == 'rejected' ? 'selected' : '' }}>Rejected (Ditolak)</option>
+                        </select>
+                        @error('legal_status')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text">
+                            <small>
+                                <i class="bi bi-info-circle"></i>
+                                <strong>Verified:</strong> Vendor sudah diverifikasi dan dapat dipilih untuk project<br>
+                                <strong>Pending:</strong> Menunggu proses verifikasi dokumen legal<br>
+                                <strong>Rejected:</strong> Vendor tidak lolos verifikasi
+                            </small>
+                        </div>
                     </div>
 
-                    @if(isset($project))
                     <div class="mb-3">
-                        <label for="status_project" class="form-label">Status Project</label>
-                        <select class="form-select @error('status_project') is-invalid @enderror"
-                                id="status_project"
-                                name="status_project">
-                            <option value="draft" {{ old('status_project', $project->status_project) === 'draft' ? 'selected' : '' }}>Draft</option>
-                            <option value="review_sc" {{ old('status_project', $project->status_project) === 'review_sc' ? 'selected' : '' }}>Review SC</option>
-                            <option value="persetujuan_sekretaris" {{ old('status_project', $project->status_project) === 'persetujuan_sekretaris' ? 'selected' : '' }}>Persetujuan Sekretaris</option>
-                            <option value="pemilihan_vendor" {{ old('status_project', $project->status_project) === 'pemilihan_vendor' ? 'selected' : '' }}>Pemilihan Vendor</option>
-                            <option value="pengecekan_legalitas" {{ old('status_project', $project->status_project) === 'pengecekan_legalitas' ? 'selected' : '' }}>Pengecekan Legalitas</option>
-                            <option value="pemesanan" {{ old('status_project', $project->status_project) === 'pemesanan' ? 'selected' : '' }}>Pemesanan</option>
-                            <option value="pembayaran" {{ old('status_project', $project->status_project) === 'pembayaran' ? 'selected' : '' }}>Pembayaran</option>
-                            <option value="selesai" {{ old('status_project', $project->status_project) === 'selesai' ? 'selected' : '' }}>Selesai</option>
-                            <option value="rejected" {{ old('status_project', $project->status_project) === 'rejected' ? 'selected' : '' }}>Rejected</option>
-                        </select>
-                        @error('status_project')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                type="checkbox"
+                                id="is_importer"
+                                name="is_importer"
+                                value="1"
+                                {{ old('is_importer') ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_importer">
+                                Vendor adalah Importir
+                            </label>
+                        </div>
                     </div>
-                    @endif
+
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <a href="{{ route('projects.index') }}" class="btn btn-secondary btn-custom">

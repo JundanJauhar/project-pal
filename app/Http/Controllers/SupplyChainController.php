@@ -40,6 +40,9 @@ class SupplyChainController extends Controller
     public function pilihVendor()
     {
         $vendors = Vendor::orderBy('name_vendor')->get();
+
+$projects = Project::where('status_project',['pemilihan_vendor', ]);
+
         return view('supply_chain.vendor.pilih', compact('vendors'));
     }
 
@@ -66,7 +69,6 @@ class SupplyChainController extends Controller
             'email' => $validated['email'] ?? null,
             'legal_status' => $validated['legal_status'] ?? null,
             'is_importer' => $validated['is_importer'] ?? false,
-            'status' => 'pending',
         ]);
 
         return redirect()->route('supply-chain.vendor.pilih')->with('success', 'Vendor berhasil ditambahkan');

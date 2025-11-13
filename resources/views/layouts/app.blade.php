@@ -621,8 +621,16 @@
 
                         @if(Auth::user()->roles === 'supply_chain')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('supply-chain*') ? 'active' : '' }}" href="{{ route('supply-chain.dashboard') }}">
+                            <a class="nav-link {{ request()->routeIs('supply-chain.dashboard*') ? 'active' : '' }}" href="{{ route('supply-chain.dashboard') }}">
                                 Supply Chain
+                            </a>
+                        </li>
+                        @endif
+
+                        @if(Auth::user()->roles === 'supply_chain')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('supply-chain.vendor.pilih*') ? 'active' : '' }}" href="{{ route('supply-chain.vendor.pilih') }}">
+                                Kelola Vendor
                             </a>
                         </li>
                         @endif
