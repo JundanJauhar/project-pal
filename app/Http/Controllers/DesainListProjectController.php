@@ -13,4 +13,11 @@ class DesainListProjectController extends Controller
 
         return view('desain.list-project', compact('projects'));
     }
+
+    public function daftarPermintaan($id)
+    {
+        $project = Project::with('requests')->findOrFail($id);
+
+        return view('desain.daftar-permintaan', compact('project'));
+    }
 }

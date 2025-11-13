@@ -141,7 +141,10 @@ Route::middleware(['auth'])->group(function () {
     });
 
     
-Route::get('/desain/list-project', [DesainListProjectController::class, 'list'])
-     ->name('desain.list-project');
+    Route::get('/desain/list-project', [DesainListProjectController::class, 'list'])
+        ->name('desain.list-project');
 
+    Route::get('/desain/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPermintaan'])
+    ->name('desain.daftar-permintaan');
+    
 });

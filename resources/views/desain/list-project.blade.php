@@ -116,14 +116,15 @@
                 @foreach($projects as $project)
                 <div class="project-card">
 
-                    <img src="/images/project-default.png" class="project-image">
+                    <img src="/images/assetimgkapal1.png" class="project-image">
 
                     <div class="project-body">
                         <p class="label">Nama Project</p>
 
                         <h3 class="project-name">{{ $project->name }}</h3>
 
-                        <a class="project-link {{ request()->routeIs('projects*') ? 'active' : '' }}"   href="{{ route('projects.index') }}">
+                        <a class="project-link" href="{{ route('desain.daftar-permintaan', $project->project_id) }}">
+
                             GO TO PROJECT →
                         </a>
                     </div>
