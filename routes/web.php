@@ -13,6 +13,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\DesainController;
 use App\Models\Project;
+use App\Http\Controllers\DesainListProjectController;
 
 // Public routes
 Route::get('/', function () {
@@ -138,4 +139,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/input-equipment', [DesainController::class, 'inputEquipment'])->name('input-equipment');
         Route::get('/status-evatek/{projectId}', [DesainController::class, 'statusEvatek'])->name('status-evatek');
     });
+
+    
+Route::get('/desain/list-project', [DesainListProjectController::class, 'list'])
+     ->name('desain.list-project');
+
 });
