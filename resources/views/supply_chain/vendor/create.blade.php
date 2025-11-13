@@ -12,6 +12,7 @@
             <div class="card-body">
                 <form method="POST" action="{{ route('supply-chain.vendor.store') }}">
                     @csrf
+                    <input type="hidden" name="redirect" value="{{ $redirect ?? 'kelola' }}">
                     <div class="mb-3">
                         <label for="name_vendor" class="form-label">Nama Perusahaan <span class="text-danger">*</span></label>
                         <input type="text"
@@ -107,7 +108,7 @@
 
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{{ route('projects.index') }}" class="btn btn-secondary btn-custom">
+                        <a href="{{ ($redirect ?? 'kelola') === 'pilih' ? route('supply-chain.vendor.pilih') : route('supply-chain.vendor.kelola') }}" class="btn btn-secondary btn-custom">
                             <i class="bi bi-x-circle"></i> Batal
                         </a>
                         <button type="submit" class="btn btn-primary btn-custom">

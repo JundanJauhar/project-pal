@@ -13,6 +13,7 @@ use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SupplyChainController extends Controller
 {
@@ -41,45 +42,89 @@ class SupplyChainController extends Controller
     {
         $vendors = Vendor::orderBy('name_vendor')->get();
 
-        $projects = Project::where('status_project', ['pemilihan_vendor',]);
+        // ✅ FIXED: Tambahkan ->get() untuk menjalankan query
+        $projects = Project::whereIn('status_project', ['pemilihan_vendor'])
+            ->with(['ownerDivision'])
+            ->get();
 
-        return view('supply_chain.vendor.kelola', compact('vendors'));
+        return view('supply_chain.vendor.kelola', compact('vendors', 'projects'));
     }
     public function pilihVendor()
     {
-        $vendors = Vendor::orderBy('name_vendor')->get();
+        $vendors = Vendor::where('legal_status', 'verified')
+            ->orderBy('name_vendor')
+            ->get();
 
-        $projects = Project::where('status_project', ['pemilihan_vendor',]);
+        $projects = Project::whereIn('status_project', ['pemilihan_vendor'])
+            ->with(['ownerDivision'])
+            ->get();
 
-        return view('supply_chain.vendor.pilih', compact('vendors'));
+        return view('supply_chain.vendor.pilih', compact('vendors', 'projects'));
     }
 
-    public function createVendor()
+    public function createVendor(Request $request)
     {
-        return view('supply_chain.vendor.create');
+        $redirect = $request->query('redirect', 'kelola');
+        return view('supply_chain.vendor.create', compact('redirect'));
+    }
+
+    public function detailVendor(Request $request)
+    {
+        $vendorId = $request->query('id');
+
+        if (!$vendorId) {
+            return redirect()->route('supply-chain.vendor.pilih')
+                ->with('error', 'Vendor ID tidak ditemukan');
+        }
+
+        $vendor = Vendor::find($vendorId);
+
+        if (!$vendor) {
+            return redirect()->route('supply-chain.vendor.pilih')
+                ->with('error', 'Vendor tidak ditemukan');
+        }
+
+        return view('supply_chain.vendor.detail', compact('vendor'));
     }
 
     public function storeVendor(Request $request)
     {
-        $validated = $request->validate([
-            'name_vendor' => 'required|string|unique:vendors,name_vendor',
-            'address' => 'nullable|string',
-            'phone_number' => 'nullable|string',
-            'email' => 'nullable|email',
-            'legal_status' => 'nullable|string',
-            'is_importer' => 'nullable|boolean',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name_vendor' => 'required|string|max:255|unique:vendors,name_vendor',
+                'address' => 'nullable|string|max:500',
+                'phone_number' => 'required|string|max:20',
+                'email' => 'required|email|max:255',
+                'legal_status' => 'required|in:verified,pending,rejected',
+                'is_importer' => 'nullable|boolean',
+            ]);
 
-        Vendor::create([
-            'name_vendor' => $validated['name_vendor'],
-            'address' => $validated['address'] ?? null,
-            'phone_number' => $validated['phone_number'] ?? null,
-            'email' => $validated['email'] ?? null,
-            'legal_status' => $validated['legal_status'] ?? null,
-            'is_importer' => $validated['is_importer'] ?? false,
-        ]);
+            $vendor = Vendor::create([
+                'name_vendor' => $validated['name_vendor'],
+                'address' => $validated['address'] ?? null,
+                'phone_number' => $validated['phone_number'],
+                'email' => $validated['email'],
+                'legal_status' => $validated['legal_status'],
+                'is_importer' => $request->has('is_importer') ? 1 : 0,
+            ]);
 
-        return redirect()->route('supply-chain.vendor.pilih')->with('success', 'Vendor berhasil ditambahkan');
+            $redirect = $request->input('redirect', 'kelola');
+            $routeName = $redirect === 'pilih' ? 'supply-chain.vendor.pilih' : 'supply-chain.vendor.kelola';
+
+            return redirect()->route($routeName)
+                ->with('success', 'Vendor "' . $vendor->name_vendor . '" berhasil ditambahkan');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (\Exception $e) {
+            Log::error('Error creating vendor: ' . $e->getMessage());
+
+            return back()
+                ->with('error', 'Gagal menambahkan vendor: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
 

@@ -118,12 +118,12 @@
                     <table class="table table-hover table-custom">
                         <thead>
                             <tr>
-                                <th>Kode Project</th>
-                                <th>Nama Project</th>
-                                <th>Department</th>
-                                <th>Prioritas</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
+                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode Project</th>
+                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Project</th>
+                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
+                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
+                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
+                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -131,13 +131,13 @@
                             <tr>
                                 <td><strong>{{ $project->code_project }}</strong></td>
                                 <td>{{ Str::limit($project->name_project, 50) }}</td>
-                                <td>{{ $project->ownerDivision->nama_divisi ?? '-' }}</td>
-                                <td>
+                                <td style="padding: 12px 8px; text-align: center;">{{ $project->ownerDivision->nama_divisi ?? '-' }}</td>
+                                <td style="padding: 12px 8px; text-align: center;">
                                     <span class="badge-priority badge-{{ strtolower($project->priority) }}">
                                         {{ strtoupper($project->priority) }}
                                     </span>
                                 </td>
-                                <td>
+                                <td style="padding: 12px 8px; text-align: center;" >
                                     @php
                                         $statusText = match($project->status_project) {
                                             'review_sc' => 'Review SC',
@@ -148,7 +148,7 @@
                                     @endphp
                                     <span class="badge bg-warning">{{ $statusText }}</span>
                                 </td>
-                                <td>
+                                <td style="padding: 12px 8px; text-align: center;">
                                     @if($project->status_project === 'review_sc')
                                     <a href="{{ route('supply-chain.review-project', $project->project_id) }}"
                                        class="btn btn-sm btn-primary btn-custom">

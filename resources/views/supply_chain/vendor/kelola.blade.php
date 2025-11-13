@@ -122,7 +122,7 @@
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="mb-1">Pilih Vendor</h2>
+                <h2 class="mb-1">Kelola Vendor</h2>
                 <p class="text-muted mb-0">Kelola dan pilih vendor untuk pengadaan material</p>
             </div>
         </div>
@@ -186,8 +186,8 @@
         <!-- Tambah Vendor -->
         <div class="tambah col-md-2 text-end ">
             @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
-                <a href="{{ route('supply-chain.vendor.create') }}" class="btn btn-primary w-100 btn-custom">
-                    <i class="bi bi-plus-circle"></i> Tambah Vendor
+                <a href="{{ route('supply-chain.vendor.create', ['redirect' => 'kelola']) }}" class="btn btn-primary w-100 btn-custom">
+                    <i class="bi bi-plus-circle"></i> Tambah Vendor Baru
                 </a>
             @endif
         </div>
@@ -198,7 +198,7 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-header">
                         <h5 class="mb-0">
-                            <i class="bi bi-list-ul"></i> Daftar Vendor
+                         Daftar Vendor
                         </h5>
                     </div>
                     <div class="card-body p-0">
@@ -206,15 +206,15 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>ID Vendor</th>
-                                        <th>Nama Vendor</th>
-                                        <th>Alamat</th>
-                                        <th>Kontak</th>
-                                        <th>Email</th>
-                                        <th>Status Legal</th>
-                                        <th>Importer</th>
-                                        <th>Status</th>
-                                        <th>Aksi</th>
+                                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">ID Vendor</th>
+                                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Vendor</th>
+                                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Alamat</th>
+                                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kontak</th>
+                                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Email</th>
+                                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status Legal</th>
+                                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Importer</th>
+                                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
+                                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>

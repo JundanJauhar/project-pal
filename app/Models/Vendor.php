@@ -17,7 +17,6 @@ class Vendor extends Model
         'email',
         'legal_status',
         'is_importer',
-        'status',
     ];
 
     protected $casts = [

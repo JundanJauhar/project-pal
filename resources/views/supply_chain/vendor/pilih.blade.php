@@ -111,6 +111,8 @@
 
 @section('content')
 
+
+
     <div class="mb-4 px-4">
         <a href="{{ route('supply-chain.dashboard') }}" class="text-decoration-none text-primary">
 
@@ -128,69 +130,26 @@
         </div>
 
         <!-- Statistics Cards -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="stat-card border-blue">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="stat-label">Total Vendor</p>
-                            <h2 class="stat-number">{{ $vendors->count() }}</h2>
-                        </div>
-                        <div class="stat-icon bg-blue">
-                            <i class="bi bi-building"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card border-green">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="stat-label">Vendor Aktif</p>
-                            <h2 class="stat-number">{{ $vendors->where('status', 'approved')->count() }}</h2>
-                        </div>
-                        <div class="stat-icon bg-green">
-                            <i class="bi bi-check-circle"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card border-yellow">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="stat-label">Menunggu Verifikasi</p>
-                            <h2 class="stat-number">{{ $vendors->where('status', 'pending')->count() }}</h2>
-                        </div>
-                        <div class="stat-icon bg-yellow">
-                            <i class="bi bi-clock-history"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card border-red">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="stat-label">Vendor Importer</p>
-                            <h2 class="stat-number">{{ $vendors->where('is_importer', true)->count() }}</h2>
-                        </div>
-                        <div class="stat-icon bg-red">
-                            <i class="bi bi-globe"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Tambah Vendor -->
         <div class="tambah col-md-2 text-end ">
             @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
-                <a href="{{ route('supply-chain.vendor.create') }}" class="btn btn-primary w-100 btn-custom">
-                    <i class="bi bi-plus-circle"></i> Tambah Vendor
+                <a href="{{ route('supply-chain.vendor.create', ['redirect' => 'pilih']) }}" class="btn btn-primary w-100 btn-custom">
+                    <i class="bi bi-plus-circle"></i> Tambah Vendor Baru
                 </a>
             @endif
         </div>
+
+        <form method="GET" action="{{ route('supply-chain.vendor.pilih') }}" class="row g-3 align-items-end mb-3" >
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" name="search" placeholder="Cari Vendor..." value="{{ request('search') }}">
+                    </div>
+                    <div class="col-md-3">
+                         <button type="submit" class="btn btn-primary w-flex btn-custom">
+                    <i class="bi bi-search"></i> Cari
+                </button>
+                    </div>
+                </form>
 
         <!-- Vendors Table -->
         <div class="row">
@@ -257,10 +216,10 @@
                                             <td>
                                                 <div class="btn-group" role="group">
                                                     <button type="button" class="btn btn-sm btn-primary"
-                                                        onclick="selectVendor({{ $vendor->vendor_id }}, '{{ $vendor->name_vendor }}')">
+                                                        onclick="selectVendor({{ $vendor->id_vendor }}, '{{ $vendor->name_vendor }}')">
                                                         <i class="bi bi-check-circle"></i> Pilih
                                                     </button>
-                                                    <a href="#" class="btn btn-sm btn-info text-white">
+                                                    <a href="{{ route('supply-chain.vendor.detail', ['id' => $vendor->id_vendor]) }}" class="btn btn-sm btn-info text-white">
                                                         <i class="bi bi-eye"></i> Detail
                                                     </a>
                                                 </div>

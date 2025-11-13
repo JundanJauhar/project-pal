@@ -93,13 +93,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/material-shipping', [SupplyChainController::class, 'materialShipping'])->name('material-shipping');
         Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])->name('material-arrival');
 
+
         Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])->name('vendor.kelola');
         Route::get('/vendor/create', [SupplyChainController::class, 'createVendor'])->name('vendor.create');
         Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])->name('vendor.store');
         Route::get('/vendor/pilih', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
+        Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])->name('vendor.detail');
+
 
 
     });
+
 
     // Payment Routes (Treasury & Accounting)
     Route::prefix('payments')->name('payments.')->group(function () {
@@ -140,7 +144,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/status-evatek/{projectId}', [DesainController::class, 'statusEvatek'])->name('status-evatek');
     });
 
-    
+
 Route::get('/desain/list-project', [DesainListProjectController::class, 'list'])
      ->name('desain.list-project');
 
