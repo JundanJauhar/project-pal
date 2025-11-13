@@ -22,11 +22,14 @@ class Project extends Model
         'start_date',
         'end_date',
         'status_project',
+        'review_notes',
+        'review_documents',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'review_documents' => 'array',
     ];
 
     /**

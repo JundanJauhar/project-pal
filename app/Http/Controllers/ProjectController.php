@@ -278,5 +278,80 @@ class ProjectController extends Controller
             }
         }
     }
-}
 
+    /**
+     * Upload review documents
+     */
+    public function uploadReview(Request $request)
+    {
+        try {
+            $request->validate([
+                'project_id' => 'required|exists:projects,project_id',
+                'documents' => 'required|array|min:1',
+                'documents.*' => 'file|mimes:pdf,doc,docx|max:10240',
+            ]);
+
+            $project = Project::findOrFail($request->project_id);
+            $uploadedFiles = [];
+
+            if ($request->hasFile('documents')) {
+                foreach ($request->file('documents') as $file) {
+                    $filename = time() . '_' . $file->getClientOriginalName();
+                    $path = $file->storeAs('review-documents/' . $project->project_id, $filename, 'public');
+                    $uploadedFiles[] = [
+                        'filename' => $file->getClientOriginalName(),
+                        'path' => $path,
+                        'uploaded_at' => now(),
+                    ];
+                }
+            }
+
+            // Store file references (optional: in database or just in filesystem)
+            $project->update([
+                'review_documents' => json_encode($uploadedFiles),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dokumen review berhasil diunggah',
+                'data' => $uploadedFiles,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Save review notes
+     */
+    public function saveReviewNotes(Request $request)
+    {
+        try {
+            $request->validate([
+                'project_id' => 'required|exists:projects,project_id',
+                'review_notes' => 'required|string',
+            ]);
+
+            $project = Project::findOrFail($request->project_id);
+            $project->update([
+                'review_notes' => $request->review_notes,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Catatan review berhasil disimpan',
+                'data' => [
+                    'review_notes' => $request->review_notes,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+            ], 422);
+        }
+    }
+}
