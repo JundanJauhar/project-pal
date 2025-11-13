@@ -19,8 +19,8 @@
             --pal-primary: #003d82;
             --pal-secondary: #0056b3;
             --pal-light: #e8f0fe;
-            --stat-value-size: 30px;
-            --priority-text-size: 20px;
+            --stat-value-size: 20px;
+            --priority-text-size: 16px;
             --priority-rendah: #;
             --priority-rendah-text: #6F6F6F;
             --priority-sedang: #;
@@ -29,8 +29,8 @@
             --priority-tinggi-text: #BD0000;
             --vendor-process: #ffc107;
             --vendor-process-text: #000000;
-            --vendor-completed: #28a745;
-            --vendor-completed-text: #ffffff;
+            --vendor-completed: #2;
+            --vendor-completed-text: #000;
             --vendor-rejected: #dc3545;
             --vendor-rejected-text: #ffffff;
             --vendor-neutral: #f5f7fa;
@@ -552,6 +552,17 @@
             }
         }
 
+        /* Paksa agar badge tidak bisa ditimpa oleh JS/Bootstrap */
+        .status-badge {
+            background-color: var(--badge-color) !important;
+            color: #fff !important;
+            padding: 6px 12px !important;
+            font-weight: 600 !important;
+            font-size: 12px !important;
+            border-radius: 8px !important;
+            min-width: 110px;
+            text-align: center;
+        }
     </style>
     @stack('styles')
 </head>
@@ -576,10 +587,34 @@
                             </a>
                         </li>
 
-                        @if(in_array(Auth::user()->roles, ['user', 'sekretaris_direksi']))
+                        @if(Auth::user()->roles === 'user')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('user.*') ? 'active' : '' }}" href="{{ route('user.list') }}">
+                                Projects
+                            </a>
+                        </li>
+                        @endif
+
+                        @if(in_array(Auth::user()->roles, ['supply_chain', 'sekretaris_direksi']))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
                                 Projects
+                            </a>
+                        </li>
+                        @endif
+
+                        @if(Auth::user()->roles === 'desain')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
+                                Projects
+                            </a>
+                        </li>
+                        @endif
+
+                        @if(Auth::user()->roles === 'sekretaris_direksi')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('sekdir.approvals*') ? 'active' : '' }}" href="{{ route('sekdir.approvals') }}">
+                                Persetujuan Pengadaan
                             </a>
                         </li>
                         @endif
@@ -597,6 +632,14 @@
                             <a class="nav-link {{ request()->routeIs('payments*') ? 'active' : '' }}" href="{{ route('payments.index') }}">
                                 <i class="bi bi-credit-card"></i>
                                 Payments
+                            </a>
+                        </li>
+                        @endif
+
+                        @if(Auth::user()->roles === 'desain')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('desain*') ? 'active' : '' }}" href="{{ route('desain.dashboard') }}">
+                                Pengadaan
                             </a>
                         </li>
                         @endif

@@ -129,37 +129,15 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                    </div>
 
-                    @if(isset($project))
-                    <div class="mb-3">
-                        <label for="status_project" class="form-label">Status Project</label>
-                        <select class="form-select @error('status_project') is-invalid @enderror"
-                                id="status_project"
-                                name="status_project">
-                            <option value="draft" {{ old('status_project', $project->status_project) === 'draft' ? 'selected' : '' }}>Draft</option>
-                            <option value="review_sc" {{ old('status_project', $project->status_project) === 'review_sc' ? 'selected' : '' }}>Review SC</option>
-                            <option value="persetujuan_sekretaris" {{ old('status_project', $project->status_project) === 'persetujuan_sekretaris' ? 'selected' : '' }}>Persetujuan Sekretaris</option>
-                            <option value="pemilihan_vendor" {{ old('status_project', $project->status_project) === 'pemilihan_vendor' ? 'selected' : '' }}>Pemilihan Vendor</option>
-                            <option value="pengecekan_legalitas" {{ old('status_project', $project->status_project) === 'pengecekan_legalitas' ? 'selected' : '' }}>Pengecekan Legalitas</option>
-                            <option value="pemesanan" {{ old('status_project', $project->status_project) === 'pemesanan' ? 'selected' : '' }}>Pemesanan</option>
-                            <option value="pembayaran" {{ old('status_project', $project->status_project) === 'pembayaran' ? 'selected' : '' }}>Pembayaran</option>
-                            <option value="selesai" {{ old('status_project', $project->status_project) === 'selesai' ? 'selected' : '' }}>Selesai</option>
-                            <option value="rejected" {{ old('status_project', $project->status_project) === 'rejected' ? 'selected' : '' }}>Rejected</option>
-                        </select>
-                        @error('status_project')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    @endif
-
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{{ route('projects.index') }}" class="btn btn-secondary btn-custom">
-                            <i class="bi bi-x-circle"></i> Batal
-                        </a>
-                        <button type="submit" class="btn btn-primary btn-custom">
-                            <i class="bi bi-save"></i> {{ isset($project) ? 'Update' : 'Simpan' }} Project
-                        </button>
+                        <div class="col-md-4 mb-3 d-flex align-items-end gap-2">
+                            <a href="{{ route('projects.index') }}" class="btn btn-secondary btn-custom flex-grow-1">
+                                <i class="bi bi-x-circle"></i> Batal
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-custom flex-grow-1">
+                                <i class="bi bi-save"></i> {{ isset($project) ? 'Update' : 'Simpan' }} Project
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>

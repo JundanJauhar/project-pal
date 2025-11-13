@@ -11,6 +11,8 @@ use App\Http\Controllers\QualityAssuranceController;
 use App\Http\Controllers\InspectionController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\DesainController;
+use App\Models\Project;
 
 // Public routes
 Route::get('/', function () {
@@ -58,6 +60,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
     Route::resource('projects', ProjectController::class);
     Route::post('/projects/{id}/status', [ProjectController::class, 'updateStatus'])->name('projects.update-status');
+
+    // User-specific project list (used by 'user' role)
+    Route::get('/user/list', function () {
+        $projects = Project::with(['ownerDivision', 'contracts'])->orderBy('created_at', 'desc')->paginate(10);
+        return view('user.list', compact('projects'));
+    })->name('user.list');
 
     // Notification Routes
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -120,5 +128,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/ncr/{id}', [InspectionController::class, 'showNcr'])->name('ncr.show');
         Route::put('/ncr/{id}', [InspectionController::class, 'updateNcr'])->name('ncr.update');
         Route::post('/ncr/{id}/verify', [InspectionController::class, 'verifyNcr'])->name('ncr.verify');
+    });
+
+    // Desain Routes
+    Route::prefix('desain')->name('desain.')->group(function () {
+        Route::get('/dashboard', [DesainController::class, 'dashboard'])->name('dashboard');
+        Route::get('/input-equipment', [DesainController::class, 'inputEquipment'])->name('input-equipment');
+        Route::get('/status-evatek/{projectId}', [DesainController::class, 'statusEvatek'])->name('status-evatek');
     });
 });

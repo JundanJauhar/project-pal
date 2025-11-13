@@ -46,7 +46,7 @@
                         </select>
                     </div>
                     <div class="tambah col-md-2 text-end">
-                        @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
+                        @if(Auth::user()->roles === 'desain')
                         <a href="{{ route('projects.create') }}" class="btn btn-primary w-100 btn-custom">
                             <i class="bi bi-plus-circle"></i> Tambah
                         </a>
@@ -75,7 +75,7 @@
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Vendor</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
                         </tr>
@@ -88,7 +88,7 @@
                             <td style="padding: 12px 8px; text-align: center;">{{ $project->ownerDivision->nama_divisi ?? '-' }}</td>
                             <td style="padding: 12px 8px; text-align: center;">{{ $project->start_date->format('d/m/Y') }}</td>
                             <td style="padding: 12px 8px; text-align: center;">{{ $project->end_date->format('d/m/Y') }}</td>
-                            <td style="padding: 12px 8px; text-align: left;">
+                            <td style="padding: 12px 8px; text-align: center;">
                                 @php
                                     $contract = $project->contracts->first();
                                     $vendorName = $contract->vendor->name_vendor ?? '-';
@@ -106,34 +106,33 @@
                                 @endif
                             </td>
                             <td style="padding: 12px 8px; text-align: center;">
-                                <span class="badge-priority badge-{{ strtolower($project->priority) }}"
-                                      style="padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">
+                                <span class="badge-priority badge-{{ strtolower($project->priority) }}">
                                     {{ strtoupper($project->priority) }}
                                 </span>
                             </td>
                             <td style="padding: 12px 8px; text-align: center;">
-                                @php
-                                    $statusClass = match($project->status_project) {
-                                        'completed', 'selesai' => 'success',
-                                        'rejected' => 'danger',
-                                        'review_sc', 'persetujuan_sekretaris' => 'warning',
-                                        'draft' => 'secondary',
-                                        default => 'info'
-                                    };
-                                    $statusText = match($project->status_project) {
-                                        'review_sc' => 'Review SC',
-                                        'persetujuan_sekretaris' => 'Review Sekretaris',
-                                        'pemilihan_vendor' => 'Pemilihan Vendor',
-                                        'selesai', 'completed' => 'Success',
-                                        'rejected' => 'Denied',
-                                        default => ucfirst($project->status_project)
-                                    };
-                                @endphp
-                                <span class="badge bg-{{ $statusClass }}"
-                                      style="padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">
-                                    {{ $statusText }}
-                                </span>
-                            </td>
+                            @php
+                                $statusMap = [
+                                    'draft'                 => ['Draft', '#555555'],
+                                    'completed'             => ['Completed', '#28AC00'],
+                                    'decline'               => ['Declined', '#BD0000'],
+                                    'review_sc'             => ['Review SC', '#ECAD02'],
+                                    'persetujuan_sekretaris'=> ['Persetujuan Sekdir', '#ECAD02'],
+                                    'pemilihan_vendor'      => ['Pemilihan Vendor', '#ECAD02'],
+                                    'in_progress'           => ['Sedang Diproses', '#ECAD02'],
+                                ];
+
+                                [$statusText, $badgeColor] = $statusMap[$project->status_project] ?? [ucfirst($project->status_project), '#ECAD02'];
+                            @endphp
+
+                            <span class="status-badge"
+                                style="background-color: {{ $badgeColor }} !important; color:white; padding:6px 12px; font-weight:600; border-radius:6px;">
+                                {{ $statusText }}
+                            </span>
+
+
+                        </td>
+
                         </tr>
                         @empty
                         <tr>
@@ -160,153 +159,135 @@
 
 @push('scripts')
 <script>
-    // Debounce helper
-    function debounce(fn, delay) {
-        let t;
-        return function () {
-            const args = arguments;
-            clearTimeout(t);
-            t = setTimeout(() => fn.apply(this, args), delay);
-        };
+function debounce(fn, delay) {
+    let t;
+    return function () {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, arguments), delay);
+    };
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.querySelector('input[name="search"]');
+    const statusSelect = document.querySelector('select[name="status"]');
+    const prioritySelect = document.querySelector('select[name="priority"]');
+    const tbody = document.getElementById('projects-tbody');
+    const paginationWrap = document.getElementById('projects-pagination');
+
+    let currentPage = 1;
+    let lastPagination = null;
+
+    const statusMap = {
+        draft: ['Draft', '#555555'],
+        completed: ['Completed', '#28AC00'],
+        decline: ['Declined', '#BD0000'],
+        review_sc: ['Review SC', '#ECAD02'],
+        persetujuan_sekretaris: ['Persetujuan Sekdir', '#ECAD02'],
+        pemilihan_vendor: ['Pemilihan Vendor', '#ECAD02'],
+        in_progress: ['Sedang Diproses', '#ECAD02'],
+    };
+
+    function renderRows(items) {
+        if (!Array.isArray(items) || items.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4">
+                        <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                        <p class="text-muted mt-2">Tidak ada data project</p>
+                    </td>
+                </tr>`;
+            paginationWrap.innerHTML = "";
+            return;
+        }
+
+        tbody.innerHTML = items.map(p => {
+            const [statusText, badgeColor] =
+                statusMap[p.status_project] ?? [p.status_project ?? '-', "#ECAD02"];
+
+            return `
+            <tr style="border-bottom: 1px solid #ddd;">
+                <td style="padding: 12px 8px;"><strong>${p.code_project}</strong></td>
+                <td style="padding: 12px 8px;">${p.name_project?.substring(0, 40) ?? '-'}</td>
+                <td style="padding: 12px 8px; text-align: center;">${p.owner_division ?? '-'}</td>
+                <td style="padding: 12px 8px; text-align: center;">${p.start_date ?? '-'}</td>
+                <td style="padding: 12px 8px; text-align: center;">${p.end_date ?? '-'}</td>
+                <td style="padding: 12px 8px; text-align: center;">${p.vendor ?? '-'}</td>
+                <td style="padding: 12px 8px; text-align: center;">
+                    <span class="badge-priority badge-${p.priority?.toLowerCase() ?? ''}">
+                        ${p.priority?.toUpperCase() ?? '-'}
+                    </span>
+                </td>
+                <td style="padding: 12px 8px; text-align: center;">
+                    <span class="status-badge"
+                        style="background-color:${badgeColor} !important; color:white; padding:6px 12px; font-weight:600; border-radius:6px;">
+                        ${statusText}
+                    </span>
+                </td>
+            </tr>`;
+        }).join("");
+
+        renderPagination();
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const searchInput = document.querySelector('input[name="search"]');
-        const statusSelect = document.querySelector('select[name="status"]');
-        const prioritySelect = document.querySelector('select[name="priority"]');
-        const tbody = document.getElementById('projects-tbody');
-        const paginationWrap = document.getElementById('projects-pagination');
-
-        let currentPage = 1;
-        let lastPagination = null;
-
-        // Render rows helper
-        function renderRows(items) {
-            if (!Array.isArray(items) || items.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="9" class="text-center py-4">
-                            <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
-                            <p class="text-muted mt-2">Tidak ada data project</p>
-                        </td>
-                    </tr>`;
-                paginationWrap.innerHTML = '';
-                return;
-            }
-
-            tbody.innerHTML = items.map(p => `
-                <tr style="border-bottom: 1px solid #ddd;">
-                    <td style="padding: 12px 8px;"><strong>${p.code_project}</strong></td>
-                    <td style="padding: 12px 8px;">${p.name_project.length > 40 ? p.name_project.substring(0,40) + '...' : p.name_project}</td>
-                    <td style="padding: 12px 8px; text-align: center;">${p.owner_division}</td>
-                    <td style="padding: 12px 8px; text-align: center;">${p.start_date ?? '-'}</td>
-                    <td style="padding: 12px 8px; text-align: center;">${p.end_date ?? '-'}</td>
-                    <td style="padding: 12px 8px;">${p.vendor ?? '-'}</td>
-                    <td style="padding: 12px 8px; text-align: center;"><span class="badge-priority badge-${(p.priority || '').toLowerCase()}" style="padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">${(p.priority || '').toUpperCase()}</span></td>
-                    <td style="padding: 12px 8px; text-align: center;"><span class="badge bg-info" style="padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;">${(p.status_project || '').replace(/_/g,' ')}</span></td>
-                </tr>
-            `).join('');
-
-            // Render pagination
-            renderPagination();
+    function renderPagination() {
+        if (!lastPagination) {
+            paginationWrap.innerHTML = '';
+            return;
         }
 
-        // Render pagination controls
-        function renderPagination() {
-            if (!lastPagination) {
-                paginationWrap.innerHTML = '';
-                return;
-            }
+        const p = lastPagination;
+        let html = `<nav><ul class="pagination">`;
 
-            const p = lastPagination;
-            let html = '<nav><ul class="pagination">';
+        html += p.current_page > 1
+            ? `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page - 1})">← Sebelumnya</a></li>`
+            : `<li class="page-item disabled"><span class="page-link">← Sebelumnya</span></li>`;
 
-            // Previous button
-            if (p.current_page > 1) {
-                html += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(${p.current_page - 1})">← Sebelumnya</a></li>`;
-            } else {
-                html += '<li class="page-item disabled"><span class="page-link">← Sebelumnya</span></li>';
-            }
-
-            // Page numbers
-            for (let i = 1; i <= p.last_page; i++) {
-                if (i === p.current_page) {
-                    html += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
-                } else {
-                    html += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(${i})">${i}</a></li>`;
-                }
-            }
-
-            // Next button
-            if (p.has_more) {
-                html += `<li class="page-item"><a class="page-link" href="javascript:void(0)" onclick="goToPage(${p.current_page + 1})">Berikutnya →</a></li>`;
-            } else {
-                html += '<li class="page-item disabled"><span class="page-link">Berikutnya →</span></li>';
-            }
-
-            html += '</ul></nav>';
-            paginationWrap.innerHTML = html;
+        for (let i = 1; i <= p.last_page; i++) {
+            html += i === p.current_page
+                ? `<li class="page-item active"><span class="page-link">${i}</span></li>`
+                : `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${i})">${i}</a></li>`;
         }
 
-        // Go to page
-        window.goToPage = function(page) {
-            currentPage = page;
-            fetchProjects();
-        };
+        html += p.has_more
+            ? `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page + 1})">Berikutnya →</a></li>`
+            : `<li class="page-item disabled"><span class="page-link">Berikutnya →</span></li>`;
 
-        // Fetch helper
-        function fetchProjects() {
-            const q = encodeURIComponent(searchInput.value.trim());
-            const status = encodeURIComponent(statusSelect.value);
-            const priority = encodeURIComponent(prioritySelect.value);
-            const url = `{{ route('projects.search') }}?q=${q}&status=${status}&priority=${priority}&page=${currentPage}`;
+        html += `</ul></nav>`;
+        paginationWrap.innerHTML = html;
+    }
 
-            console.log('Fetching:', url);
-
-            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(r => {
-                    if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
-                    return r.json();
-                })
-                .then(response => {
-                    console.log('Response:', response);
-                    lastPagination = response.pagination;
-                    renderRows(response.data);
-                })
-                .catch(err => console.error('Search error:', err));
-        }
-
-        const debouncedFetch = debounce(function() {
-            currentPage = 1;
-            fetchProjects();
-        }, 300);
-
-        // Load initial data
-        console.log('Initializing projects table...');
+    window.goToPage = function (page) {
+        currentPage = page;
         fetchProjects();
+    };
 
-        // Live on typing
-        if (searchInput) searchInput.addEventListener('input', debouncedFetch);
+    function fetchProjects() {
+        const q = encodeURIComponent(searchInput.value.trim());
+        const status = encodeURIComponent(statusSelect.value);
+        const priority = encodeURIComponent(prioritySelect.value);
 
-        // Also trigger when filters change
-        if (statusSelect) statusSelect.addEventListener('change', function() {
-            currentPage = 1;
-            fetchProjects();
-        });
-        if (prioritySelect) prioritySelect.addEventListener('change', function() {
-            currentPage = 1;
-            fetchProjects();
-        });
+        const url = `{{ route('projects.search') }}?q=${q}&status=${status}&priority=${priority}&page=${currentPage}`;
+        console.log("Fetch URL:", url);
 
-        // Optional: keep behaviour when user submits the form (fallback)
-        const filterForm = document.querySelector('form[action="{{ route('projects.index') }}"]');
-        if (filterForm) {
-            filterForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                currentPage = 1;
-                fetchProjects();
-            });
-        }
-    });
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(res => res.json())
+            .then(res => {
+                lastPagination = res.pagination;
+                renderRows(res.data);
+            })
+            .catch(err => console.error("Search error:", err));
+    }
+
+    const debouncedFetch = debounce(() => {
+        currentPage = 1;
+        fetchProjects();
+    }, 300);
+
+    searchInput.addEventListener('input', debouncedFetch);
+    statusSelect.addEventListener('change', debouncedFetch);
+    prioritySelect.addEventListener('change', debouncedFetch);
+
+    fetchProjects();
+});
 </script>
 @endpush
