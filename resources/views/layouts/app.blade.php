@@ -644,10 +644,10 @@
                         </li>
                         @endif
 
-                        @if(Auth::user()->roles === 'desain')
+                        //@if(Auth::user()->roles === 'desain')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('desain*') ? 'active' : '' }}" href="{{ route('desain.dashboard') }}">
-                                Pengadaan
+                            <a class="nav-link {{ request()->routeIs('desain*') ? 'active' : '' }}" href="{{ route('desain.list-project') }}">
+                                Project
                             </a>
                         </li>
                         @endif
