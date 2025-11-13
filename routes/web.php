@@ -147,8 +147,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/status-evatek/{projectId}', [DesainController::class, 'statusEvatek'])->name('status-evatek');
     });
 
+    
+    Route::get('/desain/list-project', [DesainListProjectController::class, 'list'])
+        ->name('desain.list-project');
 
-Route::get('/desain/list-project', [DesainListProjectController::class, 'list'])
-     ->name('desain.list-project');
+    Route::get('/desain/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPermintaan'])
+    ->name('desain.daftar-permintaan');
+    
+    Route::get('/desain/evatek/{request_id}', [App\Http\Controllers\DesainListProjectController::class, 'reviewEvatek'])
+    ->name('desain.review-evatek');
 
 });
