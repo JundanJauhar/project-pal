@@ -52,7 +52,7 @@ class SupplyChainController extends Controller
     public function pilihVendor(Request $request)
     {
         $search = $request->query('search');
-        
+
         $vendors = Vendor::where('legal_status', 'verified')
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
