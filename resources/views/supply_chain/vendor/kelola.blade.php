@@ -256,12 +256,8 @@
                                             </td>
                                             <td>
                                                 <div class="btn-group" role="group">
-                                                    <button type="button" class="btn btn-sm btn-primary"
-                                                        onclick="selectVendor({{ $vendor->vendor_id }}, '{{ $vendor->name_vendor }}')">
-                                                        <i class="bi bi-check-circle"></i> Pilih
-                                                    </button>
                                                     <a href="#" class="btn btn-sm btn-info text-white">
-                                                        <i class="bi bi-eye"></i> Detail
+                                                        <i class="bi bi-pencil"></i> Edit
                                                     </a>
                                                 </div>
                                             </td>

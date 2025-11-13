@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Tambah Vendor Baru ')
+@section('title', isset($vendor) ? 'Edit Vendor' : 'Tambah Vendor Baru ')
 
 @section('content')
 <div class="row " style="justify-content: center; align-items: center; ">
