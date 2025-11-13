@@ -568,6 +568,7 @@
 </head>
 <body>
     <!-- Navbar -->
+    @if(!isset($hideNavbar) || !$hideNavbar)
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center ms-4" href="{{ route('dashboard') }}">
@@ -629,7 +630,7 @@
 
                         @if(Auth::user()->roles === 'supply_chain')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('supply-chain.vendor.pilih*') ? 'active' : '' }}" href="{{ route('supply-chain.vendor.pilih') }}">
+                            <a class="nav-link {{ request()->routeIs('supply-chain.vendor.kelola*') ? 'active' : '' }}" href="{{ route('supply-chain.vendor.kelola') }}">
                                 Kelola Vendor
                             </a>
                         </li>
@@ -697,6 +698,7 @@
             </div>
         </div>
     </nav>
+    @endif
 
     <div class="container-fluid">
         <div class="row justify-content-center">

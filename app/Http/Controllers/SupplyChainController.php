@@ -37,11 +37,19 @@ class SupplyChainController extends Controller
         return view('supply_chain.dashboard', compact('stats', 'projects'));
     }
 
+    public function kelolaVendor()
+    {
+        $vendors = Vendor::orderBy('name_vendor')->get();
+
+        $projects = Project::where('status_project', ['pemilihan_vendor',]);
+
+        return view('supply_chain.vendor.kelola', compact('vendors'));
+    }
     public function pilihVendor()
     {
         $vendors = Vendor::orderBy('name_vendor')->get();
 
-$projects = Project::where('status_project',['pemilihan_vendor', ]);
+        $projects = Project::where('status_project', ['pemilihan_vendor',]);
 
         return view('supply_chain.vendor.pilih', compact('vendors'));
     }
@@ -84,7 +92,8 @@ $projects = Project::where('status_project',['pemilihan_vendor', ]);
         $project = Project::with(['requestProcurements.items', 'hps'])
             ->findOrFail($projectId);
 
-        return view('supply_chain.review_project', compact('project'));
+        return view('supply_chain.review_project', compact('project'))
+            ->with('hideNavbar', true);
     }
 
     /**
