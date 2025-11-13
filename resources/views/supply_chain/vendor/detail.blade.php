@@ -119,35 +119,20 @@
     <div class="d-flex justify-content-between align-items-start">
         <div>
             <h4>Daftar Pengadaan</h4>
-            <p><strong>Nama Project:</strong> {{ $project->code_project }}</p>
-            <p><strong>Vendor:</strong> {{ $project->contracts->first()->vendor->name_vendor ?? '-' }}</p>
-            <p><strong>Deskripsi:</strong> {{ $project->description }}</p>
+            <p><strong>Nama Vendor:</strong> {{ $vendor->name_vendor }}</p>
+            <p><strong>Kontak:</strong> {{ $vendor->phone_number }}</p>
+            <p><strong>Email:</strong> {{ $vendor->email }}</p>
         </div>
 
         <div class="text-end">
-            <p><strong>Prioritas:</strong> {{ strtoupper($project->priority) }}</p>
-            <p><strong>Tanggal Dibuat:</strong> {{ $project->created_at->format('d/m/Y') }}</p>
-            <p><strong>Tanggal Target:</strong> {{ $project->end_date->format('d/m/Y') }}</p>
+            <p><strong>Alamat:</strong> {{ $vendor->address }}</p>
         </div>
     </div>
 
 
     {{-- Timeline --}}
-    @php
-        $stages = ['Diajukan', 'Review SC', 'Persetujuan Sekretaris', 'Pemilihan Vendor', 'Pengecekan Legalitas', 'Pemesanan', 'Pembayaran', 'Selesai'];
-    @endphp
 
-    <div class="timeline-container">
-        @foreach ($stages as $index => $stage)
-            <div class="timeline-step
-                {{ $index < $currentStageIndex ? 'completed' : ($index == $currentStageIndex ? 'active' : '') }}">
-                <div class="timeline-icon">
-                    <i class="bi bi-check-circle"></i>
-                </div>
-                <small>{{ $stage }}</small>
-            </div>
-        @endforeach
-    </div>
+
 
 
     {{-- Detail Pengadaan --}}
@@ -163,7 +148,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($project->requestProcurements as $req)
+            @foreach ($vendor->requestProcurements as $req)
                 @foreach ($req->items as $item)
                 <tr>
                     <td>{{ $item->item_name }}</td>

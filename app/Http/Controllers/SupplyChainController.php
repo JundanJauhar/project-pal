@@ -49,9 +49,19 @@ class SupplyChainController extends Controller
 
         return view('supply_chain.vendor.kelola', compact('vendors', 'projects'));
     }
-    public function pilihVendor()
+    public function pilihVendor(Request $request)
     {
+        $search = $request->query('search');
+        
         $vendors = Vendor::where('legal_status', 'verified')
+            ->when($search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('name_vendor', 'LIKE', "%{$search}%")
+                      ->orWhere('address', 'LIKE', "%{$search}%")
+                      ->orWhere('phone_number', 'LIKE', "%{$search}%")
+                      ->orWhere('email', 'LIKE', "%{$search}%");
+                });
+            })
             ->orderBy('name_vendor')
             ->get();
 
@@ -84,7 +94,8 @@ class SupplyChainController extends Controller
                 ->with('error', 'Vendor tidak ditemukan');
         }
 
-        return view('supply_chain.vendor.detail', compact('vendor'));
+        return view('supply_chain.vendor.detail', compact('vendor'))
+            ->with('hideNavbar', true);
     }
 
     public function storeVendor(Request $request)
