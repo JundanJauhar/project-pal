@@ -20,15 +20,16 @@
             border-radius: 5px;
             font-size: 12px;
         }
-        .priority-badge {
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            font-weight: bold;
+        .badge-priority {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
         }
-        .priority-rendah { background-color: #28AC00; color: white; }
-        .priority-sedang { background-color: #FFBB00; color: black; }
-        .priority-tinggi { background-color: #BD0000; color: white; }
+        .badge-priority.badge-tinggi { color: #BD0000; font-size: 16px;}
+        .badge-priority.badge-sedang { color: #FFBB00; font-size: 16px;}
+        .badge-priority.badge-rendah { color: #6f6f6f; font-size: 16px; }
 
         .card-header {
             background-color: #ffffff;
@@ -115,8 +116,7 @@
                             <td>{{ $project->contracts->first()->vendor->name_vendor ?? '-' }}</td>
 
                             <td style="padding: 12px 8px; text-align: center;">
-                                <span class="priority-badge priority-{{ strtolower($project->priority) }}"
-                                style="padding: 5px 12px; font-size: 11px; font-weight: 600;">
+                                <span class="badge-priority badge-{{ strtolower($project->priority) }}">
                                     {{ strtoupper($project->priority) }}
                                 </span>
                             </td>
@@ -135,6 +135,9 @@
                                         'review_sc' => 'Review SC',
                                         'persetujuan_sekretaris' => 'Persetujuan Sekretaris',
                                         'pemilihan_vendor' => 'Pemilihan Vendor',
+                                        'negosiasi_harga' => 'Negosiasi',
+                                        'persetujuan_direksi' => 'Approval Direktur',
+                                        'pembuatan_hps' => 'Pembuatan HPS',
                                         'in_progress' => 'Sedang Proses',
                                         'completed' => 'Completed',
                                         'decline' => 'Decline',

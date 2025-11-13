@@ -638,7 +638,6 @@
                         @if(in_array(Auth::user()->roles, ['treasury', 'accounting']))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('payments*') ? 'active' : '' }}" href="{{ route('payments.index') }}">
-                                <i class="bi bi-credit-card"></i>
                                 Payments
                             </a>
                         </li>

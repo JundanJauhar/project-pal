@@ -150,10 +150,10 @@ class PaymentController extends Controller
 
                 // Update project status if final payment
                 if ($payment->payment_type === 'final') {
-                    $payment->project->update(['status_project' => 'selesai']);
+                    $payment->project->update(['status_project' => 'completed']);
                 }
             } else {
-                $updateData['status'] = 'rejected';
+                $updateData['status'] = 'cancelled';
             }
 
             $payment->update($updateData);
