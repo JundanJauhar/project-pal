@@ -606,7 +606,7 @@
 
                         @if(Auth::user()->roles === 'desain')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
+                            <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('desain.list-project') }}">
                                 Projects
                             </a>
                         </li>
@@ -644,12 +644,12 @@
                         </li>
                         @endif
 
-                        //@if(Auth::user()->roles === 'desain')
+                        <!-- @if(Auth::user()->roles === 'desain')
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('desain*') ? 'active' : '' }}" href="{{ route('desain.list-project') }}">
                                 Project
                             </a>
-                        </li>
+                        </li> -->
                         @endif
 
                         @if(Auth::user()->roles === 'qa')
