@@ -247,7 +247,7 @@
 <a href="javascript:history.back()" class="close-btn">
     <i class="bi bi-x-circle"></i>
 </a>
-<div class="procurement-header">
+<div class="procurement-header ">
     {{-- Header Project --}}
     <div class="d-flex justify-content-between align-items-start">
         <div>

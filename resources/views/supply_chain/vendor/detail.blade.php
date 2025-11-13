@@ -4,9 +4,17 @@
 
 @section('content')
 <style>
+    .detail-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
     .procurement-header {
-        padding: 25px;
+        padding: 30px;
         background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.08);
     }
 
     .timeline-container {
@@ -92,106 +100,102 @@
     object-fit: contain;
 }
 
-/* Tanda X ke kiri mengikuti margin konten */
+/* Tanda X ke kanan atas */
 .close-btn {
     position: absolute;
-    right: 90px; /* Geser ke kiri sesuai kebutuhan */
-    top: 110px;  /* Sejajarkan dengan konten berikutnya */
-    font-size: 28px;
+    right: 20px;
+    top: 20px;
+    font-size: 32px;
     color: #DA3B3B;
     cursor: pointer;
+    z-index: 10;
 }
 
 .close-btn:hover {
     opacity: 0.7;
 }
 
+.vendor-info-grid {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.vendor-info-label {
+    font-weight: 600;
+    color: #4a5568;
+}
+
+.vendor-info-value {
+    color: #2d3748;
+}
+
 
 </style>
-<div class="header-logo-wrapper">
-    <img src="{{ asset('images/logo-pal.png') }}" alt="Logo PAL" class="logo">
-</div>
-<a href="javascript:history.back()" class="close-btn">
-    <i class="bi bi-x-circle"></i>
-</a>
-<div class="procurement-header">
-    {{-- Header Project --}}
-    <div class="d-flex justify-content-between align-items-start">
-        <div>
-            <h4>Daftar Pengadaan</h4>
-            <p><strong>Nama Project:</strong> {{ $project->code_project }}</p>
-            <p><strong>Vendor:</strong> {{ $project->contracts->first()->vendor->name_vendor ?? '-' }}</p>
-            <p><strong>Deskripsi:</strong> {{ $project->description }}</p>
-        </div>
 
-        <div class="text-end">
-            <p><strong>Prioritas:</strong> {{ strtoupper($project->priority) }}</p>
-            <p><strong>Tanggal Dibuat:</strong> {{ $project->created_at->format('d/m/Y') }}</p>
-            <p><strong>Tanggal Target:</strong> {{ $project->end_date->format('d/m/Y') }}</p>
-        </div>
+<div class="detail-container">
+    <a href="javascript:history.back()" class="close-btn">
+        <i class="bi bi-x-circle"></i>
+    </a>
+
+    <div class="header-logo-wrapper">
+        <img src="{{ asset('images/logo-pal.png') }}" alt="Logo PAL" class="logo">
     </div>
 
+    <div class="procurement-header">
+        {{-- Header --}}
+        <h4 class="mb-4 pb-3 border-bottom">
+            <i class="bi bi-building text-primary"></i> Detail Vendor
+        </h4>
 
-    {{-- Timeline --}}
-    @php
-        $stages = ['Diajukan', 'Review SC', 'Persetujuan Sekretaris', 'Pemilihan Vendor', 'Pengecekan Legalitas', 'Pemesanan', 'Pembayaran', 'Selesai'];
-    @endphp
+        {{-- Vendor Information Grid --}}
+        <div class="vendor-info-grid">
+            <div class="vendor-info-label">Nama Vendor:</div>
+            <div class="vendor-info-value">{{ $vendor->name_vendor }}</div>
 
-    <div class="timeline-container">
-        @foreach ($stages as $index => $stage)
-            <div class="timeline-step
-                {{ $index < $currentStageIndex ? 'completed' : ($index == $currentStageIndex ? 'active' : '') }}">
-                <div class="timeline-icon">
-                    <i class="bi bi-check-circle"></i>
-                </div>
-                <small>{{ $stage }}</small>
+            <div class="vendor-info-label">Alamat:</div>
+            <div class="vendor-info-value">{{ $vendor->address ?? '-' }}</div>
+
+            <div class="vendor-info-label">Nomor Telepon:</div>
+            <div class="vendor-info-value">{{ $vendor->phone_number ?? '-' }}</div>
+
+            <div class="vendor-info-label">Email:</div>
+            <div class="vendor-info-value">{{ $vendor->email ?? '-' }}</div>
+
+            <div class="vendor-info-label">Status Legal:</div>
+            <div class="vendor-info-value">
+                @if($vendor->legal_status === 'verified')
+                    <span class="badge bg-success">Verified</span>
+                @elseif($vendor->legal_status === 'pending')
+                    <span class="badge bg-warning text-dark">Pending</span>
+                @elseif($vendor->legal_status === 'rejected')
+                    <span class="badge bg-danger">Rejected</span>
+                @else
+                    <span class="badge bg-secondary">{{ $vendor->legal_status ?? '-' }}</span>
+                @endif
             </div>
-        @endforeach
+
+            <div class="vendor-info-label">Importir:</div>
+            <div class="vendor-info-value">
+                @if($vendor->is_importer)
+                    <span class="badge bg-info">Ya</span>
+                @else
+                    <span class="badge bg-secondary">Tidak</span>
+                @endif
+            </div>
+
+            <div class="vendor-info-label">Terdaftar Sejak:</div>
+            <div class="vendor-info-value">{{ $vendor->created_at->format('d F Y') }}</div>
+        </div>
+
+        {{-- Action Buttons --}}
+        <div class="mt-4 pt-3 border-top">
+            <a href="javascript:history.back()" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Kembali
+            </a>
+        </div>
     </div>
-
-
-    {{-- Detail Pengadaan --}}
-    <h5 class="section-title">Detail Pengadaan</h5>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Nama Pengadaan</th>
-                <th>Spesifikasi</th>
-                <th>Jumlah</th>
-                <th>Harga Estimasi</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($project->requestProcurements as $req)
-                @foreach ($req->items as $item)
-                <tr>
-                    <td>{{ $item->item_name }}</td>
-                    <td>{{ $item->specification }}</td>
-                    <td>{{ $item->quantity }} {{ $item->unit }}</td>
-                    <td>Rp {{ number_format($item->estimated_price, 0, ',', '.') }}</td>
-                    <td>Rp {{ number_format($item->estimated_price * $item->quantity, 0, ',', '.') }}</td>
-                </tr>
-                @endforeach
-            @endforeach
-        </tbody>
-    </table>
-
-
-    {{-- REVIEW DOCUMENT --}}
-    <h5 class="section-title mt-4">Review Document</h5>
-    <div class="doc-card">
-        {!! $project->review_notes ?? 'Belum ada review' !!}
-    </div>
-
-    {{-- SIGN DOCUMENT --}}
-    <h5 class="section-title">Sign Document</h5>
-    <div class="doc-card">
-        {!! $project->sign_notes ?? 'Belum ada tanda tangan' !!}
-    </div>
-
 </div>
-
-
 
 @endsection
