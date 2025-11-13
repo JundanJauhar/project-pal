@@ -109,7 +109,13 @@
                 {{-- Loop permintaan --}}
                 @forelse($project->requests as $req)
                 <tr>
-                    <td>{{ $req->request_name }}</td>
+                    <td>
+                        <a href="{{ route('desain.review-evatek', $req->request_id) }}" 
+                        style="text-decoration: none; color: #000; font-weight: 600;">
+                            {{ $req->request_name }}
+                        </a>
+                    </td>
+
                     <td>{{ $req->vendor->name_vendor ?? '-' }}</td>
                     <td>{{ $req->request_status }}</td>
                     <td>-</td>
