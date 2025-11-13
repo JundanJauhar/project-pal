@@ -59,6 +59,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Project Routes
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
+    Route::post('/projects/upload-review', [ProjectController::class, 'uploadReview'])->name('projects.uploadReview');
+    Route::post('/projects/save-review-notes', [ProjectController::class, 'saveReviewNotes'])->name('projects.saveReviewNotes');
     Route::resource('projects', ProjectController::class);
     Route::post('/projects/{id}/status', [ProjectController::class, 'updateStatus'])->name('projects.update-status');
 
@@ -79,6 +81,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [SupplyChainController::class, 'dashboard'])->name('dashboard');
         Route::get('/projects/{projectId}/review', [SupplyChainController::class, 'reviewProject'])->name('review-project');
         Route::post('/projects/{projectId}/approve', [SupplyChainController::class, 'approveReview'])->name('approve-review');
+        Route::post('/projects/upload-review', [SupplyChainController::class, 'uploadReview'])->name('upload-review');
 
         Route::get('/material-requests', [SupplyChainController::class, 'materialRequests'])->name('material-requests');
         Route::post('/material-requests/{requestId}', [SupplyChainController::class, 'updateMaterialRequest'])->name('update-material-request');
