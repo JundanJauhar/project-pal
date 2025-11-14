@@ -3,19 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Item extends Model
 {
     protected $table = 'items';
     protected $primaryKey = 'item_id';
 
-    public $timestamps = false;
-
     protected $fillable = [
         'request_procurement_id',
         'item_name',
-        'specification',
+        'item_description',
         'amount',
         'unit',
         'unit_price',
@@ -28,10 +25,7 @@ class Item extends Model
         'total_price' => 'integer',
     ];
 
-    /**
-     * Get the request procurement for this item
-     */
-    public function requestProcurement(): BelongsTo
+    public function requestProcurement()
     {
         return $this->belongsTo(RequestProcurement::class, 'request_procurement_id', 'request_id');
     }

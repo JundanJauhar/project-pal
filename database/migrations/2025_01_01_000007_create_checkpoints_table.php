@@ -6,26 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('checkpoints', function (Blueprint $table) {
             $table->id('point_id');
-            $table->string('point_name');
-            $table->integer('point_sequence');
+            $table->string('point_name', 100)->nullable();
+            $table->text('point_sequence')->nullable();
             $table->unsignedBigInteger('responsible_division')->nullable();
-            $table->boolean('is_final')->default(false);
+            $table->boolean('is_true')->default(false);
             $table->timestamps();
 
-            $table->foreign('responsible_division')->references('divisi_id')->on('divisions')->onDelete('set null');
+            $table->foreign('responsible_division')->references('department_id')->on('departments')->onDelete('set null');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('checkpoints');

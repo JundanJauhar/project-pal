@@ -15,12 +15,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed divisions and checkpoints first
         $this->call([
             DivisionSeeder::class,
-            CheckpointSeeder::class,
+            DepartmentSeeder::class,
             UserSeeder::class,
+            VendorSeeder::class,
+            ProcurementSeeder::class,
             ProjectSeeder::class,
+            CheckpointSeeder::class,
+            RequestProcurementSeeder::class,
+            ItemSeeder::class,
+            ProcurementProgressSeeder::class,
         ]);
     }
 }

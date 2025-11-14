@@ -3,47 +3,24 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Division extends Model
 {
     protected $table = 'divisions';
-    protected $primaryKey = 'divisi_id';
+    protected $primaryKey = 'division_id';
 
     protected $fillable = [
-        'name',
+        'division_name',
         'description',
     ];
 
-    /**
-     * Get users in this division
-     */
-    public function users(): HasMany
+    public function users()
     {
-        return $this->hasMany(User::class, 'division_id', 'divisi_id');
+        return $this->hasMany(User::class, 'division_id', 'division_id');
     }
 
-    /**
-     * Get projects owned by this division
-     */
-    public function projects(): HasMany
+    public function procurements()
     {
-        return $this->hasMany(Project::class, 'owner_division_id', 'divisi_id');
-    }
-
-    /**
-     * Get checkpoints responsible by this division
-     */
-    public function checkpoints(): HasMany
-    {
-        return $this->hasMany(Checkpoint::class, 'responsible_division', 'divisi_id');
-    }
-
-    /**
-     * Get request procurements from this division
-     */
-    public function requestProcurements(): HasMany
-    {
-        return $this->hasMany(RequestProcurement::class, 'applicant_department', 'divisi_id');
+        return $this->hasMany(Procurement::class, 'department_procurement', 'division_id');
     }
 }

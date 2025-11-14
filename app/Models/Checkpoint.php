@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Checkpoint extends Model
 {
@@ -15,26 +13,20 @@ class Checkpoint extends Model
         'point_name',
         'point_sequence',
         'responsible_division',
-        'is_final',
+        'is_true',
     ];
 
     protected $casts = [
-        'is_final' => 'boolean',
+        'is_true' => 'boolean',
     ];
 
-    /**
-     * Get the division responsible for this checkpoint
-     */
-    public function responsibleDivision(): BelongsTo
+    public function department()
     {
-        return $this->belongsTo(Division::class, 'responsible_division', 'divisi_id');
+        return $this->belongsTo(Department::class, 'responsible_division', 'department_id');
     }
 
-    /**
-     * Get procurement progress for this checkpoint
-     */
-    public function procurementProgress(): HasMany
+    public function procurementProgress()
     {
-        return $this->hasMany(ProcurementProgress::class, 'titik_id', 'point_id');
+        return $this->hasMany(ProcurementProgress::class, 'checkpoint_id', 'point_id');
     }
 }

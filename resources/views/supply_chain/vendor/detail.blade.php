@@ -151,42 +151,26 @@
 
         {{-- Vendor Information Grid --}}
         <div class="vendor-info-grid">
+            <div class="vendor-info-label">ID Vendor:</div>
+            <div class="vendor-info-value"><strong>{{ $vendor->id_vendor }}</strong></div>
+
             <div class="vendor-info-label">Nama Vendor:</div>
             <div class="vendor-info-value">{{ $vendor->name_vendor }}</div>
-
-            <div class="vendor-info-label">Alamat:</div>
-            <div class="vendor-info-value">{{ $vendor->address ?? '-' }}</div>
-
-            <div class="vendor-info-label">Nomor Telepon:</div>
-            <div class="vendor-info-value">{{ $vendor->phone_number ?? '-' }}</div>
-
-            <div class="vendor-info-label">Email:</div>
-            <div class="vendor-info-value">{{ $vendor->email ?? '-' }}</div>
-
-            <div class="vendor-info-label">Status Legal:</div>
-            <div class="vendor-info-value">
-                @if($vendor->legal_status === 'verified')
-                    <span class="badge bg-success">Verified</span>
-                @elseif($vendor->legal_status === 'pending')
-                    <span class="badge bg-warning text-dark">Pending</span>
-                @elseif($vendor->legal_status === 'rejected')
-                    <span class="badge bg-danger">Rejected</span>
-                @else
-                    <span class="badge bg-secondary">{{ $vendor->legal_status ?? '-' }}</span>
-                @endif
-            </div>
 
             <div class="vendor-info-label">Importir:</div>
             <div class="vendor-info-value">
                 @if($vendor->is_importer)
-                    <span class="badge bg-info">Ya</span>
+                    <span class="badge bg-success"><i class="bi bi-globe"></i> Ya</span>
                 @else
                     <span class="badge bg-secondary">Tidak</span>
                 @endif
             </div>
 
             <div class="vendor-info-label">Terdaftar Sejak:</div>
-            <div class="vendor-info-value">{{ $vendor->created_at->format('d F Y') }}</div>
+            <div class="vendor-info-value">{{ $vendor->created_at->format('d F Y H:i') }}</div>
+
+            <div class="vendor-info-label">Terakhir Diperbarui:</div>
+            <div class="vendor-info-value">{{ $vendor->updated_at->format('d F Y H:i') }}</div>
         </div>
 
         {{-- Action Buttons --}}

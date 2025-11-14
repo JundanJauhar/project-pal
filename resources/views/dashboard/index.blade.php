@@ -66,17 +66,17 @@
     <div class="col-md-3">
         <div class="stat-card stat-total">
             <div class="stat-content">
-                <div class="stat-title">Total Pengadaan</div>
-                <div class="stat-value">{{ $stats['total_pengadaan'] }}</div>
+                <div class="stat-title">Total Project</div>
+                <div class="stat-value">{{ $stats['total_project'] }}</div>
             </div>
-            <div class="stat-icon"><div class="stat-icon-inner"><i class="bi bi-check-lg"></i></div></div>
+            <div class="stat-icon"><div class="stat-icon-inner"><i class="bi bi-folder"></i></div></div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stat-card stat-progress">
             <div class="stat-content">
-                <div class="stat-title">Sedang Proses</div>
-                <div class="stat-value">{{ $stats['sedang_proses'] }}</div>
+                <div class="stat-title">Total Procurement</div>
+                <div class="stat-value">{{ $stats['total_procurement'] }}</div>
             </div>
             <div class="stat-icon"><div class="stat-icon-inner"><i class="bi bi-box"></i></div></div>
         </div>
@@ -84,19 +84,19 @@
     <div class="col-md-3">
         <div class="stat-card stat-success">
             <div class="stat-content">
-                <div class="stat-title">Selesai</div>
-                <div class="stat-value">{{ $stats['selesai'] }}</div>
+                <div class="stat-title">Total Vendor</div>
+                <div class="stat-value">{{ $stats['total_vendor'] }}</div>
             </div>
-            <div class="stat-icon"><div class="stat-icon-inner"><i class="bi bi-check-lg"></i></div></div>
+            <div class="stat-icon"><div class="stat-icon-inner"><i class="bi bi-building"></i></div></div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stat-card stat-rejected">
             <div class="stat-content">
-                <div class="stat-title">Ditolak</div>
-                <div class="stat-value">{{ $stats['ditolak'] }}</div>
+                <div class="stat-title">Total Requests</div>
+                <div class="stat-value">{{ $stats['total_requests'] }}</div>
             </div>
-            <div class="stat-icon"><div class="stat-icon-inner"><i class="bi bi-x"></i></div></div>
+            <div class="stat-icon"><div class="stat-icon-inner"><i class="bi bi-file-text"></i></div></div>
         </div>
     </div>
 </div>
@@ -105,7 +105,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header text-black">
-                <h5 class="mb-0">Daftar Pengadaan</h5>
+                <h5 class="mb-0">Daftar Project</h5>
             </div>
             <div class="card-body">
                 <table class="table table-hover">
@@ -113,73 +113,20 @@
                         <tr>
                             <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode Project</th>
                             <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Project</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Vendor</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
+                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Procurement</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Dibuat</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($projects as $project)
                         <tr>
-                            <td style="padding: 12px 8px;"><strong>{{ $project->code_project }}</strong></td>
-                            <td style="padding: 12px 8px;">{{ Str::limit($project->name_project, 40) }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $project->ownerDivision->nama_divisi ?? '-' }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $project->start_date->format('d/m/Y') }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $project->end_date->format('d/m/Y') }}</td>
-                            <td>{{ $project->contracts->first()->vendor->name_vendor ?? '-' }}</td>
-
-                            <td style="padding: 12px 8px; text-align: center;">
-                                <span class="badge-priority badge-{{ strtolower($project->priority) }}">
-                                    {{ strtoupper($project->priority) }}
-                                </span>
-                            </td>
-
-                            <td style="padding: 12px 8px; text-align: center;">
-                                @php
-                                    $statusColors = [
-                                        'draft'     => '#555555',
-                                        'completed' => '#28AC00',
-                                        'decline'   => '#BD0000',
-                                    ];
-
-                                    $badgeColor = $statusColors[$project->status_project] ?? '#ECAD02';
-
-                                    $statusText = match($project->status_project) {
-                                        'review_sc' => 'Review SC',
-                                        'persetujuan_sekretaris' => 'Persetujuan Sekretaris',
-                                        'pemilihan_vendor' => 'Pemilihan Vendor',
-                                        'negosiasi_harga' => 'Negosiasi',
-                                        'persetujuan_direksi' => 'Approval Direktur',
-                                        'pembuatan_hps' => 'Pembuatan HPS',
-                                        'in_progress' => 'Sedang Proses',
-                                        'completed' => 'Completed',
-                                        'decline' => 'Decline',
-                                        default => ucfirst($project->status_project)
-                                    };
-                                @endphp
-
-                                <span class="badge custom-status-badge"
-                                    style="background-color: {{ $badgeColor }} !important;
-                                           color: #fff !important;
-                                           padding: 6px 12px !important;
-                                           font-weight: 600 !important;
-                                           font-size: 12px;">
-                                    {{ $statusText }}
-                                </span>
-                            </td>
-
-                            <td style="padding: 12px 8px; text-align: center;">
-                                <a href="{{ route('projects.show', $project->project_id) }}" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-eye"></i> Detail
-                                </a>
-                            </td>
+                            <td style="padding: 12px 8px;"><strong>{{ $project->project_code ?? '-' }}</strong></td>
+                            <td style="padding: 12px 8px;">{{ $project->project_name }}</td>
+                            <td style="padding: 12px 8px;">{{ $project->procurement->name_procurement ?? '-' }}</td>
+                            <td style="padding: 12px 8px; text-align: center;">{{ $project->created_at->format('d/m/Y') }}</td>
                         </tr>
                         @empty
-                        <tr><td colspan="8" class="text-center">Tidak ada data pengadaan</td></tr>
+                        <tr><td colspan="4" class="text-center">Tidak ada data project</td></tr>
                         @endforelse
                     </tbody>
                 </table>

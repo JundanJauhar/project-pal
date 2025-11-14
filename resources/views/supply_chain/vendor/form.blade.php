@@ -1,150 +1,98 @@
 @extends('layouts.app')
 
-@section('title', isset($vendor) ? 'Edit Vendor' : 'Tambah Vendor Baru ')
+@section('title', isset($vendor) ? 'Edit Vendor' : 'Tambah Vendor Baru')
+
+@push('styles')
+<style>
+    .card-custom {
+        border: none;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+    }
+
+    .card-header-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .btn-custom {
+        border-radius: 5px;
+        padding: 10px 25px;
+    }
+</style>
+@endpush
 
 @section('content')
-<div class="row " style="justify-content: center; align-items: center; ">
-    <div class="col-md-8" style="align-items: center;">
-        <div class="card card-custom">
-            <div class="card-header-custom">
-                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi Vendor</h5>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{{ route('supply-chain.vendor.store') }}">
-                    @csrf
-                    <input type="hidden" name="redirect" value="{{ $redirect ?? 'kelola' }}">
-                    <div class="mb-3">
-                        <label for="name_vendor" class="form-label">Nama Perusahaan <span class="text-danger">*</span></label>
-                        <input type="text"
-                            class="form-control @error('name_vendor') is-invalid @enderror"
-                            id="name_vendor"
-                            name="name_vendor"
-                            value=""
-                            placeholder="PT Vendor Contoh"
-                            required>
-                        @error('name_vendor')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+<div class="container-fluid px-4">
+    <!-- Back Button -->
+    <div class="mb-4">
+        <a href="{{ ($redirect ?? 'kelola') === 'pilih' ? route('supply-chain.vendor.pilih') : route('supply-chain.vendor.kelola') }}" 
+           class="text-decoration-none text-primary">
+            <h4><i class="bi bi-arrow-left"></i> Kembali</h4>
+        </a>
+    </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="phone_number" class="form-label">No Telepon <span class="text-danger">*</span></label>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card card-custom">
+                <div class="card-header-custom">
+                    <h5 class="mb-0">
+                        <i class="bi bi-{{ isset($vendor) ? 'pencil-square' : 'plus-circle' }}"></i> 
+                        {{ isset($vendor) ? 'Edit Vendor' : 'Tambah Vendor Baru' }}
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ isset($vendor) ? route('supply-chain.vendor.update', $vendor->id_vendor) : route('supply-chain.vendor.store') }}">
+                        @csrf
+                        <input type="hidden" name="redirect" value="{{ $redirect ?? 'kelola' }}">
+                        
+                        <!-- Nama Vendor -->
+                        <div class="mb-3">
+                            <label for="name_vendor" class="form-label">Nama Perusahaan <span class="text-danger">*</span></label>
                             <input type="text"
-                                class="form-control @error('phone_number') is-invalid @enderror"
-                                id="phone_number"
-                                name="phone_number"
-                                value=""
-                                placeholder="+62 812 3456 7890"
-                                {{ isset($project) ? 'readonly' : 'required' }}>
-                            @error('phone_number')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="owner_division_id" class="form-label">Email <span class="text-danger">*</span></label>
-                            <input type="text"
-                                class="form-control @error('email') is-invalid @enderror"
-                                id="email"
-                                name="email"
-                                value=""
-                                placeholder="example@gmail.com"
-                                {{ isset($project) ? 'readonly' : 'required' }}>
-                            @error('email')
+                                class="form-control @error('name_vendor') is-invalid @enderror"
+                                id="name_vendor"
+                                name="name_vendor"
+                                value="{{ old('name_vendor', $vendor->name_vendor ?? '') }}"
+                                placeholder="PT Vendor Contoh"
+                                required>
+                            @error('name_vendor')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                    </div>
 
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Alamat Perusahaan</label>
-                        <textarea class="form-control @error('address') is-invalid @enderror"
-                            id="address"
-                            name="address"
-                            rows="4"
-                            placeholder="">{{ old('description', $project->description ?? '') }}</textarea>
-                        @error('address')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="mb-3">
-                        <label for="legal_status" class="form-label">Status Legal</label>
-                        <select class="form-select @error('legal_status') is-invalid @enderror"
-                            id="legal_status"
-                            name="legal_status">
-                            <option value="">Pilih Status Legal</option>
-                            <option value="verified" {{ old('legal_status') == 'verified' ? 'selected' : '' }}>Verified (Terverifikasi)</option>
-                            <option value="pending" {{ old('legal_status') == 'pending' ? 'selected' : '' }}>Pending (Menunggu Verifikasi)</option>
-                            <option value="rejected" {{ old('legal_status') == 'rejected' ? 'selected' : '' }}>Rejected (Ditolak)</option>
-                        </select>
-                        @error('legal_status')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">
-                            <small>
-                                <i class="bi bi-info-circle"></i>
-                                <strong>Verified:</strong> Vendor sudah diverifikasi dan dapat dipilih untuk project<br>
-                                <strong>Pending:</strong> Menunggu proses verifikasi dokumen legal<br>
-                                <strong>Rejected:</strong> Vendor tidak lolos verifikasi
-                            </small>
+                        <!-- Is Importer Checkbox -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                    type="checkbox"
+                                    id="is_importer"
+                                    name="is_importer"
+                                    value="1"
+                                    {{ old('is_importer', $vendor->is_importer ?? false) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_importer">
+                                    <i class="bi bi-globe"></i> Vendor adalah Importir
+                                </label>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input"
-                                type="checkbox"
-                                id="is_importer"
-                                name="is_importer"
-                                value="1"
-                                {{ old('is_importer') ? 'checked' : '' }}>
-                            <label class="form-check-label" for="is_importer">
-                                Vendor adalah Importir
-                            </label>
+                        <!-- Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ ($redirect ?? 'kelola') === 'pilih' ? route('supply-chain.vendor.pilih') : route('supply-chain.vendor.kelola') }}" 
+                               class="btn btn-secondary btn-custom">
+                                <i class="bi bi-x-circle"></i> Batal
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-custom">
+                                <i class="bi bi-{{ isset($vendor) ? 'save' : 'plus-circle' }}"></i> 
+                                {{ isset($vendor) ? 'Update Vendor' : 'Simpan Vendor' }}
+                            </button>
                         </div>
-                    </div>
-
-
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{{ ($redirect ?? 'kelola') === 'pilih' ? route('supply-chain.vendor.pilih') : route('supply-chain.vendor.kelola') }}" class="btn btn-secondary btn-custom">
-                            <i class="bi bi-x-circle"></i> Batal
-                        </a>
-                        <button type="submit" class="btn btn-primary btn-custom">
-                            <i class="bi bi-save"></i> {{ isset($project) ? 'Update' : 'Simpan' }} Project
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    // Auto-generate project code suggestion
-    document.addEventListener('DOMContentLoaded', function() {
-        @if(!isset($project))
-        const codeInput = document.getElementById('code_project');
-        if (codeInput && !codeInput.value) {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const random = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-            codeInput.value = `KCJ-${year}${month}987-${random}`;
-        }
-        @endif
-
-        // Validate end date > start date
-        const startDate = document.getElementById('start_date');
-        const endDate = document.getElementById('end_date');
-
-        startDate.addEventListener('change', function() {
-            endDate.min = this.value;
-        });
-    });
-</script>
-@endpush

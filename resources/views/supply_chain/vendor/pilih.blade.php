@@ -188,12 +188,7 @@
                                 <tr>
                                     <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">ID Vendor</th>
                                     <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Vendor</th>
-                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Alamat</th>
-                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kontak</th>
-                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Email</th>
-                                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status Legal</th>
                                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Importer</th>
-                                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
                                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                                 </tr>
                             </thead>
@@ -202,10 +197,6 @@
                                 <tr>
                                     <td style="padding: 12px 8px;"><strong>{{ $vendor->id_vendor }}</strong></td>
                                     <td style="padding: 12px 8px;">{{ $vendor->name_vendor }}</td>
-                                    <td style="padding: 12px 8px;">{{ Str::limit($vendor->address ?? '-', 30) }}</td>
-                                    <td style="padding: 12px 8px;">{{ $vendor->phone_number ?? '-' }}</td>
-                                    <td style="padding: 12px 8px;">{{ $vendor->email ?? '-' }}</td>
-                                    <td style="padding: 12px 8px; text-align: center;">{{ $vendor->legal_status ?? '-' }}</td>
                                     <td style="padding: 12px 8px; text-align: center;">
                                         @if($vendor->is_importer)
                                         <span class="badge bg-success">
@@ -216,39 +207,15 @@
                                         @endif
                                     </td>
                                     <td style="padding: 12px 8px; text-align: center;">
-                                        @php
-                                        $statusClass = match ($vendor->status ?? 'pending') {
-                                        'approved' => 'status-active',
-                                        'pending' => 'status-pending',
-                                        'rejected' => 'status-inactive',
-                                        default => 'status-pending'
-                                        };
-                                        $statusText = match ($vendor->status ?? 'pending') {
-                                        'approved' => 'Aktif',
-                                        'pending' => 'Pending',
-                                        'rejected' => 'Ditolak',
-                                        default => 'Pending'
-                                        };
-                                        @endphp
-                                        <span class="vendor-status {{ $statusClass }}">
-                                            {{ $statusText }}
-                                        </span>
-                                    </td>
-                                    <td style="padding: 12px 8px; text-align: center;">
-                                        <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-primary"
-                                                onclick="selectVendor({{ $vendor->id_vendor }}, '{{ $vendor->name_vendor }}')">
-                                                <i class="bi bi-check-circle"></i> Pilih
-                                            </button>
-                                            <a href="{{ route('supply-chain.vendor.detail', ['id' => $vendor->id_vendor]) }}" class="btn btn-sm btn-info text-white">
-                                                <i class="bi bi-eye"></i> Detail
-                                            </a>
-                                        </div>
+                                        <button type="button" class="btn btn-sm btn-primary"
+                                            onclick="selectVendor({{ $vendor->id_vendor }}, '{{ $vendor->name_vendor }})">
+                                            <i class="bi bi-check-circle"></i> Pilih
+                                        </button>
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="9" class="text-center py-5 text-muted">
+                                    <td colspan="4" class="text-center py-5 text-muted">
                                         <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
                                         <p class="mt-3 mb-0">Tidak ada data vendor</p>
                                     </td>
@@ -285,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Tampilkan loading
         tableBody.innerHTML = `
             <tr>
-                <td colspan="9" class="text-center py-5">
+                <td colspan="4" class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
@@ -317,7 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error:', error);
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="9" class="text-center py-5 text-danger">
+                    <td colspan="4" class="text-center py-5 text-danger">
                         <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
                         <p class="mt-3 mb-0">Terjadi kesalahan saat mencari data</p>
                     </td>

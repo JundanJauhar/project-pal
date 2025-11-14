@@ -68,26 +68,10 @@ class User extends Authenticatable
     }
 
     /**
-     * Get approvals made by this user
+     * Get request procurements made by this user's department
      */
-    public function approvals(): HasMany
+    public function requestProcurements(): HasMany
     {
-        return $this->hasMany(Approval::class, 'approver_id');
-    }
-
-    /**
-     * Get evaluations made by this user
-     */
-    public function evaluations(): HasMany
-    {
-        return $this->hasMany(Evatek::class, 'evaluated_by');
-    }
-
-    /**
-     * Get HPS created by this user
-     */
-    public function hps(): HasMany
-    {
-        return $this->hasMany(Hps::class, 'created_by');
+        return $this->hasMany(RequestProcurement::class, 'user_id');
     }
 }

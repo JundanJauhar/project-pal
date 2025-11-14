@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProcurementProgress extends Model
 {
@@ -11,41 +10,26 @@ class ProcurementProgress extends Model
     protected $primaryKey = 'progress_id';
 
     protected $fillable = [
-        'permintaan_pengadaan_id',
-        'titik_id',
-        'status_progress',
-        'tanggal_mulai',
-        'tanggal_selesai',
-        'user_id',
-        'catatan',
+        'request_id',
+        'checkpoint_id',
+        'status',
+        'start_date',
+        'end_date',
+        'note',
     ];
 
     protected $casts = [
-        'tanggal_mulai' => 'date',
-        'tanggal_selesai' => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
-    /**
-     * Get the request procurement for this progress
-     */
-    public function requestProcurement(): BelongsTo
+    public function requestProcurement()
     {
-        return $this->belongsTo(RequestProcurement::class, 'permintaan_pengadaan_id', 'request_id');
+        return $this->belongsTo(RequestProcurement::class, 'request_id', 'request_id');
     }
 
-    /**
-     * Get the checkpoint for this progress
-     */
-    public function checkpoint(): BelongsTo
+    public function checkpoint()
     {
-        return $this->belongsTo(Checkpoint::class, 'titik_id', 'point_id');
-    }
-
-    /**
-     * Get the user who made this progress
-     */
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(Checkpoint::class, 'checkpoint_id', 'point_id');
     }
 }

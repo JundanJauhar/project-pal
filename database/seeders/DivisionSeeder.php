@@ -2,29 +2,42 @@
 
 namespace Database\Seeders;
 
-use App\Models\Division;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class DivisionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $divisions = [
-            ['nama_divisi' => 'User Division', 'deskripsi' => 'User / Department yang mengajukan procurement'],
-            ['nama_divisi' => 'Supply Chain', 'deskripsi' => 'Supply Chain Management Division'],
-            ['nama_divisi' => 'Treasury', 'deskripsi' => 'Treasury Division - Pembayaran dan Keuangan'],
-            ['nama_divisi' => 'Accounting', 'deskripsi' => 'Accounting Division - Verifikasi Dokumen'],
-            ['nama_divisi' => 'Quality Assurance', 'deskripsi' => 'Quality Assurance - Inspeksi dan NCR'],
-            ['nama_divisi' => 'Sekretaris Direksi', 'deskripsi' => 'Sekretaris Direksi - Approval Kontrak'],
-            ['nama_divisi' => 'Desain', 'deskripsi' => 'Desain Division - HPS dan Evatek'],
-        ];
-
-        foreach ($divisions as $division) {
-            Division::create($division);
-        }
+        DB::table('divisions')->insert([
+            [
+                'division_id' => 1,
+                'division_name' => 'Supply Chain Management',
+                'description' => 'Divisi yang bertanggung jawab atas pengadaan dan manajemen vendor',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'division_id' => 2,
+                'division_name' => 'Engineering',
+                'description' => 'Divisi teknik dan engineering kapal',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'division_id' => 3,
+                'division_name' => 'Finance',
+                'description' => 'Divisi keuangan dan akuntansi',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'division_id' => 4,
+                'division_name' => 'Production',
+                'description' => 'Divisi produksi kapal',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
     }
 }

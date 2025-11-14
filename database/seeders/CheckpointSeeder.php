@@ -2,38 +2,50 @@
 
 namespace Database\Seeders;
 
-use App\Models\Checkpoint;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class CheckpointSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        $checkpoints = [
-            ['point_name' => 'PDM', 'point_sequence' => 1, 'responsible_division' => 1, 'is_final' => false],
-            ['point_name' => 'Pengecekan', 'point_sequence' => 2, 'responsible_division' => 2, 'is_final' => false],
-            ['point_name' => 'Penawaran Permintaan', 'point_sequence' => 3, 'responsible_division' => 2, 'is_final' => false],
-            ['point_name' => 'Evatek', 'point_sequence' => 4, 'responsible_division' => 7, 'is_final' => false],
-            ['point_name' => 'Negosiasi', 'point_sequence' => 5, 'responsible_division' => 2, 'is_final' => false],
-            ['point_name' => 'Usulan Pengadaan / OC', 'point_sequence' => 6, 'responsible_division' => 2, 'is_final' => false],
-            ['point_name' => 'Pengesahan Kontrak', 'point_sequence' => 7, 'responsible_division' => 6, 'is_final' => false],
-            ['point_name' => 'Pengiriman Material', 'point_sequence' => 8, 'responsible_division' => 2, 'is_final' => false],
-            ['point_name' => 'Pembayaran DP', 'point_sequence' => 9, 'responsible_division' => 3, 'is_final' => false],
-            ['point_name' => 'Proses Importasi / Produksi', 'point_sequence' => 10, 'responsible_division' => 2, 'is_final' => false],
-            ['point_name' => 'Kedatangan Material', 'point_sequence' => 11, 'responsible_division' => 2, 'is_final' => false],
-            ['point_name' => 'Serah Terima Dokumen', 'point_sequence' => 12, 'responsible_division' => 2, 'is_final' => false],
-            ['point_name' => 'Inspeksi Barang', 'point_sequence' => 13, 'responsible_division' => 5, 'is_final' => false],
-            ['point_name' => 'Berita Acara / NCR', 'point_sequence' => 14, 'responsible_division' => 5, 'is_final' => false],
-            ['point_name' => 'Verifikasi Dokumen', 'point_sequence' => 15, 'responsible_division' => 4, 'is_final' => false],
-            ['point_name' => 'Pembayaran', 'point_sequence' => 16, 'responsible_division' => 3, 'is_final' => true],
-        ];
-
-        foreach ($checkpoints as $checkpoint) {
-            Checkpoint::create($checkpoint);
-        }
+        DB::table('checkpoints')->insert([
+            [
+                'point_id' => 1,
+                'point_name' => 'Vendor Selection',
+                'point_sequence' => 'Step 1: Select qualified vendors',
+                'responsible_division' => 1,
+                'is_true' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'point_id' => 2,
+                'point_name' => 'Price Negotiation',
+                'point_sequence' => 'Step 2: Negotiate pricing with selected vendors',
+                'responsible_division' => 1,
+                'is_true' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'point_id' => 3,
+                'point_name' => 'Quality Inspection',
+                'point_sequence' => 'Step 3: Conduct quality inspection',
+                'responsible_division' => 2,
+                'is_true' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'point_id' => 4,
+                'point_name' => 'Delivery Confirmation',
+                'point_sequence' => 'Step 4: Confirm delivery and acceptance',
+                'responsible_division' => 3,
+                'is_true' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
     }
 }
