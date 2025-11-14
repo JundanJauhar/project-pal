@@ -42,13 +42,13 @@ class SupplyChainController extends Controller
     {
         $search = $request->query('search');
 
-         $vendors = Vendor::where('legal_status', 'verified')
+        $vendors = Vendor::where('legal_status', 'verified')
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('name_vendor', 'LIKE', "%{$search}%")
-                      ->orWhere('address', 'LIKE', "%{$search}%")
-                      ->orWhere('phone_number', 'LIKE', "%{$search}%")
-                      ->orWhere('email', 'LIKE', "%{$search}%");
+                        ->orWhere('address', 'LIKE', "%{$search}%")
+                        ->orWhere('phone_number', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%");
                 });
             })
             ->orderBy('name_vendor')
@@ -68,9 +68,9 @@ class SupplyChainController extends Controller
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('name_vendor', 'LIKE', "%{$search}%")
-                      ->orWhere('address', 'LIKE', "%{$search}%")
-                      ->orWhere('phone_number', 'LIKE', "%{$search}%")
-                      ->orWhere('email', 'LIKE', "%{$search}%");
+                        ->orWhere('address', 'LIKE', "%{$search}%")
+                        ->orWhere('phone_number', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%");
                 });
             })
             ->orderBy('name_vendor')
@@ -86,10 +86,24 @@ class SupplyChainController extends Controller
 
     public function formVendor(Request $request)
     {
+
+        $vendorId = $request->query('id');
         $redirect = $request->query('redirect', 'kelola');
+
+        $vendor = null;
+        if ($vendorId) {
+            $vendor = Vendor::find($vendorId);
+            if (!$vendor) {
+                return redirect()->route('supply-chain.vendor.kelola')
+                    ->with('error', 'Vendor tidak ditemukan');
+            }
+        }
+
         return view('supply_chain.vendor.form', compact('redirect'))
             ->with('hideNavbar', true);
     }
+
+
 
     public function detailVendor(Request $request)
     {
@@ -132,12 +146,21 @@ class SupplyChainController extends Controller
                 'is_importer' => $request->has('is_importer') ? 1 : 0,
             ]);
 
+            $lastVendor = Vendor::orderBy('id_vendor', 'desc')->first();
+            $lastNumber = $lastVendor ? intval(substr($lastVendor->id_vendor, 2)) : 0;
+            $validated['id_vendor'] = 'V-' . str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+
+
+            $validated['is_importer'] = $request->has('is_importer') ? 1 : 0;
+            $validated['legal_status'] = $validated['legal_status'] ?? 'pending';
+
+            Vendor::create($validated);
+
             $redirect = $request->input('redirect', 'kelola');
             $routeName = $redirect === 'pilih' ? 'supply-chain.vendor.pilih' : 'supply-chain.vendor.kelola';
 
             return redirect()->route($routeName)
                 ->with('success', 'Vendor "' . $vendor->name_vendor . '" berhasil ditambahkan');
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()
                 ->withErrors($e->errors())

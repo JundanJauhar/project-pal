@@ -332,8 +332,6 @@ document.addEventListener('DOMContentLoaded', function() {
         searchTimeout = setTimeout(performSearch, 500);
     });
 
-    // Search saat klik tombol
-    searchBtn.addEventListener('click', performSearch);
 
     // Search saat tekan Enter
     searchInput.addEventListener('keypress', function(e) {
