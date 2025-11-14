@@ -37,7 +37,7 @@ class Project extends Model
      */
     public function ownerDivision(): BelongsTo
     {
-        return $this->belongsTo(Division::class, 'owner_division_id', 'divisi_id');
+    return $this->belongsTo(Division::class, 'owner_division_id', 'division_id');
     }
 
     /**
