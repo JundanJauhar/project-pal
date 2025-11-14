@@ -13,13 +13,19 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id('project_id');
-            $table->string('code_project', 50)->unique();
-            $table->string('name_project', 100);
+            $table->string('project_code', 50)->unique();
+            $table->string('project_name', 100);
             $table->text('description')->nullable();
-            $table->unsignedBigInteger('owner_division_id');
+
+            // FK ke division
+            $table->unsignedBigInteger('owner_division_id')->nullable();
+
+            // Detail proyek
             $table->enum('priority', ['rendah', 'sedang', 'tinggi'])->default('sedang');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
+
+            // Status workflow proyek
             $table->enum('status_project', [
                 'draft',
                 'review_sc',
@@ -39,9 +45,18 @@ return new class extends Migration
                 'completed',
                 'cancelled'
             ])->default('draft');
+
+            // Tambahan untuk review
+            $table->text('review_notes')->nullable();
+            $table->json('review_documents')->nullable();
+
             $table->timestamps();
 
-            $table->foreign('owner_division_id')->references('divisi_id')->on('divisions')->onDelete('cascade');
+            // Foreign key ke divisions
+            $table->foreign('owner_division_id')
+                ->references('division_id')
+                ->on('divisions')
+                ->nullOnDelete();
         });
     }
 

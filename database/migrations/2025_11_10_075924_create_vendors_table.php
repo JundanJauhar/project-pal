@@ -17,8 +17,13 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->string('phone_number', 20)->nullable();
             $table->string('email', 100)->nullable();
+
+            // Status legal vendor (tambahan)
             $table->enum('legal_status', ['pending', 'verified', 'rejected'])->default('pending');
-            $table->boolean('is_importer')->default(false);
+
+            // Konsisten dengan ERD
+            $table->boolean('is_importir')->default(false);
+
             $table->timestamps();
         });
     }

@@ -12,19 +12,39 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('notifications', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('sender_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->string('type'); // info, warning, success, error, project_created
+            $table->id('notification_id');
+
+            // FK ke users.user_id
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('sender_id')->nullable();
+
+            $table->string('type'); // info, warning, success, error, etc.
             $table->string('title');
             $table->text('message');
-            $table->string('reference_type')->nullable(); // App\Models\Project, etc
+
+            // objek referensi (polymorphic)
+            $table->string('reference_type')->nullable();
             $table->unsignedBigInteger('reference_id')->nullable();
+
             $table->string('action_url')->nullable();
+
             $table->boolean('is_read')->default(false);
             $table->timestamp('read_at')->nullable();
+
             $table->timestamps();
 
+            // Foreign keys (disesuaikan dgn PK users = user_id)
+            $table->foreign('user_id')
+                ->references('user_id')
+                ->on('users')
+                ->cascadeOnDelete();
+
+            $table->foreign('sender_id')
+                ->references('user_id')
+                ->on('users')
+                ->nullOnDelete();
+
+            // Index untuk performa
             $table->index(['user_id', 'is_read']);
             $table->index(['reference_type', 'reference_id']);
         });

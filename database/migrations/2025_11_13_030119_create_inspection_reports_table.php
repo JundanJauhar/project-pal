@@ -21,29 +21,33 @@ return new class extends Migration
 
             // Data inspeksi
             $table->date('inspection_date')->nullable();
-            $table->string('result')->nullable(); // contoh: 'passed', 'failed', 'recheck'
-            $table->text('findings')->nullable(); // temuan selama inspeksi
-            $table->text('notes')->nullable(); // catatan tambahan
-            $table->string('attachment_path')->nullable(); // lampiran file foto/dokumen
-            $table->boolean('ncr_required')->default(false); // apakah perlu NCR (non-conformance report)
+
+            $table->enum('result', ['passed', 'failed', 'recheck'])
+                  ->nullable();
+
+            $table->text('findings')->nullable(); 
+            $table->text('notes')->nullable();
+            $table->string('attachment_path')->nullable();
+            $table->boolean('ncr_required')->default(false);
 
             $table->timestamps();
 
-            // 🔗 Foreign keys — pastikan tabel terkait sudah memiliki kolom yang cocok
+            // Foreign keys
             $table->foreign('project_id')
                 ->references('project_id')
                 ->on('projects')
-                ->onDelete('cascade');
+                ->cascadeOnDelete();
 
             $table->foreign('item_id')
                 ->references('item_id')
                 ->on('items')
-                ->onDelete('cascade');
+                ->cascadeOnDelete();
 
+            // FIX: gunakan user_id, bukan id
             $table->foreign('inspector_id')
-                ->references('id')
+                ->references('user_id')
                 ->on('users')
-                ->onDelete('set null');
+                ->nullOnDelete();
         });
     }
 
