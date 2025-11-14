@@ -5,13 +5,6 @@
 @section('content')
 <div class="row mb-4">
     <div class="col-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('projects.index') }}">Projects</a></li>
-                <li class="breadcrumb-item active">{{ isset($project) ? 'Edit' : 'Tambah Baru' }}</li>
-            </ol>
-        </nav>
         <h2>
             <i class="bi bi-{{ isset($project) ? 'pencil' : 'plus-circle' }}"></i>
             {{ isset($project) ? 'Edit Project' : 'Tambah Project Baru' }}

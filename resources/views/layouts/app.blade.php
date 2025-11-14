@@ -606,7 +606,7 @@
 
                         @if(Auth::user()->roles === 'desain')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('desain-list-project*') ? 'active' : '' }}" href="{{ route('desain.list-project') }}">
+                            <a class="nav-link {{ request()->routeIs('desain.list-project*') ? 'active' : '' }}" href="{{ route('desain.list-project') }}">
                                 Projects
                             </a>
                         </li>
@@ -646,7 +646,7 @@
 
                          @if(Auth::user()->roles === 'desain')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('project.create*') ? 'active' : '' }}" href="{{ route('projects.create') }}">
+                            <a class="nav-link {{ request()->routeIs('projects.create*') ? 'active' : '' }}" href="{{ route('projects.create') }}">
                                 Pengadaan
                             </a>
                         </li> 
