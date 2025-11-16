@@ -19,7 +19,7 @@ class UserSeeder extends Seeder
                 'email' => 'user@pal.com',
                 'password' => Hash::make('password'),
                 'division_id' => 1,
-                'role' => 'user',
+                'roles' => 'user',
                 'status' => 'active',
             ],
             [
@@ -27,7 +27,7 @@ class UserSeeder extends Seeder
                 'email' => 'supplychain@pal.com',
                 'password' => Hash::make('password'),
                 'division_id' => 2,
-                'role' => 'supply_chain',
+                'roles' => 'supply_chain',
                 'status' => 'active',
             ],
             [
@@ -35,7 +35,7 @@ class UserSeeder extends Seeder
                 'email' => 'treasury@pal.com',
                 'password' => Hash::make('password'),
                 'division_id' => 3,
-                'role' => 'treasury',
+                'roles' => 'treasury',
                 'status' => 'active',
             ],
             [
@@ -43,7 +43,7 @@ class UserSeeder extends Seeder
                 'email' => 'accounting@pal.com',
                 'password' => Hash::make('password'),
                 'division_id' => 4,
-                'role' => 'accounting',
+                'roles' => 'accounting',
                 'status' => 'active',
             ],
             [
@@ -51,7 +51,7 @@ class UserSeeder extends Seeder
                 'email' => 'qa@pal.com',
                 'password' => Hash::make('password'),
                 'division_id' => 5,
-                'role' => 'qa',
+                'roles' => 'qa',
                 'status' => 'active',
             ],
             [
@@ -59,7 +59,7 @@ class UserSeeder extends Seeder
                 'email' => 'sekretaris@pal.com',
                 'password' => Hash::make('password'),
                 'division_id' => 6,
-                'role' => 'sekretaris',
+                'roles' => 'sekretaris',
                 'status' => 'active',
             ],
             [
@@ -67,7 +67,7 @@ class UserSeeder extends Seeder
                 'email' => 'desain@pal.com',
                 'password' => Hash::make('password'),
                 'division_id' => 7,
-                'role' => 'desain',
+                'roles' => 'desain',
                 'status' => 'active',
             ],
         ];

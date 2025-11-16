@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('name_procurement', 100);
             $table->text('description')->nullable();
 
-            // FK ke divisions (karena procurement dibuat oleh divisi tertentu)
+            // FK ke department (karena procurement dibuat oleh department tertentu)
             $table->unsignedBigInteger('department_procurement')->nullable();
 
             // Prioritas pengadaan
