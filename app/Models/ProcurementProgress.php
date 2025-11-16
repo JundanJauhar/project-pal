@@ -11,26 +11,26 @@ class ProcurementProgress extends Model
     protected $primaryKey = 'progress_id';
 
     protected $fillable = [
-        'permintaan_pengadaan_id',
-        'titik_id',
-        'status_progress',
-        'tanggal_mulai',
-        'tanggal_selesai',
+        'procurement_id',
+        'checkpoint_id',
         'user_id',
-        'catatan',
+        'status',
+        'start_date',
+        'end_date',
+        'note',
     ];
 
     protected $casts = [
-        'tanggal_mulai' => 'date',
-        'tanggal_selesai' => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     /**
-     * Get the request procurement for this progress
+     * Get the procurement for this progress
      */
-    public function requestProcurement(): BelongsTo
+    public function procurement(): BelongsTo
     {
-        return $this->belongsTo(RequestProcurement::class, 'permintaan_pengadaan_id', 'request_id');
+        return $this->belongsTo(Procurement::class, 'procurement_id', 'procurement_id');
     }
 
     /**
@@ -38,7 +38,7 @@ class ProcurementProgress extends Model
      */
     public function checkpoint(): BelongsTo
     {
-        return $this->belongsTo(Checkpoint::class, 'titik_id', 'point_id');
+        return $this->belongsTo(Checkpoint::class, 'checkpoint_id', 'point_id');
     }
 
     /**
@@ -46,6 +46,6 @@ class ProcurementProgress extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'user_id');
     }
 }

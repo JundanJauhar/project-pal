@@ -57,7 +57,7 @@ class PaymentSchedule extends Model
      */
     public function accountingVerifier(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'verified_by_accounting');
+        return $this->belongsTo(User::class, 'verified_by_accounting', 'user_id');
     }
 
     /**
@@ -65,6 +65,6 @@ class PaymentSchedule extends Model
      */
     public function treasuryVerifier(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'verified_by_treasury');
+        return $this->belongsTo(User::class, 'verified_by_treasury', 'user_id');
     }
 }

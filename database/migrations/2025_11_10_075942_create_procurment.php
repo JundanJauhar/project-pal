@@ -14,6 +14,9 @@ return new class extends Migration
         Schema::create('procurement', function (Blueprint $table) {
             $table->id('procurement_id'); // Primary Key
 
+            // FK ke project
+            $table->unsignedBigInteger('project_id')->nullable();
+
             $table->string('code_procurement', 50)->unique();
             $table->string('name_procurement', 100);
             $table->text('description')->nullable();
@@ -42,7 +45,12 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // Foreign key
+            // Foreign keys
+            $table->foreign('project_id')
+                ->references('project_id')
+                ->on('projects')
+                ->nullOnDelete();
+
             $table->foreign('department_procurement')
                 ->references('department_id')
                 ->on('departments')

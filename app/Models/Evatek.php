@@ -32,6 +32,6 @@ class Evatek extends Model
      */
     public function evaluator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'evaluated_by');
+        return $this->belongsTo(User::class, 'evaluated_by', 'user_id');
     }
 }

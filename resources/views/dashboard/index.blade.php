@@ -111,30 +111,30 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode Project</th>
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Project</th>
+                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode Pengadaan</th>
+                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Pengadaan</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Vendor</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($projects as $project)
+                        @forelse($procurements as $procurement)
                         <tr>
-                            <td style="padding: 12px 8px;"><strong>{{ $project->code_project }}</strong></td>
-                            <td style="padding: 12px 8px;">{{ Str::limit($project->name_project, 40) }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $project->ownerDivision->nama_divisi ?? '-' }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $project->start_date->format('d/m/Y') }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $project->end_date->format('d/m/Y') }}</td>
-                            <td>{{ $project->contracts->first()->vendor->name_vendor ?? '-' }}</td>
+                            <td style="padding: 12px 8px;"><strong>{{ $procurement->code_procurement }}</strong></td>
+                            <td style="padding: 12px 8px;">{{ Str::limit($procurement->name_procurement, 40) }}</td>
+                            <td style="padding: 12px 8px; text-align: center;">{{ $procurement->department->department_name ?? '-' }}</td>
+                            <td style="padding: 12px 8px; text-align: center;">{{ $procurement->start_date->format('d/m/Y') }}</td>
+                            <td style="padding: 12px 8px; text-align: center;">{{ $procurement->end_date->format('d/m/Y') }}</td>
+                            <td style="padding: 12px 8px; text-align: center;">{{ $procurement->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</td>
 
                             <td style="padding: 12px 8px; text-align: center;">
-                                <span class="badge-priority badge-{{ strtolower($project->priority) }}">
-                                    {{ strtoupper($project->priority) }}
+                                <span class="badge-priority badge-{{ strtolower($procurement->priority) }}">
+                                    {{ strtoupper($procurement->priority) }}
                                 </span>
                             </td>
 
@@ -143,22 +143,21 @@
                                     $statusColors = [
                                         'draft'     => '#555555',
                                         'completed' => '#28AC00',
-                                        'decline'   => '#BD0000',
+                                        'rejected'   => '#BD0000',
                                     ];
 
-                                    $badgeColor = $statusColors[$project->status_project] ?? '#ECAD02';
+                                    $badgeColor = $statusColors[$procurement->status_procurement] ?? '#ECAD02';
 
-                                    $statusText = match($project->status_project) {
-                                        'review_sc' => 'Review SC',
-                                        'persetujuan_sekretaris' => 'Persetujuan Sekretaris',
-                                        'pemilihan_vendor' => 'Pemilihan Vendor',
-                                        'negosiasi_harga' => 'Negosiasi',
-                                        'persetujuan_direksi' => 'Approval Direktur',
-                                        'pembuatan_hps' => 'Pembuatan HPS',
+                                    $statusText = match($procurement->status_procurement) {
+                                        'draft' => 'Draft',
+                                        'submitted' => 'Submitted',
+                                        'reviewed' => 'Reviewed',
+                                        'approved' => 'Approved',
+                                        'rejected' => 'Rejected',
                                         'in_progress' => 'Sedang Proses',
                                         'completed' => 'Completed',
-                                        'decline' => 'Decline',
-                                        default => ucfirst($project->status_project)
+                                        'cancelled' => 'Cancelled',
+                                        default => ucfirst($procurement->status_procurement)
                                     };
                                 @endphp
 
@@ -173,7 +172,7 @@
                             </td>
 
                             <td style="padding: 12px 8px; text-align: center;">
-                                <a href="{{ route('projects.show', $project->project_id) }}" class="btn btn-sm btn-primary">
+                                <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary">
                                     <i class="bi bi-eye"></i> Detail
                                 </a>
                             </td>

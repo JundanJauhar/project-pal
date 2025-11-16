@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('procurement_progress', function (Blueprint $table) {
             $table->id('progress_id');
 
-            // FK ke request procurement
-            $table->unsignedBigInteger('request_id');
+            // FK ke procurement (monitoring dilakukan di level procurement, bukan request)
+            $table->unsignedBigInteger('procurement_id');
 
             // FK ke checkpoint
             $table->unsignedBigInteger('checkpoint_id');
@@ -33,9 +33,9 @@ return new class extends Migration
             $table->timestamps();
 
             // Foreign keys
-            $table->foreign('request_id')
-                  ->references('request_id')
-                  ->on('request_procurement')
+            $table->foreign('procurement_id')
+                  ->references('procurement_id')
+                  ->on('procurement')
                   ->cascadeOnDelete();
 
             $table->foreign('checkpoint_id')

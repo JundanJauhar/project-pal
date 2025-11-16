@@ -75,29 +75,97 @@ class ProjectSeeder extends Seeder
         ]);
 
         $procurement1 = \App\Models\Procurement::create([
-    'code_procurement' => 'PRC-2025-001',
-    'name_procurement' => 'Procurement Project 1',
-    'description' => 'Pengadaan untuk proyek 1',
-    'department_procurement' => 1,
-    'priority' => 'tinggi',
-    'start_date' => Carbon::now()->subDays(100),
-    'end_date' => Carbon::now()->addDays(30),
-    'status_procurement' => 'in_progress',
-]);
+            'project_id' => $project1->project_id,
+            'code_procurement' => 'PRC-2025-001',
+            'name_procurement' => 'Pengadaan Material Baja Berkualitas Tinggi',
+            'description' => 'Pengadaan material baja untuk proyek 1',
+            'department_procurement' => 1,
+            'priority' => 'tinggi',
+            'start_date' => Carbon::now()->subDays(100),
+            'end_date' => Carbon::now()->addDays(30),
+            'status_procurement' => 'in_progress',
+        ]);
+
+        $procurement2 = \App\Models\Procurement::create([
+            'project_id' => $project1->project_id,
+            'code_procurement' => 'PRC-2025-002',
+            'name_procurement' => 'Pengadaan Komponen Elektronik',
+            'description' => 'Pengadaan komponen elektronik untuk sistem kontrol',
+            'department_procurement' => 2,
+            'priority' => 'sedang',
+            'start_date' => Carbon::now()->subDays(60),
+            'end_date' => Carbon::now()->addDays(15),
+            'status_procurement' => 'submitted',
+        ]);
+
+        $procurement3 = \App\Models\Procurement::create([
+            'project_id' => $project1->project_id,
+            'code_procurement' => 'PRC-2025-003',
+            'name_procurement' => 'Jasa Cutting dan Fabrication',
+            'description' => 'Jasa potong dan fabrikasi material logam',
+            'department_procurement' => 3,
+            'priority' => 'tinggi',
+            'start_date' => Carbon::now()->subDays(40),
+            'end_date' => Carbon::now()->addDays(10),
+            'status_procurement' => 'approved',
+        ]);
+
+        $procurement4 = \App\Models\Procurement::create([
+            'project_id' => $project1->project_id,
+            'code_procurement' => 'PRC-2025-004',
+            'name_procurement' => 'Permintaan Alat Pelindung Diri (APD)',
+            'description' => 'Pengadaan APD untuk keselamatan kerja',
+            'department_procurement' => 4,
+            'priority' => 'rendah',
+            'start_date' => Carbon::now()->subDays(20),
+            'end_date' => Carbon::now()->addDays(5),
+            'status_procurement' => 'draft',
+        ]);
 
 
         /**
          * REQUEST PROCUREMENT (sesuai schema baru)
          */
         $request1 = RequestProcurement::create([
-            'procurement_id' => 1, // atau buat procurement jika tabelnya sudah ada
+            'procurement_id' => $procurement1->procurement_id,
             'vendor_id' => 1,
             'request_name' => 'Material Baja Berkualitas Tinggi',
             'created_date' => Carbon::now()->subDays(90),
             'deadline_date' => Carbon::now()->addDays(30),
             'request_status' => 'completed',
-            'department_id' => 1, // harus FK ke department
+            'department_id' => 1,
         ]);
+
+        $request2 = RequestProcurement::create([
+            'procurement_id' => $procurement2->procurement_id,
+            'vendor_id' => 2,
+            'request_name' => 'Pengadaan Komponen Elektronik',
+            'created_date' => Carbon::now()->subDays(60),
+            'deadline_date' => Carbon::now()->addDays(15),
+            'request_status' => 'submitted',
+            'department_id' => 2,
+        ]);
+
+        $request3 = RequestProcurement::create([
+            'procurement_id' => $procurement3->procurement_id,
+            'vendor_id' => 3,
+            'request_name' => 'Jasa Cutting dan Fabrication',
+            'created_date' => Carbon::now()->subDays(40),
+            'deadline_date' => Carbon::now()->addDays(10),
+            'request_status' => 'approved',
+            'department_id' => 3,
+        ]);
+
+        $request4 = RequestProcurement::create([
+            'procurement_id' => $procurement4->procurement_id,
+            'vendor_id' => null,
+            'request_name' => 'Permintaan Alat Pelindung Diri (APD)',
+            'created_date' => Carbon::now()->subDays(20),
+            'deadline_date' => Carbon::now()->addDays(5),
+            'request_status' => 'draft',
+            'department_id' => 4,
+        ]);
+
 
         /**
          * ITEMS — HARUS MENGIKUTI request_procurement_id
@@ -153,6 +221,25 @@ class ProjectSeeder extends Seeder
             'result' => 'passed',
             'notes' => 'Material sesuai spesifikasi teknis.',
         ]);
+
+        /**
+         * PROCUREMENT PROGRESS - Monitoring step procurement
+         * Setiap procurement melalui beberapa checkpoint/step
+         */
+        $checkpoints = \App\Models\Checkpoint::all();
+        
+        // Progress untuk procurement 1
+        foreach ($checkpoints->take(5) as $index => $checkpoint) {
+            \App\Models\ProcurementProgress::create([
+                'procurement_id' => $procurement1->procurement_id,
+                'checkpoint_id' => $checkpoint->point_id,
+                'user_id' => ($index % 2 === 0) ? 2 : 3,
+                'status' => $index < 3 ? 'completed' : 'in_progress',
+                'start_date' => Carbon::now()->subDays(90 - ($index * 10)),
+                'end_date' => $index < 3 ? Carbon::now()->subDays(85 - ($index * 10)) : null,
+                'note' => 'Step ' . ($index + 1) . ' ' . $checkpoint->point_name,
+            ]);
+        }
 
         /**
          * PROJECT 2–7 dibuat ulang versi pendek

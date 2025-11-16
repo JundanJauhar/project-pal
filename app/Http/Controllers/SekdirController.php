@@ -40,7 +40,7 @@ class SekdirController extends Controller
     public function approvals()
     {
         // Get projects awaiting secretary director approval
-        $approvals = Project::with(['ownerDivision', 'contracts.vendor', 'requestProcurements.items'])
+        $approvals = Project::with(['ownerDivision', 'contracts.vendor'])
             ->where('status_project', 'persetujuan_sekretaris')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -95,7 +95,6 @@ class SekdirController extends Controller
         $project = Project::with([
             'ownerDivision',
             'contracts.vendor',
-            'requestProcurements.items',
             'approvals',
         ])->findOrFail($projectId);
 
