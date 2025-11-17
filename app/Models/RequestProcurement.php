@@ -39,6 +39,14 @@ class RequestProcurement extends Model
     }
 
     /**
+     * Get the project for this request (PERBAIKAN #1)
+     */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class, 'project_id', 'project_id');
+    }
+
+    /**
      * Get the vendor for this request
      */
     public function vendor(): BelongsTo
@@ -63,10 +71,10 @@ class RequestProcurement extends Model
     }
 
     /**
-     * Get procurement progress for this request
+     * Get procurement progress for this request (PERBAIKAN #4)
      */
     public function procurementProgress(): HasMany
     {
-        return $this->hasMany(ProcurementProgress::class, 'permintaan_pengadaan_id', 'request_id');
+        return $this->hasMany(ProcurementProgress::class, 'procurement_id', 'procurement_id');
     }
 }

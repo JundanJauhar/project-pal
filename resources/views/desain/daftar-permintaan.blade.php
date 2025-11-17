@@ -106,8 +106,8 @@
 
             <tbody>
 
-                {{-- Loop permintaan --}}
-                @forelse($project->requests as $req)
+                {{-- Loop permintaan (PERBAIKAN #3) --}}
+                @forelse($project->requestProcurements as $req)
                 <tr>
                     <td>
                         <a href="{{ route('desain.review-evatek', $req->request_id) }}" 

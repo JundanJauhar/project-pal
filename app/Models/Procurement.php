@@ -61,17 +61,17 @@ class Procurement extends Model
     }
 
     /**
-     * Get all vendors through request procurements
+     * Get all vendors through request procurements (PERBAIKAN #14)
      */
     public function vendors()
     {
         return $this->hasManyThrough(
             Vendor::class,
             RequestProcurement::class,
-            'procurement_id',
-            'id_vendor',
-            'procurement_id',
-            'vendor_id'
+            'procurement_id',    // FK di request_procurement
+            'id_vendor',         // FK di vendors
+            'procurement_id',    // Local key di procurement
+            'vendor_id'          // Local key di request_procurement
         );
     }
 

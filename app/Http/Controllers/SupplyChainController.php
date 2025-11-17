@@ -136,7 +136,14 @@ class SupplyChainController extends Controller
                 'is_importer' => 'nullable|boolean',
             ]);
 
+            // Generate ID vendor (PERBAIKAN #10)
+            $lastVendor = Vendor::orderBy('id_vendor', 'desc')->first();
+            $lastNumber = $lastVendor ? intval(substr($lastVendor->id_vendor, 2)) : 0;
+            $vendorId = 'V-' . str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+
+            // Create vendor hanya sekali (PERBAIKAN #9)
             $vendor = Vendor::create([
+                'id_vendor' => $vendorId, // PERBAIKAN #10
                 'name_vendor' => $validated['name_vendor'],
                 'address' => $validated['address'] ?? null,
                 'phone_number' => $validated['phone_number'],
@@ -144,16 +151,6 @@ class SupplyChainController extends Controller
                 'legal_status' => $validated['legal_status'],
                 'is_importer' => $request->has('is_importer') ? 1 : 0,
             ]);
-
-            $lastVendor = Vendor::orderBy('id_vendor', 'desc')->first();
-            $lastNumber = $lastVendor ? intval(substr($lastVendor->id_vendor, 2)) : 0;
-            $validated['id_vendor'] = 'V-' . str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
-
-
-            $validated['is_importer'] = $request->has('is_importer') ? 1 : 0;
-            $validated['legal_status'] = $validated['legal_status'] ?? 'pending';
-
-            Vendor::create($validated);
 
             $redirect = $request->input('redirect', 'kelola');
             $routeName = $redirect === 'pilih' ? 'supply-chain.vendor.pilih' : 'supply-chain.vendor.kelola';

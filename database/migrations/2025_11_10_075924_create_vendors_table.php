@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('vendors', function (Blueprint $table) {
-            $table->id('id_vendor');
+            $table->string('id_vendor', 20)->primary(); // PERBAIKAN #10 - ubah ke string
             $table->string('name_vendor', 100);
             $table->text('address')->nullable();
             $table->string('phone_number', 20)->nullable();
@@ -21,8 +21,8 @@ return new class extends Migration
             // Status legal vendor (tambahan)
             $table->enum('legal_status', ['pending', 'verified', 'rejected'])->default('pending');
 
-            // Konsisten dengan ERD
-            $table->boolean('is_importir')->default(false);
+            // Konsisten dengan ERD - PERBAIKAN #10
+            $table->boolean('is_importer')->default(false);
 
             $table->timestamps();
         });

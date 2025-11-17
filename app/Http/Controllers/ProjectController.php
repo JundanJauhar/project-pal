@@ -6,6 +6,11 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\Procurement;
+use App\Models\Division; // PERBAIKAN #2
+use App\Models\ProcurementProgress; // PERBAIKAN #2
+use App\Models\Notification; // PERBAIKAN #2
+use Carbon\Carbon; // PERBAIKAN #2
+use Illuminate\Support\Facades\Auth; // PERBAIKAN #2
 
 class ProjectController extends Controller
 {
