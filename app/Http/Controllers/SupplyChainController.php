@@ -6,7 +6,6 @@ use App\Models\Project;
 use App\Models\RequestProcurement;
 use App\Models\Item;
 use App\Models\Vendor;
-use App\Models\Negotiation;
 use App\Models\Hps;
 use App\Models\Contract;
 use App\Models\Notification;
@@ -24,7 +23,7 @@ class SupplyChainController extends Controller
     {
         $stats = [
             'pending_review' => Project::where('status_project', 'review_sc')->count(),
-            'active_negotiations' => Negotiation::where('status', 'in_progress')->count(),
+            'active_negotiations' => \App\Models\Procurement::where('status_procurement', 'in_progress')->count(),
             'pending_contracts' => Contract::where('status', 'draft')->count(),
             'material_requests' => RequestProcurement::where('request_status', 'submitted')->count(),
         ];
@@ -294,80 +293,16 @@ class SupplyChainController extends Controller
     }
 
     /**
-     * Manage negotiations
+     * Manage negotiations (Procurement Progress Monitoring)
      */
     public function negotiations()
     {
-        $negotiations = Negotiation::with(['project', 'hps'])
+        $negotiations = \App\Models\Procurement::with(['project', 'procurementProgress.checkpoint', 'requestProcurements.vendor'])
+            ->where('status_procurement', 'in_progress')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
         return view('supply_chain.negotiations', compact('negotiations'));
-    }
-
-    /**
-     * Create negotiation
-     */
-    public function createNegotiation(Request $request, $projectId)
-    {
-        $validated = $request->validate([
-            'hps_id' => 'required|exists:hps,hps_id',
-            'vendor_offer' => 'required|numeric|min:0',
-            'notes' => 'nullable|string',
-        ]);
-
-        $hps = Hps::findOrFail($validated['hps_id']);
-
-        // Check if vendor offer exceeds HPS
-        if ($validated['vendor_offer'] > $hps->total_amount) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Penawaran vendor melebihi HPS. Perlu update HPS dari Desain.',
-                'requires_hps_update' => true,
-            ]);
-        }
-
-        $negotiation = Negotiation::create([
-            'project_id' => $projectId,
-            'hps_id' => $validated['hps_id'],
-            'negotiated_price' => $validated['vendor_offer'],
-            'status' => 'completed',
-            'negotiation_date' => now(),
-            'notes' => $validated['notes'],
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Negosiasi berhasil dibuat',
-            'negotiation' => $negotiation
-        ]);
-    }
-
-    /**
-     * Request HPS update from Design team
-     */
-    public function requestHpsUpdate($projectId)
-    {
-        $project = Project::findOrFail($projectId);
-
-        // Notify Design team
-        $designUsers = \App\Models\User::where('roles', 'desain')->get();
-        foreach ($designUsers as $user) {
-            Notification::create([
-                'user_id' => $user->id,
-                'sender_id' => Auth::id(),
-                'type' => 'hps_update_required',
-                'title' => 'Update HPS Diperlukan',
-                'message' => 'Negosiasi melebihi HPS untuk proyek: ' . $project->name_project,
-                'reference_type' => 'App\Models\Project',
-                'reference_id' => $project->project_id,
-            ]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Notifikasi update HPS telah dikirim ke tim Desain'
-        ]);
     }
 
     /**
