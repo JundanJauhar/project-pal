@@ -6,6 +6,11 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use App\Models\Project;
 use App\Models\Procurement;
+use App\Models\Division;
+use App\Models\Notification;
+use App\Models\ProcurementProgress;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class ProjectController extends Controller
 {
@@ -19,7 +24,7 @@ class ProjectController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('projects.index', compact('projects'));
+        return view('procurements.index', compact('projects'));
     }
 
     /**
@@ -27,8 +32,7 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        $divisions = Division::all();
-        return view('projects.create', compact('divisions'));
+        return redirect()->route('procurements.create');
     }
 
     /**
@@ -36,24 +40,7 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'code_project' => 'required|string|unique:projects,code_project',
-            'name_project' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'owner_division_id' => 'required|exists:divisions,divisi_id',
-            'priority' => 'required|in:rendah,sedang,tinggi',
-            'end_date' => 'required|date|after:today',
-        ]);
-
-        $validated['start_date'] = Carbon::now()->format('Y-m-d');
-        $validated['status_project'] = 'draft';
-
-        $project = Project::create($validated);
-
-        $this->notifySupplyChain($project, 'Proyek baru telah dibuat dan menunggu review');
-
-        return redirect()->route('projects.show', $project->project_id)
-            ->with('success', 'Proyek berhasil dibuat');
+        return redirect()->route('procurements.store');
     }
 
     /**

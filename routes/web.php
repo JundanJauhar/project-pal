@@ -70,12 +70,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/procurements/by-project/{projectId}', [ProcurementController::class, 'byProject'])->name('procurements.by-project');
     Route::get('/procurements/{id}/progress', [ProcurementController::class, 'getProgress'])->name('procurements.progress');
     Route::post('/procurements/{id}/progress', [ProcurementController::class, 'updateProgress'])->name('procurements.update-progress');
-    Route::resource('procurements', ProcurementController::class, ['only' => ['index', 'show']]);
+    Route::resource('procurements', ProcurementController::class, ['only' => ['index', 'show', 'create', 'store']]);
 
     // User-specific procurement list (used by 'user' role)
     Route::get('/user/list', function () {
-        $projects = \App\Models\Procurement::with(['department', 'requestProcurements.vendor'])->orderBy('created_at', 'desc')->paginate(10);
-        return view('user.list', compact('projects'));
+        $procurements = \App\Models\Procurement::with(['department', 'requestProcurements.vendor'])->orderBy('created_at', 'desc')->paginate(10);
+        return view('user.list', compact('procurements'));
     })->name('user.list');
 
     // Notification Routes

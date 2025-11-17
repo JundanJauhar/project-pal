@@ -46,7 +46,9 @@ class DashboardController extends Controller
     {
         $query = Procurement::with(['department', 'requestProcurements.vendor']);
 
-        // All roles can see all procurements - no filter
+        // All users can see all procurements
+        // This allows users to view the full list of procurements in the system
+
         return $query->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
