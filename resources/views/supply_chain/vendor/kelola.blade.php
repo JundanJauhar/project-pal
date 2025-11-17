@@ -281,7 +281,7 @@
                                     </td>
                                     <td style="padding: 12px 8px; text-align: center;">
                                         <div class="btn-group" role="group">
-                                            <a action="{{ route('supply-chain.vendor.form', ['id' => $vendor->id_vendor]) }}" class="btn btn-sm btn-primary text-white">
+                                            <a href="{{ route('supply-chain.vendor.form', ['id' => $vendor->id_vendor]) }}" class="btn btn-sm btn-primary text-white">
                                                 <i class="bi bi-pencil"></i> Edit
                                             </a>
                                         </div>

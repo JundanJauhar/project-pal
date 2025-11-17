@@ -102,7 +102,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])->name('vendor.store');
         Route::get('/vendor/pilih', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
         Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])->name('vendor.detail');
-        Route::get('/vendor/edit/{id}', [SupplyChainController::class, 'editVendor'])->name('vendor.edit');
+        Route::put('/vendor/update/{id_vendor}', [SupplyChainController::class, 'updateVendor'])->name('vendor.update');
 
 
 
