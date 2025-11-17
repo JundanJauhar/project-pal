@@ -113,4 +113,60 @@ class ProcurementController extends Controller
 
         return view('procurements.by-project', compact('project', 'procurements'));
     }
+
+    /**
+     * Search procurements (for user list and other procurement searches)
+     */
+    public function search(Request $request)
+    {
+        $q = $request->query('q', '');
+        $status = $request->query('status', '');
+        $priority = $request->query('priority', '');
+        $page = $request->query('page', 1);
+
+        $procurementsQuery = Procurement::with(['department', 'requestProcurements.vendor']);
+
+        if (!empty($q)) {
+            $procurementsQuery->where('name_procurement', 'LIKE', "%{$q}%")
+                ->orWhere('code_procurement', 'LIKE', "%{$q}%");
+        }
+
+        if (!empty($status)) {
+            $procurementsQuery->where('status_procurement', $status);
+        }
+
+        if (!empty($priority)) {
+            $procurementsQuery->where('priority', $priority);
+        }
+
+        $procurements = $procurementsQuery->orderBy('created_at', 'desc')->paginate(10, ['*'], 'page', $page);
+
+        $items = $procurements->map(function ($p) {
+            $firstRequest = $p->requestProcurements ? $p->requestProcurements->first() : null;
+            $vendor = ($firstRequest && $firstRequest->vendor) ? $firstRequest->vendor->name_vendor : '-';
+
+            return [
+                'procurement_id' => $p->procurement_id,
+                'code_procurement' => $p->code_procurement,
+                'name_procurement' => $p->name_procurement,
+                'department_name' => $p->department ? $p->department->department_name : '-',
+                'start_date' => $p->start_date ? $p->start_date->format('d/m/Y') : '-',
+                'end_date' => $p->end_date ? $p->end_date->format('d/m/Y') : '-',
+                'vendor' => $vendor,
+                'priority' => $p->priority,
+                'status_procurement' => $p->status_procurement,
+            ];
+        });
+
+        return response()->json([
+            'data' => $items,
+            'pagination' => [
+                'current_page' => $procurements->currentPage(),
+                'per_page' => $procurements->perPage(),
+                'total' => $procurements->total(),
+                'last_page' => $procurements->lastPage(),
+                'has_more' => $procurements->hasMorePages(),
+            ]
+        ]);
+    }
 }

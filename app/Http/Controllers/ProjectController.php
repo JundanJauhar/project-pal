@@ -2,25 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
-use App\Models\Division;
-use App\Models\ProcurementProgress;
-use App\Models\Notification;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Carbon\Carbon;
+use Illuminate\Http\Request;
+use App\Models\Project;
+use App\Models\Procurement;
 
 class ProjectController extends Controller
 {
     use AuthorizesRequests;
     /**
-     * Display a listing of projects
+     * Display a listing of procurements (displayed as projects)
      */
     public function index()
     {
-        $projects = Project::with(['ownerDivision', 'contracts'])
+        $projects = Procurement::with(['department', 'requestProcurements.vendor'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
@@ -176,42 +171,42 @@ class ProjectController extends Controller
      */
     public function search(Request $request)
     {
-        $q = $request->get('q');
-        $status = $request->get('status');
-        $priority = $request->get('priority');
-        $page = $request->get('page', 1);
+        $q = $request->query('q', '');
+        $status = $request->query('status', '');
+        $priority = $request->query('priority', '');
+        $page = $request->query('page', 1);
 
-        $projectsQuery = Project::with(['ownerDivision', 'contracts.vendor']);
+        $projectsQuery = Procurement::with(['department', 'requestProcurements.vendor']);
 
-        if ($q) {
-            $projectsQuery->where(fn($sub) => $sub
-                ->where('name_project', 'LIKE', "%{$q}%")
-                ->orWhere('code_project', 'LIKE', "%{$q}%"));
+        if (!empty($q)) {
+            $projectsQuery->where('name_procurement', 'LIKE', "%{$q}%")
+                ->orWhere('code_procurement', 'LIKE', "%{$q}%");
         }
 
-        if ($status) {
-            $projectsQuery->where('status_project', $status);
+        if (!empty($status)) {
+            $projectsQuery->where('status_procurement', $status);
         }
 
-        if ($priority) {
+        if (!empty($priority)) {
             $projectsQuery->where('priority', $priority);
         }
 
         $projects = $projectsQuery->orderBy('created_at', 'desc')->paginate(10, ['*'], 'page', $page);
 
         $items = $projects->map(function ($p) {
-            $vendor = optional(optional($p->contracts->first())->vendor)->name_vendor ?? '-'; // ✅ null safe
+            $firstRequest = $p->requestProcurements ? $p->requestProcurements->first() : null;
+            $vendor = ($firstRequest && $firstRequest->vendor) ? $firstRequest->vendor->name_vendor : '-';
 
             return [
-                'project_id' => $p->project_id,
-                'code_project' => $p->code_project,
-                'name_project' => $p->name_project,
-                'owner_division' => $p->ownerDivision->nama_divisi ?? '-',
-                'start_date' => optional($p->start_date)->format('d/m/Y'),
-                'end_date' => optional($p->end_date)->format('d/m/Y'),
+                'procurement_id' => $p->procurement_id,
+                'code_procurement' => $p->code_procurement,
+                'name_procurement' => $p->name_procurement,
+                'department_name' => $p->department ? $p->department->department_name : '-',
+                'start_date' => $p->start_date ? $p->start_date->format('d/m/Y') : '-',
+                'end_date' => $p->end_date ? $p->end_date->format('d/m/Y') : '-',
                 'vendor' => $vendor,
                 'priority' => $p->priority,
-                'status_project' => $p->status_project,
+                'status_procurement' => $p->status_procurement,
             ];
         });
 
