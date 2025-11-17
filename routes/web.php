@@ -66,14 +66,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/projects/{id}/status', [ProjectController::class, 'updateStatus'])->name('projects.update-status');
 
     // Procurement Routes
+    Route::get('/procurements/search', [ProcurementController::class, 'search'])->name('procurements.search');
     Route::get('/procurements/by-project/{projectId}', [ProcurementController::class, 'byProject'])->name('procurements.by-project');
     Route::get('/procurements/{id}/progress', [ProcurementController::class, 'getProgress'])->name('procurements.progress');
     Route::post('/procurements/{id}/progress', [ProcurementController::class, 'updateProgress'])->name('procurements.update-progress');
     Route::resource('procurements', ProcurementController::class, ['only' => ['index', 'show']]);
 
-    // User-specific project list (used by 'user' role)
+    // User-specific procurement list (used by 'user' role)
     Route::get('/user/list', function () {
-        $projects = Project::with(['ownerDivision', 'contracts'])->orderBy('created_at', 'desc')->paginate(10);
+        $projects = \App\Models\Procurement::with(['department', 'requestProcurements.vendor'])->orderBy('created_at', 'desc')->paginate(10);
         return view('user.list', compact('projects'));
     })->name('user.list');
 

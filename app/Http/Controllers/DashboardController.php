@@ -46,26 +46,7 @@ class DashboardController extends Controller
     {
         $query = Procurement::with(['department', 'requestProcurements.vendor']);
 
-        // Filter based on role
-        switch ($user->roles) {
-            case 'user':
-                // User only sees procurements from their division/department
-                $query->where('department_procurement', $user->division_id);
-                break;
-
-            case 'supply_chain':
-            case 'treasury':
-            case 'accounting':
-            case 'qa':
-            case 'sekretaris':
-            case 'desain':
-                // These roles can see all procurements
-                break;
-
-            default:
-                $query->where('department_procurement', $user->division_id);
-        }
-
+        // All roles can see all procurements - no filter
         return $query->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();

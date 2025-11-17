@@ -32,9 +32,11 @@
                         <select class="form-select" name="status">
                             <option value="">Semua Status</option>
                             <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Draft</option>
-                            <option value="review_sc" {{ request('status') === 'review_sc' ? 'selected' : '' }}>Review SC</option>
-                            <option value="persetujuan_sekretaris" {{ request('status') === 'persetujuan_sekretaris' ? 'selected' : '' }}>Persetujuan Sekretaris</option>
-                            <option value="selesai" {{ request('status') === 'selesai' ? 'selected' : '' }}>Selesai</option>
+                            <option value="submitted" {{ request('status') === 'submitted' ? 'selected' : '' }}>Submitted</option>
+                            <option value="reviewed" {{ request('status') === 'reviewed' ? 'selected' : '' }}>Reviewed</option>
+                            <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
+                            <option value="in_progress" {{ request('status') === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                            <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -83,27 +85,16 @@
                     <tbody id="projects-tbody">
                         @forelse($projects as $project)
                         <tr style="border-bottom: 1px solid #ddd;">
-                            <td style="padding: 12px 8px;"><strong>{{ $project->code_project }}</strong></td>
-                            <td style="padding: 12px 8px;">{{ Str::limit($project->name_project, 40) }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $project->ownerDivision->nama_divisi ?? '-' }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $project->start_date->format('d/m/Y') }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $project->end_date->format('d/m/Y') }}</td>
+                            <td style="padding: 12px 8px;"><strong>{{ $project->code_procurement }}</strong></td>
+                            <td style="padding: 12px 8px;">{{ Str::limit($project->name_procurement, 40) }}</td>
+                            <td style="padding: 12px 8px; text-align: center;">{{ $project->department ? $project->department->department_name : '-' }}</td>
+                            <td style="padding: 12px 8px; text-align: center;">{{ $project->start_date ? $project->start_date->format('d/m/Y') : '-' }}</td>
+                            <td style="padding: 12px 8px; text-align: center;">{{ $project->end_date ? $project->end_date->format('d/m/Y') : '-' }}</td>
                             <td style="padding: 12px 8px; text-align: center;">
                                 @php
-                                    $contract = $project->contracts->first();
-                                    $vendorName = $contract->vendor->name_vendor ?? '-';
-                                    $vendorStatus = match($project->status_project) {
-                                        'pemilihan_vendor', 'in_progress', 'ongoing', 'proses' => 'process',
-                                        'selesai', 'completed' => 'completed',
-                                        'rejected', 'ditolak' => 'rejected',
-                                        default => 'neutral'
-                                    };
+                                    $vendor = '-';
                                 @endphp
-                                @if($contract)
-                                    <span class="vendor-pill vendor-status-{{ $vendorStatus }}">{{ Str::limit($vendorName, 20) }}</span>
-                                @else
-                                    <span class="vendor-pill vendor-status-neutral">-</span>
-                                @endif
+                                <span class="vendor-pill vendor-status-neutral">{{ $vendor }}</span>
                             </td>
                             <td style="padding: 12px 8px; text-align: center;">
                                 <span class="badge-priority badge-{{ strtolower($project->priority) }}">
@@ -113,16 +104,17 @@
                             <td style="padding: 12px 8px; text-align: center;">
                             @php
                                 $statusMap = [
-                                    'draft'                 => ['Draft', '#555555'],
-                                    'completed'             => ['Completed', '#28AC00'],
-                                    'decline'               => ['Declined', '#BD0000'],
-                                    'review_sc'             => ['Review SC', '#ECAD02'],
-                                    'persetujuan_sekretaris'=> ['Persetujuan Sekdir', '#ECAD02'],
-                                    'pemilihan_vendor'      => ['Pemilihan Vendor', '#ECAD02'],
-                                    'in_progress'           => ['Sedang Diproses', '#ECAD02'],
+                                    'draft'     => ['Draft', '#555555'],
+                                    'submitted' => ['Submitted', '#ECAD02'],
+                                    'reviewed'  => ['Reviewed', '#ECAD02'],
+                                    'approved'  => ['Approved', '#ECAD02'],
+                                    'rejected'  => ['Rejected', '#BD0000'],
+                                    'in_progress' => ['Sedang Diproses', '#ECAD02'],
+                                    'completed' => ['Completed', '#28AC00'],
+                                    'cancelled' => ['Cancelled', '#555555'],
                                 ];
 
-                                [$statusText, $badgeColor] = $statusMap[$project->status_project] ?? [ucfirst($project->status_project), '#ECAD02'];
+                                [$statusText, $badgeColor] = $statusMap[$project->status_procurement] ?? [ucfirst($project->status_procurement), '#ECAD02'];
                             @endphp
 
                             <span class="status-badge"
@@ -179,12 +171,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const statusMap = {
         draft: ['Draft', '#555555'],
-        completed: ['Completed', '#28AC00'],
-        decline: ['Declined', '#BD0000'],
-        review_sc: ['Review SC', '#ECAD02'],
-        persetujuan_sekretaris: ['Persetujuan Sekdir', '#ECAD02'],
-        pemilihan_vendor: ['Pemilihan Vendor', '#ECAD02'],
+        submitted: ['Submitted', '#ECAD02'],
+        reviewed: ['Reviewed', '#ECAD02'],
+        approved: ['Approved', '#ECAD02'],
+        rejected: ['Rejected', '#BD0000'],
         in_progress: ['Sedang Diproses', '#ECAD02'],
+        completed: ['Completed', '#28AC00'],
+        cancelled: ['Cancelled', '#555555'],
     };
 
     function renderRows(items) {
