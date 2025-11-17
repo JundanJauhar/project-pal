@@ -102,6 +102,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])->name('vendor.store');
         Route::get('/vendor/pilih', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
         Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])->name('vendor.detail');
+        Route::get('/vendor/edit/{id}', [SupplyChainController::class, 'editVendor'])->name('vendor.edit');
 
 
 
@@ -142,18 +143,12 @@ Route::middleware(['auth'])->group(function () {
 
     // Desain Routes
     Route::prefix('desain')->name('desain.')->group(function () {
-        Route::get('/dashboard', [DesainController::class, 'dashboard'])->name('dashboard');
-        Route::get('/input-equipment', [DesainController::class, 'inputEquipment'])->name('input-equipment');
-        Route::get('/status-evatek/{projectId}', [DesainController::class, 'statusEvatek'])->name('status-evatek');
+    Route::get('/dashboard', [DesainController::class, 'dashboard'])->name('dashboard');
+    Route::get('/list-project', [DesainListProjectController::class, 'list'])->name('list-project');
+    Route::get('/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPermintaan'])->name('daftar-permintaan');
+    Route::get('/project/{id}/pengadaan', [DesainListProjectController::class, 'formPengadaan'])->name('permintaan-pengadaan');
+    Route::post('/project/{id}/pengadaan/kirim', [DesainListProjectController::class, 'kirimPengadaan'])->name('kirim-pengadaan');
+    Route::get('/evatek/{request_id}', [DesainListProjectController::class, 'reviewEvatek'])->name('review-evatek');
     });
+});
 
-
-    Route::get('/desain/list-project', [DesainListProjectController::class, 'list'])
-        ->name('desain.list-project');
-
-    Route::get('/desain/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPermintaan'])
-    ->name('desain.daftar-permintaan');
-
-    Route::get('/desain/evatek/{request_id}', [App\Http\Controllers\DesainListProjectController::class, 'reviewEvatek'])
-    ->name('desain.review-evatek');
-    });

@@ -281,8 +281,13 @@
                                     </td>
                                     <td style="padding: 12px 8px; text-align: center;">
                                         <div class="btn-group" role="group">
-                                            <a action="{{ route('supply-chain.vendor.form', ['id' => $vendor->id_vendor]) }}" class="btn btn-sm btn-info text-white">
+                                            <a action="{{ route('supply-chain.vendor.form', ['id' => $vendor->id_vendor]) }}" class="btn btn-sm btn-primary text-white">
                                                 <i class="bi bi-pencil"></i> Edit
+                                            </a>
+                                        </div>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ route('supply-chain.vendor.detail', ['id' => $vendor->id_vendor]) }}" class="btn btn-sm btn-info text-white">
+                                                <i class="bi bi-eye"></i> Detail
                                             </a>
                                         </div>
                                     </td>
@@ -373,8 +378,6 @@ document.addEventListener('DOMContentLoaded', function() {
         searchTimeout = setTimeout(performSearch, 500);
     });
 
-    // Search saat klik tombol
-    searchBtn.addEventListener('click', performSearch);
 
     // Search saat tekan Enter
     searchInput.addEventListener('keypress', function(e) {
@@ -386,8 +389,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Clear search
-    clearBtn.addEventListener('click', function() {
+    clearBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         searchInput.value = '';
+        searchInput.focus();
         clearBtn.style.display = 'none';
         performSearch();
     });
@@ -395,6 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Clear dengan ESC
     searchInput.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && this.value) {
+            e.preventDefault();
             searchInput.value = '';
             clearBtn.style.display = 'none';
             performSearch();

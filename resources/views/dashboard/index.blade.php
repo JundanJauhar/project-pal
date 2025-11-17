@@ -4,48 +4,65 @@
 
 @push('styles')
 <style>
-        .stat-card {
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            color: white;
-        }
-        .stat-total { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .stat-progress { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-        .stat-success { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-        .stat-rejected { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
-        .timeline-step {
-            padding: 10px;
-            text-align: center;
-            border-radius: 5px;
-            font-size: 12px;
-        }
-        .badge-priority {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-            display: inline-block;
-        }
-        .badge-priority.badge-tinggi { color: #BD0000; font-size: 16px;}
-        .badge-priority.badge-sedang { color: #FFBB00; font-size: 16px;}
-        .badge-priority.badge-rendah { color: #6f6f6f; font-size: 16px; }
+    .stat-card {
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        color: white;
+    }
+    .stat-total {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .stat-progress {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .stat-success {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    .stat-rejected {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    .timeline-step {
+        padding: 10px;
+        text-align: center;
+        border-radius: 5px;
+        font-size: 12px;
+    }
+    .badge-priority {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    .badge-priority.badge-tinggi {
+        color: #BD0000;
+        font-size: 16px;
+    }
+    .badge-priority.badge-sedang {
+        color: #FFBB00;
+        font-size: 16px;
+    }
+    .badge-priority.badge-rendah {
+        color: #6f6f6f;
+        font-size: 16px;
+    }
 
-        .card-header {
-            background-color: #ffffff;
-        }
+    .card-header {
+        background-color: #ffffff;
+    }
 
-        /* ✅ tambahkan ini biar badge status tidak berubah warna lagi */
-        .custom-status-badge {
-            border-radius: 8px;
-            display: inline-block;
-        }
+    .custom-status-badge {
+        border-radius: 8px;
+        display: inline-block;
+    }
 </style>
 @endpush
 
 @section('content')
 
-<div class="row">
+<div class="container-fluid px-4">
+    <div class="row">
     <div class="col-md-3">
         <div class="stat-card stat-total">
             <div class="stat-content">
@@ -169,6 +186,8 @@
             </div>
         </div>
     </div>
+</div>
+
 </div>
 
 @endsection
