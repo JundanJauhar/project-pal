@@ -11,14 +11,12 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    protected $primaryKey = 'user_id';
+    public $incrementing = true;
+    protected $keyType = 'int';
+
     protected $fillable = [
         'name',
         'email',
@@ -28,21 +26,11 @@ class User extends Authenticatable
         'status',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -51,43 +39,13 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Get the division that the user belongs to
-     */
     public function division(): BelongsTo
     {
-        return $this->belongsTo(Division::class, 'division_id', 'divisi_id');
+        return $this->belongsTo(Division::class, 'division_id', 'division_id');
     }
 
-    /**
-     * Get procurement progress created by this user
-     */
     public function procurementProgress(): HasMany
     {
         return $this->hasMany(ProcurementProgress::class, 'user_id');
-    }
-
-    /**
-     * Get approvals made by this user
-     */
-    public function approvals(): HasMany
-    {
-        return $this->hasMany(Approval::class, 'approver_id');
-    }
-
-    /**
-     * Get evaluations made by this user
-     */
-    public function evaluations(): HasMany
-    {
-        return $this->hasMany(Evatek::class, 'evaluated_by');
-    }
-
-    /**
-     * Get HPS created by this user
-     */
-    public function hps(): HasMany
-    {
-        return $this->hasMany(Hps::class, 'created_by');
     }
 }

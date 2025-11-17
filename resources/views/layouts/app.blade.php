@@ -591,7 +591,7 @@
                         @if(Auth::user()->roles === 'user')
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('user.*') ? 'active' : '' }}" href="{{ route('user.list') }}">
-                                Projects
+                                Pengadaan
                             </a>
                         </li>
                         @endif

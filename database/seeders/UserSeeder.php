@@ -59,7 +59,7 @@ class UserSeeder extends Seeder
                 'email' => 'sekretaris@pal.com',
                 'password' => Hash::make('password'),
                 'division_id' => 6,
-                'roles' => 'sekretaris_direksi',
+                'roles' => 'sekretaris',
                 'status' => 'active',
             ],
             [

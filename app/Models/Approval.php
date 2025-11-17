@@ -24,6 +24,6 @@ class Approval extends Model
      */
     public function approver(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'approver_id');
+        return $this->belongsTo(User::class, 'approver_id', 'user_id');
     }
 }

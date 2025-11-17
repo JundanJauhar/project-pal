@@ -13,16 +13,32 @@ return new class extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id('item_id');
+
+            // FK ke request procurement
             $table->unsignedBigInteger('request_procurement_id');
+
+            // Sesuai ERD
             $table->string('item_name', 200);
+            $table->text('item_description')->nullable();
+
+            // Kolom tambahan yang kamu ingin gunakan
             $table->text('specification')->nullable();
+
             $table->integer('amount')->default(1);
             $table->string('unit', 50)->default('pcs');
-            $table->integer('unit_price')->default(0);
-            $table->integer('total_price')->default(0);
-            $table->timestamp('created_at')->useCurrent();
 
-            $table->foreign('request_procurement_id')->references('request_id')->on('request_procurement')->onDelete('cascade');
+            // Harga besar → gunakan bigint
+            $table->bigInteger('unit_price')->default(0);
+            $table->bigInteger('total_price')->default(0);
+
+            // Standard Laravel timestamps
+            $table->timestamps();
+
+            // Foreign key
+            $table->foreign('request_procurement_id')
+                  ->references('request_id')
+                  ->on('request_procurement')
+                  ->cascadeOnDelete();
         });
     }
 

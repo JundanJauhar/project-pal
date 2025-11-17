@@ -1,6 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.app', ['hideNavbar' => true])
 
-@section('title', 'Detail Project - ' . $project->name_project)
+@section('title', 'Detail procurement - ' . $procurement->name_procurement)
 
 @section('content')
 <style>
@@ -115,38 +115,36 @@
     <i class="bi bi-x-circle"></i>
 </a>
 <div class="procurement-header">
-    {{-- Header Project --}}
+    {{-- Header procurement --}}
     <div class="d-flex justify-content-between align-items-start">
         <div>
             <h4>Daftar Pengadaan</h4>
-            <p><strong>Nama Project:</strong> {{ $project->code_project }}</p>
-            <p><strong>Vendor:</strong> {{ $project->contracts->first()->vendor->name_vendor ?? '-' }}</p>
-            <p><strong>Deskripsi:</strong> {{ $project->description }}</p>
+            <p><strong>Nama procurement:</strong> {{ $procurement->code_procurement }}</p>
+            <p><strong>Vendor:</strong> {{ $procurement->contracts?->first()?->vendor?->name_vendor ?? '-' }}</p>
+            <p><strong>Deskripsi:</strong> {{ $procurement->description }}</p>
         </div>
 
         <div class="text-end">
-            <p><strong>Prioritas:</strong> {{ strtoupper($project->priority) }}</p>
-            <p><strong>Tanggal Dibuat:</strong> {{ $project->created_at->format('d/m/Y') }}</p>
-            <p><strong>Tanggal Target:</strong> {{ $project->end_date->format('d/m/Y') }}</p>
+            <p><strong>Prioritas:</strong> {{ strtoupper($procurement->priority) }}</p>
+            <p><strong>Tanggal Dibuat:</strong> {{ $procurement->created_at->format('d/m/Y') }}</p>
+            <p><strong>Tanggal Target:</strong> {{ $procurement->end_date->format('d/m/Y') }}</p>
         </div>
     </div>
 
 
     {{-- Timeline --}}
-    @php
-        $stages = ['Diajukan', 'Review SC', 'Persetujuan Sekretaris', 'Pemilihan Vendor', 'Pengecekan Legalitas', 'Pemesanan', 'Pembayaran', 'Selesai'];
-    @endphp
-
     <div class="timeline-container">
-        @foreach ($stages as $index => $stage)
+        @forelse($checkpoints as $index => $checkpoint)
             <div class="timeline-step
-                {{ $index < $currentStageIndex ? 'completed' : ($index == $currentStageIndex ? 'active' : '') }}">
+                {{ $currentStageIndex !== null && $index < $currentStageIndex ? 'completed' : ($currentStageIndex !== null && $index == $currentStageIndex ? 'active' : '') }}">
                 <div class="timeline-icon">
                     <i class="bi bi-check-circle"></i>
                 </div>
-                <small>{{ $stage }}</small>
+                <small>{{ $checkpoint->point_name }}</small>
             </div>
-        @endforeach
+        @empty
+            <div class="text-center">Tidak ada checkpoint yang tersedia</div>
+        @endforelse
     </div>
 
 
@@ -163,7 +161,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($project->requestProcurements as $req)
+            @foreach ($procurement->requestProcurements as $req)
                 @foreach ($req->items as $item)
                 <tr>
                     <td>{{ $item->item_name }}</td>
@@ -181,13 +179,13 @@
     {{-- REVIEW DOCUMENT --}}
     <h5 class="section-title mt-4">Review Document</h5>
     <div class="doc-card">
-        {!! $project->review_notes ?? 'Belum ada review' !!}
+        {!! $procurement->review_notes ?? 'Belum ada review' !!}
     </div>
 
     {{-- SIGN DOCUMENT --}}
     <h5 class="section-title">Sign Document</h5>
     <div class="doc-card">
-        {!! $project->sign_notes ?? 'Belum ada tanda tangan' !!}
+        {!! $procurement->sign_notes ?? 'Belum ada tanda tangan' !!}
     </div>
 
 </div>

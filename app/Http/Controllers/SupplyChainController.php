@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\RequestProcurement;
+use App\Models\Procurement;
 use App\Models\Item;
 use App\Models\Vendor;
-use App\Models\Negotiation;
 use App\Models\Hps;
 use App\Models\Contract;
 use App\Models\Notification;
@@ -23,19 +23,19 @@ class SupplyChainController extends Controller
     public function dashboard()
     {
         $stats = [
-            'pending_review' => Project::where('status_project', 'review_sc')->count(),
-            'active_negotiations' => Negotiation::where('status', 'in_progress')->count(),
+            'pending_review' => Procurement::where('status_procurement', 'submitted')->count(),
+            'active_negotiations' => Procurement::where('status_procurement', 'in_progress')->count(),
             'pending_contracts' => Contract::where('status', 'draft')->count(),
             'material_requests' => RequestProcurement::where('request_status', 'submitted')->count(),
         ];
 
-        $projects = Project::whereIn('status_project', ['review_sc', 'pemilihan_vendor', 'pengecekan_legalitas'])
-            ->with(['ownerDivision'])
+        $procurements = Procurement::whereIn('status_procurement', ['submitted', 'reviewed', 'approved', 'in_progress'])
+            ->with(['department', 'project'])
             ->orderBy('priority', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('supply_chain.dashboard', compact('stats', 'projects'));
+        return view('supply_chain.dashboard', compact('stats', 'procurements'));
     }
 
     public function kelolaVendor(Request $request)
@@ -54,11 +54,11 @@ class SupplyChainController extends Controller
             ->orderBy('name_vendor')
             ->get();
 
-        $projects = Project::whereIn('status_project', ['pemilihan_vendor'])
+       $procurements =procurement::whereIn('status_procurement', ['pemilihan_vendor'])
             ->with(['ownerDivision'])
             ->get();
 
-        return view('supply_chain.vendor.kelola', compact('vendors', 'projects'));
+        return view('supply_chain.vendor.kelola', compact('vendors', 'procurements'));
     }
     public function pilihVendor(Request $request)
     {
@@ -76,7 +76,7 @@ class SupplyChainController extends Controller
             ->orderBy('name_vendor')
             ->get();
 
-        $projects = Project::whereIn('status_project', ['pemilihan_vendor'])
+       $procurements =procurement::whereIn('status_procurement', ['pemilihan_vendor'])
             ->with(['ownerDivision'])
             ->get();
 
@@ -228,31 +228,29 @@ class SupplyChainController extends Controller
 
 
     /**
-     * Review project for SC
+     * Reviewprocurement for SC
      */
-    public function reviewProject($projectId)
+    public function reviewProject($procurementId)
     {
-        $project = Project::with(['requestProcurements.items', 'hps'])
-            ->findOrFail($projectId);
 
-        return view('supply_chain.review_project', compact('project'))
+        return view('supply_chain.review_project', compact('procurement'))
             ->with('hideNavbar', true);
     }
 
     /**
-     * Approve project review
+     * Approveprocurement review
      */
-    public function approveReview(Request $request, $projectId)
+    public function approveReview(Request $request,$procurementId)
     {
-        $project = Project::findOrFail($projectId);
+       $procurement =procurement::findOrFail($procurementId);
 
         $validated = $request->validate([
             'notes' => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($project, $validated) {
-            $project->update([
-                'status_project' => 'persetujuan_sekretaris'
+        DB::transaction(function () use ($procurement, $validated) {
+           $procurement->update([
+                'status_procurement' => 'persetujuan_sekretaris'
             ]);
 
             // Notify Sekretaris Direksi
@@ -263,15 +261,15 @@ class SupplyChainController extends Controller
                     'sender_id' => Auth::id(),
                     'type' => 'approval_required',
                     'title' => 'Persetujuan Diperlukan',
-                    'message' => 'Proyek menunggu persetujuan Sekretaris: ' . $project->name_project,
+                    'message' => 'Proyek menunggu persetujuan Sekretaris: ' .$procurement->name_project,
                     'reference_type' => 'App\Models\Project',
-                    'reference_id' => $project->project_id,
+                    'reference_id' =>$procurement->project_id,
                 ]);
             }
         });
 
         return redirect()->route('supply-chain.dashboard')
-            ->with('success', 'Review project berhasil disetujui');
+            ->with('success', 'Reviewprocurement berhasil disetujui');
     }
 
     /**
@@ -316,26 +314,26 @@ class SupplyChainController extends Controller
     }
 
     /**
-     * Select vendor for project
+     * Select vendor forprocurement
      */
-    public function selectVendor(Request $request, $projectId)
+    public function selectVendor(Request $request,$procurementId)
     {
         $validated = $request->validate([
             'vendor_id' => 'required|exists:vendors,vendor_id',
         ]);
 
-        $project = Project::findOrFail($projectId);
+       $procurement =procurement::findOrFail($procurementId);
 
         // Create or update contract with vendor
         Contract::create([
-            'project_id' => $project->project_id,
+            'project_id' =>$procurement->project_id,
             'vendor_id' => $validated['vendor_id'],
             'status' => 'draft',
             'created_by' => Auth::id(),
         ]);
 
-        $project->update([
-            'status_project' => 'pengecekan_legalitas'
+       $procurement->update([
+            'status_procurement' => 'pengecekan_legalitas'
         ]);
 
         return response()->json([
@@ -345,11 +343,12 @@ class SupplyChainController extends Controller
     }
 
     /**
-     * Manage negotiations
+     * Manage negotiations (Procurement Progress Monitoring)
      */
     public function negotiations()
     {
-        $negotiations = Negotiation::with(['project', 'hps'])
+        $negotiations = \App\Models\Procurement::with(['project', 'procurementProgress.checkpoint', 'requestProcurements.vendor'])
+            ->where('status_procurement', 'in_progress')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
@@ -357,77 +356,12 @@ class SupplyChainController extends Controller
     }
 
     /**
-     * Create negotiation
-     */
-    public function createNegotiation(Request $request, $projectId)
-    {
-        $validated = $request->validate([
-            'hps_id' => 'required|exists:hps,hps_id',
-            'vendor_offer' => 'required|numeric|min:0',
-            'notes' => 'nullable|string',
-        ]);
-
-        $hps = Hps::findOrFail($validated['hps_id']);
-
-        // Check if vendor offer exceeds HPS
-        if ($validated['vendor_offer'] > $hps->total_amount) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Penawaran vendor melebihi HPS. Perlu update HPS dari Desain.',
-                'requires_hps_update' => true,
-            ]);
-        }
-
-        $negotiation = Negotiation::create([
-            'project_id' => $projectId,
-            'hps_id' => $validated['hps_id'],
-            'negotiated_price' => $validated['vendor_offer'],
-            'status' => 'completed',
-            'negotiation_date' => now(),
-            'notes' => $validated['notes'],
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Negosiasi berhasil dibuat',
-            'negotiation' => $negotiation
-        ]);
-    }
-
-    /**
-     * Request HPS update from Design team
-     */
-    public function requestHpsUpdate($projectId)
-    {
-        $project = Project::findOrFail($projectId);
-
-        // Notify Design team
-        $designUsers = \App\Models\User::where('roles', 'desain')->get();
-        foreach ($designUsers as $user) {
-            Notification::create([
-                'user_id' => $user->id,
-                'sender_id' => Auth::id(),
-                'type' => 'hps_update_required',
-                'title' => 'Update HPS Diperlukan',
-                'message' => 'Negosiasi melebihi HPS untuk proyek: ' . $project->name_project,
-                'reference_type' => 'App\Models\Project',
-                'reference_id' => $project->project_id,
-            ]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Notifikasi update HPS telah dikirim ke tim Desain'
-        ]);
-    }
-
-    /**
      * Manage material shipping
      */
     public function materialShipping()
     {
-        $projects = Project::whereIn('status_project', ['pemesanan', 'pengiriman_material'])
-            ->with(['contracts.vendor', 'requestProcurements.items'])
+       $procurements =procurement::whereIn('status_procurement', ['pemesanan', 'pengiriman_material'])
+            ->with(['contracts.vendor'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -437,15 +371,15 @@ class SupplyChainController extends Controller
     /**
      * Update material arrival
      */
-    public function updateMaterialArrival(Request $request, $projectId)
+    public function updateMaterialArrival(Request $request,$procurementId)
     {
         $validated = $request->validate([
             'arrival_date' => 'required|date',
             'notes' => 'nullable|string',
         ]);
 
-        $project = Project::findOrFail($projectId);
-        $project->update(['status_project' => 'inspeksi_barang']);
+       $procurement =procurement::findOrFail($procurementId);
+       $procurement->update(['status_procurement' => 'inspeksi_barang']);
 
         // Notify QA team
         $qaUsers = \App\Models\User::where('roles', 'qa')->get();
@@ -455,9 +389,9 @@ class SupplyChainController extends Controller
                 'sender_id' => Auth::id(),
                 'type' => 'inspection_required',
                 'title' => 'Inspeksi Material Diperlukan',
-                'message' => 'Material telah tiba untuk proyek: ' . $project->name_project,
+                'message' => 'Material telah tiba untuk proyek: ' .$procurement->name_project,
                 'reference_type' => 'App\Models\Project',
-                'reference_id' => $project->project_id,
+                'reference_id' =>$procurement->project_id,
             ]);
         }
 

@@ -81,7 +81,7 @@ class NcrReport extends Model
      */
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'created_by', 'user_id');
     }
 
     /**
@@ -89,7 +89,7 @@ class NcrReport extends Model
      */
     public function verifier(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'verified_by');
+        return $this->belongsTo(User::class, 'verified_by', 'user_id');
     }
 
     /**
@@ -97,6 +97,6 @@ class NcrReport extends Model
      */
     public function assignedUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_to');
+        return $this->belongsTo(User::class, 'assigned_to', 'user_id');
     }
 }

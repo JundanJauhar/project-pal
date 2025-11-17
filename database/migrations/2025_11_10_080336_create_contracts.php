@@ -6,33 +6,31 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('contracts', function (Blueprint $table) {
             $table->id('contract_id');
+
             $table->unsignedBigInteger('project_id');
             $table->unsignedBigInteger('vendor_id');
             $table->string('contract_number', 50);
             $table->bigInteger('contract_value');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
-            $table->enum('status', ['draft', 'active', 'completed', 'terminated'])->default('draft');
+            $table->enum('status', ['draft', 'active', 'completed', 'terminated'])
+                  ->default('draft');
+
             $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
 
-            $table->foreign('project_id')->references('project_id')->on('projects')->onDelete('cascade');
-            $table->foreign('vendor_id')->references('id_vendor')->on('vendors')->onDelete('cascade');
+            $table->foreign('project_id')->references('project_id')->on('projects')->cascadeOnDelete();
+            $table->foreign('vendor_id')->references('id_vendor')->on('vendors')->cascadeOnDelete();
+            $table->foreign('created_by')->references('user_id')->on('users')->nullOnDelete();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('contracts');
+        Schema::dropIfExists('contracts'); // WAJIB KONTRAK, bukan payment_schedules!
     }
 };

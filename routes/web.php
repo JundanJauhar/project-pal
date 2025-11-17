@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\SupplyChainController;
 use App\Http\Controllers\TreasuryController;
 use App\Http\Controllers\AccountingController;
@@ -64,10 +65,17 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('projects', ProjectController::class);
     Route::post('/projects/{id}/status', [ProjectController::class, 'updateStatus'])->name('projects.update-status');
 
-    // User-specific project list (used by 'user' role)
+    // Procurement Routes
+    Route::get('/procurements/search', [ProcurementController::class, 'search'])->name('procurements.search');
+    Route::get('/procurements/by-project/{projectId}', [ProcurementController::class, 'byProject'])->name('procurements.by-project');
+    Route::get('/procurements/{id}/progress', [ProcurementController::class, 'getProgress'])->name('procurements.progress');
+    Route::post('/procurements/{id}/progress', [ProcurementController::class, 'updateProgress'])->name('procurements.update-progress');
+    Route::resource('procurements', ProcurementController::class, ['only' => ['index', 'show', 'create', 'store']]);
+
+    // User-specific procurement list (used by 'user' role)
     Route::get('/user/list', function () {
-        $projects = Project::with(['ownerDivision', 'contracts'])->orderBy('created_at', 'desc')->paginate(10);
-        return view('user.list', compact('projects'));
+        $procurements = \App\Models\Procurement::with(['department', 'requestProcurements.vendor'])->orderBy('created_at', 'desc')->paginate(10);
+        return view('user.list', compact('procurements'));
     })->name('user.list');
 
     // Notification Routes

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Projects - PT PAL Indonesia')
+@section('title', 'Procurements - PT PAL Indonesia')
 
 @section('content')
 
@@ -15,7 +15,7 @@
 
 <div class="row mb-4">
     <div class="col-md-8">
-        <h2><i class="bi bi-folder-fill"></i> Daftar Projects</h2>
+        <h2><i class="bi bi-folder-fill"></i> Daftar Procurements</h2>
     </div>
 </div>
 
@@ -24,30 +24,32 @@
     <div class="col-12">
         <div class="card card-custom">
             <div class="card-body">
-                <form method="GET" action="{{ route('projects.index') }}" class="row g-3 align-items-end">
+                <form id="filter-form" class="row g-3 align-items-end">
                     <div class="col-md-4">
-                        <input type="text" class="form-control" name="search" placeholder="Cari project..." value="{{ request('search') }}">
+                        <input type="text" class="form-control" name="search" placeholder="Cari procurement..." value="">
                     </div>
                     <div class="col-md-3">
                         <select class="form-select" name="status">
                             <option value="">Semua Status</option>
-                            <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Draft</option>
-                            <option value="review_sc" {{ request('status') === 'review_sc' ? 'selected' : '' }}>Review SC</option>
-                            <option value="persetujuan_sekretaris" {{ request('status') === 'persetujuan_sekretaris' ? 'selected' : '' }}>Persetujuan Sekretaris</option>
-                            <option value="selesai" {{ request('status') === 'selesai' ? 'selected' : '' }}>Selesai</option>
+                            <option value="draft">Draft</option>
+                            <option value="submitted">Submitted</option>
+                            <option value="reviewed">Reviewed</option>
+                            <option value="approved">Approved</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <select class="form-select" name="priority">
                             <option value="">Semua Prioritas</option>
-                            <option value="rendah" {{ request('priority') === 'rendah' ? 'selected' : '' }}>Rendah</option>
-                            <option value="sedang" {{ request('priority') === 'sedang' ? 'selected' : '' }}>Sedang</option>
-                            <option value="tinggi" {{ request('priority') === 'tinggi' ? 'selected' : '' }}>Tinggi</option>
+                            <option value="rendah">Rendah</option>
+                            <option value="sedang">Sedang</option>
+                            <option value="tinggi">Tinggi</option>
                         </select>
                     </div>
                     <div class="tambah col-md-2 text-end">
                         @if(Auth::user()->roles === 'desain')
-                        <a href="{{ route('projects.create') }}" class="btn btn-primary w-100 btn-custom">
+                        <a href="{{ route('procurements.create') }}" class="btn btn-primary w-100 btn-custom">
                             <i class="bi bi-plus-circle"></i> Tambah
                         </a>
                         @endif
@@ -70,8 +72,8 @@
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr style="border-bottom: 2px solid #000;">
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode Project</th>
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Project</th>
+                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode Procurement</th>
+                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Procurement</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
@@ -80,49 +82,40 @@
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
                         </tr>
                     </thead>
-                    <tbody id="projects-tbody">
-                        @forelse($projects as $project)
+                    <tbody id="procurements-tbody">
+                        @forelse($procurements as $procurement)
                         <tr style="border-bottom: 1px solid #ddd;">
-                            <td style="padding: 12px 8px;"><strong>{{ $project->code_project }}</strong></td>
-                            <td style="padding: 12px 8px;">{{ Str::limit($project->name_project, 40) }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $project->ownerDivision->nama_divisi ?? '-' }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $project->start_date->format('d/m/Y') }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $project->end_date->format('d/m/Y') }}</td>
+                            <td style="padding: 12px 8px;"><strong>{{ $procurement->code_procurement }}</strong></td>
+                            <td style="padding: 12px 8px;">{{ Str::limit($procurement->name_procurement, 40) }}</td>
+                            <td style="padding: 12px 8px; text-align: center;">{{ $procurement->department ? $procurement->department->department_name : '-' }}</td>
+                            <td style="padding: 12px 8px; text-align: center;">{{ $procurement->start_date ? $procurement->start_date->format('d/m/Y') : '-' }}</td>
+                            <td style="padding: 12px 8px; text-align: center;">{{ $procurement->end_date ? $procurement->end_date->format('d/m/Y') : '-' }}</td>
                             <td style="padding: 12px 8px; text-align: center;">
                                 @php
-                                    $contract = $project->contracts->first();
-                                    $vendorName = $contract->vendor->name_vendor ?? '-';
-                                    $vendorStatus = match($project->status_project) {
-                                        'pemilihan_vendor', 'in_progress', 'ongoing', 'proses' => 'process',
-                                        'selesai', 'completed' => 'completed',
-                                        'rejected', 'ditolak' => 'rejected',
-                                        default => 'neutral'
-                                    };
+                                    $firstRequest = $procurement->requestProcurements ? $procurement->requestProcurements->first() : null;
+                                    $vendor = ($firstRequest && $firstRequest->vendor) ? $firstRequest->vendor->name_vendor : '-';
                                 @endphp
-                                @if($contract)
-                                    <span class="vendor-pill vendor-status-{{ $vendorStatus }}">{{ Str::limit($vendorName, 20) }}</span>
-                                @else
-                                    <span class="vendor-pill vendor-status-neutral">-</span>
-                                @endif
+                                <span class="vendor-pill vendor-status-neutral">{{ Str::limit($vendor, 20) }}</span>
                             </td>
                             <td style="padding: 12px 8px; text-align: center;">
-                                <span class="badge-priority badge-{{ strtolower($project->priority) }}">
-                                    {{ strtoupper($project->priority) }}
+                                <span class="badge-priority badge-{{ strtolower($procurement->priority) }}">
+                                    {{ strtoupper($procurement->priority) }}
                                 </span>
                             </td>
                             <td style="padding: 12px 8px; text-align: center;">
                             @php
                                 $statusMap = [
-                                    'draft'                 => ['Draft', '#555555'],
-                                    'completed'             => ['Completed', '#28AC00'],
-                                    'decline'               => ['Declined', '#BD0000'],
-                                    'review_sc'             => ['Review SC', '#ECAD02'],
-                                    'persetujuan_sekretaris'=> ['Persetujuan Sekdir', '#ECAD02'],
-                                    'pemilihan_vendor'      => ['Pemilihan Vendor', '#ECAD02'],
-                                    'in_progress'           => ['Sedang Diproses', '#ECAD02'],
+                                    'draft'     => ['Draft', '#555555'],
+                                    'submitted' => ['Submitted', '#ECAD02'],
+                                    'reviewed'  => ['Reviewed', '#ECAD02'],
+                                    'approved'  => ['Approved', '#ECAD02'],
+                                    'rejected'  => ['Rejected', '#BD0000'],
+                                    'in_progress' => ['Sedang Diproses', '#ECAD02'],
+                                    'completed' => ['Completed', '#28AC00'],
+                                    'cancelled' => ['Cancelled', '#555555'],
                                 ];
 
-                                [$statusText, $badgeColor] = $statusMap[$project->status_project] ?? [ucfirst($project->status_project), '#ECAD02'];
+                                [$statusText, $badgeColor] = $statusMap[$procurement->status_procurement] ?? [ucfirst($procurement->status_procurement), '#ECAD02'];
                             @endphp
 
                             <span class="status-badge"
@@ -138,7 +131,7 @@
                         <tr>
                             <td colspan="8" class="text-center py-4">
                                 <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
-                                <p class="text-muted mt-2">Tidak ada data project</p>
+                                <p class="text-muted mt-2">Tidak ada data procurement</p>
                             </td>
                         </tr>
                         @endforelse
@@ -148,8 +141,8 @@
 
             <!-- Pagination -->
             <div class="mt-3">
-                <div id="projects-pagination">
-                    {{ $projects->links() }}
+                <div id="procurements-pagination">
+                    {{ $procurements->links() }}
                 </div>
             </div>
         </div>
@@ -171,20 +164,28 @@ document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.querySelector('input[name="search"]');
     const statusSelect = document.querySelector('select[name="status"]');
     const prioritySelect = document.querySelector('select[name="priority"]');
-    const tbody = document.getElementById('projects-tbody');
-    const paginationWrap = document.getElementById('projects-pagination');
+    const tbody = document.getElementById('procurements-tbody');
+    const paginationWrap = document.getElementById('procurements-pagination');
+
+    console.log('DOMContentLoaded - Elements loaded:', { searchInput, statusSelect, prioritySelect, tbody, paginationWrap });
+
+    if (!searchInput || !statusSelect || !prioritySelect || !tbody || !paginationWrap) {
+        console.error('Missing required elements');
+        return;
+    }
 
     let currentPage = 1;
     let lastPagination = null;
 
     const statusMap = {
         draft: ['Draft', '#555555'],
-        completed: ['Completed', '#28AC00'],
-        decline: ['Declined', '#BD0000'],
-        review_sc: ['Review SC', '#ECAD02'],
-        persetujuan_sekretaris: ['Persetujuan Sekdir', '#ECAD02'],
-        pemilihan_vendor: ['Pemilihan Vendor', '#ECAD02'],
+        submitted: ['Submitted', '#ECAD02'],
+        reviewed: ['Reviewed', '#ECAD02'],
+        approved: ['Approved', '#ECAD02'],
+        rejected: ['Rejected', '#BD0000'],
         in_progress: ['Sedang Diproses', '#ECAD02'],
+        completed: ['Completed', '#28AC00'],
+        cancelled: ['Cancelled', '#555555'],
     };
 
     function renderRows(items) {
@@ -193,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <tr>
                     <td colspan="8" class="text-center py-4">
                         <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
-                        <p class="text-muted mt-2">Tidak ada data project</p>
+                        <p class="text-muted mt-2">Tidak ada data procurement</p>
                     </td>
                 </tr>`;
             paginationWrap.innerHTML = "";
@@ -202,16 +203,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         tbody.innerHTML = items.map(p => {
             const [statusText, badgeColor] =
-                statusMap[p.status_project] ?? [p.status_project ?? '-', "#ECAD02"];
+                statusMap[p.status_procurement] ?? [p.status_procurement ?? '-', "#ECAD02"];
 
             return `
             <tr style="border-bottom: 1px solid #ddd;">
-                <td style="padding: 12px 8px;"><strong>${p.code_project}</strong></td>
-                <td style="padding: 12px 8px;">${p.name_project?.substring(0, 40) ?? '-'}</td>
-                <td style="padding: 12px 8px; text-align: center;">${p.owner_division ?? '-'}</td>
+                <td style="padding: 12px 8px;"><strong>${p.code_procurement}</strong></td>
+                <td style="padding: 12px 8px;">${p.name_procurement?.substring(0, 40) ?? '-'}</td>
+                <td style="padding: 12px 8px; text-align: center;">${p.department_name ?? '-'}</td>
                 <td style="padding: 12px 8px; text-align: center;">${p.start_date ?? '-'}</td>
                 <td style="padding: 12px 8px; text-align: center;">${p.end_date ?? '-'}</td>
-                <td style="padding: 12px 8px; text-align: center;">${p.vendor ?? '-'}</td>
+                <td style="padding: 12px 8px; text-align: center;">-</td>
                 <td style="padding: 12px 8px; text-align: center;">
                     <span class="badge-priority badge-${p.priority?.toLowerCase() ?? ''}">
                         ${p.priority?.toUpperCase() ?? '-'}
@@ -266,28 +267,49 @@ document.addEventListener('DOMContentLoaded', function () {
         const status = encodeURIComponent(statusSelect.value);
         const priority = encodeURIComponent(prioritySelect.value);
 
-        const url = `{{ route('projects.search') }}?q=${q}&status=${status}&priority=${priority}&page=${currentPage}`;
-        console.log("Fetch URL:", url);
+        const url = `{{ route('procurements.search') }}?q=${q}&status=${status}&priority=${priority}&page=${currentPage}`;
+        console.log("Fetching from URL:", url, { q: searchInput.value, status: statusSelect.value, priority: prioritySelect.value });
 
         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(res => res.json())
             .then(res => {
+                console.log("Response status:", res.status);
+                return res.json();
+            })
+            .then(res => {
+                console.log("Response data:", res);
                 lastPagination = res.pagination;
                 renderRows(res.data);
             })
-            .catch(err => console.error("Search error:", err));
+            .catch(err => {
+                console.error("Search error:", err);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <i class="bi bi-exclamation-circle" style="font-size: 48px; color: #f00;"></i>
+                            <p class="text-danger mt-2">Terjadi kesalahan: ${err.message}</p>
+                        </td>
+                    </tr>`;
+            });
     }
 
     const debouncedFetch = debounce(() => {
+        console.log("Debounced fetch triggered");
         currentPage = 1;
         fetchProjects();
     }, 300);
 
-    searchInput.addEventListener('input', debouncedFetch);
-    statusSelect.addEventListener('change', debouncedFetch);
-    prioritySelect.addEventListener('change', debouncedFetch);
-
-    fetchProjects();
+    searchInput.addEventListener('input', () => {
+        console.log("Search input changed:", searchInput.value);
+        debouncedFetch();
+    });
+    statusSelect.addEventListener('change', () => {
+        console.log("Status changed:", statusSelect.value);
+        debouncedFetch();
+    });
+    prioritySelect.addEventListener('change', () => {
+        console.log("Priority changed:", prioritySelect.value);
+        debouncedFetch();
+    });
 });
 </script>
 @endpush

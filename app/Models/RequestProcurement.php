@@ -15,14 +15,13 @@ class RequestProcurement extends Model
     protected $primaryKey = 'request_id';
 
     protected $fillable = [
-        'project_id',
-        'item_id',
+        'procurement_id',
         'vendor_id',
         'request_name',
         'created_date',
         'deadline_date',
         'request_status',
-        'applicant_department',
+        'department_id',
     ];
 
     protected $casts = [
@@ -31,11 +30,11 @@ class RequestProcurement extends Model
     ];
 
     /**
-     * Get the project for this request
+     * Get the procurement for this request
      */
-    public function project(): BelongsTo
+    public function procurement(): BelongsTo
     {
-        return $this->belongsTo(Project::class, 'project_id', 'project_id');
+        return $this->belongsTo(Procurement::class, 'procurement_id', 'procurement_id');
     }
 
     /**
@@ -47,11 +46,11 @@ class RequestProcurement extends Model
     }
 
     /**
-     * Get the applicant division for this request
+     * Get the department for this request
      */
-    public function applicantDivision(): BelongsTo
+    public function department(): BelongsTo
     {
-        return $this->belongsTo(Division::class, 'applicant_department', 'divisi_id');
+        return $this->belongsTo(Department::class, 'department_id', 'department_id');
     }
 
     /**
@@ -68,13 +67,5 @@ class RequestProcurement extends Model
     public function procurementProgress(): HasMany
     {
         return $this->hasMany(ProcurementProgress::class, 'permintaan_pengadaan_id', 'request_id');
-    }
-
-    /**
-     * Get negotiations for this request
-     */
-    public function negotiations(): HasMany
-    {
-        return $this->hasMany(Negotiation::class, 'request_id', 'request_id');
     }
 }
