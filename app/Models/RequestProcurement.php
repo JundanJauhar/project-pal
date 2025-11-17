@@ -68,12 +68,4 @@ class RequestProcurement extends Model
     {
         return $this->hasMany(ProcurementProgress::class, 'permintaan_pengadaan_id', 'request_id');
     }
-
-    /**
-     * Get negotiations for this request
-     */
-    public function negotiations(): HasMany
-    {
-        return $this->hasMany(Negotiation::class, 'request_id', 'request_id');
-    }
 }

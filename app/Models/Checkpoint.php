@@ -35,6 +35,6 @@ class Checkpoint extends Model
      */
     public function procurementProgress(): HasMany
     {
-        return $this->hasMany(ProcurementProgress::class, 'titik_id', 'point_id');
+        return $this->hasMany(ProcurementProgress::class, 'checkpoint_id', 'point_id');
     }
 }
