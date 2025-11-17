@@ -69,9 +69,7 @@ class ProjectController extends Controller
         $project = Project::with([
             'ownerDivision',
             'contracts',
-            'hps',
-            'evaluations',
-            'requestProcurements.items'
+            'evaluations'
         ])->findOrFail($id);
 
         $stages = [

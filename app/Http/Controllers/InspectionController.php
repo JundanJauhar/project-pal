@@ -30,7 +30,7 @@ class InspectionController extends Controller
      */
     public function create($projectId)
     {
-        $project = Project::with(['requestProcurements.items'])->findOrFail($projectId);
+        $project = Project::with([])->findOrFail($projectId);
         return view('inspections.create', compact('project'));
     }
 

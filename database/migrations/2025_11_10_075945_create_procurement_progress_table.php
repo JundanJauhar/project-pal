@@ -13,16 +13,40 @@ return new class extends Migration
     {
         Schema::create('procurement_progress', function (Blueprint $table) {
             $table->id('progress_id');
-            $table->unsignedBigInteger('permintaan_pengadaan_id');
-            $table->unsignedBigInteger('titik_id');
-            $table->enum('status_progress', ['not_started', 'in_progress', 'completed', 'blocked'])->default('not_started');
-            $table->date('tanggal_mulai')->nullable();
-            $table->date('tanggal_selesai')->nullable();
-            $table->unsignedBigInteger('user_id');
-            $table->text('catatan')->nullable();
+
+            // FK ke procurement (monitoring dilakukan di level procurement, bukan request)
+            $table->unsignedBigInteger('procurement_id');
+
+            // FK ke checkpoint
+            $table->unsignedBigInteger('checkpoint_id');
+
+            // FK ke users
+            $table->unsignedBigInteger('user_id')->nullable();
+
+            $table->enum('status', ['not_started', 'in_progress', 'completed', 'blocked'])
+                  ->default('not_started');
+
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->text('note')->nullable();
+
             $table->timestamps();
 
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            // Foreign keys
+            $table->foreign('procurement_id')
+                  ->references('procurement_id')
+                  ->on('procurement')
+                  ->cascadeOnDelete();
+
+            $table->foreign('checkpoint_id')
+                  ->references('point_id')
+                  ->on('checkpoints')
+                  ->cascadeOnDelete();
+
+            $table->foreign('user_id')
+                  ->references('user_id')
+                  ->on('users')
+                  ->nullOnDelete();
         });
     }
 

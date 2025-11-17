@@ -181,7 +181,7 @@ class SupplyChainController extends Controller
      */
     public function reviewProject($projectId)
     {
-        $project = Project::with(['requestProcurements.items', 'hps'])
+        $project = Project::with(['hps'])
             ->findOrFail($projectId);
 
         return view('supply_chain.review_project', compact('project'))
@@ -376,7 +376,7 @@ class SupplyChainController extends Controller
     public function materialShipping()
     {
         $projects = Project::whereIn('status_project', ['pemesanan', 'pengiriman_material'])
-            ->with(['contracts.vendor', 'requestProcurements.items'])
+            ->with(['contracts.vendor'])
             ->orderBy('created_at', 'desc')
             ->get();
 

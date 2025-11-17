@@ -15,11 +15,23 @@ return new class extends Migration
             $table->id('point_id');
             $table->string('point_name');
             $table->integer('point_sequence');
+
+            // FK ke divisions (PIC checkpoint)
             $table->unsignedBigInteger('responsible_division')->nullable();
+
+            // field dari ERD
+            $table->boolean('is_true')->default(false);
+
+            // tambahan custom field (kalau ingin)
             $table->boolean('is_final')->default(false);
+
             $table->timestamps();
 
-            $table->foreign('responsible_division')->references('divisi_id')->on('divisions')->onDelete('set null');
+            // foreign key yang benar
+            $table->foreign('responsible_division')
+                  ->references('division_id')
+                  ->on('divisions')
+                  ->nullOnDelete();
         });
     }
 

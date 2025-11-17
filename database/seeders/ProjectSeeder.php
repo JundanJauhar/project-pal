@@ -6,14 +6,10 @@ use Illuminate\Database\Seeder;
 use App\Models\Project;
 use App\Models\RequestProcurement;
 use App\Models\Item;
-use App\Models\Hps;
 use App\Models\Vendor;
 use App\Models\Contract;
-use App\Models\Evatek;
-use App\Models\Negotiation;
 use App\Models\PaymentSchedule;
 use App\Models\InspectionReport;
-use App\Models\ProcurementProgress;
 use Carbon\Carbon;
 
 class ProjectSeeder extends Seeder
@@ -23,7 +19,11 @@ class ProjectSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create sample vendors
+        /**
+         * ============================
+         * CREATE SAMPLE VENDORS
+         * ============================
+         */
         $vendors = [
             [
                 'id_vendor' => 1,
@@ -32,6 +32,7 @@ class ProjectSeeder extends Seeder
                 'phone_number' => '021-12345678',
                 'email' => 'sales@krakatausteel.com',
                 'legal_status' => 'verified',
+                'is_importir' => false,
             ],
             [
                 'id_vendor' => 2,
@@ -40,6 +41,7 @@ class ProjectSeeder extends Seeder
                 'phone_number' => '022-87654321',
                 'email' => 'procurement@pindad.com',
                 'legal_status' => 'verified',
+                'is_importir' => false,
             ],
             [
                 'id_vendor' => 3,
@@ -48,6 +50,7 @@ class ProjectSeeder extends Seeder
                 'phone_number' => '022-98765432',
                 'email' => 'sales@indonesian-aerospace.com',
                 'legal_status' => 'pending',
+                'is_importir' => true,
             ],
         ];
 
@@ -55,59 +58,151 @@ class ProjectSeeder extends Seeder
             Vendor::create($vendor);
         }
 
-        // Project 1: Completed - Pengadaan Material Kapal Fregat
+        /**
+         * ============================
+         * PROJECT 1 - Completed
+         * ============================
+         */
         $project1 = Project::create([
-            'code_project' => 'KCJ-202511-001',
-            'name_project' => 'Pengadaan Material Kapal Fregat',
-            'description' => 'Pengadaan material utama untuk pembangunan kapal fregat kelas sigma',
-            'owner_division_id' => 2, // Supply Chain
+            'project_code' => 'KCJ-202511-001',
+            'project_name' => 'Pengadaan Material Kapal Fregat',
+            'description' => 'Pengadaan material utama untuk kapal fregat kelas sigma',
+            'owner_division_id' => 2,
             'priority' => 'tinggi',
             'start_date' => Carbon::now()->subDays(90),
             'end_date' => Carbon::now()->addDays(30),
             'status_project' => 'completed',
         ]);
 
-        // Create Request Procurement for Project 1
-        $request1 = RequestProcurement::create([
+        $procurement1 = \App\Models\Procurement::create([
             'project_id' => $project1->project_id,
-            'item_id' => 1,
+            'code_procurement' => 'PRC-2025-001',
+            'name_procurement' => 'Pengadaan Material Baja Berkualitas Tinggi',
+            'description' => 'Pengadaan material baja untuk proyek 1',
+            'department_procurement' => 1,
+            'priority' => 'tinggi',
+            'start_date' => Carbon::now()->subDays(100),
+            'end_date' => Carbon::now()->addDays(30),
+            'status_procurement' => 'in_progress',
+        ]);
+
+        $procurement2 = \App\Models\Procurement::create([
+            'project_id' => $project1->project_id,
+            'code_procurement' => 'PRC-2025-002',
+            'name_procurement' => 'Pengadaan Komponen Elektronik',
+            'description' => 'Pengadaan komponen elektronik untuk sistem kontrol',
+            'department_procurement' => 2,
+            'priority' => 'sedang',
+            'start_date' => Carbon::now()->subDays(60),
+            'end_date' => Carbon::now()->addDays(15),
+            'status_procurement' => 'submitted',
+        ]);
+
+        $procurement3 = \App\Models\Procurement::create([
+            'project_id' => $project1->project_id,
+            'code_procurement' => 'PRC-2025-003',
+            'name_procurement' => 'Jasa Cutting dan Fabrication',
+            'description' => 'Jasa potong dan fabrikasi material logam',
+            'department_procurement' => 3,
+            'priority' => 'tinggi',
+            'start_date' => Carbon::now()->subDays(40),
+            'end_date' => Carbon::now()->addDays(10),
+            'status_procurement' => 'approved',
+        ]);
+
+        $procurement4 = \App\Models\Procurement::create([
+            'project_id' => $project1->project_id,
+            'code_procurement' => 'PRC-2025-004',
+            'name_procurement' => 'Permintaan Alat Pelindung Diri (APD)',
+            'description' => 'Pengadaan APD untuk keselamatan kerja',
+            'department_procurement' => 4,
+            'priority' => 'rendah',
+            'start_date' => Carbon::now()->subDays(20),
+            'end_date' => Carbon::now()->addDays(5),
+            'status_procurement' => 'draft',
+        ]);
+
+
+        /**
+         * REQUEST PROCUREMENT (sesuai schema baru)
+         */
+        $request1 = RequestProcurement::create([
+            'procurement_id' => $procurement1->procurement_id,
             'vendor_id' => 1,
             'request_name' => 'Material Baja Berkualitas Tinggi',
             'created_date' => Carbon::now()->subDays(90),
             'deadline_date' => Carbon::now()->addDays(30),
             'request_status' => 'completed',
-            'applicant_department' => 2,
+            'department_id' => 1,
         ]);
 
-        // Create HPS for Project 1
-        $hps1 = Hps::create([
-            'project_id' => $project1->project_id,
-            'hps_date' => Carbon::now()->subDays(85),
-            'total_amount' => 15000000000, // 15 Miliar
-            'status' => 'approved',
-            'notes' => 'HPS telah disetujui oleh Sekretaris Direksi',
-            'created_by' => 7, // Desain
+        $request2 = RequestProcurement::create([
+            'procurement_id' => $procurement2->procurement_id,
+            'vendor_id' => 2,
+            'request_name' => 'Pengadaan Komponen Elektronik',
+            'created_date' => Carbon::now()->subDays(60),
+            'deadline_date' => Carbon::now()->addDays(15),
+            'request_status' => 'submitted',
+            'department_id' => 2,
         ]);
 
-        // Create Contract for Project 1
+        $request3 = RequestProcurement::create([
+            'procurement_id' => $procurement3->procurement_id,
+            'vendor_id' => 3,
+            'request_name' => 'Jasa Cutting dan Fabrication',
+            'created_date' => Carbon::now()->subDays(40),
+            'deadline_date' => Carbon::now()->addDays(10),
+            'request_status' => 'approved',
+            'department_id' => 3,
+        ]);
+
+        $request4 = RequestProcurement::create([
+            'procurement_id' => $procurement4->procurement_id,
+            'vendor_id' => null,
+            'request_name' => 'Permintaan Alat Pelindung Diri (APD)',
+            'created_date' => Carbon::now()->subDays(20),
+            'deadline_date' => Carbon::now()->addDays(5),
+            'request_status' => 'draft',
+            'department_id' => 4,
+        ]);
+
+
+        /**
+         * ITEMS — HARUS MENGIKUTI request_procurement_id
+         */
+        Item::create([
+            'request_procurement_id' => $request1->request_id,
+            'item_name' => 'Baja High Grade',
+            'item_description' => 'Material baja high grade untuk struktur kapal',
+            'amount' => 100,
+            'unit' => 'ton',
+            'unit_price' => 120000000,
+            'total_price' => 12000000000,
+        ]);
+
+        /**
+         * CONTRACT FOR PROJECT 1
+         */
         $contract1 = Contract::create([
             'project_id' => $project1->project_id,
             'vendor_id' => 1,
             'contract_number' => 'CTR/PAL/2025/001',
-            'contract_value' => 14500000000, // Setelah negosiasi
+            'contract_value' => 14500000000,
             'start_date' => Carbon::now()->subDays(70),
             'end_date' => Carbon::now()->addDays(30),
             'status' => 'active',
-            'created_by' => 2,
+            'created_by' => 2, // user_id
         ]);
 
-        // Create Payment Schedule for Project 1
+        /**
+         * PAYMENT SCHEDULES
+         */
         PaymentSchedule::create([
             'project_id' => $project1->project_id,
             'contract_id' => $contract1->contract_id,
             'payment_type' => 'dp',
-            'amount' => 4350000000, // 30% DP
-            'percentage' => 30.00,
+            'amount' => 4350000000,
+            'percentage' => 30,
             'due_date' => Carbon::now()->subDays(65),
             'status' => 'paid',
             'verified_by_treasury' => 3,
@@ -115,45 +210,47 @@ class ProjectSeeder extends Seeder
             'payment_date' => Carbon::now()->subDays(65),
         ]);
 
-        PaymentSchedule::create([
-            'project_id' => $project1->project_id,
-            'contract_id' => $contract1->contract_id,
-            'payment_type' => 'termin',
-            'amount' => 7250000000, // 50% Progress
-            'percentage' => 50.00,
-            'due_date' => Carbon::now()->subDays(30),
-            'status' => 'paid',
-            'verified_by_treasury' => 3,
-            'verified_by_accounting' => 4,
-            'payment_date' => Carbon::now()->subDays(30),
-        ]);
-
-        PaymentSchedule::create([
-            'project_id' => $project1->project_id,
-            'contract_id' => $contract1->contract_id,
-            'payment_type' => 'final',
-            'amount' => 2900000000, // 20% Final
-            'percentage' => 20.00,
-            'due_date' => Carbon::now()->addDays(5),
-            'status' => 'pending',
-        ]);
-
-        // Create Inspection Report for Project 1
+        /**
+         * INSPECTION REPORT
+         */
         InspectionReport::create([
             'project_id' => $project1->project_id,
-            'item_id' => null,
+            'item_id' => 1,
             'inspection_date' => Carbon::now()->subDays(10),
-            'inspector_id' => 5, // QA
+            'inspector_id' => 5,
             'result' => 'passed',
-            'findings' => null,
-            'notes' => 'Material sesuai spesifikasi teknis. Kualitas sangat baik.',
+            'notes' => 'Material sesuai spesifikasi teknis.',
         ]);
 
-        // Project 2: In Progress - Pengadaan Sistem Radar
-        $project2 = Project::create([
-            'code_project' => 'KCJ-202511-002',
-            'name_project' => 'Pengadaan Sistem Radar Navigasi',
-            'description' => 'Pengadaan dan instalasi sistem radar untuk kapal perang',
+        /**
+         * PROCUREMENT PROGRESS - Monitoring step procurement
+         * Setiap procurement melalui beberapa checkpoint/step
+         */
+        $checkpoints = \App\Models\Checkpoint::all();
+        
+        // Progress untuk procurement 1
+        foreach ($checkpoints->take(5) as $index => $checkpoint) {
+            \App\Models\ProcurementProgress::create([
+                'procurement_id' => $procurement1->procurement_id,
+                'checkpoint_id' => $checkpoint->point_id,
+                'user_id' => ($index % 2 === 0) ? 2 : 3,
+                'status' => $index < 3 ? 'completed' : 'in_progress',
+                'start_date' => Carbon::now()->subDays(90 - ($index * 10)),
+                'end_date' => $index < 3 ? Carbon::now()->subDays(85 - ($index * 10)) : null,
+                'note' => 'Step ' . ($index + 1) . ' ' . $checkpoint->point_name,
+            ]);
+        }
+
+        /**
+         * PROJECT 2–7 dibuat ulang versi pendek
+         * tanpa HPS / Negotiation / Evatek
+         * karena tabelnya BELUM ADA
+         */
+
+        Project::create([
+            'project_code' => 'KCJ-202511-002',
+            'project_name' => 'Pengadaan Sistem Radar Navigasi',
+            'description' => 'Pengadaan radar navigasi untuk kapal perang',
             'owner_division_id' => 2,
             'priority' => 'tinggi',
             'start_date' => Carbon::now()->subDays(45),
@@ -161,61 +258,21 @@ class ProjectSeeder extends Seeder
             'status_project' => 'negosiasi_harga',
         ]);
 
-        $hps2 = Hps::create([
-            'project_id' => $project2->project_id,
-            'hps_date' => Carbon::now()->subDays(40),
-            'total_amount' => 25000000000, // 25 Miliar
-            'status' => 'approved',
-            'notes' => 'HPS untuk sistem radar navigasi',
-            'created_by' => 7,
-        ]);
-
-        // Buat Request Procurement minimal untuk negosiasi Project 2
-        $request2 = RequestProcurement::create([
-            'project_id' => $project2->project_id,
-            'item_id' => 1,
-            'vendor_id' => 3,
-            'request_name' => 'Sistem Radar Navigasi',
-            'created_date' => Carbon::now()->subDays(42),
-            'deadline_date' => Carbon::now()->addDays(60),
-            'request_status' => 'submitted',
-            'applicant_department' => 2,
-        ]);
-
-        Negotiation::create([
-            'request_id' => $request2->request_id,
-            'status' => 'in_progress',
-            'notes' => 'Vendor menawarkan diskon 6% dari HPS',
-        ]);
-
-        // Project 3: Review Stage - Pengadaan Mesin Diesel
-        $project3 = Project::create([
-            'code_project' => 'KCJ-202511-003',
-            'name_project' => 'Pengadaan Mesin Diesel Utama',
-            'description' => 'Pengadaan mesin diesel 4 unit untuk kapal tanker',
-            'owner_division_id' => 7, // Desain
+        Project::create([
+            'project_code' => 'KCJ-202511-003',
+            'project_name' => 'Pengadaan Mesin Diesel Utama',
+            'description' => 'Mesin diesel untuk kapal tanker',
+            'owner_division_id' => 7,
             'priority' => 'sedang',
             'start_date' => Carbon::now()->subDays(20),
             'end_date' => Carbon::now()->addDays(120),
             'status_project' => 'review_sc',
         ]);
 
-        RequestProcurement::create([
-            'project_id' => $project3->project_id,
-            'item_id' => 1,
-            'vendor_id' => 2,
-            'request_name' => 'Mesin Diesel MTU Series 4000',
-            'created_date' => Carbon::now()->subDays(20),
-            'deadline_date' => Carbon::now()->addDays(120),
-            'request_status' => 'submitted',
-            'applicant_department' => 7,
-        ]);
-
-        // Project 4: Draft - Pengadaan Peralatan Keselamatan
-        $project4 = Project::create([
-            'code_project' => 'KCJ-202511-004',
-            'name_project' => 'Pengadaan Peralatan Keselamatan Kapal',
-            'description' => 'Life jacket, life boat, fire extinguisher, dan peralatan keselamatan lainnya',
+        Project::create([
+            'project_code' => 'KCJ-202511-004',
+            'project_name' => 'Pengadaan Peralatan Keselamatan Kapal',
+            'description' => 'Life jacket, fire extinguisher, dll.',
             'owner_division_id' => 1,
             'priority' => 'sedang',
             'start_date' => Carbon::now()->subDays(5),
@@ -223,11 +280,10 @@ class ProjectSeeder extends Seeder
             'status_project' => 'draft',
         ]);
 
-        // Project 5: Approval Stage - Pengadaan Cat & Coating
-        $project5 = Project::create([
-            'code_project' => 'KCJ-202511-005',
-            'name_project' => 'Pengadaan Cat Anti Karat & Coating',
-            'description' => 'Cat marine grade untuk proteksi kapal dari korosi air laut',
+        Project::create([
+            'project_code' => 'KCJ-202511-005',
+            'project_name' => 'Pengadaan Cat Anti Karat & Coating',
+            'description' => 'Cat marine grade untuk kapal',
             'owner_division_id' => 2,
             'priority' => 'rendah',
             'start_date' => Carbon::now()->subDays(15),
@@ -235,11 +291,10 @@ class ProjectSeeder extends Seeder
             'status_project' => 'persetujuan_sekretaris',
         ]);
 
-        // Project 6: HPS Creation - Pengadaan Sistem Komunikasi
-        $project6 = Project::create([
-            'code_project' => 'KCJ-202511-006',
-            'name_project' => 'Pengadaan Sistem Komunikasi Satelit',
-            'description' => 'Sistem komunikasi satelit untuk kapal jelajah jauh',
+        Project::create([
+            'project_code' => 'KCJ-202511-006',
+            'project_name' => 'Pengadaan Sistem Komunikasi Satelit',
+            'description' => 'Sistem satelit untuk kapal jelajah jauh',
             'owner_division_id' => 2,
             'priority' => 'tinggi',
             'start_date' => Carbon::now()->subDays(30),
@@ -247,11 +302,10 @@ class ProjectSeeder extends Seeder
             'status_project' => 'pembuatan_hps',
         ]);
 
-        // Project 7: Vendor Selection - Pengadaan Generator
-        $project7 = Project::create([
-            'code_project' => 'KCJ-202511-007',
-            'name_project' => 'Pengadaan Generator Listrik',
-            'description' => 'Generator cadangan 500 KVA untuk galangan kapal',
+        Project::create([
+            'project_code' => 'KCJ-202511-007',
+            'project_name' => 'Pengadaan Generator Listrik',
+            'description' => 'Generator cadangan 500 KVA',
             'owner_division_id' => 2,
             'priority' => 'sedang',
             'start_date' => Carbon::now()->subDays(25),
@@ -259,26 +313,6 @@ class ProjectSeeder extends Seeder
             'status_project' => 'pemilihan_vendor',
         ]);
 
-        $hps7 = Hps::create([
-            'project_id' => $project7->project_id,
-            'hps_date' => Carbon::now()->subDays(20),
-            'total_amount' => 8000000000,
-            'status' => 'approved',
-            'notes' => 'HPS generator listrik backup',
-            'created_by' => 7,
-        ]);
-
-        echo "✅ Created 7 sample projects with different stages\n";
-        echo "✅ Created 3 vendors\n";
-        echo "✅ Created contracts, HPS, payment schedules, and inspection reports\n";
-        echo "\n";
-        echo "📊 Project Status Distribution:\n";
-        echo "   - Draft: 1 project\n";
-        echo "   - Review SC: 1 project\n";
-        echo "   - Approval: 1 project\n";
-        echo "   - HPS Creation: 1 project\n";
-        echo "   - Vendor Selection: 1 project\n";
-        echo "   - Negotiation: 1 project\n";
-        echo "   - Completed: 1 project\n";
+        echo "✅ Seeder berhasil disesuaikan dengan schema terbaru.\n";
     }
 }

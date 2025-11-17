@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\Procurement;
 use App\Models\ProcurementProgress;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -17,16 +18,16 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // Get statistics
+        // Get statistics from Procurement table
         $stats = [
-            'total_pengadaan' => Project::count(),
-            'sedang_proses' => Project::where('status_project', 'in_progress')->count(),
-            'selesai' => Project::where('status_project', 'completed')->count(),
-            'ditolak' => Project::where('status_project', 'rejected')->count(),
+            'total_pengadaan' => Procurement::count(),
+            'sedang_proses' => Procurement::where('status_procurement', 'in_progress')->count(),
+            'selesai' => Procurement::where('status_procurement', 'completed')->count(),
+            'ditolak' => Procurement::where('status_procurement', 'rejected')->count(),
         ];
 
-        // Get recent projects based on user role
-        $projects = $this->getProjectsByRole($user);
+        // Get recent procurements based on user role
+        $procurements = $this->getProcurementsByRole($user);
 
         // Get unread notifications
         $notifications = Notification::where('user_id', $user->id)
@@ -35,33 +36,34 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        return view('dashboard.index', compact('stats', 'projects', 'notifications'));
+        return view('dashboard.index', compact('stats', 'procurements', 'notifications'));
     }
 
     /**
-     * Get projects based on user role
+     * Get procurements based on user role
      */
-    private function getProjectsByRole($user)
+    private function getProcurementsByRole($user)
     {
-        $query = Project::with(['ownerDivision', 'contracts']);
+        $query = Procurement::with(['department', 'requestProcurements.vendor']);
 
         // Filter based on role
         switch ($user->roles) {
             case 'user':
-                // User only sees projects from their division
-                $query->where('owner_division_id', $user->division_id);
+                // User only sees procurements from their division/department
+                $query->where('department_procurement', $user->division_id);
                 break;
 
             case 'supply_chain':
             case 'treasury':
             case 'accounting':
             case 'qa':
-            case 'sekretaris_direksi':
-                // These roles can see all projects
+            case 'sekretaris':
+            case 'desain':
+                // These roles can see all procurements
                 break;
 
             default:
-                $query->where('owner_division_id', $user->division_id);
+                $query->where('department_procurement', $user->division_id);
         }
 
         return $query->orderBy('created_at', 'desc')
@@ -70,35 +72,35 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get dashboard data for specific division
+     * Get dashboard data for specific department
      */
-    public function divisionDashboard($divisionId)
+    public function departmentDashboard($departmentId)
     {
         $user = Auth::user();
 
-        // Check if user has access to this division
-        if ($user->roles !== 'supply_chain' && $user->division_id != $divisionId) {
-            abort(403, 'Unauthorized access to division dashboard');
+        // Check if user has access to this department
+        if ($user->roles !== 'supply_chain' && $user->division_id != $departmentId) {
+            abort(403, 'Unauthorized access to department dashboard');
         }
 
-        $projects = Project::where('owner_division_id', $divisionId)
-            ->with(['ownerDivision', 'contracts'])
+        $procurements = Procurement::where('department_procurement', $departmentId)
+            ->with(['department', 'requestProcurements.vendor'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('dashboard.division', compact('projects'));
+        return view('dashboard.department', compact('procurements'));
     }
 
     /**
-     * Get project statistics by status
+     * Get procurement statistics by status
      */
     public function getStatistics()
     {
-        $statusStats = Project::selectRaw('status_project, COUNT(*) as count')
-            ->groupBy('status_project')
+        $statusStats = Procurement::selectRaw('status_procurement, COUNT(*) as count')
+            ->groupBy('status_procurement')
             ->get();
 
-        $priorityStats = Project::selectRaw('priority, COUNT(*) as count')
+        $priorityStats = Procurement::selectRaw('priority, COUNT(*) as count')
             ->groupBy('priority')
             ->get();
 
@@ -111,9 +113,9 @@ class DashboardController extends Controller
     /**
      * Get procurement timeline progress
      */
-    public function getProcurementTimeline($projectId)
+    public function getProcurementTimeline($procurementId)
     {
-        $progress = ProcurementProgress::where('permintaan_pengadaan_id', $projectId)
+        $progress = ProcurementProgress::where('permintaan_pengadaan_id', $procurementId)
             ->with('checkpoint')
             ->orderBy('titik_id')
             ->get();

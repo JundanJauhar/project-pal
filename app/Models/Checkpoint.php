@@ -27,7 +27,7 @@ class Checkpoint extends Model
      */
     public function responsibleDivision(): BelongsTo
     {
-        return $this->belongsTo(Division::class, 'responsible_division', 'divisi_id');
+        return $this->belongsTo(Division::class, 'responsible_division', 'division_id');
     }
 
     /**

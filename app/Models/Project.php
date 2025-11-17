@@ -14,8 +14,8 @@ class Project extends Model
     protected $primaryKey = 'project_id';
 
     protected $fillable = [
-        'code_project',
-        'name_project',
+        'project_code',
+        'project_name',
         'description',
         'owner_division_id',
         'priority',
@@ -37,7 +37,7 @@ class Project extends Model
      */
     public function ownerDivision(): BelongsTo
     {
-        return $this->belongsTo(Division::class, 'owner_division_id', 'divisi_id');
+    return $this->belongsTo(Division::class, 'owner_division_id', 'division_id');
     }
 
     /**
@@ -89,16 +89,10 @@ class Project extends Model
     }
 
     /**
-     * Get request procurements for this project
+     * Get procurements for this project
      */
-    public function requestProcurements(): HasMany
+    public function procurements(): HasMany
     {
-        return $this->hasMany(RequestProcurement::class, 'project_id', 'project_id');
+        return $this->hasMany(Procurement::class, 'project_id', 'project_id');
     }
-
-    public function requests()
-    {
-        return $this->hasMany(\App\Models\RequestProcurement::class, 'project_id', 'project_id');
-    }
-
 }

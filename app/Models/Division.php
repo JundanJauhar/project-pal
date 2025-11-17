@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Division extends Model
 {
     protected $table = 'divisions';
-    protected $primaryKey = 'divisi_id';
+    protected $primaryKey = 'division_id';
 
     protected $fillable = [
-        'name',
+        'division_name',
         'description',
     ];
 
@@ -20,7 +20,7 @@ class Division extends Model
      */
     public function users(): HasMany
     {
-        return $this->hasMany(User::class, 'division_id', 'divisi_id');
+        return $this->hasMany(User::class, 'division_id', 'division_id');
     }
 
     /**
@@ -28,7 +28,7 @@ class Division extends Model
      */
     public function projects(): HasMany
     {
-        return $this->hasMany(Project::class, 'owner_division_id', 'divisi_id');
+        return $this->hasMany(Project::class, 'owner_division_id', 'division_id');
     }
 
     /**
@@ -36,7 +36,7 @@ class Division extends Model
      */
     public function checkpoints(): HasMany
     {
-        return $this->hasMany(Checkpoint::class, 'responsible_division', 'divisi_id');
+        return $this->hasMany(Checkpoint::class, 'responsible_division', 'division_id');
     }
 
     /**
@@ -44,6 +44,6 @@ class Division extends Model
      */
     public function requestProcurements(): HasMany
     {
-        return $this->hasMany(RequestProcurement::class, 'applicant_department', 'divisi_id');
+        return $this->hasMany(RequestProcurement::class, 'applicant_department', 'division_id');
     }
 }

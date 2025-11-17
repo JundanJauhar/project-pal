@@ -14,7 +14,11 @@ class Contract extends Model
         'project_id',
         'vendor_id',
         'contract_number',
+        'contract_value',
+        'start_date',
+        'end_date',
         'status',
+        'created_by',
     ];
 
     /**
@@ -31,5 +35,13 @@ class Contract extends Model
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class, 'vendor_id', 'id_vendor');
+    }
+
+    /**
+     * Get the user who created this contract
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by', 'user_id');
     }
 }

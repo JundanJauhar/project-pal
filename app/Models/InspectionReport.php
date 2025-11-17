@@ -50,7 +50,7 @@ class InspectionReport extends Model
      */
     public function inspector(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'inspector_id');
+        return $this->belongsTo(User::class, 'inspector_id', 'user_id');
     }
 
     /**

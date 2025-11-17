@@ -15,6 +15,7 @@ class Item extends Model
     protected $fillable = [
         'request_procurement_id',
         'item_name',
+        'item_description',
         'specification',
         'amount',
         'unit',

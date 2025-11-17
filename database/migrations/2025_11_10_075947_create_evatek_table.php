@@ -13,15 +13,31 @@ return new class extends Migration
     {
         Schema::create('evatek', function (Blueprint $table) {
             $table->id('evatek_id');
-            $table->unsignedBigInteger('project_id');
-            $table->unsignedBigInteger('evaluated_by');
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->text('evaluation_result')->nullable();
-            $table->timestamp('created_at')->useCurrent();
-            $table->timestamp('update_at')->nullable();
 
-            $table->foreign('project_id')->references('project_id')->on('projects')->onDelete('cascade');
-            $table->foreign('evaluated_by')->references('id')->on('users')->onDelete('cascade');
+            // FK ke proyek
+            $table->unsignedBigInteger('project_id');
+
+            // user yang melakukan evaluasi
+            $table->unsignedBigInteger('evaluated_by');
+
+            $table->enum('status', ['pending', 'approved', 'rejected'])
+                  ->default('pending');
+
+            $table->text('evaluation_result')->nullable();
+
+            // timestamps standar
+            $table->timestamps();
+
+            // Foreign keys
+            $table->foreign('project_id')
+                  ->references('project_id')
+                  ->on('projects')
+                  ->onDelete('cascade');
+
+            $table->foreign('evaluated_by')
+                  ->references('user_id')
+                  ->on('users')
+                  ->onDelete('cascade');
         });
     }
 
