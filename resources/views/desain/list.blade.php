@@ -47,6 +47,24 @@
         justify-items: center;
     }
 
+    @media (max-width: 1200px) {
+        .project-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .project-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        .project-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
     /* --- Card Project --- */
     .project-card {
         width: 260px;
@@ -123,20 +141,18 @@
 
                 @foreach($projects as $project)
                 <div class="project-card"
-                    data-name="{{ strtolower($project->name ?? $project->project_name ?? '') }}">
+                    data-name="{{ strtolower($project->project_name ?? '') }}">
 
                     <img 
                         src="{{ asset('images/' . ($project->image ?? 'assetimgkapal1.jpg')) }}"
-                        class="project-image">
+                        class="project-image"
+                        alt="{{ $project->project_name ?? 'Project' }}">
 
                     <div class="project-body">
                         <p class="label">Nama Project</p>
 
                         <h3 class="project-name">
-                            {{ $project->name 
-                                ?? $project->project_name 
-                                ?? $project->name_project 
-                                ?? 'Nama Tidak Ditemukan' }}
+                            {{ $project->project_name ?? 'Nama Tidak Ditemukan' }}
                         </h3>
 
                         <a class="project-link" href="{{ route('desain.daftar-permintaan', $project->project_id) }}">

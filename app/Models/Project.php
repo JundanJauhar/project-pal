@@ -95,4 +95,12 @@ class Project extends Model
     {
         return $this->hasMany(Procurement::class, 'project_id', 'project_id');
     }
+
+    /**
+     * Get request procurements for this project (through procurements)
+     */
+    public function requests(): HasMany
+    {
+        return $this->hasMany(RequestProcurement::class, 'project_id', 'project_id');
+    }
 }

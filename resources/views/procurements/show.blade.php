@@ -14,6 +14,7 @@
         justify-content: space-between;
         margin: 40px 0;
         position: relative;
+        width: 50px;
     }
 
     .timeline-container::before {
@@ -30,7 +31,7 @@
     .timeline-step {
         text-align: center;
         position: relative;
-        z-index: 2;
+        z-index: 3;
     }
 
     .timeline-icon {

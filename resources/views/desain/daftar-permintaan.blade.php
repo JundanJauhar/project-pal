@@ -66,6 +66,7 @@
             border: 1px solid #bbb;
             background: white;
             font-size: 14px;
+            width: 120px;
         }
 
     </style>
@@ -83,24 +84,22 @@
             <input type="text" class="search-input" placeholder="Cari permintaan...">
             <span class="search-icon">🔍</span>
         </div>
+         <select class="filter-select">
+                            <option>All</option>
+                            <option>Tepat Waktu</option>
+                            <option>Terlambat</option>
+                        </select>
 
         {{-- TABLE HEADER --}}
         <table class="request-table">
             <thead>
                 <tr>
-                    <th>Equipment</th>
-                    <th>Vendor</th>
-                    <th>Status</th>
-                    <th>Information</th>
-                    <th>Tanggal Pengadaan</th>
-                    <th>
-                        <select class="filter-select">
-                            <option>All</option>
-                            <option>Tepat Waktu</option>
-                            <option>Terlambat</option>
-                        </select>
-                        <div>Tanggal Tenggat</div>
-                    </th>
+                    <th style = "padding: 12px 8px; text-align: left;">Equipment</th>
+                    <th style = "padding: 12px 8px; text-align: left;">Vendor</th>
+                    <th style = "padding: 12px 8px; text-align: center;">Status</th>
+                    <th style = "padding: 12px 8px; text-align: center;">Information</th>
+                    <th style = "padding: 12px 8px; text-align: center;">Tanggal Pengadaan</th>
+                    <th style = "padding: 12px 8px; text-align: center;">Tanggal Tenggat</th>
                 </tr>
             </thead>
 
@@ -113,7 +112,7 @@
                         {{-- Loop items dari setiap request --}}
                         @forelse($req->items as $item)
                         <tr>
-                            <td>
+                            <td style = "padding: 12px 8px; text-align: left;">
                                 <a href="{{ route('desain.review-evatek', $req->request_id) }}"
                                 style="text-decoration: none; color: #000; font-weight: 600;">
                                     {{ $item->item_name }}
@@ -123,8 +122,8 @@
                                 </div>
                             </td>
 
-                            <td>{{ $req->vendor->name_vendor ?? '-' }}</td>
-                            <td>
+                            <td style = "padding: 12px 8px; text-align: left;">{{ $req->vendor->name_vendor ?? '-' }}</td>
+                            <td style = "padding: 12px 8px; text-align: center;">
                                 @php
                                     $statusMap = [
                                         'draft' => ['Draft', '#6c757d'],
@@ -139,12 +138,12 @@
                                     {{ $statusText }}
                                 </span>
                             </td>
-                            <td>
+                            <td style = "padding: 12px 8px; text-align: center;">
                                 <div style="font-size: 13px;">{{ $procurement->code_procurement }}</div>
                                 <div style="font-size: 11px; color: #666;">{{ $req->request_name }}</div>
                             </td>
-                            <td>{{ \Carbon\Carbon::parse($req->created_date)->format('d/m/Y') }}</td>
-                            <td>
+                            <td style = "padding: 12px 8px; text-align: center;">{{ \Carbon\Carbon::parse($req->created_date)->format('d/m/Y') }}</td>
+                            <td style = "padding: 12px 8px; text-align: center;">
                                 @php
                                     $deadline = \Carbon\Carbon::parse($req->deadline_date);
                                     $now = \Carbon\Carbon::now();

@@ -75,32 +75,16 @@ class ProcurementController extends Controller
         $checkpoints = \App\Models\Checkpoint::orderBy('point_sequence', 'asc')->get();
 
         // Get the current stage index based on procurement progress
-        $currentStageIndex = null;
-        if ($procurement->procurementProgress->count() > 0) {
-            // Get the highest sequence checkpoint that has been completed or is in progress
-            $latestProgress = $procurement->procurementProgress
-                ->where('status', 'completed')
-                ->sortByDesc(function ($p) {
-                    return $p->checkpoint ? $p->checkpoint->point_sequence : 0;
-                })
-                ->first();
+        $currentStageIndex = 0;
 
-            if ($latestProgress && $latestProgress->checkpoint) {
-                $currentStageIndex = $latestProgress->checkpoint->point_sequence - 1;
-            } else {
-                // If no completed progress, check for in_progress
-                $inProgressProgress = $procurement->procurementProgress
-                    ->where('status', 'in_progress')
-                    ->sortByDesc(function ($p) {
-                        return $p->checkpoint ? $p->checkpoint->point_sequence : 0;
-                    })
-                    ->first();
+$latestProgress = $procurement->procurementProgress
+    ->sortByDesc(fn($p) => $p->checkpoint?->point_sequence ?? 0)
+    ->first();
 
-                if ($inProgressProgress && $inProgressProgress->checkpoint) {
-                    $currentStageIndex = $inProgressProgress->checkpoint->point_sequence - 1;
-                }
-            }
-        }
+if ($latestProgress && $latestProgress->checkpoint) {
+    $currentStageIndex = $latestProgress->checkpoint->point_sequence - 1;
+}
+
 
         return view('procurements.show', compact('procurement', 'checkpoints', 'currentStageIndex'));
     }
