@@ -37,7 +37,7 @@ class Project extends Model
      */
     public function ownerDivision(): BelongsTo
     {
-    return $this->belongsTo(Division::class, 'owner_division_id', 'division_id');
+        return $this->belongsTo(Division::class, 'owner_division_id', 'division_id');
     }
 
     /**
@@ -94,5 +94,22 @@ class Project extends Model
     public function procurements(): HasMany
     {
         return $this->hasMany(Procurement::class, 'project_id', 'project_id');
+    }
+
+    /**
+     * Get RequestProcurement (permintaan pengadaan) for this project
+     */
+    public function requestProcurements(): HasMany
+    {
+        // Pastikan model RequestProcurement ada di App\Models\RequestProcurement
+        return $this->hasMany(RequestProcurement::class, 'project_id', 'project_id');
+    }
+
+    /**
+     * Alias untuk kompatibilitas jika kode lama memanggil `requests`
+     */
+    public function requests(): HasMany
+    {
+        return $this->requestProcurements();
     }
 }

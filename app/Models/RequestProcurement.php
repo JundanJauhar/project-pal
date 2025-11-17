@@ -22,6 +22,7 @@ class RequestProcurement extends Model
         'deadline_date',
         'request_status',
         'department_id',
+        'project_id', // pastikan kolom ini ada di migration
     ];
 
     protected $casts = [

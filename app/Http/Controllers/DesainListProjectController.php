@@ -16,7 +16,8 @@ class DesainListProjectController extends Controller
 
     public function daftarPermintaan($id)
     {
-        $project = Project::with('requests')->findOrFail($id);
+        // Muat relasi requestProcurements (nama relasi yang konsisten)
+        $project = Project::with('requestProcurements')->findOrFail($id);
 
         return view('desain.daftar-permintaan', compact('project'));
     }
@@ -32,32 +33,32 @@ class DesainListProjectController extends Controller
 
    public function kirimPengadaan(Request $request, $id)
     {
-    $project = Project::findOrFail($id);
+        $project = Project::findOrFail($id);
 
-    // Validasi input
-    $data = $request->validate([
-        'nama_barang.*' => 'required|string',
-        'satuan.*' => 'required|string',
-        'harga.*' => 'required|numeric',
-        'harga_estimasi.*' => 'required|numeric',
-        'spesifikasi.*' => 'required|string',
-    ]);
-
-    // Ambil request procurement paling baru milik project
-    $requestProc = $project->requestProcurements()->latest()->firstOrFail();
-
-    // Simpan ke tabel items
-    foreach ($data['nama_barang'] as $index => $nama) {
-        $requestProc->items()->create([
-            'item_name' => $nama,
-            'unit' => $data['satuan'][$index],
-            'unit_price' => $data['harga'][$index],
-            'total_price' => $data['harga_estimasi'][$index],
-            'specification' => $data['spesifikasi'][$index],
+        // Validasi input
+        $data = $request->validate([
+            'nama_barang.*' => 'required|string',
+            'satuan.*' => 'required|string',
+            'harga.*' => 'required|numeric',
+            'harga_estimasi.*' => 'required|numeric',
+            'spesifikasi.*' => 'required|string',
         ]);
-    }
 
-    return back()->with('success', 'Pengadaan berhasil dikirim!');
+        // Ambil request procurement paling baru milik project
+        $requestProc = $project->requestProcurements()->latest()->firstOrFail();
+
+        // Simpan ke tabel items
+        foreach ($data['nama_barang'] as $index => $nama) {
+            $requestProc->items()->create([
+                'item_name' => $nama,
+                'unit' => $data['satuan'][$index],
+                'unit_price' => $data['harga'][$index],
+                'total_price' => $data['harga_estimasi'][$index],
+                'specification' => $data['spesifikasi'][$index],
+            ]);
+        }
+
+        return back()->with('success', 'Pengadaan berhasil dikirim!');
     }
 
 }
