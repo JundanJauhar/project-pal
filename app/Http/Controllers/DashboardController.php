@@ -20,11 +20,13 @@ class DashboardController extends Controller
 
         // Get statistics from Procurement table
         $stats = [
-            'total_pengadaan' => Procurement::count(),
-            'sedang_proses' => Procurement::where('status_procurement', 'in_progress')->count(),
-            'selesai' => Procurement::where('status_procurement', 'completed')->count(),
-            'ditolak' => Procurement::where('status_procurement', 'rejected')->count(),
-        ];
+    'total_pengadaan' => Procurement::count(),
+    'sedang_proses' => Procurement::get()->filter(fn($p) => $p->auto_status === 'in_progress')->count(),
+    'selesai' => Procurement::get()->filter(fn($p) => $p->auto_status === 'completed')->count(),
+    'ditolak' => Procurement::get()->filter(fn($p) => $p->auto_status === 'rejected')->count(),
+];
+
+
 
         // Get recent procurements based on user role
         $procurements = $this->getProcurementsByRole($user);

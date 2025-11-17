@@ -187,6 +187,66 @@ class ProjectSeeder extends Seeder
             'total_price' => 12000000000,
         ]);
 
+        Item::create([
+            'request_procurement_id' => $request1->request_id,
+            'item_name' => 'Plat Baja Marine Grade',
+            'item_description' => 'Plat baja tahan korosi untuk lambung kapal',
+            'amount' => 50,
+            'unit' => 'ton',
+            'unit_price' => 95000000,
+            'total_price' => 4750000000,
+        ]);
+
+        Item::create([
+            'request_procurement_id' => $request2->request_id,
+            'item_name' => 'Panel Kontrol Navigasi',
+            'item_description' => 'Panel kontrol elektronik untuk sistem navigasi',
+            'amount' => 5,
+            'unit' => 'unit',
+            'unit_price' => 250000000,
+            'total_price' => 1250000000,
+        ]);
+
+        Item::create([
+            'request_procurement_id' => $request2->request_id,
+            'item_name' => 'Sensor Radar',
+            'item_description' => 'Sensor radar untuk deteksi objek',
+            'amount' => 10,
+            'unit' => 'unit',
+            'unit_price' => 85000000,
+            'total_price' => 850000000,
+        ]);
+
+        Item::create([
+            'request_procurement_id' => $request3->request_id,
+            'item_name' => 'Jasa Cutting Laser',
+            'item_description' => 'Jasa pemotongan material dengan laser precision',
+            'amount' => 200,
+            'unit' => 'jam',
+            'unit_price' => 500000,
+            'total_price' => 100000000,
+        ]);
+
+        Item::create([
+            'request_procurement_id' => $request4->request_id,
+            'item_name' => 'Helm Safety',
+            'item_description' => 'Helm pengaman standar K3',
+            'amount' => 100,
+            'unit' => 'pcs',
+            'unit_price' => 150000,
+            'total_price' => 15000000,
+        ]);
+
+        Item::create([
+            'request_procurement_id' => $request4->request_id,
+            'item_name' => 'Safety Shoes',
+            'item_description' => 'Sepatu safety boots',
+            'amount' => 100,
+            'unit' => 'pcs',
+            'unit_price' => 350000,
+            'total_price' => 35000000,
+        ]);
+
         /**
          * CONTRACT FOR PROJECT 1
          */

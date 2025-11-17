@@ -58,7 +58,6 @@
             border-bottom: 2px solid transparent;
         }
 
-        /* make links full navbar height so underline sits on navbar bottom */
         .navbar-custom .nav-link {
             height: 60px; /* match navbar height */
             display: flex;
@@ -606,9 +605,10 @@
 
                         @if(Auth::user()->roles === 'desain')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('desain-list-project*') ? 'active' : '' }}" href="{{ route('desain.list-project') }}">
-                                Projects
-                            </a>
+                            <a class="nav-link {{ request()->routeIs('desain.list-project*') ? 'active' : '' }}" href="{{ route('desain.list-project') }}">
+                            Projects
+                        </a>
+
                         </li>
                         @endif
 
@@ -640,6 +640,14 @@
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('payments*') ? 'active' : '' }}" href="{{ route('payments.index') }}">
                                 Payments
+                            </a>
+                        </li>
+                        @endif
+
+                         @if(Auth::user()->roles === 'desain')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('project.create*') ? 'active' : '' }}" href="{{ route('projects.create') }}">
+                                Pengadaan
                             </a>
                         </li>
                         @endif

@@ -65,6 +65,14 @@
         border-radius: 8px;
         display: inline-block;
     }
+
+    table thead th {
+        vertical-align: middle;
+    }
+
+    table tbody td {
+        vertical-align: middle;
+    }
 </style>
 @endpush
 
@@ -238,6 +246,7 @@
     searchInput.addEventListener('input', function() {
         const value = this.value.trim().toLowerCase();
 
+<<<<<<< HEAD
         // Show/hide clear button
         clearBtn.style.display = value ? 'block' : 'none';
 
@@ -286,6 +295,55 @@
 </script>
 @endpush
 
+=======
+                            <td style="padding: 12px 8px; text-align: center;">
+
+                                @php
+                                    $status = $procurement->auto_status;
+                                    $current = $procurement->current_checkpoint; // ← ini yang kita tambahkan
+
+                                    $badgeColor = match($status) {
+                                        'completed' => '#28AC00',
+                                        'in_progress' => '#ECAD02',
+                                        'not_started' => '#555',
+                                        default => '#BD0000'
+                                    };
+
+                                    $text = match($status) {
+                                        'completed' => 'Selesai',
+                                        'not_started' => 'Belum Dimulai',
+                                        'in_progress' => $current ?? 'Sedang Proses', // ← tampilkan checkpoint!
+                                        default => $status
+                                    };
+                                @endphp
+
+                                <span class="badge"
+                                    style="background-color: {{ $badgeColor }};
+                                        color:white;
+                                        padding:6px 12px;
+                                        font-weight:600;">
+                                    {{ $text }}
+                                </span>
+
+                            </td>
+
+
+                            <td style="padding: 12px 8px; text-align: center;">
+                                <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary">
+                                     Detail
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="8" class="text-center">Tidak ada data pengadaan</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+>>>>>>> 2cf30ad17ed3c3ee22c81f48b1d6950541dfa798
 
 
 @endsection
