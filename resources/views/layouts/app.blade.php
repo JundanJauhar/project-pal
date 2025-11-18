@@ -644,13 +644,6 @@
                         </li>
                         @endif
 
-                         @if(Auth::user()->roles === 'desain')
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('project.create*') ? 'active' : '' }}" href="{{ route('projects.create') }}">
-                                Pengadaan
-                            </a>
-                        </li>
-                        @endif
 
                         @if(Auth::user()->roles === 'qa')
                         <li class="nav-item">

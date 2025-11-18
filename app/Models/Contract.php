@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Contract extends Model
 {
-    protected $table = 'contracts';
+    use HasFactory;
+
     protected $primaryKey = 'contract_id';
 
     protected $fillable = [
@@ -18,29 +19,26 @@ class Contract extends Model
         'start_date',
         'end_date',
         'status',
-        'created_by',
+        'created_by'
     ];
 
-    /**
-     * Get the project for this contract
-     */
-    public function project(): BelongsTo
-    {
-        return $this->belongsTo(Project::class, 'project_id', 'project_id');
-    }
+    protected $casts = [
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+        'contract_value' => 'integer'
+    ];
 
-    /**
-     * Get the vendor for this contract
-     */
-    public function vendor(): BelongsTo
+    public function vendor()
     {
         return $this->belongsTo(Vendor::class, 'vendor_id', 'id_vendor');
     }
 
-    /**
-     * Get the user who created this contract
-     */
-    public function creator(): BelongsTo
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'project_id', 'project_id');
+    }
+
+    public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by', 'user_id');
     }

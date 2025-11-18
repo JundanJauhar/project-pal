@@ -204,14 +204,7 @@
             };
             @endphp
 
-            <span class="badge custom-status-badge"
-                style="background-color: {{ $badgeColor }} !important;
-                       color: #fff !important;
-                       padding: 6px 12px !important;
-                       font-weight: 600 !important;
-                       font-size: 12px;">
-                {{ $statusText }}
-            </span>
+
         </td>
 
         <td style="padding: 12px 8px; text-align: center;">
@@ -314,15 +307,6 @@
                                         default => $status
                                     };
                                 @endphp
-
-                                <span class="badge"
-                                    style="background-color: {{ $badgeColor }};
-                                        color:white;
-                                        padding:6px 12px;
-                                        font-weight:600;">
-                                    {{ $text }}
-                                </span>
-
                             </td>
 
 

@@ -149,6 +149,7 @@
                     </div>
                 </div>
             </form>
+    
 
             <!-- GRID PROJECT -->
             <div class="project-grid">
@@ -169,7 +170,7 @@
                             {{ $project->project_name ?? 'Nama Tidak Ditemukan' }}
                         </h3>
 
-                        <a class="project-link" href="{{ route('desain.daftar-permintaan', $project->project_id) }}">
+                        <a class="project-link" href="{{ route('desain.daftar-pengadaan', $project->project_id) }}">
                             GO TO PROJECT →
                         </a>
                     </div>
