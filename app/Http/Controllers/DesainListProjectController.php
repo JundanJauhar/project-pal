@@ -21,7 +21,7 @@ class DesainListProjectController extends Controller
             'procurements.requestProcurements.items'
         ])->findOrFail($id);
 
-        return view('desain.daftar-pengadaan', compact('project'));
+        return view('desain.daftar-permintaan', compact('project'));
     }
 
     public function reviewEvatek($requestId)

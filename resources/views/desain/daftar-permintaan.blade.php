@@ -96,12 +96,9 @@
                     <div class="col-md-3">
                         <select class="form-select" name="status">
                             <option value="">Semua Status</option>
-                            <option value="draft">Draft</option>
-                            <option value="submitted">Submitted</option>
-                            <option value="reviewed">Reviewed</option>
-                            <option value="approved">Approved</option>
-                            <option value="in_progress">In Progress</option>
+                            <option value="on_progress">On Progress</option>
                             <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
                         </select>
                     </div>
                     <div class="col-md-3">
