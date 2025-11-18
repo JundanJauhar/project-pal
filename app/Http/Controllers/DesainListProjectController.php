@@ -14,11 +14,11 @@ class DesainListProjectController extends Controller
         return view('desain.list-project', compact('projects'));
     }
 
-    public function daftarPermintaan($id)
+    public function daftarPengadaan($id)
     {
         $project = Project::with('requests')->findOrFail($id);
 
-        return view('desain.daftar-permintaan', compact('project'));
+        return view('desain.daftar-pengadaan', compact('project'));
     }
 
     public function reviewEvatek($requestId)

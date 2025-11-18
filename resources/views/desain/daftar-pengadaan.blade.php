@@ -1,6 +1,6 @@
     @extends('layouts.app')
 
-    @section('title', 'Daftar Item - PT PAL Indonesia')
+    @section('title', 'Daftar Pengadaan - PT PAL Indonesia')
 
     @push('styles')
     <style>
@@ -82,7 +82,7 @@
 
     @section('content')
 
-    <h2 class="fw-bold mb-4">Daftar Item</h2>
+    <h2 class="fw-bold mb-4">Daftar Pengadaan</h2>
     
     
     <div class="row mb-4">

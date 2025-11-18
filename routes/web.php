@@ -158,5 +158,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/project/{id}/pengadaan/kirim', [DesainListProjectController::class, 'kirimPengadaan'])->name('kirim-pengadaan');
     Route::get('/evatek/{request_id}', [DesainListProjectController::class, 'reviewEvatek'])->name('review-evatek');
     });
-});
 
+    Route::get('/desain/list-project', [DesainListProjectController::class, 'list'])
+        ->name('desain.list-project');
+
+    Route::get('/desain/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPengadaan'])
+    ->name('desain.daftar-pengadaan');
+
+    Route::get('/desain/evatek/{request_id}', [App\Http\Controllers\DesainListProjectController::class, 'reviewEvatek'])
+    ->name('desain.review-evatek');
+    });

@@ -12,7 +12,7 @@
         min-height: 550px;
         box-shadow: 0 6px 12px rgba(0,0,0,0.12);
     }
-
+    
     /* --- Search Bar --- */
     .search-box {
         width: 45%;
@@ -133,7 +133,7 @@
             <!-- SEARCH BAR -->
             <div class="search-box">
                 <input type="text" class="search-input" id="search-project">
-                <span class="search-icon">🔍</span>
+                <span class="search-icon"></span>
             </div>
 
             <!-- GRID PROJECT -->
@@ -155,7 +155,7 @@
                             {{ $project->project_name ?? 'Nama Tidak Ditemukan' }}
                         </h3>
 
-                        <a class="project-link" href="{{ route('desain.daftar-permintaan', $project->project_id) }}">
+                        <a class="project-link" href="{{ route('desain.daftar-pengadaan', $project->project_id) }}">
                             GO TO PROJECT →
                         </a>
                     </div>
