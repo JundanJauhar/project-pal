@@ -56,6 +56,14 @@
         border-radius: 8px;
         display: inline-block;
     }
+
+    table thead th {
+        vertical-align: middle;
+    }
+
+    table tbody td {
+        vertical-align: middle;
+    }
 </style>
 @endpush
 
@@ -139,41 +147,40 @@
                             </td>
 
                             <td style="padding: 12px 8px; text-align: center;">
+
                                 @php
-                                    $statusColors = [
-                                        'draft'     => '#555555',
+                                    $status = $procurement->auto_status;
+                                    $current = $procurement->current_checkpoint; // ← ini yang kita tambahkan
+
+                                    $badgeColor = match($status) {
                                         'completed' => '#28AC00',
-                                        'rejected'   => '#BD0000',
-                                    ];
+                                        'in_progress' => '#ECAD02',
+                                        'not_started' => '#555',
+                                        default => '#BD0000'
+                                    };
 
-                                    $badgeColor = $statusColors[$procurement->status_procurement] ?? '#ECAD02';
-
-                                    $statusText = match($procurement->status_procurement) {
-                                        'draft' => 'Draft',
-                                        'submitted' => 'Submitted',
-                                        'reviewed' => 'Reviewed',
-                                        'approved' => 'Approved',
-                                        'rejected' => 'Rejected',
-                                        'in_progress' => 'Sedang Proses',
-                                        'completed' => 'Completed',
-                                        'cancelled' => 'Cancelled',
-                                        default => ucfirst($procurement->status_procurement)
+                                    $text = match($status) {
+                                        'completed' => 'Selesai',
+                                        'not_started' => 'Belum Dimulai',
+                                        'in_progress' => $current ?? 'Sedang Proses', // ← tampilkan checkpoint!
+                                        default => $status
                                     };
                                 @endphp
 
-                                <span class="badge custom-status-badge"
-                                    style="background-color: {{ $badgeColor }} !important;
-                                           color: #fff !important;
-                                           padding: 6px 12px !important;
-                                           font-weight: 600 !important;
-                                           font-size: 12px;">
-                                    {{ $statusText }}
+                                <span class="badge"
+                                    style="background-color: {{ $badgeColor }};
+                                        color:white;
+                                        padding:6px 12px;
+                                        font-weight:600;">
+                                    {{ $text }}
                                 </span>
+
                             </td>
+
 
                             <td style="padding: 12px 8px; text-align: center;">
                                 <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-eye"></i> Detail
+                                     Detail
                                 </a>
                             </td>
                         </tr>

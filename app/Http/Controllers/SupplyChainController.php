@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\RequestProcurement;
+use App\Models\Procurement;
 use App\Models\Item;
 use App\Models\Vendor;
 use App\Models\Hps;
@@ -22,26 +23,26 @@ class SupplyChainController extends Controller
     public function dashboard()
     {
         $stats = [
-            'pending_review' => Project::where('status_project', 'review_sc')->count(),
-            'active_negotiations' => \App\Models\Procurement::where('status_procurement', 'in_progress')->count(),
+            'pending_review' => Procurement::where('status_procurement', 'submitted')->count(),
+            'active_negotiations' => Procurement::where('status_procurement', 'in_progress')->count(),
             'pending_contracts' => Contract::where('status', 'draft')->count(),
             'material_requests' => RequestProcurement::where('request_status', 'submitted')->count(),
         ];
 
-        $projects = Project::whereIn('status_project', ['review_sc', 'pemilihan_vendor', 'pengecekan_legalitas'])
-            ->with(['ownerDivision'])
+        $procurements = Procurement::whereIn('status_procurement', ['submitted', 'reviewed', 'approved', 'in_progress'])
+            ->with(['department', 'project'])
             ->orderBy('priority', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('supply_chain.dashboard', compact('stats', 'projects'));
+        return view('supply_chain.dashboard', compact('stats', 'procurements'));
     }
 
     public function kelolaVendor(Request $request)
     {
         $search = $request->query('search');
 
-        $vendors = Vendor::where('legal_status', 'verified')
+        $vendors = Vendor::query()
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('name_vendor', 'LIKE', "%{$search}%")
@@ -53,17 +54,17 @@ class SupplyChainController extends Controller
             ->orderBy('name_vendor')
             ->get();
 
-        $projects = Project::whereIn('status_project', ['pemilihan_vendor'])
+       $procurements =procurement::whereIn('status_procurement', ['pemilihan_vendor'])
             ->with(['ownerDivision'])
             ->get();
 
-        return view('supply_chain.vendor.kelola', compact('vendors', 'projects'));
+        return view('supply_chain.vendor.kelola', compact('vendors', 'procurements'));
     }
     public function pilihVendor(Request $request)
     {
         $search = $request->query('search');
 
-        $vendors = Vendor::where('legal_status', 'verified')
+        $vendors = Vendor::query()
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('name_vendor', 'LIKE', "%{$search}%")
@@ -75,7 +76,7 @@ class SupplyChainController extends Controller
             ->orderBy('name_vendor')
             ->get();
 
-        $projects = Project::whereIn('status_project', ['pemilihan_vendor'])
+       $procurements =procurement::whereIn('status_procurement', ['pemilihan_vendor'])
             ->with(['ownerDivision'])
             ->get();
 
@@ -85,22 +86,54 @@ class SupplyChainController extends Controller
 
     public function formVendor(Request $request)
     {
-
         $vendorId = $request->query('id');
-        $redirect = $request->query('redirect', 'kelola');
+        $vendor   = $vendorId ? Vendor::find($vendorId) : null;
 
-        $vendor = null;
-        if ($vendorId) {
-            $vendor = Vendor::find($vendorId);
-            if (!$vendor) {
-                return redirect()->route('supply-chain.vendor.kelola')
-                    ->with('error', 'Vendor tidak ditemukan');
-            }
+        if ($vendorId && ! $vendor) {
+            return redirect()->route('supply-chain.vendor.kelola')
+                ->with('error', 'Vendor tidak ditemukan.');
         }
 
-        return view('supply_chain.vendor.form', compact('redirect'))
-            ->with('hideNavbar', true);
+        return view('supply_chain.vendor.form', compact('vendor'))
+            ->with('hideNavbar', true)
+            ->with('success', "Vendor berhasil ditambahkan.");
     }
+
+   public function updateVendor(Request $request, $id)
+{
+    try {
+        $vendor = Vendor::findOrFail($id);
+
+        $validated = $request->validate([
+            'name_vendor' => 'required|string|max:255',
+            'phone_number' => 'required|string|max:20',
+            'email' => 'required|email|max:255',
+            'address' => 'nullable|string|max:500',
+            'is_importer' => 'nullable|boolean',
+        ]);
+
+        $vendor->update([
+            'name_vendor' => $validated['name_vendor'],
+            'phone_number' => $validated['phone_number'],
+            'email' => $validated['email'],
+            'address' => $validated['address'] ?? null,
+            'is_importer' => $request->has('is_importer') ? 1 : 0,
+        ]);
+
+        $redirect = $request->input('redirect', 'kelola');
+        $routeName = $redirect === 'pilih' ? 'supply-chain.vendor.pilih' : 'supply-chain.vendor.kelola';
+
+        return redirect()->route($routeName)
+            ->with('success', 'Vendor "' . $vendor->name_vendor . '" berhasil diperbarui');
+
+    } catch (\Exception $e) {
+        Log::error('Error updating vendor: ' . $e->getMessage());
+
+        return back()
+            ->with('error', 'Gagal memperbarui vendor: ' . $e->getMessage())
+            ->withInput();
+    }
+}
 
 
 
@@ -124,80 +157,100 @@ class SupplyChainController extends Controller
             ->with('hideNavbar', true);
     }
 
-    public function storeVendor(Request $request)
-    {
+   public function storeVendor(Request $request)
+{
+    try {
+        $validated = $request->validate([
+            'name_vendor' => 'required|string|max:255|unique:vendors,name_vendor',
+            'address' => 'nullable|string|max:500',
+            'phone_number' => 'required|string|max:20',
+            'email' => 'required|email|max:255|unique:vendors,email',
+            'is_importer' => 'nullable|boolean',
+        ]);
+
+        // Generate ID Vendor dengan pengecekan duplikasi
+        DB::beginTransaction();
+
         try {
-            $validated = $request->validate([
-                'name_vendor' => 'required|string|max:255|unique:vendors,name_vendor',
-                'address' => 'nullable|string|max:500',
-                'phone_number' => 'required|string|max:20',
-                'email' => 'required|email|max:255',
-                'legal_status' => 'required|in:verified,pending,rejected',
-                'is_importer' => 'nullable|boolean',
-            ]);
+            // Ambil vendor terakhir berdasarkan ID (terurut descending)
+            $lastVendor = Vendor::orderByRaw('CAST(SUBSTRING(id_vendor, 3) AS UNSIGNED) DESC')->first();
 
-            // Generate ID vendor (PERBAIKAN #10)
-            $lastVendor = Vendor::orderBy('id_vendor', 'desc')->first();
-            $lastNumber = $lastVendor ? intval(substr($lastVendor->id_vendor, 2)) : 0;
-            $vendorId = 'V-' . str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+            // Hitung nomor baru
+            if ($lastVendor && preg_match('/^V-(\d+)$/', $lastVendor->id_vendor, $matches)) {
+                $lastNumber = intval($matches[1]);
+            } else {
+                $lastNumber = 0;
+            }
 
-            // Create vendor hanya sekali (PERBAIKAN #9)
+            // Loop untuk memastikan ID unik
+            do {
+                $lastNumber++;
+                $idVendor = 'V-' . str_pad($lastNumber, 3, '0', STR_PAD_LEFT);
+            } while (Vendor::where('id_vendor', $idVendor)->exists());
+
+            // Create vendor dengan ID yang sudah dipastikan unik
             $vendor = Vendor::create([
-                'id_vendor' => $vendorId, // PERBAIKAN #10
+                'id_vendor' => $idVendor,
                 'name_vendor' => $validated['name_vendor'],
                 'address' => $validated['address'] ?? null,
                 'phone_number' => $validated['phone_number'],
                 'email' => $validated['email'],
-                'legal_status' => $validated['legal_status'],
                 'is_importer' => $request->has('is_importer') ? 1 : 0,
+                'legal_status' => 'pending',
             ]);
+
+            DB::commit();
 
             $redirect = $request->input('redirect', 'kelola');
             $routeName = $redirect === 'pilih' ? 'supply-chain.vendor.pilih' : 'supply-chain.vendor.kelola';
 
             return redirect()->route($routeName)
-                ->with('success', 'Vendor "' . $vendor->name_vendor . '" berhasil ditambahkan');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return back()
-                ->withErrors($e->errors())
-                ->withInput();
-        } catch (\Exception $e) {
-            Log::error('Error creating vendor: ' . $e->getMessage());
+                ->with('success', 'Vendor "' . $vendor->name_vendor . '" berhasil ditambahkan dengan ID: ' . $idVendor);
 
-            return back()
-                ->with('error', 'Gagal menambahkan vendor: ' . $e->getMessage())
-                ->withInput();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return back()
+            ->withErrors($e->errors())
+            ->withInput();
+    } catch (\Exception $e) {
+        Log::error('Error creating vendor: ' . $e->getMessage());
+
+        return back()
+            ->with('error', 'Gagal menambahkan vendor: ' . $e->getMessage())
+            ->withInput();
     }
+}
 
 
 
     /**
-     * Review project for SC
+     * Reviewprocurement for SC
      */
-    public function reviewProject($projectId)
+    public function reviewProject($procurementId)
     {
-        $project = Project::with(['hps'])
-            ->findOrFail($projectId);
 
-        return view('supply_chain.review_project', compact('project'))
+        return view('supply_chain.review_project', compact('procurement'))
             ->with('hideNavbar', true);
     }
 
     /**
-     * Approve project review
+     * Approveprocurement review
      */
-    public function approveReview(Request $request, $projectId)
+    public function approveReview(Request $request,$procurementId)
     {
-        $project = Project::findOrFail($projectId);
+       $procurement =procurement::findOrFail($procurementId);
 
         $validated = $request->validate([
             'notes' => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($project, $validated) {
-            $project->update([
-                'status_project' => 'persetujuan_sekretaris'
+        DB::transaction(function () use ($procurement, $validated) {
+           $procurement->update([
+                'status_procurement' => 'persetujuan_sekretaris'
             ]);
 
             // Notify Sekretaris Direksi
@@ -208,15 +261,15 @@ class SupplyChainController extends Controller
                     'sender_id' => Auth::id(),
                     'type' => 'approval_required',
                     'title' => 'Persetujuan Diperlukan',
-                    'message' => 'Proyek menunggu persetujuan Sekretaris: ' . $project->name_project,
+                    'message' => 'Proyek menunggu persetujuan Sekretaris: ' .$procurement->name_project,
                     'reference_type' => 'App\Models\Project',
-                    'reference_id' => $project->project_id,
+                    'reference_id' =>$procurement->project_id,
                 ]);
             }
         });
 
         return redirect()->route('supply-chain.dashboard')
-            ->with('success', 'Review project berhasil disetujui');
+            ->with('success', 'Reviewprocurement berhasil disetujui');
     }
 
     /**
@@ -261,26 +314,26 @@ class SupplyChainController extends Controller
     }
 
     /**
-     * Select vendor for project
+     * Select vendor forprocurement
      */
-    public function selectVendor(Request $request, $projectId)
+    public function selectVendor(Request $request,$procurementId)
     {
         $validated = $request->validate([
             'vendor_id' => 'required|exists:vendors,vendor_id',
         ]);
 
-        $project = Project::findOrFail($projectId);
+       $procurement =procurement::findOrFail($procurementId);
 
         // Create or update contract with vendor
         Contract::create([
-            'project_id' => $project->project_id,
+            'project_id' =>$procurement->project_id,
             'vendor_id' => $validated['vendor_id'],
             'status' => 'draft',
             'created_by' => Auth::id(),
         ]);
 
-        $project->update([
-            'status_project' => 'pengecekan_legalitas'
+       $procurement->update([
+            'status_procurement' => 'pengecekan_legalitas'
         ]);
 
         return response()->json([
@@ -307,7 +360,7 @@ class SupplyChainController extends Controller
      */
     public function materialShipping()
     {
-        $projects = Project::whereIn('status_project', ['pemesanan', 'pengiriman_material'])
+       $procurements =procurement::whereIn('status_procurement', ['pemesanan', 'pengiriman_material'])
             ->with(['contracts.vendor'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -318,15 +371,15 @@ class SupplyChainController extends Controller
     /**
      * Update material arrival
      */
-    public function updateMaterialArrival(Request $request, $projectId)
+    public function updateMaterialArrival(Request $request,$procurementId)
     {
         $validated = $request->validate([
             'arrival_date' => 'required|date',
             'notes' => 'nullable|string',
         ]);
 
-        $project = Project::findOrFail($projectId);
-        $project->update(['status_project' => 'inspeksi_barang']);
+       $procurement =procurement::findOrFail($procurementId);
+       $procurement->update(['status_procurement' => 'inspeksi_barang']);
 
         // Notify QA team
         $qaUsers = \App\Models\User::where('roles', 'qa')->get();
@@ -336,9 +389,9 @@ class SupplyChainController extends Controller
                 'sender_id' => Auth::id(),
                 'type' => 'inspection_required',
                 'title' => 'Inspeksi Material Diperlukan',
-                'message' => 'Material telah tiba untuk proyek: ' . $project->name_project,
+                'message' => 'Material telah tiba untuk proyek: ' .$procurement->name_project,
                 'reference_type' => 'App\Models\Project',
-                'reference_id' => $project->project_id,
+                'reference_id' =>$procurement->project_id,
             ]);
         }
 

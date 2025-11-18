@@ -30,11 +30,29 @@ class Item extends Model
         'total_price' => 'integer',
     ];
 
+    protected $appends = ['quantity', 'estimated_price'];
+
     /**
      * Get the request procurement for this item
      */
     public function requestProcurement(): BelongsTo
     {
         return $this->belongsTo(RequestProcurement::class, 'request_procurement_id', 'request_id');
+    }
+
+    /**
+     * Accessor for quantity (alias for amount)
+     */
+    public function getQuantityAttribute()
+    {
+        return $this->amount;
+    }
+
+    /**
+     * Accessor for estimated_price (alias for unit_price)
+     */
+    public function getEstimatedPriceAttribute()
+    {
+        return $this->unit_price;
     }
 }

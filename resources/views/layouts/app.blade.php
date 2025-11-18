@@ -58,7 +58,6 @@
             border-bottom: 2px solid transparent;
         }
 
-        /* make links full navbar height so underline sits on navbar bottom */
         .navbar-custom .nav-link {
             height: 60px; /* match navbar height */
             display: flex;
@@ -591,7 +590,7 @@
                         @if(Auth::user()->roles === 'user')
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('user.*') ? 'active' : '' }}" href="{{ route('user.list') }}">
-                                Projects
+                                Pengadaan
                             </a>
                         </li>
                         @endif
@@ -607,8 +606,14 @@
                         @if(Auth::user()->roles === 'desain')
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('desain.list-project*') ? 'active' : '' }}" href="{{ route('desain.list-project') }}">
+<<<<<<< HEAD
                                 Projects
                             </a>
+=======
+                            Projects    
+                        </a>
+
+>>>>>>> bd2fdb2e9c450c380e9d96623528ac11265728cc
                         </li>
                         @endif
 
@@ -646,8 +651,7 @@
 
                         <!-- @if(Auth::user()->roles === 'desain' && isset($project))
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('desain.permintaan-pengadaan*') ? 'active' : '' }}" 
-                            href="{{ route('desain.permintaan-pengadaan', $project->project_id) }}">
+                            <a class="nav-link {{ request()->routeIs('procurements.create*') ? 'active' : '' }}" href="{{ route('procurements.create') }}">
                                 Pengadaan
                             </a>
                         </li>

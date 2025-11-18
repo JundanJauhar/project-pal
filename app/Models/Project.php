@@ -97,19 +97,10 @@ class Project extends Model
     }
 
     /**
-     * Get RequestProcurement (permintaan pengadaan) for this project
-     */
-    public function requestProcurements(): HasMany
-    {
-        // Pastikan model RequestProcurement ada di App\Models\RequestProcurement
-        return $this->hasMany(RequestProcurement::class, 'project_id', 'project_id');
-    }
-
-    /**
-     * Alias untuk kompatibilitas jika kode lama memanggil `requests`
+     * Get request procurements for this project (through procurements)
      */
     public function requests(): HasMany
     {
-        return $this->requestProcurements();
+        return $this->hasMany(RequestProcurement::class, 'project_id', 'project_id');
     }
 }

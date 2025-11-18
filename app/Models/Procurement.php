@@ -56,9 +56,26 @@ class Procurement extends Model
      * Get procurement progress for this procurement
      */
     public function procurementProgress(): HasMany
-    {
-        return $this->hasMany(ProcurementProgress::class, 'procurement_id', 'procurement_id');
-    }
+{
+    return $this->hasMany(ProcurementProgress::class, 'procurement_id', 'procurement_id');
+}
+
+public function getAutoStatusAttribute()
+{
+    $totalCheckpoint = \App\Models\Checkpoint::count();
+
+    $completed = $this->procurementProgress()
+        ->where('status', 'completed')
+        ->count();
+
+    if ($completed === 0) return 'not_started';
+
+    if ($completed >= $totalCheckpoint) return 'completed';
+
+    return 'in_progress';
+}
+
+
 
     /**
      * Get all vendors through request procurements (PERBAIKAN #14)
@@ -89,4 +106,16 @@ class Procurement extends Model
             'request_id'
         );
     }
+
+    public function getCurrentCheckpointAttribute()
+    {
+        $latest = $this->procurementProgress()
+            ->where('status', 'in_progress')
+            ->with('checkpoint')
+            ->orderBy('checkpoint_id')
+            ->first();
+
+        return $latest?->checkpoint?->point_name ?? null;
+    }
+
 }

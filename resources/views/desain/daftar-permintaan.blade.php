@@ -66,6 +66,7 @@
             border: 1px solid #bbb;
             background: white;
             font-size: 14px;
+            width: 120px;
         }
 
     </style>
@@ -83,48 +84,85 @@
             <input type="text" class="search-input" placeholder="Cari permintaan...">
             <span class="search-icon">🔍</span>
         </div>
+         <select class="filter-select">
+                            <option>All</option>
+                            <option>Tepat Waktu</option>
+                            <option>Terlambat</option>
+                        </select>
 
         {{-- TABLE HEADER --}}
         <table class="request-table">
             <thead>
                 <tr>
-                    <th>Equipment</th>
-                    <th>Vendor</th>
-                    <th>Status</th>
-                    <th>Information</th>
-                    <th>Tanggal Pengadaan</th>
-                    <th>
-                        <select class="filter-select">
-                            <option>All</option>
-                            <option>Tepat Waktu</option>
-                            <option>Terlambat</option>
-                        </select>
-                        <div>Tanggal Tenggat</div>
-                    </th>
+                    <th style = "padding: 12px 8px; text-align: left;">Equipment</th>
+                    <th style = "padding: 12px 8px; text-align: left;">Vendor</th>
+                    <th style = "padding: 12px 8px; text-align: center;">Status</th>
+                    <th style = "padding: 12px 8px; text-align: center;">Information</th>
+                    <th style = "padding: 12px 8px; text-align: center;">Tanggal Pengadaan</th>
+                    <th style = "padding: 12px 8px; text-align: center;">Tanggal Tenggat</th>
                 </tr>
             </thead>
 
             <tbody>
 
-                {{-- Loop permintaan (PERBAIKAN #3) --}}
-                @forelse($project->requestProcurements as $req)
-                <tr>
-                    <td>
-                        <a href="{{ route('desain.review-evatek', $req->request_id) }}" 
-                        style="text-decoration: none; color: #000; font-weight: 600;">
-                            {{ $req->request_name }}
-                        </a>
-                    </td>
+                {{-- Loop semua procurement dari project --}}
+                @forelse($project->procurements as $procurement)
+                    {{-- Loop request procurement dari setiap procurement --}}
+                    @foreach($procurement->requestProcurements as $req)
+                        {{-- Loop items dari setiap request --}}
+                        @forelse($req->items as $item)
+                        <tr>
+                            <td style = "padding: 12px 8px; text-align: left;">
+                                <a href="{{ route('desain.review-evatek', $req->request_id) }}"
+                                style="text-decoration: none; color: #000; font-weight: 600;">
+                                    {{ $item->item_name }}
+                                </a>
+                                <div style="font-size: 12px; color: #666;">
+                                    {{ $item->amount }} {{ $item->unit }}
+                                </div>
+                            </td>
 
-                    <td>{{ $req->vendor->name_vendor ?? '-' }}</td>
-                    <td>{{ $req->request_status }}</td>
-                    <td>-</td>
-                    <td>{{ \Carbon\Carbon::parse($req->created_date)->format('d/m/Y') }}</td>
-                    <td>{{ \Carbon\Carbon::parse($req->deadline_date)->format('d/m/Y') }}</td>
-                </tr>
+                            <td style = "padding: 12px 8px; text-align: left;">{{ $req->vendor->name_vendor ?? '-' }}</td>
+                            <td style = "padding: 12px 8px; text-align: center;">
+                                @php
+                                    $statusMap = [
+                                        'draft' => ['Draft', '#6c757d'],
+                                        'submitted' => ['Submitted', '#0dcaf0'],
+                                        'approved' => ['Approved', '#198754'],
+                                        'rejected' => ['Rejected', '#dc3545'],
+                                        'completed' => ['Completed', '#28a745'],
+                                    ];
+                                    [$statusText, $color] = $statusMap[$req->request_status] ?? [ucfirst($req->request_status), '#6c757d'];
+                                @endphp
+                                <span style="background: {{ $color }}; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px;">
+                                    {{ $statusText }}
+                                </span>
+                            </td>
+                            <td style = "padding: 12px 8px; text-align: center;">
+                                <div style="font-size: 13px;">{{ $procurement->code_procurement }}</div>
+                                <div style="font-size: 11px; color: #666;">{{ $req->request_name }}</div>
+                            </td>
+                            <td style = "padding: 12px 8px; text-align: center;">{{ \Carbon\Carbon::parse($req->created_date)->format('d/m/Y') }}</td>
+                            <td style = "padding: 12px 8px; text-align: center;">
+                                @php
+                                    $deadline = \Carbon\Carbon::parse($req->deadline_date);
+                                    $now = \Carbon\Carbon::now();
+                                    $isLate = $deadline->isPast() && $req->request_status !== 'completed';
+                                @endphp
+                                <span style="color: {{ $isLate ? '#dc3545' : '#000' }}; font-weight: {{ $isLate ? '600' : '400' }};">
+                                    {{ $deadline->format('d/m/Y') }}
+                                    @if($isLate)
+                                        <small style="display: block; font-size: 10px;">⚠️ Terlambat</small>
+                                    @endif
+                                </span>
+                            </td>
+                        </tr>
+                        @empty
+                        @endforelse
+                    @endforeach
                 @empty
                 <tr>
-                    <td colspan="6" class="text-center py-5">Belum ada permintaan.</td>
+                    <td colspan="6" class="text-center py-5">Belum ada permintaan atau item untuk project ini.</td>
                 </tr>
                 @endforelse
 

@@ -106,20 +106,20 @@
     </div>
 </div>
 
-<!-- Projects Needing Attention -->
+<!-- procurements Needing Attention -->
 <div class="row">
     <div class="col-12">
         <div class="card card-custom">
             <div class="card-header-custom" style="background: #003d82;">
-                <h5 class="mb-0"><i class="bi bi-exclamation-circle"></i> Projects Needing Attention</h5>
+                <h5 class="mb-0"><i class="bi bi-exclamation-circle"></i> procurements Needing Attention</h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-hover table-custom">
                         <thead>
                             <tr>
-                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode Project</th>
-                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Project</th>
+                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode procurement</th>
+                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama procurement</th>
                                 <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
                                 <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
                                 <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
@@ -127,51 +127,44 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($projects as $project)
+                            @forelse($procurements as $procurement)
                             <tr>
-                                <td><strong>{{ $project->code_project }}</strong></td>
-                                <td>{{ Str::limit($project->name_project, 50) }}</td>
-                                <td style="padding: 12px 8px; text-align: center;">{{ $project->ownerDivision->nama_divisi ?? '-' }}</td>
+                                <td><strong>{{ $procurement->code_procurement }}</strong></td>
+                                <td>{{ Str::limit($procurement->name_procurement, 50) }}</td>
+                                <td style="padding: 12px 8px; text-align: center;">{{ $procurement->department->department_name ?? '-' }}</td>
                                 <td style="padding: 12px 8px; text-align: center;">
-                                    <span class="badge-priority badge-{{ strtolower($project->priority) }}">
-                                        {{ strtoupper($project->priority) }}
+                                    <span class="badge-priority badge-{{ strtolower($procurement->priority) }}">
+                                        {{ strtoupper($procurement->priority) }}
                                     </span>
                                 </td>
                                 <td style="padding: 12px 8px; text-align: center;" >
                                     @php
-                                        $statusText = match($project->status_project) {
-                                            'review_sc' => 'Review SC',
-                                            'pemilihan_vendor' => 'Pemilihan Vendor',
-                                            'pengecekan_legalitas' => 'Cek Legalitas',
-                                            default => ucfirst($project->status_project)
-                                        };
+                                        $statusMap = [
+                                            'draft' => ['Draft', 'secondary'],
+                                            'submitted' => ['Submitted', 'warning'],
+                                            'reviewed' => ['Reviewed', 'info'],
+                                            'approved' => ['Approved', 'success'],
+                                            'rejected' => ['Rejected', 'danger'],
+                                            'in_progress' => ['In Progress', 'primary'],
+                                            'completed' => ['Completed', 'success'],
+                                            'cancelled' => ['Cancelled', 'dark'],
+                                        ];
+                                        [$statusText, $badgeColor] = $statusMap[$procurement->status_procurement] ?? [ucfirst($procurement->status_procurement), 'warning'];
                                     @endphp
-                                    <span class="badge bg-warning">{{ $statusText }}</span>
+                                    <span class="badge bg-{{ $badgeColor }}">{{ $statusText }}</span>
                                 </td>
                                 <td style="padding: 12px 8px; text-align: center;">
-                                    @if($project->status_project === 'review_sc')
-                                    <a href="{{ route('supply-chain.review-project', $project->project_id) }}"
+                                    <a href="{{ route('procurements.show', $procurement->procurement_id) }}"
                                        class="btn btn-sm btn-primary btn-custom">
-                                        <i class="bi bi-eye"></i> Review
-                                    </a>
-                                    @elseif($project->status_project === 'pemilihan_vendor')
-                                    <a href="{{ route('supply-chain.vendor.pilih') }}"
-                                       class="btn btn-sm btn-success btn-custom">
-                                        <i class="bi bi-people"></i> Pilih Vendor
-                                    </a>
-                                    @else
-                                    <a href="{{ route('projects.show', $project->project_id) }}"
-                                       class="btn btn-sm btn-info btn-custom">
                                         <i class="bi bi-eye"></i> Detail
                                     </a>
-                                    @endif
                                 </td>
                             </tr>
                             @empty
                             <tr>
                                 <td colspan="6" class="text-center py-4">
                                     <i class="bi bi-check-circle" style="font-size: 48px; color: #28a745;"></i>
-                                    <p class="text-muted mt-2">Tidak ada project yang memerlukan perhatian</p>
+                                    <p class="text-muted mt-2">Tidak ada procurement yang memerlukan perhatian</p>
                                 </td>
                             </tr>
                             @endforelse

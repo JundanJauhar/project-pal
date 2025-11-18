@@ -11,12 +11,11 @@ class Vendor extends Model
     protected $primaryKey = 'id_vendor';
 
     protected $fillable = [
+        'id_vendor',
         'name_vendor',
         'address',
         'phone_number',
         'email',
-        'legal_status',
-        'is_importer',
     ];
 
     protected $casts = [

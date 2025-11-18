@@ -10,8 +10,11 @@
                 <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi Vendor</h5>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ route('supply-chain.vendor.store') }}">
+                <form method="POST" action="{{ isset($vendor) ? route('supply-chain.vendor.update', $vendor->id_vendor) : route('supply-chain.vendor.store') }}">
                     @csrf
+                    @if(isset($vendor))
+                    @method('PUT')
+                    @endif
                     <input type="hidden" name="redirect" value="{{ $redirect ?? 'kelola' }}">
                     <div class="mb-3">
                         <label for="name_vendor" class="form-label">Nama Perusahaan <span class="text-danger">*</span></label>
@@ -19,8 +22,8 @@
                             class="form-control @error('name_vendor') is-invalid @enderror"
                             id="name_vendor"
                             name="name_vendor"
-                            value=""
-                            placeholder="PT Vendor Contoh"
+                            value="{{ isset($vendor) ? $vendor->name_vendor : old('name_vendor') }}"
+                            placeholder="Contoh : PT Vendor "
                             required>
                         @error('name_vendor')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -34,7 +37,7 @@
                                 class="form-control @error('phone_number') is-invalid @enderror"
                                 id="phone_number"
                                 name="phone_number"
-                                value=""
+                                value="{{ isset($vendor) ? $vendor->phone_number : ''}}"
                                 placeholder="+62 812 3456 7890"
                                 {{ isset($project) ? 'readonly' : 'required' }}>
                             @error('phone_number')
@@ -49,7 +52,7 @@
                                 class="form-control @error('email') is-invalid @enderror"
                                 id="email"
                                 name="email"
-                                value=""
+                                value="{{ isset($vendor) ? $vendor->email : ''}}"
                                 placeholder="example@gmail.com"
                                 {{ isset($project) ? 'readonly' : 'required' }}>
                             @error('email')
@@ -64,12 +67,14 @@
                             id="address"
                             name="address"
                             rows="4"
-                            placeholder="">{{ old('description', $project->description ?? '') }}</textarea>
+                            value="{{ isset($vendor) ? $vendor->address : ''}}"
+                            placeholder="">
+                        </textarea>
                         @error('address')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="mb-3">
+                    <!-- <div class="mb-3">
                         <label for="legal_status" class="form-label">Status Legal</label>
                         <select class="form-select @error('legal_status') is-invalid @enderror"
                             id="legal_status"
@@ -78,6 +83,7 @@
                             <option value="verified" {{ old('legal_status') == 'verified' ? 'selected' : '' }}>Verified (Terverifikasi)</option>
                             <option value="pending" {{ old('legal_status') == 'pending' ? 'selected' : '' }}>Pending (Menunggu Verifikasi)</option>
                             <option value="rejected" {{ old('legal_status') == 'rejected' ? 'selected' : '' }}>Rejected (Ditolak)</option>
+                            value="{{ isset($vendor) ? $vendor->legal_status : ''}}"
                         </select>
                         @error('legal_status')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -90,7 +96,7 @@
                                 <strong>Rejected:</strong> Vendor tidak lolos verifikasi
                             </small>
                         </div>
-                    </div>
+                    </div> -->
 
                     <div class="mb-3">
                         <div class="form-check">
@@ -112,7 +118,7 @@
                             <i class="bi bi-x-circle"></i> Batal
                         </a>
                         <button type="submit" class="btn btn-primary btn-custom">
-                            <i class="bi bi-save"></i> {{ isset($project) ? 'Update' : 'Simpan' }} Project
+                            <i class="bi bi-save"></i> {{ isset($vendor) ? 'Update Vendor' : 'Tambah Vendor' }}
                         </button>
                     </div>
                 </form>

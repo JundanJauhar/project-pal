@@ -16,14 +16,13 @@ class DesainListProjectController extends Controller
 
     public function daftarPermintaan($id)
     {
-        // Muat relasi requestProcurements (nama relasi yang konsisten)
-        $project = Project::with('requestProcurements')->findOrFail($id);
+        $project = Project::with('requests')->findOrFail($id);
 
         return view('desain.daftar-permintaan', compact('project'));
     }
 
     public function reviewEvatek($requestId)
-    {   
+    {
         $request = \App\Models\RequestProcurement::with(['vendor'])
             ->where('request_id', $requestId)
             ->firstOrFail();

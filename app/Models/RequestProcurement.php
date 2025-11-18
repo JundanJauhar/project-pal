@@ -70,11 +70,4 @@ class RequestProcurement extends Model
         return $this->hasMany(Item::class, 'request_procurement_id', 'request_id');
     }
 
-    /**
-     * Get procurement progress for this request (PERBAIKAN #4)
-     */
-    public function procurementProgress(): HasMany
-    {
-        return $this->hasMany(ProcurementProgress::class, 'procurement_id', 'procurement_id');
-    }
 }

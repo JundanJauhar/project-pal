@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Procurement;
 use App\Models\Project;
+use App\Models\Division;
+use App\Models\Department;
+use App\Models\Notification;
+use App\Models\ProcurementProgress;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,29 +27,68 @@ class ProcurementController extends Controller
     }
 
     /**
+     * Show the form for creating a new procurement
+     */
+    public function create()
+    {
+        $divisions = Department::all();
+        return view('procurements.create', compact('divisions'));
+    }
+
+    /**
+     * Store a newly created procurement
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'code_procurement' => 'required|string|unique:procurement,code_procurement',
+            'name_procurement' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'department_procurement' => 'required|exists:departments,department_id',
+            'priority' => 'required|in:rendah,sedang,tinggi',
+            'end_date' => 'required|date|after:today',
+        ]);
+
+        $validated['start_date'] = Carbon::now()->format('Y-m-d');
+        $validated['status_procurement'] = 'draft';
+
+        $procurement = Procurement::create($validated);
+
+        // $this->notifySupplyChain($procurement, 'Procurement baru telah dibuat dan menunggu review');
+
+        return redirect()->route('procurements.show', $procurement->procurement_id)
+            ->with('success', 'Procurement berhasil dibuat');
+    }
+
+    /**
      * Show the specified procurement
      */
     public function show($id)
     {
         $procurement = Procurement::with([
-            'project',
-            'department',
-            'requestProcurements.vendor',
             'requestProcurements.items',
-            'procurementProgress.checkpoint',
-            'procurementProgress.user'
+            'requestProcurements.vendor',
+            'procurementProgress.checkpoint'
         ])->findOrFail($id);
 
-        // Get all checkpoints for timeline
-        $checkpoints = \App\Models\Checkpoint::orderBy('point_sequence')->get();
-        
-        // Get completed and current progress
-        $completedProgress = $procurement->procurementProgress()
-            ->where('status', 'completed')
-            ->count();
+        // Get all checkpoints ordered by sequence
+        $checkpoints = \App\Models\Checkpoint::orderBy('point_sequence', 'asc')->get();
 
-        return view('procurements.show', compact('procurement', 'checkpoints', 'completedProgress'));
+        // Get the current stage index based on procurement progress
+        $currentStageIndex = 0;
+
+$latestProgress = $procurement->procurementProgress
+    ->sortByDesc(fn($p) => $p->checkpoint?->point_sequence ?? 0)
+    ->first();
+
+if ($latestProgress && $latestProgress->checkpoint) {
+    $currentStageIndex = $latestProgress->checkpoint->point_sequence - 1;
+}
+
+
+        return view('procurements.show', compact('procurement', 'checkpoints', 'currentStageIndex'));
     }
+
 
     /**
      * Get procurement progress (for AJAX)
@@ -169,4 +213,24 @@ class ProcurementController extends Controller
             ]
         ]);
     }
+
+    /**
+     * Notify Supply Chain team
+     */
+    // private function notifySupplyChain($procurement, $message)
+    // {
+    //     $scUsers = \App\Models\User::where('roles', 'supply_chain')->get();
+
+    //     foreach ($scUsers as $user) {
+    //         Notification::create([
+    //             'user_id' => $user->id,
+    //             'sender_id' => Auth::id(),
+    //             'type' => 'procurement_created',
+    //             'title' => 'Procurement Baru',
+    //             'message' => $message . ': ' . $procurement->name_procurement,
+    //             'reference_type' => 'App\Models\Procurement',
+    //             'reference_id' => $procurement->procurement_id,
+    //         ]);
+    //     }
+    // }
 }
