@@ -31,6 +31,7 @@
     .timeline-step {
         text-align: center;
         position: relative;
+        width: 90px;
         z-index: 3;
     }
 
