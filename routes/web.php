@@ -160,8 +160,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/desain/list-project', [DesainListProjectController::class, 'list'])
         ->name('desain.list-project');
 
-    Route::get('/desain/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPermintaan'])
-    ->name('desain.daftar-permintaan');
+    Route::get('/desain/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPengadaan'])
+    ->name('desain.daftar-pengadaan');
 
     Route::get('/desain/evatek/{request_id}', [App\Http\Controllers\DesainListProjectController::class, 'reviewEvatek'])
     ->name('desain.review-evatek');

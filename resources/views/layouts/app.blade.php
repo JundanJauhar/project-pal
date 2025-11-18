@@ -644,13 +644,13 @@
                         </li>
                         @endif
 
-                         @if(Auth::user()->roles === 'desain')
+                         <!-- @if(Auth::user()->roles === 'desain')
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('procurements.create*') ? 'active' : '' }}" href="{{ route('procurements.create') }}">
                                 Pengadaan
                             </a>
                         </li> 
-                        @endif
+                        @endif -->
 
                         @if(Auth::user()->roles === 'qa')
                         <li class="nav-item">

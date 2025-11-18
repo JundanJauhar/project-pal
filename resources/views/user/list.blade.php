@@ -47,12 +47,12 @@
                             <option value="tinggi">Tinggi</option>
                         </select>
                     </div>
-                    <div class="tambah col-md-2 text-end">
+                    <!-- <div class="tambah col-md-2 text-end">
                         
                         <a href="{{ route('procurements.create') }}" class="btn btn-primary w-100 btn-custom">
                             <i class="bi bi-plus-circle"></i> Tambah
                         </a>
-                    </div>
+                    </div> -->
                 </form>
             </div>
         </div>
