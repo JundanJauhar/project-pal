@@ -135,19 +135,23 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Inspection Routes (Quality Assurance)
-    Route::prefix('inspections')->name('inspections.')->group(function () {
-        Route::get('/', [InspectionController::class, 'index'])->name('index');
-        Route::get('/create/{projectId}', [InspectionController::class, 'create'])->name('create');
-        Route::post('/', [InspectionController::class, 'store'])->name('store');
-        Route::get('/{id}', [InspectionController::class, 'show'])->name('show');
-        Route::put('/{id}', [InspectionController::class, 'update'])->name('update');
+Route::prefix('inspections')->name('inspections.')->group(function () {
 
-        // NCR Routes
-        Route::get('/ncr', [InspectionController::class, 'ncrReports'])->name('ncr.index');
-        Route::get('/ncr/{id}', [InspectionController::class, 'showNcr'])->name('ncr.show');
-        Route::put('/ncr/{id}', [InspectionController::class, 'updateNcr'])->name('ncr.update');
-        Route::post('/ncr/{id}/verify', [InspectionController::class, 'verifyNcr'])->name('ncr.verify');
-    });
+    // Hanya LIST saja
+    Route::get('/', [InspectionController::class, 'index'])->name('index');
+
+    // NCR LIST
+    Route::get('/ncr', [InspectionController::class, 'ncrReports'])->name('ncr.index');
+
+    // NCR Detail
+    Route::get('/ncr/{id}', [InspectionController::class, 'showNcr'])->name('ncr.show');
+
+    // NCR Update
+    Route::put('/ncr/{id}', [InspectionController::class, 'updateNcr'])->name('ncr.update');
+    Route::post('/ncr/{id}/verify', [InspectionController::class, 'verifyNcr'])->name('ncr.verify');
+
+});
+
 
     // Desain Routes
     Route::prefix('desain')->name('desain.')->group(function () {
