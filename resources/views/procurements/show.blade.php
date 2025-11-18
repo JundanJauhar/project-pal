@@ -69,45 +69,48 @@
         padding: 15px 18px;
         margin-bottom: 20px;
     }
+
     .bi-x-circle {
         font-size: 24px;
         color: #dc3545;
         margin-bottom: 30px;
     }
+
     .logo {
-    height: 100px;
-    
-    ;
+        height: 100px;
+
+        ;
     }
+
     /* Posisikan logo ke tengah */
-.header-logo-wrapper {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin-top: -80px;
-    margin-bottom: 15px;
-}
+    .header-logo-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-top: -80px;
+        margin-bottom: 15px;
+    }
 
-.logo {
-    height: 220px;
-    object-fit: contain;
-}
+    .logo {
+        height: 220px;
+        object-fit: contain;
+    }
 
-/* Tanda X ke kiri mengikuti margin konten */
-.close-btn {
-    position: absolute;
-    right: 90px; /* Geser ke kiri sesuai kebutuhan */
-    top: 110px;  /* Sejajarkan dengan konten berikutnya */
-    font-size: 28px;
-    color: #DA3B3B;
-    cursor: pointer;
-}
+    /* Tanda X ke kiri mengikuti margin konten */
+    .close-btn {
+        position: absolute;
+        right: 90px;
+        /* Geser ke kiri sesuai kebutuhan */
+        top: 110px;
+        /* Sejajarkan dengan konten berikutnya */
+        font-size: 28px;
+        color: #DA3B3B;
+        cursor: pointer;
+    }
 
-.close-btn:hover {
-    opacity: 0.7;
-}
-
-
+    .close-btn:hover {
+        opacity: 0.7;
+    }
 </style>
 <div class="header-logo-wrapper">
     <img src="{{ asset('images/logo-pal.png') }}" alt="Logo PAL" class="logo">
@@ -136,15 +139,16 @@
     {{-- Timeline --}}
     <div class="timeline-container">
         @forelse($checkpoints as $index => $checkpoint)
-            <div class="timeline-step
-                {{ $currentStageIndex !== null && $index < $currentStageIndex ? 'completed' : ($currentStageIndex !== null && $index == $currentStageIndex ? 'active' : '') }}">
-                <div class="timeline-icon">
-                    <i class="bi bi-check-circle"></i>
-                </div>
-                <small>{{ $checkpoint->point_name }}</small>
+        <div
+            class="timeline-step
+                        {{ $currentStageIndex !== null && $index < $currentStageIndex ? 'completed' : ($currentStageIndex !== null && $index == $currentStageIndex ? 'active' : '') }}">
+            <div class="timeline-icon">
+                <i class="bi bi-check-circle"></i>
             </div>
+            <small>{{ $checkpoint->point_name }}</small>
+        </div>
         @empty
-            <div class="text-center">Tidak ada checkpoint yang tersedia</div>
+        <div class="text-center">Tidak ada checkpoint yang tersedia</div>
         @endforelse
     </div>
 
@@ -163,15 +167,15 @@
         </thead>
         <tbody>
             @foreach ($procurement->requestProcurements as $req)
-                @foreach ($req->items as $item)
-                <tr>
-                    <td>{{ $item->item_name }}</td>
-                    <td>{{ $item->specification }}</td>
-                    <td>{{ $item->quantity }} {{ $item->unit }}</td>
-                    <td>Rp {{ number_format($item->estimated_price, 0, ',', '.') }}</td>
-                    <td>Rp {{ number_format($item->estimated_price * $item->quantity, 0, ',', '.') }}</td>
-                </tr>
-                @endforeach
+            @foreach ($req->items as $item)
+            <tr>
+                <td>{{ $item->item_name }}</td>
+                <td>{{ $item->specification }}</td>
+                <td>{{ $item->quantity }} {{ $item->unit }}</td>
+                <td>Rp {{ number_format($item->estimated_price, 0, ',', '.') }}</td>
+                <td>Rp {{ number_format($item->estimated_price * $item->quantity, 0, ',', '.') }}</td>
+            </tr>
+            @endforeach
             @endforeach
         </tbody>
     </table>
@@ -187,6 +191,20 @@
     <h5 class="section-title">Sign Document</h5>
     <div class="doc-card">
         {!! $procurement->sign_notes ?? 'Belum ada tanda tangan' !!}
+    </div>
+
+    <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
+            <form action="" method="post">
+                @csrf
+                method="put"
+                action="{{ route('procurements.update', $procurement->procurement_id) }}"
+                class="btn btn-sm btn-success btn-custom">
+                <i class="bi bi-check-lg"></i> Accept
+            </form>
+            <a href="{{ route('procurements.show', $procurement->procurement_id) }}"
+                class="btn btn-sm btn-danger btn-custom">
+                <i class="bi bi-x-lg"></i> Rejected
+            </a>
     </div>
 
 </div>

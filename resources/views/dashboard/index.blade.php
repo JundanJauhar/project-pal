@@ -246,7 +246,6 @@
     searchInput.addEventListener('input', function() {
         const value = this.value.trim().toLowerCase();
 
-<<<<<<< HEAD
         // Show/hide clear button
         clearBtn.style.display = value ? 'block' : 'none';
 
@@ -295,7 +294,6 @@
 </script>
 @endpush
 
-=======
                             <td style="padding: 12px 8px; text-align: center;">
 
                                 @php
@@ -334,16 +332,12 @@
                                 </a>
                             </td>
                         </tr>
-                        @empty
-                        <tr><td colspan="8" class="text-center">Tidak ada data pengadaan</td></tr>
-                        @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
->>>>>>> 2cf30ad17ed3c3ee22c81f48b1d6950541dfa798
 
 
 @endsection
