@@ -96,17 +96,16 @@
                     <div class="col-md-3">
                         <select class="form-select" name="status">
                             <option value="">Semua Status</option>
-                            <option value="on_progress">On Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="not_approved">Not Approved</option>
+                            <option value="approved">Approved</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <select class="form-select" name="priority">
-                            <option value="">Semua Prioritas</option>
-                            <option value="rendah">Rendah</option>
-                            <option value="sedang">Sedang</option>
-                            <option value="tinggi">Tinggi</option>
+                            <option value="">Deadline</option>
+                            <option value="hari_ini">Hari Ini</option>
+                            <option value="satu_minggu">1 Minggu</option>
+                            <option value="satu_bulan">1 Bulan</option>
                         </select>
                     </div>
                     <div class="tambah col-md-2 text-end">
