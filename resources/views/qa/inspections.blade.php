@@ -1,48 +1,62 @@
 @extends('layouts.app')
 
-@section('title', 'Department')
+@section('title', 'Quality Assurance - Inspeksi')
 
 @section('content')
 
 {{-- ========================= --}}
-{{-- Bagian Statistik           --}}
+{{--  DASHBOARD STATISTIK       --}}
 {{-- ========================= --}}
 <div class="row mb-4">
 
     {{-- Total Pengadaan --}}
     <div class="col-md-3">
-        <div class="card p-3 shadow-sm" style="border-left: 4px solid #2F80ED;">
+        <div class="card p-3 shadow-sm border-0" style="border-left: 4px solid #2F80ED;">
             <h6 class="text-muted">Total Pengadaan</h6>
-            <h3 class="fw-bold">{{ $inspections->count() }}</h3>
+            <h3 class="fw-bold">
+                {{ isset($procurements) ? $procurements->total() : $inspections->total() }}
+            </h3>
         </div>
     </div>
 
     {{-- Butuh Inspeksi --}}
     <div class="col-md-3">
-        <div class="card p-3 shadow-sm" style="border-left: 4px solid #F2C94C;">
+        <div class="card p-3 shadow-sm border-0" style="border-left: 4px solid #F2C94C;">
             <h6 class="text-muted">Butuh Inspeksi</h6>
             <h3 class="fw-bold">
-                {{ $inspections->where('result', 'pending')->count() }}
+                @if(isset($procurements))
+                    {{ $procurements->filter(fn($p) => $p->auto_status === 'in_progress')->count() }}
+                @else
+                    {{ $inspections->where('result', 'pending')->count() }}
+                @endif
             </h3>
         </div>
     </div>
 
     {{-- Lolos Inspeksi --}}
     <div class="col-md-3">
-        <div class="card p-3 shadow-sm" style="border-left: 4px solid #27AE60;">
+        <div class="card p-3 shadow-sm border-0" style="border-left: 4px solid #27AE60;">
             <h6 class="text-muted">Lolos Inspeksi</h6>
             <h3 class="fw-bold">
-                {{ $inspections->where('result', 'passed')->count() }}
+                @if(isset($procurements))
+                    {{ $procurements->filter(fn($p) => $p->auto_status === 'completed')->count() }}
+                @else
+                    {{ $inspections->where('result', 'passed')->count() }}
+                @endif
             </h3>
         </div>
     </div>
 
-    {{-- Tidak Lolos Inspeksi --}}
+    {{-- Tidak Lolos --}}
     <div class="col-md-3">
-        <div class="card p-3 shadow-sm" style="border-left: 4px solid #EB5757;">
+        <div class="card p-3 shadow-sm border-0" style="border-left: 4px solid #EB5757;">
             <h6 class="text-muted">Tidak Lolos Inspeksi</h6>
             <h3 class="fw-bold">
-                {{ $inspections->where('result', 'failed')->count() }}
+                @if(isset($procurements))
+                    {{ $procurements->filter(fn($p) => $p->auto_status === 'rejected')->count() }}
+                @else
+                    {{ $inspections->where('result', 'failed')->count() }}
+                @endif
             </h3>
         </div>
     </div>
@@ -52,21 +66,21 @@
 
 
 {{-- ========================= --}}
-{{-- JUDUL TABEL               --}}
+{{--  HEADER TABEL              --}}
 {{-- ========================= --}}
 <h3 class="fw-bold mb-3">Daftar Pengadaan</h3>
 
 
 {{-- ========================= --}}
-{{-- TABEL DAFTAR PENGADAAN   --}}
+{{--  TABEL UTAMA               --}}
 {{-- ========================= --}}
-<div class="card shadow-sm">
+<div class="card shadow-sm border-0">
     <div class="card-body">
 
         <div class="table-responsive">
             <table class="table table-hover align-middle">
 
-                <thead>
+                <thead class="table-light">
                     <tr>
                         <th>Kode Pengadaan</th>
                         <th>Nama Pengadaan</th>
@@ -81,80 +95,164 @@
 
                 <tbody>
 
-                    @forelse($inspections as $row)
-                    <tr>
-                        {{-- KODE --}}
-                        <td class="fw-semibold">
-                            {{ $row->project->code_project }}
-                        </td>
+                    {{-- ================================================== --}}
+                    {{--                   MODE: QA                         --}}
+                    {{-- ================================================== --}}
+                    @if(isset($procurements))
 
-                        {{-- NAMA PENGADAAN --}}
-                        <td>
-                            {{ $row->project->name_project }}
-                        </td>
+                        @forelse($procurements as $procurement)
+                        <tr>
 
-                        {{-- DEPARTMENT --}}
-                        <td>
-                            {{ $row->project->department->name ?? '-' }}
-                        </td>
+                            {{-- KODE --}}
+                            <td class="fw-semibold">
+                                {{ $procurement->code_procurement }}
+                            </td>
 
-                        {{-- VENDOR --}}
-                        <td>
-                            {{ $row->vendor->vendor_name ?? '-' }}
-                        </td>
+                            {{-- NAMA --}}
+                            <td>{{ $procurement->name_procurement }}</td>
 
-                        {{-- TANGGAL MULAI --}}
-                        <td>
-                            {{ $row->start_date ? $row->start_date->format('d/m/Y') : '-' }}
-                        </td>
+                            {{-- DEPT --}}
+                            <td>{{ $procurement->department->department_name ?? '-' }}</td>
 
-                        {{-- TANGGAL SELESAI --}}
-                        <td>
-                            {{ $row->end_date ? $row->end_date->format('d/m/Y') : '-' }}
-                        </td>
+                            {{-- VENDOR --}}
+                            <td>
+                                {{ $procurement->requestProcurements->first()?->vendor->name_vendor ?? '-' }}
+                            </td>
 
-                        {{-- PRIORITAS --}}
-                        <td>
-                            @php
-                                $priorityClass = match(strtoupper($row->priority)) {
-                                    'TINGGI' => 'text-danger fw-bold',
-                                    'SEDANG' => 'text-warning fw-bold',
-                                    'RENDAH' => 'text-secondary fw-bold',
-                                    default => 'text-muted'
-                                };
-                            @endphp
-                            <span class="{{ $priorityClass }}">
-                                {{ strtoupper($row->priority) }}
-                            </span>
-                        </td>
+                            {{-- MULAI --}}
+                            <td>
+                                {{ $procurement->start_date ? \Carbon\Carbon::parse($procurement->start_date)->format('d/m/Y') : '-' }}
+                            </td>
 
-                        {{-- STATUS INSPEKSI --}}
-                        <td>
-                            @php
-                                $statusClass = match($row->result) {
-                                    'passed' => 'text-success fw-bold',
-                                    'failed' => 'text-danger fw-bold',
-                                    'conditional' => 'text-warning fw-bold',
-                                    'pending' => 'text-primary fw-bold',
-                                    default => 'text-muted'
-                                };
-                            @endphp
-                            <span class="{{ $statusClass }}">
-                                {{ strtoupper($row->result) }}
-                            </span>
-                        </td>
+                            {{-- SELESAI --}}
+                            <td>
+                                {{ $procurement->end_date ? \Carbon\Carbon::parse($procurement->end_date)->format('d/m/Y') : '-' }}
+                            </td>
 
-                    </tr>
-                    @empty
+                            {{-- PRIORITAS --}}
+                            <td>
+                                @php
+                                    $priorityClass = [
+                                        'tinggi' => 'badge bg-danger',
+                                        'sedang' => 'badge bg-warning text-dark',
+                                        'rendah' => 'badge bg-secondary'
+                                    ][$procurement->priority] ?? 'badge bg-light text-dark';
+                                @endphp
 
-                    <tr>
-                        <td colspan="8" class="text-center py-4">
-                            <i class="bi bi-inbox" style="font-size: 40px; color:#bbb"></i>
-                            <p class="text-muted mt-2">Tidak ada data pengadaan</p>
-                        </td>
-                    </tr>
+                                <span class="{{ $priorityClass }}">
+                                    {{ strtoupper($procurement->priority) }}
+                                </span>
+                            </td>
 
-                    @endforelse
+                            {{-- STATUS --}}
+                            <td>
+                                @php
+                                    $status = $procurement->auto_status;
+                                    $current = $procurement->current_checkpoint;
+
+                                    $statusClass = [
+                                        'completed' => 'badge bg-success',
+                                        'in_progress' => 'badge bg-warning text-dark',
+                                        'not_started' => 'badge bg-secondary',
+                                    ][$status] ?? 'badge bg-light text-dark';
+
+                                    $text = match($status) {
+                                        'completed' => 'Selesai',
+                                        'not_started' => 'Belum Dimulai',
+                                        'in_progress' => $current ?? 'Sedang Proses',
+                                        default => ucfirst($status)
+                                    };
+                                @endphp
+
+                                <span class="{{ $statusClass }}">{{ $text }}</span>
+                            </td>
+
+                        </tr>
+
+                        @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <i class="bi bi-inbox" style="font-size: 40px; color:#bbb"></i>
+                                <p class="text-muted mt-2">Tidak ada data pengadaan</p>
+                            </td>
+                        </tr>
+                        @endforelse
+
+                    {{-- ================================================== --}}
+                    {{--                 MODE: NON-QA                      --}}
+                    {{-- ================================================== --}}
+                    @else
+
+                        @forelse($inspections as $row)
+                        <tr>
+
+                            {{-- KODE PROYEK --}}
+                            <td>{{ $row->project->project_code ?? '-' }}</td>
+
+                            {{-- NAMA --}}
+                            <td>{{ $row->project->project_name ?? '-' }}</td>
+
+                            {{-- DEPARTMENT --}}
+                            <td>{{ $row->project->department->department_name ?? '-' }}</td>
+
+                            {{-- VENDOR --}}
+                            <td>{{ $row->item?->requestProcurement?->vendor->name_vendor ?? '-' }}</td>
+
+                            {{-- MULAI --}}
+                            <td>
+                                {{ $row->project->start_date ? \Carbon\Carbon::parse($row->project->start_date)->format('d/m/Y') : '-' }}
+                            </td>
+
+                            {{-- SELESAI --}}
+                            <td>
+                                {{ $row->project->end_date ? \Carbon\Carbon::parse($row->project->end_date)->format('d/m/Y') : '-' }}
+                            </td>
+
+                            {{-- PRIORITAS --}}
+                            <td>
+                                @php
+                                    $priority = strtolower($row->project->priority ?? '');
+
+                                    $priorityClass = [
+                                        'tinggi' => 'badge bg-danger',
+                                        'sedang' => 'badge bg-warning text-dark',
+                                        'rendah' => 'badge bg-secondary'
+                                    ][$priority] ?? 'badge bg-light text-dark';
+                                @endphp
+
+                                <span class="{{ $priorityClass }}">
+                                    {{ strtoupper($priority) }}
+                                </span>
+                            </td>
+
+                            {{-- STATUS INSPEKSI --}}
+                            <td>
+                                @php
+                                    $statusClass = [
+                                        'passed' => 'badge bg-success',
+                                        'failed' => 'badge bg-danger',
+                                        'conditional' => 'badge bg-warning text-dark',
+                                        'pending' => 'badge bg-primary',
+                                    ][$row->result] ?? 'badge bg-secondary';
+                                @endphp
+
+                                <span class="{{ $statusClass }}">
+                                    {{ strtoupper($row->result) }}
+                                </span>
+                            </td>
+
+                        </tr>
+
+                        @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <i class="bi bi-inbox" style="font-size: 40px; color:#bbb"></i>
+                                <p class="text-muted mt-2">Tidak ada data inspeksi</p>
+                            </td>
+                        </tr>
+                        @endforelse
+
+                    @endif
 
                 </tbody>
 
@@ -163,7 +261,11 @@
 
         {{-- PAGINATION --}}
         <div class="mt-3">
-            {{ $inspections->links() }}
+            @if(isset($procurements))
+                {{ $procurements->links() }}
+            @else
+                {{ $inspections->links() }}
+            @endif
         </div>
 
     </div>
