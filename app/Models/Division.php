@@ -40,10 +40,10 @@ class Division extends Model
     }
 
     /**
-     * Get request procurements from this division
+     * Get request procurements from this division (PERBAIKAN #8)
      */
     public function requestProcurements(): HasMany
     {
-        return $this->hasMany(RequestProcurement::class, 'applicant_department', 'division_id');
+        return $this->hasMany(RequestProcurement::class, 'department_id', 'division_id');
     }
 }

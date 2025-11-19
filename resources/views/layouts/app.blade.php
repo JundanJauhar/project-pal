@@ -606,7 +606,7 @@
                         @if(Auth::user()->roles === 'desain')
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('desain.list-project*') ? 'active' : '' }}" href="{{ route('desain.list-project') }}">
-                            Projects    
+                            Projects
                         </a>
 
                         </li>
@@ -623,7 +623,7 @@
                         @if(Auth::user()->roles === 'supply_chain')
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('supply-chain.dashboard*') ? 'active' : '' }}" href="{{ route('supply-chain.dashboard') }}">
-                                Supply Chain
+                                Department
                             </a>
                         </li>
                         @endif
@@ -644,27 +644,26 @@
                         </li>
                         @endif
 
-                         <!-- @if(Auth::user()->roles === 'desain')
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('procurements.create*') ? 'active' : '' }}" href="{{ route('procurements.create') }}">
-                                Pengadaan
-                            </a>
-                        </li> 
-                        @endif -->
 
                         @if(Auth::user()->roles === 'qa')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('inspections*') ? 'active' : '' }}" href="{{ route('inspections.index') }}">
-                                <i class="bi bi-clipboard-check"></i>
-                                Inspections
+                            <a class="nav-link {{ request()->routeIs('inspections.index') ? 'active' : '' }}" href="{{ route('inspections.index') }}">
+                                Department
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('inspections.ncr*') ? 'active' : '' }}" href="{{ route('inspections.ncr.index') }}">
+
+                        <!-- <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('qa.list-approval') ? 'active' : '' }}" href="{{ route('qa.list-approval') }}">
+                                List Approval
+                            </a>
+                        </li> -->
+                        
+                        <!-- <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('inspections.ncr.index') ? 'active' : '' }}" href="{{ route('inspections.ncr.index') }}">
                                 <i class="bi bi-exclamation-triangle"></i>
                                 NCR Reports
                             </a>
-                        </li>
+                        </li> -->
                         @endif
                     </ul>
 

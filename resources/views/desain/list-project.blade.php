@@ -10,9 +10,9 @@
         border-radius: 18px !important;
         padding: 50px !important;
         min-height: 550px;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
     }
-    
+
     /* --- Search Bar --- */
     .search-box {
         width: 45%;
@@ -27,7 +27,7 @@
         border-radius: 30px;
         background: white;
         border: none;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 
     .search-icon {
@@ -71,7 +71,7 @@
         background: #ffffff;
         border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         transition: .2s ease;
     }
 
@@ -131,10 +131,25 @@
         <div class="card big-card">
 
             <!-- SEARCH BAR -->
-            <div class="search-box">
-                <input type="text" class="search-input" id="search-project">
-                <span class="search-icon"></span>
-            </div>
+            <form class="d-flex gap-2" id="searchForm" style="flex: 0 0 auto;">
+                <div class="search-box">
+                    <div class="position-relative" style="width: 750px;">
+                        <input type="text"
+                            class="form-control pe-5"
+                            name="search"
+                            id="searchInput"
+                            placeholder="Cari Vendor..."
+                            autocomplete="off">
+                        <button type="button"
+                            class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-danger pe-2"
+                            id="clearSearch"
+                            style="z-index: 10; display: none;">
+                            <i class="bi bi-x-circle-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+    
 
             <!-- GRID PROJECT -->
             <div class="project-grid">
@@ -143,7 +158,7 @@
                 <div class="project-card"
                     data-name="{{ strtolower($project->project_name ?? '') }}">
 
-                    <img 
+                    <img
                         src="{{ asset('images/' . ($project->image ?? 'assetimgkapal1.jpg')) }}"
                         class="project-image"
                         alt="{{ $project->project_name ?? 'Project' }}">
@@ -179,34 +194,54 @@
     if (projectNav) {
         projectNav.classList.add('nav-active');
     }
-</script>
-@endpush
-
-@push('scripts')
-<script>
-    // Set navbar menu "Projects" menjadi aktif
-    const projectNav = document.getElementById('nav-projects');
-    if (projectNav) {
-        projectNav.classList.add('nav-active');
-    }
 
     // ----- Searchable Project Cards -----
-    const searchInput = document.getElementById('search-project');
+    let searchTimeout;
+    const searchInput = document.getElementById('searchInput'); // ✅ ID yang benar
+    const clearBtn = document.getElementById('clearSearch');
     const cards = document.querySelectorAll('.project-card');
 
-    searchInput.addEventListener('keyup', function () {
-        const value = this.value.toLowerCase();
+    // Search dengan debouncing
+    searchInput.addEventListener('input', function() {
+        const value = this.value.trim().toLowerCase();
+
+        // Show/hide clear buttonyyyyx`
+        clearBtn.style.display = value ? 'block' : 'none';
+
+        // Debounce search
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(function() {
+            performSearch(value);
+        }, 300); // Delay 300ms
+    });
+
+    // Clear search button
+    clearBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        this.style.display = 'none';
+        performSearch(''); // Reset tampilkan semua
+    });
+
+    // Function untuk filter cards
+    function performSearch(searchValue) {
+        let visibleCount = 0;
 
         cards.forEach(card => {
             const name = card.getAttribute('data-name');
 
-            if (name.includes(value)) {
-                card.style.display = "block";
+            if (name.includes(searchValue)) {
+                card.style.display = 'block';
+                visibleCount++;
             } else {
-                card.style.display = "none";
+                card.style.display = 'none';
             }
         });
-    });
+
+        // Optional: Tampilkan pesan jika tidak ada hasil
+        if (visibleCount === 0 && searchValue !== '') {
+            // Bisa tambahkan alert atau message
+            console.log('Tidak ada project yang ditemukan');
+        }
+    }
 </script>
 @endpush
-

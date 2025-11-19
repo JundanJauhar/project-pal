@@ -10,7 +10,8 @@ class Item extends Model
     protected $table = 'items';
     protected $primaryKey = 'item_id';
 
-    public $timestamps = false;
+    // PERBAIKAN #13 - enable timestamps
+    // public $timestamps = false;
 
     protected $fillable = [
         'request_procurement_id',
@@ -53,5 +54,10 @@ class Item extends Model
     public function getEstimatedPriceAttribute()
     {
         return $this->unit_price;
+    }
+
+    public function inspectionReports()
+    {
+        return $this->hasMany(\App\Models\InspectionReport::class, 'item_id', 'item_id');
     }
 }

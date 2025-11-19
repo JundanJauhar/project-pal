@@ -22,6 +22,7 @@ class RequestProcurement extends Model
         'deadline_date',
         'request_status',
         'department_id',
+        'project_id', // pastikan kolom ini ada di migration
     ];
 
     protected $casts = [
@@ -35,6 +36,14 @@ class RequestProcurement extends Model
     public function procurement(): BelongsTo
     {
         return $this->belongsTo(Procurement::class, 'procurement_id', 'procurement_id');
+    }
+
+    /**
+     * Get the project for this request (PERBAIKAN #1)
+     */
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class, 'project_id', 'project_id');
     }
 
     /**
