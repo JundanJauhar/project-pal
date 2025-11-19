@@ -55,4 +55,9 @@ class Item extends Model
     {
         return $this->unit_price;
     }
+
+    public function inspectionReports()
+    {
+        return $this->hasMany(\App\Models\InspectionReport::class, 'item_id', 'item_id');
+    }
 }

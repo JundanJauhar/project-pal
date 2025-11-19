@@ -14,23 +14,21 @@
         <div class="card p-3 shadow-sm border-0" style="border-left: 4px solid #2F80ED;">
             <h6 class="text-muted">Total Pengadaan</h6>
             <h3 class="fw-bold">
-                {{ isset($procurements) ? $procurements->total() : $inspections->total() }}
+                {{ $totalProcurements ?? ($totalInspections ?? 0) }}
             </h3>
         </div>
     </div>
 
-    {{-- Butuh Inspeksi --}}
+    {{-- Butuh Inspeksi (clickable) --}}
     <div class="col-md-3">
-        <div class="card p-3 shadow-sm border-0" style="border-left: 4px solid #F2C94C;">
-            <h6 class="text-muted">Butuh Inspeksi</h6>
-            <h3 class="fw-bold">
-                @if(isset($procurements))
-                    {{ $procurements->filter(fn($p) => $p->auto_status === 'in_progress')->count() }}
-                @else
-                    {{ $inspections->where('result', 'pending')->count() }}
-                @endif
-            </h3>
-        </div>
+        <a href="{{ route('qa.list-approval', ['filter' => 'inspection']) }}" class="text-decoration-none">
+            <div class="card p-3 shadow-sm border-0" style="border-left: 4px solid #F2C94C;">
+                <h6 class="text-muted">Butuh Inspeksi</h6>
+                <h3 class="fw-bold">
+                    {{ $butuhInspeksiCount ?? 0 }}
+                </h3>
+            </div>
+        </a>
     </div>
 
     {{-- Lolos Inspeksi --}}
@@ -38,11 +36,7 @@
         <div class="card p-3 shadow-sm border-0" style="border-left: 4px solid #27AE60;">
             <h6 class="text-muted">Lolos Inspeksi</h6>
             <h3 class="fw-bold">
-                @if(isset($procurements))
-                    {{ $procurements->filter(fn($p) => $p->auto_status === 'completed')->count() }}
-                @else
-                    {{ $inspections->where('result', 'passed')->count() }}
-                @endif
+                {{ $lolosCount ?? ($procurements->where('auto_status', 'completed')->count() ?? 0) }}
             </h3>
         </div>
     </div>
@@ -52,11 +46,7 @@
         <div class="card p-3 shadow-sm border-0" style="border-left: 4px solid #EB5757;">
             <h6 class="text-muted">Tidak Lolos Inspeksi</h6>
             <h3 class="fw-bold">
-                @if(isset($procurements))
-                    {{ $procurements->filter(fn($p) => $p->auto_status === 'rejected')->count() }}
-                @else
-                    {{ $inspections->where('result', 'failed')->count() }}
-                @endif
+                {{ $gagalCount ?? 0 }}
             </h3>
         </div>
     </div>
@@ -95,41 +85,18 @@
 
                 <tbody>
 
-                    {{-- ================================================== --}}
-                    {{--                   MODE: QA                         --}}
-                    {{-- ================================================== --}}
+                    {{-- MODE: QA (menampilkan procurements yang butuh inspeksi) --}}
                     @if(isset($procurements))
 
                         @forelse($procurements as $procurement)
                         <tr>
-
-                            {{-- KODE --}}
-                            <td class="fw-semibold">
-                                {{ $procurement->code_procurement }}
-                            </td>
-
-                            {{-- NAMA --}}
+                            <td class="fw-semibold">{{ $procurement->code_procurement }}</td>
                             <td>{{ $procurement->name_procurement }}</td>
-
-                            {{-- DEPT --}}
                             <td>{{ $procurement->department->department_name ?? '-' }}</td>
+                            <td>{{ $procurement->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</td>
+                            <td>{{ $procurement->start_date ? $procurement->start_date->format('d/m/Y') : '-' }}</td>
+                            <td>{{ $procurement->end_date ? $procurement->end_date->format('d/m/Y') : '-' }}</td>
 
-                            {{-- VENDOR --}}
-                            <td>
-                                {{ $procurement->requestProcurements->first()?->vendor->name_vendor ?? '-' }}
-                            </td>
-
-                            {{-- MULAI --}}
-                            <td>
-                                {{ $procurement->start_date ? \Carbon\Carbon::parse($procurement->start_date)->format('d/m/Y') : '-' }}
-                            </td>
-
-                            {{-- SELESAI --}}
-                            <td>
-                                {{ $procurement->end_date ? \Carbon\Carbon::parse($procurement->end_date)->format('d/m/Y') : '-' }}
-                            </td>
-
-                            {{-- PRIORITAS --}}
                             <td>
                                 @php
                                     $priorityClass = [
@@ -138,24 +105,18 @@
                                         'rendah' => 'badge bg-secondary'
                                     ][$procurement->priority] ?? 'badge bg-light text-dark';
                                 @endphp
-
-                                <span class="{{ $priorityClass }}">
-                                    {{ strtoupper($procurement->priority) }}
-                                </span>
+                                <span class="{{ $priorityClass }}">{{ strtoupper($procurement->priority) }}</span>
                             </td>
 
-                            {{-- STATUS --}}
                             <td>
                                 @php
                                     $status = $procurement->auto_status;
                                     $current = $procurement->current_checkpoint;
-
                                     $statusClass = [
                                         'completed' => 'badge bg-success',
                                         'in_progress' => 'badge bg-warning text-dark',
-                                        'not_started' => 'badge bg-secondary',
+                                        'not_started' => 'badge bg-secondary'
                                     ][$status] ?? 'badge bg-light text-dark';
-
                                     $text = match($status) {
                                         'completed' => 'Selesai',
                                         'not_started' => 'Belum Dimulai',
@@ -163,69 +124,40 @@
                                         default => ucfirst($status)
                                     };
                                 @endphp
-
                                 <span class="{{ $statusClass }}">{{ $text }}</span>
                             </td>
-
                         </tr>
-
                         @empty
                         <tr>
                             <td colspan="8" class="text-center py-4">
                                 <i class="bi bi-inbox" style="font-size: 40px; color:#bbb"></i>
-                                <p class="text-muted mt-2">Tidak ada data pengadaan</p>
+                                <p class="text-muted mt-2">Tidak ada pengadaan yang butuh inspeksi saat ini</p>
                             </td>
                         </tr>
                         @endforelse
 
-                    {{-- ================================================== --}}
-                    {{--                 MODE: NON-QA                      --}}
-                    {{-- ================================================== --}}
+                    {{-- MODE: NON-QA (menampilkan inspection reports) --}}
                     @else
 
                         @forelse($inspections as $row)
                         <tr>
-
-                            {{-- KODE PROYEK --}}
                             <td>{{ $row->project->project_code ?? '-' }}</td>
-
-                            {{-- NAMA --}}
                             <td>{{ $row->project->project_name ?? '-' }}</td>
-
-                            {{-- DEPARTMENT --}}
                             <td>{{ $row->project->department->department_name ?? '-' }}</td>
-
-                            {{-- VENDOR --}}
                             <td>{{ $row->item?->requestProcurement?->vendor->name_vendor ?? '-' }}</td>
-
-                            {{-- MULAI --}}
-                            <td>
-                                {{ $row->project->start_date ? \Carbon\Carbon::parse($row->project->start_date)->format('d/m/Y') : '-' }}
-                            </td>
-
-                            {{-- SELESAI --}}
-                            <td>
-                                {{ $row->project->end_date ? \Carbon\Carbon::parse($row->project->end_date)->format('d/m/Y') : '-' }}
-                            </td>
-
-                            {{-- PRIORITAS --}}
+                            <td>{{ $row->inspection_date ? \Carbon\Carbon::parse($row->inspection_date)->format('d/m/Y') : '-' }}</td>
+                            <td>-</td>
                             <td>
                                 @php
                                     $priority = strtolower($row->project->priority ?? '');
-
                                     $priorityClass = [
                                         'tinggi' => 'badge bg-danger',
                                         'sedang' => 'badge bg-warning text-dark',
                                         'rendah' => 'badge bg-secondary'
                                     ][$priority] ?? 'badge bg-light text-dark';
                                 @endphp
-
-                                <span class="{{ $priorityClass }}">
-                                    {{ strtoupper($priority) }}
-                                </span>
+                                <span class="{{ $priorityClass }}">{{ strtoupper($priority) }}</span>
                             </td>
-
-                            {{-- STATUS INSPEKSI --}}
                             <td>
                                 @php
                                     $statusClass = [
@@ -235,14 +167,9 @@
                                         'pending' => 'badge bg-primary',
                                     ][$row->result] ?? 'badge bg-secondary';
                                 @endphp
-
-                                <span class="{{ $statusClass }}">
-                                    {{ strtoupper($row->result) }}
-                                </span>
+                                <span class="{{ $statusClass }}">{{ strtoupper($row->result) }}</span>
                             </td>
-
                         </tr>
-
                         @empty
                         <tr>
                             <td colspan="8" class="text-center py-4">
