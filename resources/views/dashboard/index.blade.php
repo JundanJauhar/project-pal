@@ -105,7 +105,7 @@
                 <div class="card-body">
                     <form id="filter-form" class="row g-3 align-items-end">
                         <div class="col-md-4">
-                            <input type="text" class="form-control" name="search" placeholder="Cari Equipment..." value="">
+                            <input type="text" class="form-control" name="search" placeholder="Cari Pengadaan..." value="">
                         </div>
                         <div class="col-md-3">
                             <select class="form-select" name="checkpoint">
