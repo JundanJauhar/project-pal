@@ -83,8 +83,8 @@
     @section('content')
 
     <h2 class="fw-bold mb-4">Daftar Item</h2>
-    
-    
+
+
     <div class="row mb-4">
     <div class="col-12">
         <div class="card card-custom">
@@ -109,8 +109,8 @@
                         </select>
                     </div>
                     <div class="tambah col-md-2 text-end">
-                        
-                        <a href="{{ route('procurements.create') }}" class="btn btn-primary w-100 btn-custom">
+
+                        <a href="{{ route('procurements.create') }}" class="btn btn-primary w-100 btn-custom" wire:navigate>
                             <i class="bi bi-plus-circle"></i> Tambah
                         </a>
                     </div>

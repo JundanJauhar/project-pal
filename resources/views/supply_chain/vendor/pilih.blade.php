@@ -125,7 +125,7 @@
 
 
 <div class="mb-4 px-4">
-    <a href="{{ route('supply-chain.dashboard') }}" class="text-decoration-none text-primary">
+    <a href="{{ route('supply-chain.dashboard') }}" class="text-decoration-none text-primary" wire:navigate>
 
         <h4><i class="bi bi-arrow-left"></i> </h4>
     </a>
@@ -166,7 +166,7 @@
     <!-- Tambah Vendor -->
     <div class="tambah col-md-2 text-end ">
         @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
-        <a href="{{ route('supply-chain.vendor.form', ['redirect' => 'pilih']) }}" class="btn btn-primary w-100 btn-custom">
+        <a href="{{ route('supply-chain.vendor.form', ['redirect' => 'pilih']) }}" class="btn btn-primary w-100 btn-custom" wire:navigate>
             <i class="bi bi-plus-circle"></i> Tambah Vendor Baru
         </a>
         @endif
@@ -258,16 +258,16 @@
                                     <td style="padding: 12px 8px; text-align: center;">
                                         <div class="btn-group" role="group">
                                             <form action="{{ route('supply-chain.vendor.simpan', $procurement->procurement_id) }}"
-                                                  method="POST"
-                                                  class="d-inline"
-                                                  onsubmit="return confirm('Pilih vendor {{ $vendor->name_vendor }} untuk pengadaan ini?')">
+                                                method="POST"
+                                                class="d-inline"
+                                                onsubmit="return confirm('Pilih vendor {{ $vendor->name_vendor }} untuk pengadaan ini?')">
                                                 @csrf
                                                 <input type="hidden" name="vendor_id" value="{{ $vendor->id_vendor }}">
                                                 <button type="submit" class="btn btn-sm btn-primary">
                                                     <i class="bi bi-check-circle"></i> Pilih
                                                 </button>
                                             </form>
-                                            <a href="{{ route('supply-chain.vendor.detail', ['id' => $vendor->id_vendor]) }}" class="btn btn-sm btn-info text-white">
+                                            <a href="{{ route('supply-chain.vendor.detail', ['id' => $vendor->id_vendor]) }}" class="btn btn-sm btn-info text-white" wire:navigate>
                                                 <i class="bi bi-eye"></i> Detail
                                             </a>
                                         </div>
@@ -295,22 +295,22 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearch');
-    const searchBtn = document.getElementById('searchBtn');
-    const tableBody = document.getElementById('vendorTableBody');
-    let searchTimeout;
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearch');
+        const searchBtn = document.getElementById('searchBtn');
+        const tableBody = document.getElementById('vendorTableBody');
+        let searchTimeout;
 
-    // Function untuk melakukan search
-    function performSearch() {
-        const searchValue = searchInput.value.trim();
+        // Function untuk melakukan search
+        function performSearch() {
+            const searchValue = searchInput.value.trim();
 
-        // Tampilkan/sembunyikan tombol X
-        clearBtn.style.display = searchValue ? 'block' : 'none';
+            // Tampilkan/sembunyikan tombol X
+            clearBtn.style.display = searchValue ? 'block' : 'none';
 
-        // Tampilkan loading
-        tableBody.innerHTML = `
+            // Tampilkan loading
+            tableBody.innerHTML = `
             <tr>
                 <td colspan="9" class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
@@ -321,28 +321,28 @@ document.addEventListener('DOMContentLoaded', function() {
             </tr>
         `;
 
-        // Fetch data dengan AJAX
-        fetch('{{ route("supply-chain.vendor.pilih", $procurement->procurement_id) }}?search=' + encodeURIComponent(searchValue), {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            // Parse HTML response
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const newTableBody = doc.querySelector('#vendorTableBody');
+            // Fetch data dengan AJAX
+            fetch('{{ route("supply-chain.vendor.pilih", $procurement->procurement_id) }}?search=' + encodeURIComponent(searchValue), {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Parse HTML response
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newTableBody = doc.querySelector('#vendorTableBody');
 
-            if (newTableBody) {
-                tableBody.innerHTML = newTableBody.innerHTML;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            tableBody.innerHTML = `
+                    if (newTableBody) {
+                        tableBody.innerHTML = newTableBody.innerHTML;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    tableBody.innerHTML = `
                 <tr>
                     <td colspan="9" class="text-center py-5 text-danger">
                         <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
@@ -350,48 +350,48 @@ document.addEventListener('DOMContentLoaded', function() {
                     </td>
                 </tr>
             `;
-        });
-    }
-
-    // Search saat mengetik (debounced)
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(performSearch, 500);
-    });
-
-
-    // Search saat tekan Enter
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            clearTimeout(searchTimeout);
-            performSearch();
+                });
         }
-    });
 
-    // Clear search
-    clearBtn.addEventListener('click', function() {
-        searchInput.value = '';
-        clearBtn.style.display = 'none';
-        performSearch();
-    });
+        // Search saat mengetik (debounced)
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 500);
+        });
 
-    // Clear dengan ESC
-    searchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && this.value) {
+
+        // Search saat tekan Enter
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(searchTimeout);
+                performSearch();
+            }
+        });
+
+        // Clear search
+        clearBtn.addEventListener('click', function() {
             searchInput.value = '';
             clearBtn.style.display = 'none';
             performSearch();
-        }
-    });
-});
+        });
 
-// Fungsi untuk memilih vendor
-function selectVendor(vendorId, vendorName) {
-    if (confirm('Pilih vendor "' + vendorName + '" untuk project ini?')) {
-        alert('Vendor ID: ' + vendorId + ' dipilih');
-        // Implementasi logic pilih vendor
+        // Clear dengan ESC
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && this.value) {
+                searchInput.value = '';
+                clearBtn.style.display = 'none';
+                performSearch();
+            }
+        });
+    });
+
+    // Fungsi untuk memilih vendor
+    function selectVendor(vendorId, vendorName) {
+        if (confirm('Pilih vendor "' + vendorName + '" untuk project ini?')) {
+            alert('Vendor ID: ' + vendorId + ' dipilih');
+            // Implementasi logic pilih vendor
+        }
     }
-}
 </script>
 @endpush

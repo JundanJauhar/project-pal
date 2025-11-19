@@ -95,6 +95,7 @@ Route::middleware(['auth'])->group(function () {
     // ------ Supply Chain ------
     Route::prefix('supply-chain')->name('supply-chain.')->group(function () {
         Route::get('/dashboard', [SupplyChainController::class, 'dashboard'])->name('dashboard');
+        Route::get('/pengadaan/create', [SupplyChainController::class, 'createPengadaan'])->name('pengadaan.create');
         Route::post('/dashboard/store', [SupplyChainController::class, 'storePengadaan'])->name('dashboard.store');
 
         Route::get('/projects/{projectId}/review', [SupplyChainController::class, 'reviewProject'])->name('review-project');

@@ -29,6 +29,14 @@ class SupplyChainController extends Controller
         return view('supply_chain.dashboard', compact('procurements'));
     }
 
+    /**
+     * Show create procurement form
+     */
+    public function createPengadaan()
+    {
+        return view('supply_chain.create');
+    }
+
     public function kelolaVendor(Request $request)
     {
         $search = $request->query('search');
@@ -66,7 +74,7 @@ class SupplyChainController extends Controller
                     ->orWhere('id_vendor', 'like', "%{$search}%")
                     ->orWhere('address', 'like', "%{$search}%");
             })
-            ->where('legal_status', 'approved') // Hanya vendor yang sudah diapprove
+            ->where('legal_status', 'verified') // Hanya vendor yang sudah diapprove
             ->orderBy('name_vendor', 'asc')
             ->get();
 
@@ -78,7 +86,8 @@ class SupplyChainController extends Controller
             'importer' => Vendor::where('is_importer', true)->count(),
         ];
 
-        return view('supply_chain.vendor.pilih', compact('vendors', 'stats', 'procurement'));
+        return view('supply_chain.vendor.pilih', compact('vendors', 'stats', 'procurement'))
+        ->with('hideNavbar', true);
     }
 
     public function simpanVendor($procurementId, Request $request)
