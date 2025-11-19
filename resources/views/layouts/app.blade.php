@@ -623,7 +623,7 @@
                         @if(Auth::user()->roles === 'supply_chain')
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('supply-chain.dashboard*') ? 'active' : '' }}" href="{{ route('supply-chain.dashboard') }}">
-                                Supply Chain
+                                Department
                             </a>
                         </li>
                         @endif

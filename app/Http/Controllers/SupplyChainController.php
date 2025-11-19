@@ -22,20 +22,11 @@ class SupplyChainController extends Controller
      */
     public function dashboard()
     {
-        $stats = [
-            'pending_review' => Procurement::where('status_procurement', 'submitted')->count(),
-            'active_negotiations' => Procurement::where('status_procurement', 'in_progress')->count(),
-            'pending_contracts' => Contract::where('status', 'draft')->count(),
-            'material_requests' => RequestProcurement::where('request_status', 'submitted')->count(),
-        ];
-
-        $procurements = Procurement::whereIn('status_procurement', ['submitted', 'reviewed', 'approved', 'in_progress'])
-            ->with(['department', 'project'])
-            ->orderBy('priority', 'desc')
+        $procurements = Procurement::with(['department', 'requestProcurements.vendor'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('supply_chain.dashboard', compact('stats', 'procurements'));
+        return view('supply_chain.dashboard', compact('procurements'));
     }
 
     public function kelolaVendor(Request $request)
@@ -399,5 +390,59 @@ class SupplyChainController extends Controller
             'success' => true,
             'message' => 'Status kedatangan material berhasil diupdate'
         ]);
+    }
+
+    /**
+     * Store multiple pengadaan
+     */
+    public function storePengadaan(Request $request)
+    {
+        $validated = $request->validate([
+            'pengadaan' => 'required|array',
+            'pengadaan.*.name' => 'required|string|max:255',
+            'pengadaan.*.department' => 'required|exists:departments,department_id',
+            'pengadaan.*.start_date' => 'required|date',
+            'pengadaan.*.end_date' => 'required|date|after:start_date',
+            'pengadaan.*.priority' => 'required|in:rendah,sedang,tinggi',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            foreach ($validated['pengadaan'] as $pengadaanData) {
+                // Generate code
+                $lastCode = Procurement::where('code_procurement', 'LIKE', 'PRC-' . date('Y') . '-%')
+                    ->orderBy('code_procurement', 'desc')
+                    ->first();
+
+                if ($lastCode) {
+                    $lastNumber = intval(substr($lastCode->code_procurement, -3));
+                    $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+                } else {
+                    $newNumber = '001';
+                }
+
+                $code = 'PRC-' . date('Y') . '-' . $newNumber;
+
+                Procurement::create([
+                    'code_procurement' => $code,
+                    'name_procurement' => $pengadaanData['name'],
+                    'department_procurement' => $pengadaanData['department'],
+                    'start_date' => $pengadaanData['start_date'],
+                    'end_date' => $pengadaanData['end_date'],
+                    'priority' => $pengadaanData['priority'],
+                    'status_procurement' => 'draft',
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('supply-chain.dashboard')
+                ->with('success', 'Pengadaan berhasil ditambahkan');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error creating pengadaan: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Gagal menambahkan pengadaan')
+                ->withInput();
+        }
     }
 }

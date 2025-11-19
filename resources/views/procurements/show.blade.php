@@ -195,12 +195,12 @@
     </div>
 
     <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
-            <form action="" method="post">
+            <form action="{{ route('procurements.update', $procurement->procurement_id) }}" method="post">
                 @csrf
-                method="put"
-                action="{{ route('procurements.update', $procurement->procurement_id) }}"
-                class="btn btn-sm btn-success btn-custom">
-                <i class="bi bi-check-lg"></i> Accept
+                @method('put')
+                <button type="submit" class="btn btn-sm btn-success btn-custom">
+                    <i class="bi bi-check-lg"></i> Accept
+                </button>
             </form>
             <a href="{{ route('procurements.show', $procurement->procurement_id) }}"
                 class="btn btn-sm btn-danger btn-custom">
