@@ -87,6 +87,8 @@ Route::middleware(['auth'])->group(function () {
     // Supply Chain Routes
     Route::prefix('supply-chain')->name('supply-chain.')->group(function () {
         Route::get('/dashboard', [SupplyChainController::class, 'dashboard'])->name('dashboard');
+        Route::post('/dashboard/store', [SupplyChainController::class, 'storePengadaan'])->name('dashboard.store');
+
         Route::get('/projects/{projectId}/review', [SupplyChainController::class, 'reviewProject'])->name('review-project');
         Route::post('/projects/{projectId}/approve', [SupplyChainController::class, 'approveReview'])->name('approve-review');
         Route::post('/projects/upload-review', [SupplyChainController::class, 'uploadReview'])->name('upload-review');
@@ -158,8 +160,8 @@ Route::prefix('inspections')->name('inspections.')->group(function () {
     Route::get('/dashboard', [DesainController::class, 'dashboard'])->name('dashboard');
     Route::get('/list-project', [DesainListProjectController::class, 'list'])->name('list-project');
     Route::get('/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPermintaan'])->name('daftar-permintaan');
-    Route::get('/project/{id}/pengadaan', [DesainListProjectController::class, 'formPengadaan'])->name('permintaan-pengadaan');
-    Route::post('/project/{id}/pengadaan/kirim', [DesainListProjectController::class, 'kirimPengadaan'])->name('kirim-pengadaan');
+    Route::get('/project/{id}/dashboard', [DesainListProjectController::class, 'formPengadaan'])->name('permintaan-pengadaan');
+    Route::post('/project/{id}/dasboard/kirim', [DesainListProjectController::class, 'kirimPengadaan'])->name('kirim-pengadaan');
     Route::get('/evatek/{request_id}', [DesainListProjectController::class, 'reviewEvatek'])->name('review-evatek');
     });
 
