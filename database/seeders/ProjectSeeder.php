@@ -7,7 +7,6 @@ use App\Models\Project;
 use App\Models\RequestProcurement;
 use App\Models\Item;
 use App\Models\Vendor;
-use App\Models\Contract;
 use App\Models\PaymentSchedule;
 use App\Models\InspectionReport;
 use Carbon\Carbon;
@@ -175,9 +174,9 @@ class ProjectSeeder extends Seeder
 
 
         /**
-         * ITEMS — HARUS MENGIKUTI request_procurement_id
+         * ITEMS — DENGAN STATUS APPROVED/NOT_APPROVED
          */
-        Item::create([
+        $item1 = Item::create([
             'request_procurement_id' => $request1->request_id,
             'item_name' => 'Baja High Grade',
             'item_description' => 'Material baja high grade untuk struktur kapal',
@@ -185,9 +184,12 @@ class ProjectSeeder extends Seeder
             'unit' => 'ton',
             'unit_price' => 120000000,
             'total_price' => 12000000000,
+            'status' => 'approved',
+            'approved_by' => 2,
+            'approved_at' => Carbon::now()->subDays(85),
         ]);
 
-        Item::create([
+        $item2 = Item::create([
             'request_procurement_id' => $request1->request_id,
             'item_name' => 'Plat Baja Marine Grade',
             'item_description' => 'Plat baja tahan korosi untuk lambung kapal',
@@ -195,6 +197,9 @@ class ProjectSeeder extends Seeder
             'unit' => 'ton',
             'unit_price' => 95000000,
             'total_price' => 4750000000,
+            'status' => 'approved',
+            'approved_by' => 2,
+            'approved_at' => Carbon::now()->subDays(85),
         ]);
 
         Item::create([
@@ -205,6 +210,9 @@ class ProjectSeeder extends Seeder
             'unit' => 'unit',
             'unit_price' => 250000000,
             'total_price' => 1250000000,
+            'status' => 'approved',
+            'approved_by' => 3,
+            'approved_at' => Carbon::now()->subDays(55),
         ]);
 
         Item::create([
@@ -215,6 +223,7 @@ class ProjectSeeder extends Seeder
             'unit' => 'unit',
             'unit_price' => 85000000,
             'total_price' => 850000000,
+            'status' => 'not_approved',
         ]);
 
         Item::create([
@@ -225,6 +234,9 @@ class ProjectSeeder extends Seeder
             'unit' => 'jam',
             'unit_price' => 500000,
             'total_price' => 100000000,
+            'status' => 'approved',
+            'approved_by' => 5,
+            'approved_at' => Carbon::now()->subDays(35),
         ]);
 
         Item::create([
@@ -235,6 +247,7 @@ class ProjectSeeder extends Seeder
             'unit' => 'pcs',
             'unit_price' => 150000,
             'total_price' => 15000000,
+            'status' => 'not_approved',
         ]);
 
         Item::create([
@@ -245,28 +258,15 @@ class ProjectSeeder extends Seeder
             'unit' => 'pcs',
             'unit_price' => 350000,
             'total_price' => 35000000,
+            'status' => 'not_approved',
         ]);
 
         /**
-         * CONTRACT FOR PROJECT 1
-         */
-        $contract1 = Contract::create([
-            'project_id' => $project1->project_id,
-            'vendor_id' => 1,
-            'contract_number' => 'CTR/PAL/2025/001',
-            'contract_value' => 14500000000,
-            'start_date' => Carbon::now()->subDays(70),
-            'end_date' => Carbon::now()->addDays(30),
-            'status' => 'active',
-            'created_by' => 2, // user_id
-        ]);
-
-        /**
-         * PAYMENT SCHEDULES
+         * PAYMENT SCHEDULES (tanpa contract_id jika tidak ada Contract)
          */
         PaymentSchedule::create([
             'project_id' => $project1->project_id,
-            'contract_id' => $contract1->contract_id,
+            'contract_id' => null, // Set null jika tidak ada Contract
             'payment_type' => 'dp',
             'amount' => 4350000000,
             'percentage' => 30,
@@ -277,21 +277,55 @@ class ProjectSeeder extends Seeder
             'payment_date' => Carbon::now()->subDays(65),
         ]);
 
+        PaymentSchedule::create([
+            'project_id' => $project1->project_id,
+            'contract_id' => null,
+            'payment_type' => 'progress',
+            'amount' => 5075000000,
+            'percentage' => 35,
+            'due_date' => Carbon::now()->addDays(15),
+            'status' => 'pending',
+            'verified_by_treasury' => null,
+            'verified_by_accounting' => null,
+            'payment_date' => null,
+        ]);
+
+        PaymentSchedule::create([
+            'project_id' => $project1->project_id,
+            'contract_id' => null,
+            'payment_type' => 'final',
+            'amount' => 5075000000,
+            'percentage' => 35,
+            'due_date' => Carbon::now()->addDays(45),
+            'status' => 'pending',
+            'verified_by_treasury' => null,
+            'verified_by_accounting' => null,
+            'payment_date' => null,
+        ]);
+
         /**
          * INSPECTION REPORT
          */
         InspectionReport::create([
             'project_id' => $project1->project_id,
-            'item_id' => 1,
+            'item_id' => $item1->item_id,
             'inspection_date' => Carbon::now()->subDays(10),
             'inspector_id' => 5,
             'result' => 'passed',
             'notes' => 'Material sesuai spesifikasi teknis.',
         ]);
 
+        InspectionReport::create([
+            'project_id' => $project1->project_id,
+            'item_id' => $item2->item_id,
+            'inspection_date' => Carbon::now()->subDays(10),
+            'inspector_id' => 5,
+            'result' => 'passed',
+            'notes' => 'Plat baja dalam kondisi baik, tidak ada cacat.',
+        ]);
+
         /**
          * PROCUREMENT PROGRESS - Monitoring step procurement
-         * Setiap procurement melalui beberapa checkpoint/step
          */
         $checkpoints = \App\Models\Checkpoint::orderBy('point_sequence')->get();
 
@@ -348,11 +382,8 @@ class ProjectSeeder extends Seeder
         }
 
         /**
-         * PROJECT 2–7 dibuat ulang versi pendek
-         * tanpa HPS / Negotiation / Evatek
-         * karena tabelnya BELUM ADA
+         * PROJECT 2–7 - Additional projects
          */
-
         Project::create([
             'project_code' => 'KCJ-202511-002',
             'project_name' => 'Pengadaan Sistem Radar Navigasi',
@@ -419,6 +450,6 @@ class ProjectSeeder extends Seeder
             'status_project' => 'pemilihan_vendor',
         ]);
 
-        echo "✅ Seeder berhasil disesuaikan dengan schema terbaru.\n";
+        echo "✅ Seeder berhasil (dengan PaymentSchedule & InspectionReport, tanpa Contract).\n";
     }
 }
