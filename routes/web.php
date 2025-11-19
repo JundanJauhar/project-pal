@@ -135,27 +135,33 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Inspection Routes (Quality Assurance)
-    Route::prefix('inspections')->name('inspections.')->group(function () {
-        Route::get('/', [InspectionController::class, 'index'])->name('index');
-        Route::get('/create/{projectId}', [InspectionController::class, 'create'])->name('create');
-        Route::post('/', [InspectionController::class, 'store'])->name('store');
-        Route::get('/{id}', [InspectionController::class, 'show'])->name('show');
-        Route::put('/{id}', [InspectionController::class, 'update'])->name('update');
+Route::prefix('inspections')->name('inspections.')->group(function () {
 
-        // NCR Routes
-        Route::get('/ncr', [InspectionController::class, 'ncrReports'])->name('ncr.index');
-        Route::get('/ncr/{id}', [InspectionController::class, 'showNcr'])->name('ncr.show');
-        Route::put('/ncr/{id}', [InspectionController::class, 'updateNcr'])->name('ncr.update');
-        Route::post('/ncr/{id}/verify', [InspectionController::class, 'verifyNcr'])->name('ncr.verify');
-    });
+    // Hanya LIST saja
+    Route::get('/', [InspectionController::class, 'index'])->name('index');
+
+    // NCR LIST
+    Route::get('/ncr', [InspectionController::class, 'ncrReports'])->name('ncr.index');
+
+    // NCR Detail
+    Route::get('/ncr/{id}', [InspectionController::class, 'showNcr'])->name('ncr.show');
+
+    // NCR Update
+    Route::put('/ncr/{id}', [InspectionController::class, 'updateNcr'])->name('ncr.update');
+    Route::post('/ncr/{id}/verify', [InspectionController::class, 'verifyNcr'])->name('ncr.verify');
+
+});
+
 
     // Desain Routes
     Route::prefix('desain')->name('desain.')->group(function () {
-        Route::get('/dashboard', [DesainController::class, 'dashboard'])->name('dashboard');
-        Route::get('/input-equipment', [DesainController::class, 'inputEquipment'])->name('input-equipment');
-        Route::get('/status-evatek/{projectId}', [DesainController::class, 'statusEvatek'])->name('status-evatek');
+    Route::get('/dashboard', [DesainController::class, 'dashboard'])->name('dashboard');
+    Route::get('/list-project', [DesainListProjectController::class, 'list'])->name('list-project');
+    Route::get('/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPermintaan'])->name('daftar-permintaan');
+    Route::get('/project/{id}/pengadaan', [DesainListProjectController::class, 'formPengadaan'])->name('permintaan-pengadaan');
+    Route::post('/project/{id}/pengadaan/kirim', [DesainListProjectController::class, 'kirimPengadaan'])->name('kirim-pengadaan');
+    Route::get('/evatek/{request_id}', [DesainListProjectController::class, 'reviewEvatek'])->name('review-evatek');
     });
-
 
     Route::get('/desain/list-project', [DesainListProjectController::class, 'list'])
         ->name('desain.list-project');

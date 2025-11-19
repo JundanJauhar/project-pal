@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\InspectionReport;
 use App\Models\NcrReport;
 use App\Models\Project;
-use App\Models\Item;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,25 +13,31 @@ use Illuminate\Support\Facades\DB;
 class InspectionController extends Controller
 {
     /**
-     * Display inspection reports
+     * Display inspection reports (LIST)
      */
     public function index()
     {
-        $inspections = InspectionReport::with(['project', 'item', 'inspector'])
-            ->orderBy('inspection_date', 'desc')
-            ->paginate(20);
+        $inspections = InspectionReport::with([
+            'project',
+            'project.department',
+            'vendor',
+        ])
+        ->orderBy('inspection_date', 'desc')
+        ->paginate(20);
 
-        return view('inspections.index', compact('inspections'));
+        // View kamu berada di folder: resources/views/qa/inspections.blade.php
+        return view('qa.inspections', compact('inspections'));
     }
+
 
     /**
-     * Show form to create inspection
+     * DISABLED — show detail (tidak dipakai)
      */
-    public function create($projectId)
+    public function show($id)
     {
-        $project = Project::with([])->findOrFail($projectId);
-        return view('inspections.create', compact('project'));
+        abort(404); // Karena tidak digunakan
     }
+
 
     /**
      * Store inspection report
@@ -43,7 +48,7 @@ class InspectionController extends Controller
             'project_id' => 'required|exists:projects,project_id',
             'item_id' => 'nullable|exists:items,item_id',
             'inspection_date' => 'required|date',
-            'result' => 'required|in:passed,failed,conditional',
+            'result' => 'required|in:passed,failed,conditional,pending',
             'findings' => 'nullable|string',
             'notes' => 'nullable|string',
             'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
@@ -51,6 +56,7 @@ class InspectionController extends Controller
         ]);
 
         DB::transaction(function () use ($validated, $request) {
+
             $attachmentPath = null;
             if ($request->hasFile('attachment')) {
                 $attachmentPath = $request->file('attachment')->store('inspection_reports', 'public');
@@ -68,19 +74,16 @@ class InspectionController extends Controller
                 'ncr_required' => $validated['ncr_required'] ?? ($validated['result'] === 'failed'),
             ]);
 
-            // Update project status based on inspection result
+            // Update status proyek & NCR
             $project = Project::find($validated['project_id']);
 
             if ($validated['result'] === 'passed') {
                 $project->update(['status_project' => 'verifikasi_dokumen']);
-
-                // Notify Accounting for document verification
                 $this->notifyAccounting($project, 'Inspeksi barang passed, verifikasi dokumen diperlukan');
-            } elseif ($validated['result'] === 'failed') {
-                // Create NCR if needed
-                if ($inspection->ncr_required) {
-                    $this->createNcrReport($inspection);
-                }
+            }
+
+            if ($validated['result'] === 'failed' && $inspection->ncr_required) {
+                $this->createNcrReport($inspection);
             }
         });
 
@@ -88,48 +91,13 @@ class InspectionController extends Controller
             ->with('success', 'Laporan inspeksi berhasil dibuat');
     }
 
-    /**
-     * Show inspection report
-     */
-    public function show($id)
-    {
-        $inspection = InspectionReport::with([
-            'project',
-            'item',
-            'inspector',
-            'ncrReports'
-        ])->findOrFail($id);
-
-        return view('inspections.show', compact('inspection'));
-    }
-
-    /**
-     * Update inspection report
-     */
-    public function update(Request $request, $id)
-    {
-        $inspection = InspectionReport::findOrFail($id);
-
-        $validated = $request->validate([
-            'result' => 'required|in:passed,failed,conditional',
-            'findings' => 'nullable|string',
-            'notes' => 'nullable|string',
-        ]);
-
-        $inspection->update($validated);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Laporan inspeksi berhasil diupdate'
-        ]);
-    }
 
     /**
      * Create NCR report
      */
     private function createNcrReport($inspection)
     {
-        $ncr = NcrReport::create([
+        return NcrReport::create([
             'inspection_id' => $inspection->inspection_id,
             'project_id' => $inspection->project_id,
             'item_id' => $inspection->item_id,
@@ -139,23 +107,8 @@ class InspectionController extends Controller
             'status' => 'open',
             'created_by' => $inspection->inspector_id,
         ]);
-
-        // Notify Supply Chain
-        $scUsers = \App\Models\User::where('roles', 'supply_chain')->get();
-        foreach ($scUsers as $user) {
-            Notification::create([
-                'user_id' => $user->id,
-                'sender_id' => $inspection->inspector_id,
-                'type' => 'ncr_created',
-                'title' => 'NCR Baru',
-                'message' => 'NCR telah dibuat untuk proyek: ' . $inspection->project->name_project . ' (NCR: ' . $ncr->ncr_number . ')',
-                'reference_type' => 'App\Models\NcrReport',
-                'reference_id' => $ncr->ncr_id,
-            ]);
-        }
-
-        return $ncr;
     }
+
 
     /**
      * View NCR reports
@@ -168,11 +121,13 @@ class InspectionController extends Controller
             'item',
             'creator',
             'assignedUser'
-        ])->orderBy('ncr_date', 'desc')
-            ->paginate(20);
+        ])
+        ->orderBy('ncr_date', 'desc')
+        ->paginate(20);
 
-        return view('inspections.ncr_reports', compact('ncrReports'));
+        return view('qa.ncr_reports', compact('ncrReports'));
     }
+
 
     /**
      * Show NCR report
@@ -186,13 +141,15 @@ class InspectionController extends Controller
             'creator',
             'verifier',
             'assignedUser'
-        ])->findOrFail($id);
+        ])
+        ->findOrFail($id);
 
-        return view('inspections.ncr_show', compact('ncr'));
+        return view('qa.ncr_show', compact('ncr'));
     }
 
+
     /**
-     * Update NCR report
+     * Update NCR
      */
     public function updateNcr(Request $request, $id)
     {
@@ -210,30 +167,15 @@ class InspectionController extends Controller
 
         $ncr->update($validated);
 
-        // If status is resolved, notify QA for verification
-        if ($validated['status'] === 'resolved') {
-            $qaUsers = \App\Models\User::where('roles', 'qa')->get();
-            foreach ($qaUsers as $user) {
-                Notification::create([
-                    'user_id' => $user->id,
-                    'sender_id' => Auth::id(),
-                    'type' => 'ncr_verification',
-                    'title' => 'Verifikasi NCR Diperlukan',
-                    'message' => 'NCR ' . $ncr->ncr_number . ' telah diselesaikan dan menunggu verifikasi',
-                    'reference_type' => 'App\Models\NcrReport',
-                    'reference_id' => $ncr->ncr_id,
-                ]);
-            }
-        }
-
         return response()->json([
             'success' => true,
             'message' => 'NCR berhasil diupdate'
         ]);
     }
 
+
     /**
-     * Verify NCR closure
+     * Verify NCR
      */
     public function verifyNcr(Request $request, $id)
     {
@@ -250,24 +192,19 @@ class InspectionController extends Controller
                 'verified_by' => Auth::id(),
                 'verified_at' => now(),
             ]);
-
-            $message = 'NCR berhasil diverifikasi dan ditutup';
         } else {
-            $ncr->update([
-                'status' => 'in_progress',
-            ]);
-
-            $message = 'NCR ditolak, perlu tindakan lebih lanjut';
+            $ncr->update(['status' => 'in_progress']);
         }
 
         return response()->json([
             'success' => true,
-            'message' => $message
+            'message' => 'Status NCR berhasil diperbarui'
         ]);
     }
 
+
     /**
-     * Notify Accounting team
+     * Notify accounting
      */
     private function notifyAccounting($project, $message)
     {

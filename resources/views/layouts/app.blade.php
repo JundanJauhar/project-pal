@@ -647,17 +647,17 @@
 
                         @if(Auth::user()->roles === 'qa')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('inspections*') ? 'active' : '' }}" href="{{ route('inspections.index') }}">
-                                <i class="bi bi-clipboard-check"></i>
-                                Inspections
+                            <a class="nav-link {{ request()->routeIs('inspections.index') ? 'active' : '' }}" href="{{ route('inspections.index') }}">
+                                Department
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('inspections.ncr*') ? 'active' : '' }}" href="{{ route('inspections.ncr.index') }}">
+
+                        <!-- <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('inspections.ncr.index') ? 'active' : '' }}" href="{{ route('inspections.ncr.index') }}">
                                 <i class="bi bi-exclamation-triangle"></i>
                                 NCR Reports
                             </a>
-                        </li>
+                        </li> -->
                         @endif
                     </ul>
 
