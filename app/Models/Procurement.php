@@ -28,58 +28,80 @@ class Procurement extends Model
         'end_date' => 'date',
     ];
 
-    /**
-     * Get the project for this procurement
-     */
+    protected $appends = ['auto_status', 'current_checkpoint'];
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id', 'project_id');
     }
 
-    /**
-     * Get the department for this procurement
-     */
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class, 'department_procurement', 'department_id');
     }
 
-    /**
-     * Get request procurements for this procurement
-     */
     public function requestProcurements(): HasMany
     {
         return $this->hasMany(RequestProcurement::class, 'procurement_id', 'procurement_id');
     }
 
-    /**
-     * Get procurement progress for this procurement
-     */
     public function procurementProgress(): HasMany
-{
-    return $this->hasMany(ProcurementProgress::class, 'procurement_id', 'procurement_id');
-}
+    {
+        return $this->hasMany(ProcurementProgress::class, 'procurement_id', 'procurement_id');
+    }
 
-public function getAutoStatusAttribute()
-{
-    $totalCheckpoint = \App\Models\Checkpoint::count();
+    public function getAutoStatusAttribute()
+    {
+        // ✅ Gunakan relasi yang sudah di-load, bukan query baru
+        $progressCollection = $this->relationLoaded('procurementProgress')
+            ? $this->procurementProgress
+            : $this->procurementProgress()->get();
 
-    $completed = $this->procurementProgress()
-        ->where('status', 'completed')
-        ->count();
+        // Cek apakah ada yang ditolak
+        $rejected = $progressCollection->where('status', 'rejected')->isNotEmpty();
 
-    if ($completed === 0) return 'not_started';
+        if ($rejected) {
+            return 'rejected';
+        }
 
-    if ($completed >= $totalCheckpoint) return 'completed';
+        $totalCheckpoint = \App\Models\Checkpoint::count();
+        $completed = $progressCollection->where('status', 'completed')->count();
 
-    return 'in_progress';
-}
+        if ($completed === 0) {
+            return 'not_started';
+        }
 
+        if ($completed >= $totalCheckpoint) {
+            return 'completed';
+        }
 
+        return 'in_progress';
+    }
 
-    /**
-     * Get all vendors through request procurements (PERBAIKAN #14)
-     */
+    public function getCurrentCheckpointAttribute()
+    {
+        // ✅ Gunakan relasi yang sudah di-load
+        $progressCollection = $this->relationLoaded('procurementProgress')
+            ? $this->procurementProgress
+            : $this->procurementProgress()->with('checkpoint')->get();
+
+        // Cari progress yang sedang in_progress
+        $latest = $progressCollection
+            ->where('status', 'in_progress')
+            ->sortByDesc('checkpoint_id')
+            ->first();
+
+        // Jika tidak ada yang in_progress, ambil yang terakhir completed
+        if (!$latest) {
+            $latest = $progressCollection
+                ->where('status', 'completed')
+                ->sortByDesc('checkpoint_id')
+                ->first();
+        }
+
+        return $latest?->checkpoint?->point_name ?? null;
+    }
+
     public function vendors()
     {
         return $this->hasManyThrough(
@@ -92,9 +114,6 @@ public function getAutoStatusAttribute()
         );
     }
 
-    /**
-     * Get all items through request procurements
-     */
     public function items()
     {
         return $this->hasManyThrough(
@@ -106,16 +125,4 @@ public function getAutoStatusAttribute()
             'request_id'
         );
     }
-
-    public function getCurrentCheckpointAttribute()
-    {
-        $latest = $this->procurementProgress()
-            ->where('status', 'in_progress')
-            ->with('checkpoint')
-            ->orderBy('checkpoint_id')
-            ->first();
-
-        return $latest?->checkpoint?->point_name ?? null;
-    }
-
 }
