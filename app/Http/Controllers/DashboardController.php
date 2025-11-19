@@ -20,13 +20,11 @@ class DashboardController extends Controller
 
         // Get statistics from Procurement table
         $stats = [
-    'total_pengadaan' => Procurement::count(),
-    'sedang_proses' => Procurement::get()->filter(fn($p) => $p->auto_status === 'in_progress')->count(),
-    'selesai' => Procurement::get()->filter(fn($p) => $p->auto_status === 'completed')->count(),
-    'ditolak' => Procurement::get()->filter(fn($p) => $p->auto_status === 'rejected')->count(),
-];
-
-
+            'total_pengadaan' => Procurement::count(),
+            'sedang_proses' => Procurement::get()->filter(fn($p) => $p->auto_status === 'in_progress')->count(),
+            'selesai' => Procurement::get()->filter(fn($p) => $p->auto_status === 'completed')->count(),
+            'ditolak' => Procurement::get()->filter(fn($p) => $p->auto_status === 'rejected')->count(),
+        ];
 
         // Get recent procurements based on user role
         $procurements = $this->getProcurementsByRole($user);
@@ -45,17 +43,106 @@ class DashboardController extends Controller
      * Get procurements based on user role
      */
     private function getProcurementsByRole($user)
-    {
-        $query = Procurement::with(['department', 'requestProcurements.vendor']);
+{
+    $query = Procurement::with([
+        'department', 
+        'requestProcurements.vendor',
+        'procurementProgress.checkpoint' // ✅ Tambahkan ini
+    ]);
 
-        // All users can see all procurements
-        // This allows users to view the full list of procurements in the system
+    return $query->orderBy('created_at', 'desc')
+        ->paginate(10);
+}
 
-        return $query->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+    /**
+     * Search procurements with filters
+     */
+   public function search(Request $request)
+{
+    $query = Procurement::with([
+        'department', 
+        'requestProcurements.vendor',
+        'procurementProgress.checkpoint'
+    ]);
+    
+    // Search filter
+    if ($request->filled('q')) {
+        $searchTerm = $request->q;
+        $query->where(function($q) use ($searchTerm) {
+            $q->where('name_procurement', 'like', '%' . $searchTerm . '%')
+              ->orWhere('code_procurement', 'like', '%' . $searchTerm . '%');
+        });
     }
-
+    
+    // Priority filter
+    if ($request->filled('priority')) {
+        $query->where('priority', $request->priority);
+    }
+    
+    // ✅ Ambil semua data dulu (dengan eager loading)
+    $allProcurements = $query->orderBy('created_at', 'desc')->get();
+    
+    // ✅ Filter berdasarkan checkpoint SETELAH data di-load
+    if ($request->filled('checkpoint')) {
+        $checkpoint = $request->checkpoint;
+        
+        $allProcurements = $allProcurements->filter(function($p) use ($checkpoint) {
+            // Handle special statuses
+            if ($checkpoint === 'not_started') {
+                return $p->auto_status === 'not_started';
+            }
+            
+            if ($checkpoint === 'completed') {
+                return $p->auto_status === 'completed';
+            }
+            
+            if ($checkpoint === 'rejected') {
+                return $p->auto_status === 'rejected';
+            }
+            
+            // Filter by current checkpoint name
+            return $p->auto_status === 'in_progress' 
+                && $p->current_checkpoint === $checkpoint;
+        });
+    }
+    
+    // ✅ Manual pagination
+    $page = $request->get('page', 1);
+    $perPage = 10;
+    $total = $allProcurements->count();
+    $lastPage = ceil($total / $perPage);
+    
+    $procurements = $allProcurements
+        ->slice(($page - 1) * $perPage, $perPage)
+        ->values(); // Reset array keys
+    
+    // Transform data
+    $data = $procurements->map(function($p) {
+        return [
+            'procurement_id' => $p->procurement_id,
+            'code_procurement' => $p->code_procurement,
+            'name_procurement' => $p->name_procurement,
+            'department_name' => $p->department->department_name ?? '-',
+            'start_date' => $p->start_date ? $p->start_date->format('d/m/Y') : '-',
+            'end_date' => $p->end_date ? $p->end_date->format('d/m/Y') : '-',
+            'vendor_name' => $p->requestProcurements->first()?->vendor->name_vendor ?? '-',
+            'priority' => $p->priority ?? 'rendah',
+            'auto_status' => $p->auto_status,
+            'current_checkpoint' => $p->current_checkpoint,
+        ];
+    });
+    
+    return response()->json([
+        'data' => $data,
+        'pagination' => [
+            'current_page' => (int)$page,
+            'last_page' => $lastPage,
+            'per_page' => $perPage,
+            'total' => $total,
+            'has_more' => $page < $lastPage,
+        ]
+    ]);
+}
     /**
      * Get dashboard data for specific department
      */
@@ -71,7 +158,7 @@ class DashboardController extends Controller
         $procurements = Procurement::where('department_procurement', $departmentId)
             ->with(['department', 'requestProcurements.vendor'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(10); // ✅ Juga ganti di sini
 
         return view('dashboard.department', compact('procurements'));
     }
