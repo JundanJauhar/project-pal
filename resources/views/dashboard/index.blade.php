@@ -201,7 +201,7 @@
                 <div class="card-body">
                     <form id="filter-form" class="row g-3 align-items-end">
                         <div class="col-md-4">
-                            <input type="text" class="form-control" name="search" placeholder="Cari Equipment..." value="">
+                            <input type="text" class="form-control" name="search" placeholder="Cari Pengadaan..." value="">
                         </div>
                         <div class="col-md-3">
                             <select class="form-select" name="checkpoint">
@@ -333,157 +333,6 @@
 
 @endsection
 
-<<<<<<< HEAD
-@push('scripts')
-<script>
-function debounce(fn, delay) {
-    let t;
-    return function () {
-        clearTimeout(t);
-        t = setTimeout(() => fn.apply(this, arguments), delay);
-    };
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    const searchInput = document.querySelector('input[name="search"]');
-    const checkpointSelect = document.querySelector('select[name="checkpoint"]');
-    const prioritySelect = document.querySelector('select[name="priority"]');
-    const tbody = document.getElementById('procurements-tbody');
-    const paginationWrap = document.getElementById('procurements-pagination');
-
-    if (!searchInput || !checkpointSelect || !prioritySelect || !tbody || !paginationWrap) {
-        console.error('Missing required elements');
-        return;
-    }
-
-    let currentPage = 1;
-    let lastPagination = null;
-
-    function getStatusBadge(status, checkpoint) {
-        const statusMap = {
-            'completed': { text: 'Selesai', color: '#28AC00' },
-            'not_started': { text: 'Belum Dimulai', color: '#555' },
-            'in_progress': { text: checkpoint || 'Sedang Proses', color: '#ECAD02' },
-            'rejected': { text: 'Ditolak', color: '#BD0000' }
-        };
-
-        const badge = statusMap[status] || { text: status, color: '#ECAD02' };
-        return `<span class="badge" style="background-color: ${badge.color}; color:white; padding:6px 12px; font-weight:600; border-radius:6px;">
-            ${badge.text}
-        </span>`;
-    }
-
-    function renderRows(items) {
-        if (!Array.isArray(items) || items.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="9" class="text-center py-4">
-                        <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
-                        <p class="text-muted mt-2">Tidak ada data pengadaan</p>
-                    </td>
-                </tr>`;
-            paginationWrap.innerHTML = "";
-            return;
-        }
-
-        tbody.innerHTML = items.map(p => {
-            const priorityClass = p.priority?.toLowerCase() || '';
-            const priorityText = p.priority?.toUpperCase() || '-';
-            
-            return `
-            <tr>
-                <td style="padding: 12px 8px;"><strong>${p.code_procurement}</strong></td>
-                <td style="padding: 12px 8px;">${p.name_procurement?.substring(0, 40) || '-'}</td>
-                <td style="padding: 12px 8px; text-align: center;">${p.department_name || '-'}</td>
-                <td style="padding: 12px 8px; text-align: center;">${p.start_date || '-'}</td>
-                <td style="padding: 12px 8px; text-align: center;">${p.end_date || '-'}</td>
-                <td style="padding: 12px 8px; text-align: center;">${p.vendor_name || '-'}</td>
-                <td style="padding: 12px 8px; text-align: center;">
-                    <span class="badge-priority badge-${priorityClass}">
-                        ${priorityText}
-                    </span>
-                </td>
-                <td style="padding: 12px 8px; text-align: center;">
-                    ${getStatusBadge(p.auto_status, p.current_checkpoint)}
-                </td>
-                <td style="padding: 12px 8px; text-align: center;">
-                    <a href="/procurements/${p.procurement_id}" class="btn btn-sm btn-primary">
-                        Detail
-                    </a>
-                </td>
-            </tr>`;
-        }).join("");
-
-        renderPagination();
-    }
-
-    function renderPagination() {
-        if (!lastPagination) {
-            paginationWrap.innerHTML = '';
-            return;
-        }
-
-        const p = lastPagination;
-        let html = `<nav><ul class="pagination">`;
-
-        html += p.current_page > 1
-            ? `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page - 1})">← Sebelumnya</a></li>`
-            : `<li class="page-item disabled"><span class="page-link">← Sebelumnya</span></li>`;
-
-        for (let i = 1; i <= p.last_page; i++) {
-            html += i === p.current_page
-                ? `<li class="page-item active"><span class="page-link">${i}</span></li>`
-                : `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${i})">${i}</a></li>`;
-        }
-
-        html += p.has_more
-            ? `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page + 1})">Berikutnya →</a></li>`
-            : `<li class="page-item disabled"><span class="page-link">Berikutnya →</span></li>`;
-
-        html += `</ul></nav>`;
-        paginationWrap.innerHTML = html;
-    }
-
-    window.goToPage = function (page) {
-        currentPage = page;
-        fetchProcurements();
-    };
-
-    function fetchProcurements() {
-        const q = encodeURIComponent(searchInput.value.trim());
-        const checkpoint = encodeURIComponent(checkpointSelect.value);
-        const priority = encodeURIComponent(prioritySelect.value);
-
-const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&priority=${priority}&page=${currentPage}`;
-        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(res => res.json())
-            .then(res => {
-                lastPagination = res.pagination;
-                renderRows(res.data);
-            })
-            .catch(err => {
-                console.error("Search error:", err);
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="9" class="text-center py-4">
-                            <i class="bi bi-exclamation-circle" style="font-size: 48px; color: #f00;"></i>
-                            <p class="text-danger mt-2">Terjadi kesalahan: ${err.message}</p>
-                        </td>
-                    </tr>`;
-            });
-    }
-
-    const debouncedFetch = debounce(() => {
-        currentPage = 1;
-        fetchProcurements();
-    }, 300);
-
-    searchInput.addEventListener('input', debouncedFetch);
-    checkpointSelect.addEventListener('change', debouncedFetch);
-    prioritySelect.addEventListener('change', debouncedFetch);
-});
-</script>
-=======
 
 @push('scripts')
 <script>
@@ -544,4 +393,3 @@ const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&pri
     }
 </script>
 @endpush
->>>>>>> carel-punya

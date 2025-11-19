@@ -61,8 +61,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/division/{divisionId}', [DashboardController::class, 'divisionDashboard'])->name('dashboard.division');
     Route::get('/dashboard/statistics', [DashboardController::class, 'getStatistics'])->name('dashboard.statistics');
     Route::get('/dashboard/timeline/{projectId}', [DashboardController::class, 'getProcurementTimeline'])->name('dashboard.timeline');
-
-    // ------ Projects ------
+    // Route::get('/procurements/search', [DashboardController::class, 'search'])->name('procurements.search');
+    // Route::get('/dashboard/search', [DashboardController::class, 'search'])->name('dashboard.search');
+    // Project Routes
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
     Route::post('/projects/upload-review', [ProjectController::class, 'uploadReview'])->name('projects.uploadReview');
     Route::post('/projects/save-review-notes', [ProjectController::class, 'saveReviewNotes'])->name('projects.saveReviewNotes');
