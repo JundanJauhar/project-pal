@@ -96,7 +96,7 @@ if ($latestProgress && $latestProgress->checkpoint) {
     public function getProgress($id)
     {
         $procurement = Procurement::findOrFail($id);
-        
+
         $progress = $procurement->procurementProgress()
             ->with(['checkpoint', 'user'])
             ->orderBy('checkpoint_id')
@@ -117,7 +117,7 @@ if ($latestProgress && $latestProgress->checkpoint) {
         ]);
 
         $procurement = Procurement::findOrFail($id);
-        
+
         $progress = $procurement->procurementProgress()
             ->where('checkpoint_id', $validated['checkpoint_id'])
             ->first();
@@ -144,12 +144,28 @@ if ($latestProgress && $latestProgress->checkpoint) {
     }
 
     /**
+     * Update procurement status (Accept/Reject)
+     */
+    public function update(Request $request, $id)
+    {
+        $procurement = Procurement::findOrFail($id);
+
+        // Update status procurement
+        $procurement->update([
+            'status_procurement' => 'approved',
+        ]);
+
+        return redirect()->route('procurements.show', $id)
+            ->with('success', 'Procurement berhasil disetujui');
+    }
+
+    /**
      * List procurements for a project
      */
     public function byProject($projectId)
     {
         $project = Project::findOrFail($projectId);
-        
+
         $procurements = $project->procurements()
             ->with(['department', 'requestProcurements.vendor', 'procurementProgress'])
             ->orderBy('created_at', 'desc')

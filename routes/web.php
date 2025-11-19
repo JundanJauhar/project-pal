@@ -70,7 +70,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/procurements/by-project/{projectId}', [ProcurementController::class, 'byProject'])->name('procurements.by-project');
     Route::get('/procurements/{id}/progress', [ProcurementController::class, 'getProgress'])->name('procurements.progress');
     Route::post('/procurements/{id}/progress', [ProcurementController::class, 'updateProgress'])->name('procurements.update-progress');
-    Route::resource('procurements', ProcurementController::class, ['only' => ['index', 'show', 'create', 'store']]);
+    Route::resource('procurements', ProcurementController::class, ['only' => ['index', 'show', 'create', 'store', 'update']]);
 
     // User-specific procurement list (used by 'user' role)
     Route::get('/user/list', function () {

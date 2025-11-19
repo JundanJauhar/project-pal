@@ -139,17 +139,15 @@
                                 </td>
                                 <td style="padding: 12px 8px; text-align: center;" >
                                     @php
+                                        $vendor = $procurement->requestProcurements->first()?->vendor;
                                         $statusMap = [
-                                            'draft' => ['Draft', 'secondary'],
-                                            'submitted' => ['Submitted', 'warning'],
-                                            'reviewed' => ['Reviewed', 'info'],
-                                            'approved' => ['Approved', 'success'],
+                                            'pending' => ['Pending', 'secondary'],
+                                            'verified' => ['Verified', 'success'],
                                             'rejected' => ['Rejected', 'danger'],
-                                            'in_progress' => ['In Progress', 'primary'],
-                                            'completed' => ['Completed', 'success'],
-                                            'cancelled' => ['Cancelled', 'dark'],
                                         ];
-                                        [$statusText, $badgeColor] = $statusMap[$procurement->status_procurement] ?? [ucfirst($procurement->status_procurement), 'warning'];
+                                        [$statusText, $badgeColor] = $vendor && isset($statusMap[$vendor->legal_status])
+                                            ? $statusMap[$vendor->legal_status]
+                                            : [ucfirst($procurement->status_procurement ?? 'pending'), 'warning'];
                                     @endphp
                                     <span class="badge bg-{{ $badgeColor }}">{{ $statusText }}</span>
                                 </td>
