@@ -6,6 +6,7 @@ use App\Models\InspectionReport;
 use App\Models\NcrReport;
 use App\Models\Project;
 use App\Models\Notification;
+use App\Models\Procurement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,20 +14,40 @@ use Illuminate\Support\Facades\DB;
 class InspectionController extends Controller
 {
     /**
-     * Display inspection reports (LIST)
+     * Display inspection reports (LIST) or procurements for QA
      */
     public function index()
     {
+        $user = Auth::user();
+
+        // =========================
+        //  UNTUK USER ROLE QA
+        // =========================
+        if ($user->roles === 'qa') {
+
+            $procurements = Procurement::with([
+                'department',
+                'requestProcurements.vendor'
+            ])
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+            return view('qa.inspections', compact('procurements'));
+        }
+
+        // =========================
+        //  UNTUK ROLE SELAIN QA
+        // =========================
         $inspections = InspectionReport::with([
             'project',
             'project.department',
-            'vendor',
+            'item',
+            'project.owner',
         ])
         ->orderBy('inspection_date', 'desc')
         ->paginate(20);
 
-        // View kamu berada di folder: resources/views/qa/inspections.blade.php
-        return view('qa.inspections', compact('inspections'));
+        return view('qa.inspection', compact('inspections'));
     }
 
 
@@ -35,7 +56,7 @@ class InspectionController extends Controller
      */
     public function show($id)
     {
-        abort(404); // Karena tidak digunakan
+        abort(404);
     }
 
 
@@ -74,7 +95,7 @@ class InspectionController extends Controller
                 'ncr_required' => $validated['ncr_required'] ?? ($validated['result'] === 'failed'),
             ]);
 
-            // Update status proyek & NCR
+            // UPDATE PROJECT STATUS
             $project = Project::find($validated['project_id']);
 
             if ($validated['result'] === 'passed') {
@@ -111,7 +132,7 @@ class InspectionController extends Controller
 
 
     /**
-     * View NCR reports
+     * NCR Reports List
      */
     public function ncrReports()
     {
@@ -130,7 +151,7 @@ class InspectionController extends Controller
 
 
     /**
-     * Show NCR report
+     * Show NCR Detail
      */
     public function showNcr($id)
     {
@@ -159,7 +180,7 @@ class InspectionController extends Controller
             'root_cause' => 'nullable|string',
             'corrective_action' => 'nullable|string',
             'preventive_action' => 'nullable|string',
-            'assigned_to' => 'nullable|exists:users,id',
+            'assigned_to' => 'nullable|exists:users,user_id',
             'target_completion_date' => 'nullable|date',
             'actual_completion_date' => 'nullable|date',
             'status' => 'required|in:open,in_progress,resolved,verified,closed',
@@ -212,11 +233,11 @@ class InspectionController extends Controller
 
         foreach ($accountingUsers as $user) {
             Notification::create([
-                'user_id' => $user->id,
+                'user_id' => $user->user_id,
                 'sender_id' => Auth::id(),
                 'type' => 'document_verification',
                 'title' => 'Verifikasi Dokumen',
-                'message' => $message . ' - Proyek: ' . $project->name_project,
+                'message' => $message . ' - Proyek: ' . $project->project_name,
                 'reference_type' => 'App\Models\Project',
                 'reference_id' => $project->project_id,
             ]);
