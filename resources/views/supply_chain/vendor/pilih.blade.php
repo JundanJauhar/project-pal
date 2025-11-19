@@ -140,6 +140,27 @@
         </div>
     </div>
 
+    <!-- Info Procurement -->
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body">
+            <h5 class="mb-3">Pilih Vendor untuk Pengadaan:</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Kode:</strong> {{ $procurement->code_procurement }}</p>
+                    <p class="mb-1"><strong>Nama:</strong> {{ $procurement->name_procurement }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p class="mb-1"><strong>Department:</strong> {{ $procurement->department->department_name ?? '-' }}</p>
+                    <p class="mb-1"><strong>Prioritas:</strong>
+                        <span class="badge bg-{{ $procurement->priority == 'tinggi' ? 'danger' : ($procurement->priority == 'sedang' ? 'warning' : 'secondary') }}">
+                            {{ strtoupper($procurement->priority) }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Statistics Cards -->
 
     <!-- Tambah Vendor -->
@@ -236,10 +257,16 @@
                                     </td>
                                     <td style="padding: 12px 8px; text-align: center;">
                                         <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-primary"
-                                                onclick="selectVendor({{ $vendor->id_vendor }}, '{{ $vendor->name_vendor }}')">
-                                                <i class="bi bi-check-circle"></i> Pilih
-                                            </button>
+                                            <form action="{{ route('supply-chain.vendor.simpan', $procurement->procurement_id) }}"
+                                                  method="POST"
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Pilih vendor {{ $vendor->name_vendor }} untuk pengadaan ini?')">
+                                                @csrf
+                                                <input type="hidden" name="vendor_id" value="{{ $vendor->id_vendor }}">
+                                                <button type="submit" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-check-circle"></i> Pilih
+                                                </button>
+                                            </form>
                                             <a href="{{ route('supply-chain.vendor.detail', ['id' => $vendor->id_vendor]) }}" class="btn btn-sm btn-info text-white">
                                                 <i class="bi bi-eye"></i> Detail
                                             </a>
@@ -295,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
 
         // Fetch data dengan AJAX
-        fetch('{{ route("supply-chain.vendor.pilih") }}?search=' + encodeURIComponent(searchValue), {
+        fetch('{{ route("supply-chain.vendor.pilih", $procurement->procurement_id) }}?search=' + encodeURIComponent(searchValue), {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',

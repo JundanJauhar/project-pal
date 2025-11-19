@@ -116,9 +116,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])->name('vendor.kelola');
         Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])->name('vendor.form');
         Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])->name('vendor.store');
-        Route::get('/vendor/pilih', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
         Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])->name('vendor.detail');
         Route::put('/vendor/update/{id_vendor}', [SupplyChainController::class, 'updateVendor'])->name('vendor.update');
+
+        Route::get('/vendor/pilih/{procurementId}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
+        Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])->name('vendor.simpan');
     });
 
     // ------ Payments ------

@@ -122,7 +122,36 @@
                             <td><strong>{{ $procurement->code_procurement }}</strong></td>
                             <td>{{ Str::limit($procurement->name_procurement, 40) }}</td>
                             <td>{{ $procurement->department->department_name ?? '-' }}</td>
-                            <td>{{ $procurement->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</td>
+                            <td>
+                                @php
+                                    $requestProcurement = $procurement->requestProcurements->first();
+                                    $vendor = $requestProcurement?->vendor;
+                                @endphp
+
+                                @if($vendor)
+                                    <div class="d-flex flex-column">
+                                        <div>
+                                            <strong>{{ $vendor->name_vendor }}</strong>
+                                            @if($requestProcurement->request_status)
+                                                @php
+                                                    $statusMap = [
+                                                        'submitted' => ['Submitted', 'info'],
+                                                        'approved' => ['Approved', 'success'],
+                                                        'rejected' => ['Rejected', 'danger'],
+                                                    ];
+                                                    [$statusText, $badgeColor] = $statusMap[$requestProcurement->request_status] ?? ['Pending', 'warning'];
+                                                @endphp
+                                                <span class="badge bg-{{ $badgeColor }} ms-2">{{ $statusText }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @else
+                                    <a href="{{ route('supply-chain.vendor.pilih', $procurement->procurement_id) }}"
+                                       class="btn btn-sm btn-primary">
+                                        <i class="bi bi-plus-circle"></i> Kelola Vendor
+                                    </a>
+                                @endif
+                            </td>
                             <td>{{ $procurement->start_date->format('d/m/Y') }}</td>
                             <td>{{ $procurement->end_date->format('d/m/Y') }}</td>
                             <td>
