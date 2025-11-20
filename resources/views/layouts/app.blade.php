@@ -757,9 +757,6 @@
         });
     </script>
 
-    <!-- Livewire Scripts -->
-    @livewireScripts
-
     @stack('scripts')
 </body>
 </html>

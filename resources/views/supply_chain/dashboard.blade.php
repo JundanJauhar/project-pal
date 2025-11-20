@@ -36,37 +36,56 @@
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <h2><i class="bi bi-box-seam"></i> Daftar Pengadaan</h2>
-            <p class="text-muted">{{ Auth::user()->department->department_name ?? 'Department' }}</p>
+            <h2><i class="bi bi-box-seam"></i> Daftar Pengadaan</h2> 
         </div>
     </div>
 
     <!-- Filters -->
     <div class="row mb-4">
-        <div class="col-md-4">
-            <input type="text" id="searchInput" class="form-control" placeholder="Cari pengadaan...">
-        </div>
-        <div class="col-md-3">
-            <select id="statusFilter" class="form-select">
-                <option value="">Semua Status</option>
-                <option value="draft">Draft</option>
-                <option value="submitted">Submitted</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <select id="priorityFilter" class="form-select">
-                <option value="">Semua Prioritas</option>
-                <option value="tinggi">Tinggi</option>
-                <option value="sedang">Sedang</option>
-                <option value="rendah">Rendah</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <a href="{{ route('supply-chain.pengadaan.create') }}" class="btn btn-primary w-100" wire:navigate>
-                <i class="bi bi-plus-circle"></i> Tambah
-            </a>
+        <div class="col-12">
+            <div class="card card-custom">
+                <div class="card-body">
+                    <form id="filter-form" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="search" placeholder="Cari Pengadaan..." value="">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="checkpoint">
+                                <option value="">Semua Checkpoint</option>
+                                <option value="Penawaran Permintaan">Penawaran Permintaan</option>
+                                <option value="Evatek">Evatek</option>
+                                <option value="Negosiasi">Negosiasi</option>
+                                <option value="Usulan Pengadaan / OC">Usulan Pengadaan / OC</option>
+                                <option value="Pengesahan Kontrak">Pengesahan Kontrak</option>
+                                <option value="Pengiriman Material">Pengiriman Material</option>
+                                <option value="Pembayaran DP">Pembayaran DP</option>
+                                <option value="Proses Importasi / Produksi">Proses Importasi / Produksi</option>
+                                <option value="Kedatangan Material">Kedatangan Material</option>
+                                <option value="Serah Terima Dokumen">Serah Terima Dokumen</option>
+                                <option value="Inspeksi Barang">Inspeksi Barang</option>
+                                <option value="Berita Acara / NCR">Berita Acara / NCR</option>
+                                <option value="Verifikasi Dokumen">Verifikasi Dokumen</option>
+                                <option value="Pembayaran">Pembayaran</option>
+                                <option value="completed">Selesai</option>
+                                <option value="rejected">Ditolak</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="priority">
+                                <option value="">Semua Prioritas</option>
+                                <option value="rendah">Rendah</option>
+                                <option value="sedang">Sedang</option>
+                                <option value="tinggi">Tinggi</option>
+                            </select>
+                        </div>
+                        <div class="tambah col-md-2 text-end">
+                            <a href="{{ route('procurements.create') }}" class="btn btn-primary w-100 btn-custom" wire:navigate>
+                                <i class="bi bi-plus-circle"></i> Tambah
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
