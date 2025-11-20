@@ -2,53 +2,130 @@
 
 @section('title', 'Quality Assurance - Inspeksi')
 
+@push('styles')
+<style>
+/* ===== DASHBOARD CARDS ===== */
+.qa-topcards {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    margin-top: 10px;
+}
+.qa-card {
+    flex: 1;
+    padding: 22px;
+    border-radius: 12px;
+    background: #F4F4F4;
+    border: 1px solid #E0E0E0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.qa-card h6 { color: #676767; font-size: 14px; margin-bottom: 5px; }
+.qa-card h3 { font-weight: 700; font-size: 32px; }
+
+.qa-card.blue     { border-left: 5px solid #1E90FF; }
+.qa-card.yellow   { border-left: 5px solid #F2C94C; }
+.qa-card.green    { border-left: 5px solid #27AE60; }
+.qa-card.red      { border-left: 5px solid #EB5757; }
+
+/* ===== TABLE WRAPPER ===== */
+.qa-table-wrapper {
+    background: #F6F6F6;
+    padding: 35px;
+    border-radius: 14px;
+    border: 1px solid #E0E0E0;
+}
+
+/* Title */
+.qa-table-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Search */
+.qa-search-box {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: #F0F0F0;
+    border-radius: 30px;
+    padding: 3px 14px;
+    width: 450px;
+    border: 1px solid #ddd;
+}
+.qa-search-box input {
+    border: none;
+    background: transparent;
+    width: 100%;
+    outline: none;
+}
+.qa-search-box i { font-size: 18px; color: #777; }
+
+/* ===== TABLE STYLE ===== */
+.qa-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.qa-table thead th {
+    padding: 14px 8px;
+    border-bottom: 2px solid #C9C9C9;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: #555;
+}
+.qa-table tbody td {
+    padding: 18px 8px;
+    border-bottom: 1px solid #DFDFDF;
+    font-size: 15px;
+    color: #333;
+}
+.qa-table tbody tr:hover {
+    background: #EFEFEF;
+}
+
+/* PRIORITY COLORS */
+.priority-high   { color: #D60000; font-weight: bold; }
+.priority-medium { color: #FF8C00; font-weight: bold; }
+.priority-low    { color: #A9A9A9; font-weight: bold; }
+</style>
+@endpush
+
 @section('content')
 
 {{-- ========================= --}}
-{{--  DASHBOARD STATISTIK       --}}
+{{-- DASHBOARD STATISTICS --}}
 {{-- ========================= --}}
-<div class="row mb-4">
+<div class="qa-topcards">
 
     {{-- Total Pengadaan --}}
-    <div class="col-md-3">
-        <div class="card p-3 shadow-sm border-0" style="border-left: 4px solid #2F80ED;">
-            <h6 class="text-muted">Total Pengadaan</h6>
-            <h3 class="fw-bold">
-                {{ $totalProcurements ?? ($totalInspections ?? 0) }}
-            </h3>
-        </div>
+    <div class="qa-card blue">
+        <h6>Total Pengadaan</h6>
+        <h3>{{ $totalProcurements ?? 0 }}</h3>
     </div>
 
-    {{-- Butuh Inspeksi (clickable) --}}
-    <div class="col-md-3">
-        <a href="{{ route('qa.list-approval', ['filter' => 'inspection']) }}" class="text-decoration-none">
-            <div class="card p-3 shadow-sm border-0" style="border-left: 4px solid #F2C94C;">
-                <h6 class="text-muted">Butuh Inspeksi</h6>
-                <h3 class="fw-bold">
-                    {{ $butuhInspeksiCount ?? 0 }}
-                </h3>
-            </div>
-        </a>
-    </div>
+    {{-- Butuh Inspeksi --}}
+    <a href="{{ route('qa.list-approval') }}" class="text-decoration-none text-dark" style="flex:1;">
+        <div class="qa-card yellow">
+            <h6>Butuh Inspeksi</h6>
+            <h3>{{ $butuhInspeksiCount ?? 0 }}</h3>
+        </div>
+    </a>
 
     {{-- Lolos Inspeksi --}}
-    <div class="col-md-3">
-        <div class="card p-3 shadow-sm border-0" style="border-left: 4px solid #27AE60;">
-            <h6 class="text-muted">Lolos Inspeksi</h6>
-            <h3 class="fw-bold">
-                {{ $lolosCount ?? ($procurements->where('auto_status', 'completed')->count() ?? 0) }}
-            </h3>
-        </div>
+    <div class="qa-card green">
+        <h6>Lolos Inspeksi</h6>
+        <h3>{{ $lolosCount ?? 0 }}</h3>
     </div>
 
     {{-- Tidak Lolos --}}
-    <div class="col-md-3">
-        <div class="card p-3 shadow-sm border-0" style="border-left: 4px solid #EB5757;">
-            <h6 class="text-muted">Tidak Lolos Inspeksi</h6>
-            <h3 class="fw-bold">
-                {{ $gagalCount ?? 0 }}
-            </h3>
-        </div>
+    <div class="qa-card red">
+        <h6>Tidak Lolos Inspeksi</h6>
+        <h3>{{ $gagalCount ?? 0 }}</h3>
     </div>
 
 </div>
@@ -56,146 +133,78 @@
 
 
 {{-- ========================= --}}
-{{--  HEADER TABEL              --}}
+{{-- TABLE WRAPPER --}}
 {{-- ========================= --}}
-<h3 class="fw-bold mb-3">Daftar Pengadaan</h3>
+<div class="qa-table-wrapper">
 
+    <div class="qa-table-title">
+        <span>Daftar Pengadaan</span>
 
-{{-- ========================= --}}
-{{--  TABEL UTAMA               --}}
-{{-- ========================= --}}
-<div class="card shadow-sm border-0">
-    <div class="card-body">
-
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-
-                <thead class="table-light">
-                    <tr>
-                        <th>Kode Pengadaan</th>
-                        <th>Nama Pengadaan</th>
-                        <th>Department</th>
-                        <th>Vendor</th>
-                        <th>Tanggal Mulai</th>
-                        <th>Tanggal Selesai</th>
-                        <th>Prioritas</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                    {{-- MODE: QA (menampilkan procurements yang butuh inspeksi) --}}
-                    @if(isset($procurements))
-
-                        @forelse($procurements as $procurement)
-                        <tr>
-                            <td class="fw-semibold">{{ $procurement->code_procurement }}</td>
-                            <td>{{ $procurement->name_procurement }}</td>
-                            <td>{{ $procurement->department->department_name ?? '-' }}</td>
-                            <td>{{ $procurement->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</td>
-                            <td>{{ $procurement->start_date ? $procurement->start_date->format('d/m/Y') : '-' }}</td>
-                            <td>{{ $procurement->end_date ? $procurement->end_date->format('d/m/Y') : '-' }}</td>
-
-                            <td>
-                                @php
-                                    $priorityClass = [
-                                        'tinggi' => 'badge bg-danger',
-                                        'sedang' => 'badge bg-warning text-dark',
-                                        'rendah' => 'badge bg-secondary'
-                                    ][$procurement->priority] ?? 'badge bg-light text-dark';
-                                @endphp
-                                <span class="{{ $priorityClass }}">{{ strtoupper($procurement->priority) }}</span>
-                            </td>
-
-                            <td>
-                                @php
-                                    $status = $procurement->auto_status;
-                                    $current = $procurement->current_checkpoint;
-                                    $statusClass = [
-                                        'completed' => 'badge bg-success',
-                                        'in_progress' => 'badge bg-warning text-dark',
-                                        'not_started' => 'badge bg-secondary'
-                                    ][$status] ?? 'badge bg-light text-dark';
-                                    $text = match($status) {
-                                        'completed' => 'Selesai',
-                                        'not_started' => 'Belum Dimulai',
-                                        'in_progress' => $current ?? 'Sedang Proses',
-                                        default => ucfirst($status)
-                                    };
-                                @endphp
-                                <span class="{{ $statusClass }}">{{ $text }}</span>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="8" class="text-center py-4">
-                                <i class="bi bi-inbox" style="font-size: 40px; color:#bbb"></i>
-                                <p class="text-muted mt-2">Tidak ada pengadaan yang butuh inspeksi saat ini</p>
-                            </td>
-                        </tr>
-                        @endforelse
-
-                    {{-- MODE: NON-QA (menampilkan inspection reports) --}}
-                    @else
-
-                        @forelse($inspections as $row)
-                        <tr>
-                            <td>{{ $row->project->project_code ?? '-' }}</td>
-                            <td>{{ $row->project->project_name ?? '-' }}</td>
-                            <td>{{ $row->project->department->department_name ?? '-' }}</td>
-                            <td>{{ $row->item?->requestProcurement?->vendor->name_vendor ?? '-' }}</td>
-                            <td>{{ $row->inspection_date ? \Carbon\Carbon::parse($row->inspection_date)->format('d/m/Y') : '-' }}</td>
-                            <td>-</td>
-                            <td>
-                                @php
-                                    $priority = strtolower($row->project->priority ?? '');
-                                    $priorityClass = [
-                                        'tinggi' => 'badge bg-danger',
-                                        'sedang' => 'badge bg-warning text-dark',
-                                        'rendah' => 'badge bg-secondary'
-                                    ][$priority] ?? 'badge bg-light text-dark';
-                                @endphp
-                                <span class="{{ $priorityClass }}">{{ strtoupper($priority) }}</span>
-                            </td>
-                            <td>
-                                @php
-                                    $statusClass = [
-                                        'passed' => 'badge bg-success',
-                                        'failed' => 'badge bg-danger',
-                                        'conditional' => 'badge bg-warning text-dark',
-                                        'pending' => 'badge bg-primary',
-                                    ][$row->result] ?? 'badge bg-secondary';
-                                @endphp
-                                <span class="{{ $statusClass }}">{{ strtoupper($row->result) }}</span>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="8" class="text-center py-4">
-                                <i class="bi bi-inbox" style="font-size: 40px; color:#bbb"></i>
-                                <p class="text-muted mt-2">Tidak ada data inspeksi</p>
-                            </td>
-                        </tr>
-                        @endforelse
-
-                    @endif
-
-                </tbody>
-
-            </table>
-        </div>
-
-        {{-- PAGINATION --}}
-        <div class="mt-3">
-            @if(isset($procurements))
-                {{ $procurements->links() }}
-            @else
-                {{ $inspections->links() }}
-            @endif
-        </div>
-
+        {{-- Search Form --}}
+        <form method="GET" action="{{ route('inspections.index') }}">
+            <div class="qa-search-box">
+                <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari...">
+                <i class="bi bi-search"></i>
+            </div>
+        </form>
     </div>
+
+    {{-- TABLE --}}
+    <div class="table-responsive">
+        <table class="qa-table">
+            <thead>
+                <tr>
+                    <th>Kode Pengadaan</th>
+                    <th>Nama Pengadaan</th>
+                    <th>Department</th>
+                    <th>Vendor</th>
+                    <th>Tanggal Mulai</th>
+                    <th>Tanggal Selesai</th>
+                    <th>Prioritas</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            @forelse($procurements as $proc)
+                <tr>
+                    <td>{{ $proc->code_procurement }}</td>
+                    <td>{{ $proc->name_procurement }}</td>
+                    <td>{{ $proc->department->department_name ?? '-' }}</td>
+                    <td>{{ $proc->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</td>
+                    <td>{{ $proc->start_date ? $proc->start_date->format('d/m/Y') : '-' }}</td>
+                    <td>{{ $proc->end_date ? $proc->end_date->format('d/m/Y') : '-' }}</td>
+
+                    {{-- PRIORITY COLOR --}}
+                    <td>
+                        @php
+                            $p = strtolower($proc->priority);
+                            $class = match($p) {
+                                'tinggi' => 'priority-high',
+                                'sedang' => 'priority-medium',
+                                'rendah' => 'priority-low',
+                                default  => '',
+                            };
+                        @endphp
+                        <span class="{{ $class }}">{{ strtoupper($proc->priority ?? '-') }}</span>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <i class="bi bi-inbox" style="font-size: 40px; color:#bbb"></i>
+                        <p class="text-muted mt-2">Tidak ada pengadaan yang butuh inspeksi</p>
+                    </td>
+                </tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    {{-- PAGINATION --}}
+    <div class="mt-3">
+        {{ $procurements->links() }}
+    </div>
+
 </div>
 
 @endsection

@@ -91,4 +91,9 @@ class Item extends Model
     {
         return $query->where('status', 'not_approved');
     }
+
+    public function inspectionReports()
+{
+    return $this->hasMany(\App\Models\InspectionReport::class, 'item_id', 'item_id');
+}
 }

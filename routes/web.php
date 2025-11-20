@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProcurementController;
@@ -16,20 +17,16 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\DesainController;
 use App\Http\Controllers\DesainListProjectController;
 use App\Http\Controllers\ListApprovalController;
-use App\Models\Project;
 
-// ============= PUBLIC ROUTES =============
-Route::get('/', function () {
-    return redirect()->route('login');
-});
 
-// ============= AUTH ROUTES =============
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login')->middleware('guest');
+// =================== PUBLIC ROUTES ===================
+Route::get('/', fn() => redirect()->route('login'));
+
+Route::get('/login', fn() => view('auth.login'))
+    ->name('login')
+    ->middleware('guest');
 
 Route::post('/login', function (Request $request) {
-
     $credentials = $request->validate([
         'email' => 'required|email',
         'password' => 'required',
@@ -37,13 +34,12 @@ Route::post('/login', function (Request $request) {
 
     if (Auth::attempt($credentials, $request->boolean('remember'))) {
         $request->session()->regenerate();
-        return redirect()->intended(route('dashboard'));
+        return redirect()->route('dashboard');
     }
 
     return back()->withErrors([
-        'email' => 'The provided credentials do not match our records.',
-    ])->onlyInput('email');
-
+        'email' => 'Email atau password salah.',
+    ]);
 })->middleware('guest');
 
 Route::post('/logout', function (Request $request) {
@@ -53,7 +49,9 @@ Route::post('/logout', function (Request $request) {
     return redirect()->route('login');
 })->name('logout');
 
-// ============= PROTECTED ROUTES =============
+
+
+// =================== PROTECTED ROUTES ===================
 Route::middleware(['auth'])->group(function () {
 
     // ------ Dashboard ------
@@ -61,9 +59,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/division/{divisionId}', [DashboardController::class, 'divisionDashboard'])->name('dashboard.division');
     Route::get('/dashboard/statistics', [DashboardController::class, 'getStatistics'])->name('dashboard.statistics');
     Route::get('/dashboard/timeline/{projectId}', [DashboardController::class, 'getProcurementTimeline'])->name('dashboard.timeline');
-    Route::get('/procurements/search', [DashboardController::class, 'search'])->name('procurements.search');
     Route::get('/dashboard/search', [DashboardController::class, 'search'])->name('dashboard.search');
-    // Project Routes
+
+    // ------ Projects ------
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
     Route::post('/projects/upload-review', [ProjectController::class, 'uploadReview'])->name('projects.uploadReview');
     Route::post('/projects/save-review-notes', [ProjectController::class, 'saveReviewNotes'])->name('projects.saveReviewNotes');
@@ -96,15 +94,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 
-    // ------ Supply Chain ------
+
+    // =================== SUPPLY CHAIN ===================
     Route::prefix('supply-chain')->name('supply-chain.')->group(function () {
+
         Route::get('/dashboard', [SupplyChainController::class, 'dashboard'])->name('dashboard');
-        Route::get('/pengadaan/create', [SupplyChainController::class, 'createPengadaan'])->name('pengadaan.create');
         Route::post('/dashboard/store', [SupplyChainController::class, 'storePengadaan'])->name('dashboard.store');
 
         Route::get('/projects/{projectId}/review', [SupplyChainController::class, 'reviewProject'])->name('review-project');
         Route::post('/projects/{projectId}/approve', [SupplyChainController::class, 'approveReview'])->name('approve-review');
-        Route::post('/projects/upload-review', [SupplyChainController::class, 'uploadReview'])->name('upload-review');
 
         Route::get('/material-requests', [SupplyChainController::class, 'materialRequests'])->name('material-requests');
         Route::post('/material-requests/{requestId}', [SupplyChainController::class, 'updateMaterialRequest'])->name('update-material-request');
@@ -114,37 +112,30 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/negotiations', [SupplyChainController::class, 'negotiations'])->name('negotiations');
         Route::post('/projects/{projectId}/negotiation', [SupplyChainController::class, 'createNegotiation'])->name('create-negotiation');
-        Route::post('/projects/{projectId}/request-hps-update', [SupplyChainController::class, 'requestHpsUpdate'])->name('request-hps-update');
 
         Route::get('/material-shipping', [SupplyChainController::class, 'materialShipping'])->name('material-shipping');
         Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])->name('material-arrival');
 
         Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])->name('vendor.kelola');
         Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])->name('vendor.form');
-        Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])->name('vendor.store');
+        Route::post('/vendor/pilih', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
         Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])->name('vendor.detail');
         Route::put('/vendor/update/{id_vendor}', [SupplyChainController::class, 'updateVendor'])->name('vendor.update');
-
-        Route::get('/vendor/pilih/{procurementId}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
-        Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])->name('vendor.simpan');
     });
 
-    // ------ Payments ------
+
+    // =================== PAYMENTS ===================
     Route::prefix('payments')->name('payments.')->group(function () {
         Route::get('/', [PaymentController::class, 'index'])->name('index');
         Route::get('/create/{projectId}', [PaymentController::class, 'create'])->name('create');
         Route::post('/', [PaymentController::class, 'store'])->name('store');
         Route::get('/{id}', [PaymentController::class, 'show'])->name('show');
-        Route::get('/statistics', [PaymentController::class, 'statistics'])->name('statistics');
-
         Route::post('/{id}/accounting-verification', [PaymentController::class, 'accountingVerification'])->name('accounting-verification');
         Route::post('/{id}/treasury-verification', [PaymentController::class, 'treasuryVerification'])->name('treasury-verification');
-
-        Route::post('/projects/{projectId}/open-lc-tt', [PaymentController::class, 'openLcTt'])->name('open-lc-tt');
-        Route::post('/projects/{projectId}/open-sekbun', [PaymentController::class, 'openSekbun'])->name('open-sekbun');
     });
 
-    // ------ QA INSPECTIONS ------
+
+    // =================== QA INSPECTIONS ===================
     Route::prefix('inspections')->name('inspections.')->group(function () {
         Route::get('/', [InspectionController::class, 'index'])->name('index');
         Route::get('/ncr', [InspectionController::class, 'ncrReports'])->name('ncr.index');
@@ -153,12 +144,16 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/ncr/{id}/verify', [InspectionController::class, 'verifyNcr'])->name('ncr.verify');
     });
 
-    // ------ QA LIST APPROVAL ------
-    Route::get('/qa/list-approval', [ListApprovalController::class, 'index'])
-        ->name('qa.list-approval');
+
+    // =================== QA LIST APPROVAL ===================
+    Route::get('/qa/list-approval', [ListApprovalController::class, 'index'])->name('qa.list-approval');
+
+    Route::post('/qa/inspection/save-item',
+        [ListApprovalController::class, 'saveInspectionItem']
+    )->name('qa.inspection.save-item');
 
 
-    // ------ Desain ------
+    // =================== DESAIN ===================
     Route::prefix('desain')->name('desain.')->group(function () {
         Route::get('/dashboard', [DesainController::class, 'dashboard'])->name('dashboard');
         Route::get('/list-project', [DesainListProjectController::class, 'list'])->name('list-project');
@@ -168,28 +163,4 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/evatek/{request_id}', [DesainListProjectController::class, 'reviewEvatek'])->name('review-evatek');
     });
 
-    Route::get('/desain/list-project', [DesainListProjectController::class, 'list'])->name('desain.list-project');
-    Route::get('/desain/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPengadaan'])->name('desain.daftar-pengadaan');
-    Route::get('/desain/evatek/{request_id}', [DesainListProjectController::class, 'reviewEvatek'])->name('desain.review-evatek');
-
 });
-
-
-    // Desain Routes
-    Route::prefix('desain')->name('desain.')->group(function () {
-    Route::get('/dashboard', [DesainController::class, 'dashboard'])->name('dashboard');
-    Route::get('/list-project', [DesainListProjectController::class, 'list'])->name('list-project');
-    Route::get('/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPermintaan'])->name('daftar-permintaan');
-    Route::get('/project/{id}/dashboard', [DesainListProjectController::class, 'formPengadaan'])->name('permintaan-pengadaan');
-    Route::post('/project/{id}/dasboard/kirim', [DesainListProjectController::class, 'kirimPengadaan'])->name('kirim-pengadaan');
-    Route::get('/evatek/{request_id}', [DesainListProjectController::class, 'reviewEvatek'])->name('review-evatek');
-    });
-
-    Route::get('/desain/list-project', [DesainListProjectController::class, 'list'])
-        ->name('desain.list-project');
-
-    Route::get('/desain/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPengadaan'])
-    ->name('desain.daftar-pengadaan');
-
-    Route::get('/desain/evatek/{request_id}', [App\Http\Controllers\DesainListProjectController::class, 'reviewEvatek'])
-    ->name('desain.review-evatek');
