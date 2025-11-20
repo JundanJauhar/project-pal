@@ -22,12 +22,16 @@ class Item extends Model
         'unit',
         'unit_price',
         'total_price',
+        'status',
+        'approved_by',
+        'approved_at',
     ];
 
     protected $casts = [
         'amount' => 'integer',
         'unit_price' => 'integer',
         'total_price' => 'integer',
+        'approved_at' => 'datetime',
     ];
 
     protected $appends = ['quantity', 'estimated_price'];
@@ -38,6 +42,14 @@ class Item extends Model
     public function requestProcurement(): BelongsTo
     {
         return $this->belongsTo(RequestProcurement::class, 'request_procurement_id', 'request_id');
+    }
+
+    /**
+     * Get the user who approved this item
+     */
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by', 'user_id');
     }
 
     /**
@@ -54,5 +66,29 @@ class Item extends Model
     public function getEstimatedPriceAttribute()
     {
         return $this->unit_price;
+    }
+
+    /**
+     * Check if item is approved
+     */
+    public function isApproved(): bool
+    {
+        return $this->status === 'approved';
+    }
+
+    /**
+     * Scope untuk filter approved items
+     */
+    public function scopeApproved($query)
+    {
+        return $query->where('status', 'approved');
+    }
+
+    /**
+     * Scope untuk filter not approved items
+     */
+    public function scopeNotApproved($query)
+    {
+        return $query->where('status', 'not_approved');
     }
 }

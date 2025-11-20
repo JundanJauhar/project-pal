@@ -30,6 +30,7 @@ class DesainListProjectController extends Controller
         return view('desain.review-evatek', compact('request'));
     }
 
+<<<<<<< HEAD
    public function kirimPengadaan(Request $request, $id)
     {
         $project = Project::findOrFail($id);
@@ -77,5 +78,32 @@ class DesainListProjectController extends Controller
 
         return back()->with('success', 'Pengadaan berhasil dikirim!');
     }
+=======
+    public function approveItem(Request $request, $itemId)
+{
+    $item = \App\Models\Item::findOrFail($itemId);
+    
+    $item->update([
+        'status' => 'approved',
+        'approved_by' => Auth::id(),
+        'approved_at' => now(),
+    ]);
+
+    return redirect()->back()->with('success', 'Item berhasil di-approve');
+}
+
+public function rejectItem(Request $request, $itemId)
+{
+    $item = \App\Models\Item::findOrFail($itemId);
+    
+    $item->update([
+        'status' => 'not_approved',
+        'approved_by' => null,
+        'approved_at' => null,
+    ]);
+
+    return redirect()->back()->with('success', 'Item di-reject');
+}
+>>>>>>> 25d9dd12ae669830998e9012af27d461237ae50a
 
 }

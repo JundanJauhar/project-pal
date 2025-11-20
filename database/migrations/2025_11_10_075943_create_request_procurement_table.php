@@ -29,7 +29,7 @@ return new class extends Migration
             ])->default('draft');
 
             // department
-            $table->unsignedBigInteger('department_id');
+            $table->unsignedBigInteger('department_id')->nullable();
 
             $table->timestamps();
             $table->softDeletes();
