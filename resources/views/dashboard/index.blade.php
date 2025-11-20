@@ -157,7 +157,8 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode Pengadaan</th>
+                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
+                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode Pengadaan</th>
                                 <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Pengadaan</th>
                                 <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
                                 <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
@@ -171,7 +172,8 @@
                         <tbody id="procurements-tbody">
                             @forelse($procurements as $procurement)
                             <tr>
-                                <td style="padding: 12px 8px;"><strong>{{ $procurement->code_procurement }}</strong></td>
+                                <td style="padding: 12px 8px; text-align: center;"><strong>{{ $procurement->project->project_code ?? '-' }}</strong></td>
+                                <td style="padding: 12px 8px; text-align: center;"><strong>{{ $procurement->code_procurement }}</strong></td>
                                 <td style="padding: 12px 8px;">{{ Str::limit($procurement->name_procurement, 40) }}</td>
                                 <td style="padding: 12px 8px; text-align: center;">{{ $procurement->department->department_name ?? '-' }}</td>
                                 <td style="padding: 12px 8px; text-align: center;">{{ $procurement->start_date->format('d/m/Y') }}</td>

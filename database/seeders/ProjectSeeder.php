@@ -67,7 +67,7 @@ class ProjectSeeder extends Seeder
          * ============================
          */
         $project1 = Project::updateOrCreate(
-            ['project_code' => 'KCJ-202511-001'], // key untuk check
+            ['project_code' => 'W000301'], // key untuk check
             [
                 'project_name' => 'Pengadaan Material Kapal Fregat',
                 'description' => 'Pengadaan material utama untuk kapal fregat kelas sigma',
@@ -86,53 +86,61 @@ class ProjectSeeder extends Seeder
         $dept3 = $departments->skip(2)->first() ?? $dept1;
         $dept4 = $departments->skip(3)->first() ?? $dept1;
 
-        $procurement1 = \App\Models\Procurement::create([
-            'project_id' => $project1->project_id,
-            'code_procurement' => 'PRC-2025-001',
-            'name_procurement' => 'Pengadaan Material Baja Berkualitas Tinggi',
-            'description' => 'Pengadaan material baja untuk proyek 1',
-            'department_procurement' => $dept1->department_id,
-            'priority' => 'tinggi',
-            'start_date' => Carbon::now()->subDays(100),
-            'end_date' => Carbon::now()->addDays(30),
-            'status_procurement' => 'in_progress',
-        ]);
+        // Ambil kode project
+$projectCode = $project1->project_code; // contoh: "PRC-2025"
 
-        $procurement2 = \App\Models\Procurement::create([
-            'project_id' => $project1->project_id,
-            'code_procurement' => 'PRC-2025-002',
-            'name_procurement' => 'Pengadaan Komponen Elektronik',
-            'description' => 'Pengadaan komponen elektronik untuk sistem kontrol',
-            'department_procurement' => $dept2->department_id,
-            'priority' => 'sedang',
-            'start_date' => Carbon::now()->subDays(60),
-            'end_date' => Carbon::now()->addDays(15),
-            'status_procurement' => 'submitted',
-        ]);
+// Seeder untuk procurement 1
+$procurement1 = \App\Models\Procurement::create([
+    'project_id' => $project1->project_id,
+    'code_procurement' => $projectCode . '-01',
+    'name_procurement' => 'Pengadaan Material Baja Berkualitas Tinggi',
+    'description' => 'Pengadaan material baja untuk proyek 1',
+    'department_procurement' => $dept1->department_id,
+    'priority' => 'tinggi',
+    'start_date' => Carbon::now()->subDays(100),
+    'end_date' => Carbon::now()->addDays(30),
+    'status_procurement' => 'in_progress',
+]);
 
-        $procurement3 = \App\Models\Procurement::create([
-            'project_id' => $project1->project_id,
-            'code_procurement' => 'PRC-2025-003',
-            'name_procurement' => 'Jasa Cutting dan Fabrication',
-            'description' => 'Jasa potong dan fabrikasi material logam',
-            'department_procurement' => $dept3->department_id,
-            'priority' => 'tinggi',
-            'start_date' => Carbon::now()->subDays(40),
-            'end_date' => Carbon::now()->addDays(10),
-            'status_procurement' => 'approved',
-        ]);
+// Seeder untuk procurement 2
+$procurement2 = \App\Models\Procurement::create([
+    'project_id' => $project1->project_id,
+    'code_procurement' => $projectCode . '-02',
+    'name_procurement' => 'Pengadaan Komponen Elektronik',
+    'description' => 'Pengadaan komponen elektronik untuk sistem kontrol',
+    'department_procurement' => $dept2->department_id,
+    'priority' => 'sedang',
+    'start_date' => Carbon::now()->subDays(60),
+    'end_date' => Carbon::now()->addDays(15),
+    'status_procurement' => 'submitted',
+]);
 
-        $procurement4 = \App\Models\Procurement::create([
-            'project_id' => $project1->project_id,
-            'code_procurement' => 'PRC-2025-004',
-            'name_procurement' => 'Permintaan Alat Pelindung Diri (APD)',
-            'description' => 'Pengadaan APD untuk keselamatan kerja',
-            'department_procurement' => $dept4->department_id,
-            'priority' => 'rendah',
-            'start_date' => Carbon::now()->subDays(20),
-            'end_date' => Carbon::now()->addDays(5),
-            'status_procurement' => 'draft',
-        ]);
+// Seeder untuk procurement 3
+$procurement3 = \App\Models\Procurement::create([
+    'project_id' => $project1->project_id,
+    'code_procurement' => $projectCode . '-03',
+    'name_procurement' => 'Jasa Cutting dan Fabrication',
+    'description' => 'Jasa potong dan fabrikasi material logam',
+    'department_procurement' => $dept3->department_id,
+    'priority' => 'tinggi',
+    'start_date' => Carbon::now()->subDays(40),
+    'end_date' => Carbon::now()->addDays(10),
+    'status_procurement' => 'approved',
+]);
+
+// Seeder untuk procurement 4
+$procurement4 = \App\Models\Procurement::create([
+    'project_id' => $project1->project_id,
+    'code_procurement' => $projectCode . '-04',
+    'name_procurement' => 'Permintaan Alat Pelindung Diri (APD)',
+    'description' => 'Pengadaan APD untuk keselamatan kerja',
+    'department_procurement' => $dept4->department_id,
+    'priority' => 'rendah',
+    'start_date' => Carbon::now()->subDays(20),
+    'end_date' => Carbon::now()->addDays(5),
+    'status_procurement' => 'draft',
+]);
+
 
 
         /**
@@ -437,7 +445,7 @@ class ProjectSeeder extends Seeder
          */
 
         Project::updateOrCreate(
-            ['project_code' => 'KCJ-202511-002'], // key untuk check
+            ['project_code' => 'W000302'], // key untuk check
             [
                 'project_name' => 'Pengadaan Sistem Radar Navigasi',
                 'description' => 'Pengadaan radar navigasi untuk kapal perang',
@@ -450,7 +458,7 @@ class ProjectSeeder extends Seeder
         );
 
         Project::updateOrCreate(
-            ['project_code' => 'KCJ-202511-003'], // key untuk check
+            ['project_code' => 'W000303'], // key untuk check
             [
                 'project_name' => 'Pengadaan Mesin Diesel Utama',
                 'description' => 'Mesin diesel untuk kapal tanker',
@@ -463,7 +471,7 @@ class ProjectSeeder extends Seeder
         );
 
         Project::updateOrCreate(
-            ['project_code' => 'KCJ-202511-004'], // key untuk check
+            ['project_code' => 'W000304'], // key untuk check
             [
                 'project_name' => 'Pengadaan Peralatan Keselamatan Kapal',
                 'description' => 'Life jacket, fire extinguisher, dll.',
@@ -476,7 +484,7 @@ class ProjectSeeder extends Seeder
         );
 
         Project::updateOrCreate(
-            ['project_code' => 'KCJ-202511-005'], // key untuk check
+            ['project_code' => 'W000305'], // key untuk check
             [
                 'project_name' => 'Pengadaan Cat Anti Karat & Coating',
                 'description' => 'Cat marine grade untuk kapal',
@@ -489,7 +497,7 @@ class ProjectSeeder extends Seeder
         );
 
         Project::updateOrCreate(
-            ['project_code' => 'KCJ-202511-006'], // key untuk check
+            ['project_code' => 'W000306'], // key untuk check
             [
                 'project_name' => 'Pengadaan Sistem Komunikasi Satelit',
                 'description' => 'Sistem satelit untuk kapal jelajah jauh',
@@ -502,7 +510,7 @@ class ProjectSeeder extends Seeder
         );
 
         Project::updateOrCreate(
-            ['project_code' => 'KCJ-202511-007'], // key untuk check
+            ['project_code' => 'W000307'], // key untuk check
             [
                 'project_name' => 'Pengadaan Generator Listrik',
                 'description' => 'Generator cadangan 500 KVA',

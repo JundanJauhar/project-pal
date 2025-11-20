@@ -34,47 +34,49 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="code_procurement" class="form-label">Project <span class="text-danger">*</span></label>
-                            <select class="form-select" aria-label="Default select example" placeholder="Pilih Project" required>
-                                @foreach($divisions as $division)
-                                <option value="{{ $division->department_id }}"
-                                    {{ old('department_procurement', $procurement->department_procurement ?? '') == $division->department_id ? 'selected' : '' }}>
-                                    {{ $division->department_name }}
-                                </option>
+                            <label for="project_code" class="form-label">Project <span class="text-danger">*</span></label>
+                            <select name="project_code" class="form-select" aria-label="Default select example" required>
+                                <option value="">Pilih Project</option>
+                                @foreach($projects as $project)
+                                    <option value="{{ $project->project_code }}">
+                                        {{ $project->project_code }}
+                                    </option>
                                 @endforeach
-                                <option value="1">W000301</option>
-                                <option value="2">W000302</option>
-                                <option value="3">W000303</option>
-                                <option value="4">W000304</option>
-                                <option value="5">W000305</option>
-                                <option value="6">W000306</option>
-                                <option value="7">W000307</option>
-                                <option value="8">W000308</option>
                             </select>
-                            @error('code_procurement')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            @error('project_code')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
-                            <small class="text-muted">Format: PRK-YYYYMMM-XXX</small>
                         </div>
 
+                    <div class="col-md-6 mb-3">
+                        <label for="code_procurement" class="form-label">Kode Procurement <span class="text-danger">*</span></label>
+                        <input type="text"
+                            id="code_procurement"
+                            name="code_procurement"
+                            class="form-control @error('code_procurement') is-invalid @enderror"
+                            value="{{ old('code_procurement', $procurement->code_procurement ?? '') }}"
+                            placeholder="Akan ter-generate berdasarkan project"
+                            readonly
+                            required>
+                        @error('code_procurement')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                         <div class="col-md-6 mb-3">
-                            <label for="department_procurement" class="form-label">Department <span class="text-danger">*</span></label>
-                            <select class="form-select @error('department_procurement') is-invalid @enderror"
-                                id="department_procurement"
-                                name="department_procurement"
-                                required>
-                                <option value="">Pilih Department</option>
-                                @foreach($divisions as $division)
-                                <option value="{{ $division->department_id }}"
-                                    {{ old('department_procurement', $procurement->department_procurement ?? '') == $division->department_id ? 'selected' : '' }}>
-                                    {{ $division->department_name }}
-                                </option>
-                                @endforeach
-                            </select>
-                            @error('department_procurement')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                    <label for="department_procurement" class="form-label">Department <span class="text-danger">*</span></label>
+                    <select name="department_procurement" class="form-select" aria-label="Default select example" required>
+                        <option value="">Pilih Department</option>
+                        @foreach($departments as $department)
+                            <option value="{{ $department->department_id }}">
+                                {{ $department->department_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('department_procurement')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
                     </div>
 
                     <div class="mb-3">
@@ -187,3 +189,52 @@
     });
 </script>
 @endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Ambil semua project dan jumlah procurement sudah ada (dari server)
+    // Data ini di-render server-side ke JS object
+    const projectsData = {
+        @foreach($projects as $p)
+            "{{ $p->project_code }}": {{ $p->procurements_count ?? 0 }},
+        @endforeach
+    };
+
+    const projectSelect = document.querySelector('select[name="project_code"]');
+    const codeInput = document.getElementById('code_procurement');
+
+    function padSeq(n) {
+        return String(n).padStart(2, '0'); // 01, 02, ...
+    }
+
+    function generateSuggestedCode(projectCode) {
+        // gunakan count (jumlah procurement yang sudah ada) + 1 => sequence
+        const count = projectsData[projectCode] ?? 0;
+        const seq = padSeq(count + 1);
+        // format: PROJECTCODE-01  (ubah format jika mau PROJECTCODE01 atau lainnya)
+        return `${projectCode}-${seq}`;
+    }
+
+    if (projectSelect) {
+        // ketika load, jika sudah ada value selected (old input), generate suggestion
+        const initialProject = projectSelect.value;
+        if (initialProject && !codeInput.value) {
+            codeInput.value = generateSuggestedCode(initialProject);
+        }
+
+        projectSelect.addEventListener('change', function() {
+            const pc = this.value;
+            if (!pc) {
+                codeInput.value = '';
+                return;
+            }
+            codeInput.value = generateSuggestedCode(pc);
+        });
+    }
+
+    // jika form di-edit (procurement sudah ada), biarkan code existing (readonly)
+});
+</script>
+@endpush
+
