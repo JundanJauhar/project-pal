@@ -18,9 +18,119 @@
     use App\Http\Controllers\ListApprovalController;
     use App\Models\Project;
 
-    // ============= PUBLIC ROUTES =============
-    Route::get('/', function () {
-        return redirect()->route('login');
+// ============= PUBLIC ROUTES =============
+Route::get('/', function () {
+    return redirect()->route('login');
+});
+
+// ============= AUTH ROUTES =============
+Route::get('/login', function () {
+    return view('auth.login');
+})->name('login')->middleware('guest');
+
+Route::post('/login', function (Request $request) {
+
+    $credentials = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
+
+    if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        $request->session()->regenerate();
+        return redirect()->intended(route('dashboard'));
+    }
+
+    return back()->withErrors([
+        'email' => 'The provided credentials do not match our records.',
+    ])->onlyInput('email');
+
+})->middleware('guest');
+
+Route::post('/logout', function (Request $request) {
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect()->route('login');
+})->name('logout');
+
+// ============= PROTECTED ROUTES =============
+Route::middleware(['auth'])->group(function () {
+
+    // ------ Dashboard ------
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/division/{divisionId}', [DashboardController::class, 'divisionDashboard'])->name('dashboard.division');
+    Route::get('/dashboard/statistics', [DashboardController::class, 'getStatistics'])->name('dashboard.statistics');
+    Route::get('/dashboard/timeline/{projectId}', [DashboardController::class, 'getProcurementTimeline'])->name('dashboard.timeline');
+    Route::get('/procurements/search', [DashboardController::class, 'search'])->name('procurements.search');
+    Route::get('/dashboard/search', [DashboardController::class, 'search'])->name('dashboard.search');
+    // Project Routes
+    Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
+    Route::post('/projects/upload-review', [ProjectController::class, 'uploadReview'])->name('projects.uploadReview');
+    Route::post('/projects/save-review-notes', [ProjectController::class, 'saveReviewNotes'])->name('projects.saveReviewNotes');
+    Route::resource('projects', ProjectController::class);
+    Route::post('/projects/{id}/status', [ProjectController::class, 'updateStatus'])->name('projects.update-status');
+
+    // ------ Procurements ------
+    Route::get('/procurements/search', [ProcurementController::class, 'search'])->name('procurements.search');
+    Route::get('/procurements/by-project/{projectId}', [ProcurementController::class, 'byProject'])->name('procurements.by-project');
+    Route::get('/procurements/{id}/progress', [ProcurementController::class, 'getProgress'])->name('procurements.progress');
+    Route::post('/procurements/{id}/progress', [ProcurementController::class, 'updateProgress'])->name('procurements.update-progress');
+    Route::resource('procurements', ProcurementController::class, ['only' => ['index', 'show', 'create', 'store', 'update']]);
+
+
+    // ------ User Procurement ------
+    // Item Evatek
+    Route::post('/items/{itemId}/approve', [DesainListProjectController::class, 'approveItem'])->name('items.approve');
+    Route::post('/items/{itemId}/reject', [DesainListProjectController::class, 'rejectItem'])->name('items.reject');
+
+    // User-specific procurement list (used by 'user' role)
+
+    // ------ User Procurement ------
+    Route::get('/user/list', function () {
+        $procurements = \App\Models\Procurement::with(['department', 'requestProcurements.vendor'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('user.list', compact('procurements'));
+    })->name('user.list');
+
+    // ------ Notifications ------
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+
+    // ------ Supply Chain ------
+    Route::prefix('supply-chain')->name('supply-chain.')->group(function () {
+        Route::get('/dashboard', [SupplyChainController::class, 'dashboard'])->name('dashboard');
+        Route::get('/pengadaan/create', [SupplyChainController::class, 'createPengadaan'])->name('pengadaan.create');
+        Route::post('/dashboard/store', [SupplyChainController::class, 'storePengadaan'])->name('dashboard.store');
+
+        Route::get('/projects/{projectId}/review', [SupplyChainController::class, 'reviewProject'])->name('review-project');
+        Route::post('/projects/{projectId}/approve', [SupplyChainController::class, 'approveReview'])->name('approve-review');
+        Route::post('/projects/upload-review', [SupplyChainController::class, 'uploadReview'])->name('upload-review');
+
+        Route::get('/material-requests', [SupplyChainController::class, 'materialRequests'])->name('material-requests');
+        Route::post('/material-requests/{requestId}', [SupplyChainController::class, 'updateMaterialRequest'])->name('update-material-request');
+
+        Route::get('/vendors', [SupplyChainController::class, 'vendors'])->name('vendors');
+        Route::post('/projects/{projectId}/select-vendor', [SupplyChainController::class, 'selectVendor'])->name('select-vendor');
+
+        Route::get('/negotiations', [SupplyChainController::class, 'negotiations'])->name('negotiations');
+        Route::post('/projects/{projectId}/negotiation', [SupplyChainController::class, 'createNegotiation'])->name('create-negotiation');
+        Route::post('/projects/{projectId}/request-hps-update', [SupplyChainController::class, 'requestHpsUpdate'])->name('request-hps-update');
+
+        Route::get('/material-shipping', [SupplyChainController::class, 'materialShipping'])->name('material-shipping');
+        Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])->name('material-arrival');
+
+        Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])->name('vendor.kelola');
+        Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])->name('vendor.form');
+        Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])->name('vendor.store');
+        Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])->name('vendor.detail');
+        Route::put('/vendor/update/{id_vendor}', [SupplyChainController::class, 'updateVendor'])->name('vendor.update');
+
+        Route::get('/vendor/pilih/{procurementId}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
+        Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])->name('vendor.simpan');
     });
 
     // ============= AUTH ROUTES =============

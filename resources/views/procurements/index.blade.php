@@ -49,7 +49,7 @@
                     </div>
                     <div class="tambah col-md-2 text-end">
                         @if(Auth::user()->roles === 'desain')
-                        <a href="{{ route('procurements.create') }}" class="btn btn-primary w-100 btn-custom">
+                        <a href="{{ route('procurements.create') }}" class="btn btn-primary w-100 btn-custom" wire:navigate>
                             <i class="bi bi-plus-circle"></i> Tambah
                         </a>
                         @endif
