@@ -6,311 +6,369 @@
 
 @push('styles')
 <style>
-    /* Container & search */
-    .la-wrapper { padding: 18px 0; }
-    .la-search {
-        width: 520px;
-        max-width: 90%;
-        margin: 12px auto 26px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .la-search input {
-        flex: 1;
-        height: 40px;
-        border-radius: 24px;
-        border: 1px solid #d6d6d6;
-        padding: 6px 16px;
-        font-size: 15px;
-        background: #fff;
-    }
-    .la-search button {
-        border-radius: 24px;
-        height: 40px;
-        width: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid #d6d6d6;
-        background: #fff;
-    }
+/* ===== list-approval styles ===== */
 
-    /* Card */
-    .la-card {
-        background: #f6f6f6;
-        border-radius: 14px;
-        padding: 18px;
-        border: 1px solid #e2e2e2;
-        margin-bottom: 20px;
-    }
+/* Layout & card */
+.la-wrapper { padding: 18px 0; }
+.la-topbar { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.btn-back {
+    display:inline-flex; align-items:center; gap:8px;
+    padding:8px 12px; border-radius:8px;
+    background:#fff; border:1px solid #e6e6e6;
+    cursor:pointer; text-decoration:none; color:#111;
+}
+.la-card { background:#f6f6f6; border-radius:12px; padding:14px; border:1px solid #e6e6e6; }
 
-    /* Row header (procurement) */
-    .la-row {
-        background: #fff;
-        border-radius: 12px;
-        padding: 18px 22px;
-        border: 1px solid #e0e0e0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 10px;
-    }
-    .la-row .left {
-        display:flex;
-        align-items:center;
-        gap:18px;
-        flex:1;
-    }
-    .la-code { font-weight:700; font-size:16px; color:#1b1b1b; min-width:160px; }
-    .la-progress {
-        width: 200px;
-        max-width: 40%;
-    }
-    .progress-track {
-        width:100%;
-        height:6px;
-        background:#ebecec;
-        border-radius:6px;
-        overflow:hidden;
-    }
-    .progress-fill { height:100%; background:#c0392b; width:16%; } /* small red indicator like mockup */
+/* Header row */
+.la-row {
+    background:#fff; border-radius:10px; padding:16px 18px;
+    border:1px solid #e8e8e8;
+    display:flex; align-items:center;
+    justify-content:space-between; gap:12px;
+    margin-bottom:10px;
+}
+.la-row .left { display:flex; align-items:center; gap:18px; flex:1; }
+.la-code { font-weight:600; font-size:16px; min-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-    .la-date { min-width:120px; text-align:center; color:#333; }
-    .la-priority { min-width:90px; text-align:center; font-weight:700; text-transform:capitalize; }
-    .la-status { min-width:150px; text-align:right; color:#666; }
+.la-progress { width: 220px; max-width:35%; }
+.progress-track { width:100%; height:8px; background:#ebecec; border-radius:8px; overflow:hidden; }
+.progress-fill { height:100%; background:#9ce01a; transition:width .4s ease; }
 
-    .la-chevron { font-size:20px; color:#222; margin-left:12px; }
+/* meta */
+.la-date { min-width:120px; text-align:center; color:#222; }
+.la-priority { min-width:90px; text-align:center; font-weight:700; }
 
-    /* Detail box (table) */
-    .la-detail {
-        background:#f3f3f3;
-        border-radius:10px;
-        padding:18px;
-        margin-top:-2px;
-        border:1px solid #e0e0e0;
-        display:none;
-    }
-    .la-table {
-        width:100%;
-        border-collapse:collapse;
-    }
-    .la-table thead th {
-        text-align:left;
-        padding:14px 8px;
-        color:#6b6b6b;
-        border-bottom:2px solid #d7d7d7;
-        font-weight:600;
-    }
-    .la-table tbody td {
-        padding:18px 8px;
-        vertical-align:top;
-        border-bottom:1px solid #e8e8e8;
-        color:#111;
-    }
+/* status badge */
+.la-status {
+    min-width:150px; text-align:right;
+    padding:8px 12px; border-radius:12px;
+    font-weight:700;
+    background:#ffd966; color:#8a6d1a;
+}
 
-    /* small square checkboxes like mockup */
-    .la-checkbox {
-        display:inline-block;
-        width:28px;
-        height:28px;
-        background:#e7e7e7;
-        border-radius:6px;
-        border:1px solid #dfdfdf;
-        margin-left:8px;
-    }
+/* chevron */
+.la-chevron i { font-size:20px; }
 
-    /* footer row style (progress small, date, priority, status text hardcoded 'Butuh Update') */
-    .la-footer {
-        background:#fff;
-        border-radius:12px;
-        padding:14px 20px;
-        border:1px solid #e0e0e0;
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:10px;
-        margin-top:8px;
-    }
-    .footer-left { display:flex; align-items:center; gap:18px; flex:1; }
-    .footer-date { min-width:120px; text-align:center; color:#333; }
-    .footer-priority { min-width:90px; text-align:center; font-weight:700; text-transform:capitalize; }
-    .footer-status { min-width:160px; text-align:right; color:#000; font-weight:700; background:#ffd966; padding:6px 12px; border-radius:18px; }
+/* detail block */
+.la-detail {
+    background:#fdfdfd; border-radius:8px; padding:18px;
+    border:1px solid #e9e9e9; display:none;
+    margin-top:6px;
+}
+.la-table { width:100%; border-collapse:collapse; }
+.la-table thead th {
+    text-align:left; padding:12px 8px; color:#6b6b6b;
+    border-bottom:2px solid #e0e0e0; font-weight:600;
+}
+.la-table tbody td {
+    padding:18px 8px; border-bottom:1px solid #f0f0f0;
+}
 
-    /* responsive */
-    @media (max-width: 900px){
-        .la-row { flex-direction:column; align-items:flex-start; gap:10px; }
-        .la-row .left { flex-direction:column; align-items:flex-start; gap:8px; }
-        .la-progress { width:100%; max-width:100%; }
-    }
+/* inspect toggles */
+.inspect-toggle { display:flex; gap:8px; align-items:center; }
+.inspect-box {
+    width:34px; height:34px;
+    border-radius:8px; border:1px solid #e0e0e0;
+    display:flex; align-items:center; justify-content:center;
+    background:#f0f0f0; cursor:pointer;
+}
+.inspect-box.active.passed { background:#dff0d8; border-color:#b6e2b3; }
+.inspect-box.active.failed { background:#f8d7da; border-color:#e6b5b8; }
+
+/* Notes textarea */
+.inspect-notes { display:none; margin-top:8px; width:100%; }
+.inspect-notes textarea { width:100%; min-height:60px; padding:8px; border-radius:8px; }
+
+/* Buttons */
+.item-actions { display:flex; gap:8px; align-items:center; }
+.btn-save {
+    background:#1f8b3b; color:#fff;
+    padding:6px 12px; border-radius:8px;
+    border:none; cursor:pointer;
+}
+.btn-edit {
+    background:#f0f0f0; padding:6px 10px;
+    border:1px solid #ddd; border-radius:8px; cursor:pointer;
+}
+.item-saved { color:#1f8b3b; font-weight:700; }
 </style>
 @endpush
 
+
 <div class="la-wrapper container-fluid">
-    {{-- SEARCH BAR --}}
-    <div class="la-search">
-        <input type="search" id="la-search-input" placeholder="Cari kode, nama atau barang...">
-        <button id="la-search-btn"><i class="bi bi-search"></i></button>
+
+    {{-- TOPBAR LAYOUT B --}}
+    <div class="la-topbar">
+        <a href="{{ route('inspections.index') }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> <span>Kembali</span>
+        </a>
     </div>
 
-    {{-- CARD (main container) --}}
+    {{-- SEARCH BAR --}}
+    <div class="mb-3">
+        <form method="GET" class="d-flex" action="{{ route('qa.list-approval') }}">
+            <input type="search" name="q" class="form-control me-2"
+                   placeholder="Cari kode, nama pengadaan, nama barang, spesifikasi..."
+                   value="{{ request('q') }}">
+            <button class="btn btn-light"><i class="bi bi-search"></i></button>
+        </form>
+    </div>
+
+    {{-- CARD CONTAINER --}}
     <div class="la-card">
 
-        {{-- Loop procurements --}}
         @forelse($procurements as $proc)
             @php
-                // items are already filtered server-side to only include items needing inspection
-                $items = $proc->items;
+                $items = $proc->items ?? collect([]);
+                $completedCount = $proc->procurementProgress->where('status', 'completed')->count();
+                $progressPerc = max(min(round(($completedCount / max($totalCheckpoints,1))*100), 100), 8);
+
                 $totalItems = $items->count();
-                // Represent progress as small indicator: (items done / total) but here show small red like mock
-                $doneItems = 0;
-                $progressPerc = $totalItems > 0 ? round(($doneItems / $totalItems) * 100) : 0;
+                $inspectedCount = $items->filter(fn($it)=>$it->inspectionReports->isNotEmpty())->count();
+                $headerStatus = $inspectedCount >= $totalItems && $totalItems>0 ? 'Ter-update' : 'Butuh Update';
             @endphp
 
-            {{-- Row header --}}
-            <div class="la-row" data-target="detail-{{ $proc->procurement_id }}">
+            {{-- HEADER ROW --}}
+            <div class="la-row"
+                 data-target="detail-{{ $proc->procurement_id }}"
+                 data-procurement-id="{{ $proc->procurement_id }}">
+
                 <div class="left">
-                    <div class="la-code">{{ $proc->code_procurement }}</div>
+                    <div class="la-code" title="{{ $proc->name_procurement }}">
+                        {{ $proc->code_procurement }}
+                    </div>
 
                     <div class="la-progress">
-                        <div class="progress-track" aria-hidden="true">
-                            <div class="progress-fill" style="width: {{ max($progressPerc, 8) }}%;"></div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: {{ $progressPerc }}%;"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="la-date">{{ $proc->start_date?->format('d/m/Y') ?? '-' }}</div>
+                <div class="la-date">{{ optional($proc->start_date)->format('d/m/Y') ?? '-' }}</div>
+                <div class="la-priority">{{ ucfirst($proc->priority ?? '-') }}</div>
 
-                <div class="la-priority">{{ $proc->priority }}</div>
+                <div class="la-status" id="status-{{ $proc->procurement_id }}">
+                    {{ $headerStatus }}
+                </div>
 
-                <div class="la-status">Inspeksi Barang</div>
-
-                <div class="la-chevron"><i class="bi bi-chevron-down"></i></div>
+                <div class="la-chevron">
+                    <i class="bi bi-chevron-down"></i>
+                </div>
             </div>
 
-            {{-- Detail box (table) --}}
+            {{-- DETAIL ROW --}}
             <div id="detail-{{ $proc->procurement_id }}" class="la-detail">
                 <table class="la-table">
                     <thead>
-                        <tr>
-                            <th style="width:22%;">Nama Barang</th>
-                            <th style="width:36%;">Spesifikasi</th>
-                            <th style="width:10%;">Jumlah</th>
-                            <th style="width:14%;">Tanggal Kedatangan</th>
-                            <th style="width:18%;">Hasil Inspeksi</th>
-                        </tr>
+                    <tr>
+                        <th>Nama Barang</th>
+                        <th>Spesifikasi</th>
+                        <th>Jumlah</th>
+                        <th>Tgl Kedatangan</th>
+                        <th>Vendor</th>
+                        <th>Hasil Inspeksi</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        @foreach($items as $item)
-                            <tr>
-                                <td>{{ $item->item_name }}</td>
-                                <td>{{ $item->specification ?? ($item->item_description ?? '-') }}</td>
-                                <td>{{ $item->amount }} {{ $item->unit ?? '' }}</td>
-                                <td>{{ optional($item->arrival_date ?? $item->created_at)->format('d/m/Y') }}</td>
-                                <td>
-                                    {{-- two small square placeholders (UI only) --}}
-                                    <span class="la-checkbox" title="Sudah Inspeksi"></span>
-                                    <span class="la-checkbox" title="Belum Inspeksi"></span>
-                                </td>
-                            </tr>
-                        @endforeach
+
+                    @forelse($items as $item)
+                        @php
+                            $vendor = $item->requestProcurement?->vendor?->name_vendor ?? '-';
+                            $latest = $item->inspectionReports->sortByDesc('inspection_date')->first();
+                            $existing = $latest?->result;
+                        @endphp
+
+                        <tr data-item-id="{{ $item->item_id }}"
+                            data-procurement-id="{{ $proc->procurement_id }}">
+
+                            <td>{{ $item->item_name }}</td>
+                            <td>{{ $item->specification ?? '-' }}</td>
+                            <td>{{ $item->amount }} {{ $item->unit }}</td>
+                            <td>{{ $item->arrival_date ? \Carbon\Carbon::parse($item->arrival_date)->format('d/m/Y') : '-' }}</td>
+                            <td>{{ $vendor }}</td>
+
+                            <td>
+                                <div class="inspect-toggle" data-item-id="{{ $item->item_id }}">
+
+                                    <div class="inspect-box passed {{ $existing === 'passed' ? 'active' : '' }}"
+                                         data-value="passed">
+                                        <i class="bi bi-check-lg"></i>
+                                    </div>
+
+                                    <div class="inspect-box failed {{ $existing === 'failed' ? 'active' : '' }}"
+                                         data-value="failed">
+                                        <i class="bi bi-x-lg"></i>
+                                    </div>
+
+                                    <div class="inspect-notes"
+                                         style="{{ $existing === 'failed' ? 'display:block;' : '' }}">
+                                        <textarea class="notes-input form-control"
+                                                  placeholder="Keterangan wajib jika gagal">
+                                            {{ $latest->notes ?? '' }}
+                                        </textarea>
+                                    </div>
+
+                                    <div class="item-actions ms-2">
+                                        <button class="btn-save" data-item-id="{{ $item->item_id }}">Simpan</button>
+                                        <button class="btn-edit" data-item-id="{{ $item->item_id }}" style="display:none;">
+                                            Edit
+                                        </button>
+
+                                        <div class="item-saved"
+                                             style="display:{{ $existing ? 'inline-block' : 'none' }};">
+                                            Tersimpan
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </td>
+                        </tr>
+
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">
+                                Tidak ada item.
+                            </td>
+                        </tr>
+                    @endforelse
+
                     </tbody>
                 </table>
             </div>
 
-            {{-- Footer row (hardcoded status "Butuh Update") --}}
-            <div class="la-footer">
-                <div class="footer-left">
-                    <div style="width:90px;">
-                        <div class="progress-track" style="height:6px;">
-                            <div class="progress-fill" style="width: {{ max($progressPerc, 6) }}%; background:#c0392b;"></div>
-                        </div>
-                    </div>
-                    <div style="flex:1"></div>
-                </div>
-
-                <div class="footer-date">{{ $proc->start_date?->format('d/m/Y') ?? '-' }}</div>
-
-                <div class="footer-priority">{{ $proc->priority }}</div>
-
-                <div class="footer-status">Butuh Update</div>
-
-                <div style="margin-left:10px;"><i class="bi bi-chevron-down"></i></div>
-            </div>
-
         @empty
+
             <div class="text-center py-4 text-muted">
                 <i class="bi bi-inbox" style="font-size:40px;"></i>
-                <div class="mt-2">Tidak ada pengadaan yang membutuhkan inspeksi.</div>
+                <div>Belum ada pengadaan.</div>
             </div>
+
         @endforelse
 
+        <div class="mt-3">
+            {{ $procurements->links() }}
+        </div>
     </div>
+
 </div>
+
+@endsection
+
 
 @push('scripts')
 <script>
-    // toggle detail on click (row or chevron)
-    document.querySelectorAll('.la-row').forEach(function(row){
-        row.addEventListener('click', function(e){
-            // prevent double toggles when clicking chevron
-            const targetId = row.getAttribute('data-target');
-            const detail = document.getElementById(targetId);
-            const chevron = row.querySelector('.la-chevron i');
+document.addEventListener("DOMContentLoaded", function () {
 
-            if (!detail) return;
+    const csrf = document.querySelector('meta[name="csrf-token"]').content;
 
-            const isOpen = getComputedStyle(detail).display === 'block';
+    /* ===== Expand / Collapse ===== */
+    document.querySelectorAll('.la-row').forEach(row => {
+        row.addEventListener('click', function (e) {
 
-            // close all details first (optional: keep only one open)
-            document.querySelectorAll('.la-detail').forEach(d => { d.style.display = 'none'; });
-            document.querySelectorAll('.la-row .la-chevron i').forEach(c => c.classList.remove('bi-chevron-up') );
+            if (e.target.closest('button') || e.target.closest('textarea')) return;
+
+            const id = row.dataset.target;
+            const detail = document.getElementById(id);
+            const icon = row.querySelector('.la-chevron i');
+
+            const isOpen = detail.style.display === 'block';
+
+            document.querySelectorAll('.la-detail').forEach(d => d.style.display = 'none');
+            document.querySelectorAll('.la-chevron i').forEach(i => {
+                i.classList.remove('bi-chevron-up');
+                i.classList.add('bi-chevron-down');
+            });
 
             if (!isOpen) {
                 detail.style.display = 'block';
-                chevron.classList.remove('bi-chevron-down');
-                chevron.classList.add('bi-chevron-up');
-            } else {
-                detail.style.display = 'none';
-                chevron.classList.remove('bi-chevron-up');
-                chevron.classList.add('bi-chevron-down');
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-up');
             }
         });
     });
 
-    // basic search (client-side)
-    (function(){
-        const input = document.getElementById('la-search-input');
-        const btn = document.getElementById('la-search-btn');
+    /* ===== Passed / Failed toggle ===== */
+    document.querySelectorAll('.inspect-toggle').forEach(t => {
 
-        function performSearch() {
-            const q = input.value.trim().toLowerCase();
-            document.querySelectorAll('.la-row').forEach(row => {
-                const code = row.querySelector('.la-code')?.textContent?.toLowerCase() || '';
-                // check also procurement priority & date text
-                const priority = row.querySelector('.la-priority')?.textContent?.toLowerCase() || '';
-                const visible = q === '' || code.includes(q) || priority.includes(q);
-                row.style.display = visible ? '' : 'none';
+        const pass = t.querySelector('.inspect-box.passed');
+        const fail = t.querySelector('.inspect-box.failed');
+        const notes = t.querySelector('.inspect-notes');
+        const input = t.querySelector('.notes-input');
 
-                // toggle corresponding detail + footer visibility
-                const target = row.getAttribute('data-target');
-                const detail = document.getElementById(target);
-                if (detail) detail.style.display = visible && getComputedStyle(detail).display === 'block' ? 'block' : 'none';
+        pass.addEventListener('click', () => {
+            pass.classList.add('active'); fail.classList.remove('active');
+            notes.style.display = 'none';
+            input.value = '';
+        });
 
-                // footer element is the next sibling after detail (in markup), so toggle it too
-                const footer = row.nextElementSibling && row.nextElementSibling.nextElementSibling ? row.nextElementSibling.nextElementSibling : null;
-                // In our structure footer is after detail; but safe-guard:
-                if (footer && footer.classList && footer.classList.contains('la-footer')) {
-                    footer.style.display = visible ? '' : 'none';
-                }
+        fail.addEventListener('click', () => {
+            fail.classList.add('active'); pass.classList.remove('active');
+            notes.style.display = 'block';
+        });
+
+    });
+
+    /* ===== Save AJAX ===== */
+    document.querySelectorAll('.btn-save').forEach(btn => {
+        btn.addEventListener('click', async function () {
+
+            const itemId = this.dataset.itemId;
+            const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+            const procurementId = row.dataset.procurementId;
+
+            const toggle = row.querySelector('.inspect-toggle');
+            const pass = toggle.querySelector('.inspect-box.passed').classList.contains('active');
+            const fail = toggle.querySelector('.inspect-box.failed').classList.contains('active');
+            const notes = toggle.querySelector('.notes-input').value.trim();
+
+            let result = pass ? 'passed' : (fail ? 'failed' : null);
+            if (!result) return alert("Pilih hasil inspeksi.");
+            if (result === 'failed' && notes.length === 0)
+                return alert("Keterangan wajib untuk item gagal.");
+
+            const payload = {
+                item_id: parseInt(itemId),
+                procurement_id: parseInt(procurementId),
+                result,
+                notes
+            };
+
+            const res = await fetch("{{ route('qa.inspection.save-item') }}", {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": csrf
+                },
+                body: JSON.stringify(payload)
             });
-        }
 
-        btn.addEventListener('click', performSearch);
-        input.addEventListener('keydown', function(e){ if (e.key === 'Enter') performSearch(); });
-    })();
+            const json = await res.json();
+            if (!json.success) return alert("Gagal menyimpan.");
+
+            toggle.querySelector('.item-saved').style.display = 'inline-block';
+            this.style.display = 'none';
+            toggle.querySelector('.btn-edit').style.display = 'inline-block';
+
+            if (json.all_inspected) {
+                const header = document.getElementById(`status-${procurementId}`);
+                header.textContent = "Ter-update";
+                header.style.background = "#dff0d8";
+                header.style.color = "#1f8b3b";
+            }
+        });
+    });
+
+    /* ===== Edit ===== */
+    document.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const row = document.querySelector(`tr[data-item-id="${this.dataset.itemId}"]`);
+            row.querySelector('.item-saved').style.display = 'none';
+            row.querySelector('.btn-save').style.display = 'inline-block';
+            this.style.display = 'none';
+        });
+    });
+
+});
 </script>
 @endpush
-
-@endsection
