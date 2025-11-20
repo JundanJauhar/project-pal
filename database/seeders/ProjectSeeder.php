@@ -202,18 +202,19 @@ class ProjectSeeder extends Seeder
         /**
          * ITEMS — DENGAN STATUS APPROVED/NOT_APPROVED
          */
-        $item1 = Item::create([
-            'request_procurement_id' => $request1->request_id,
-            'item_name' => 'Baja High Grade',
-            'item_description' => 'Material baja high grade untuk struktur kapal',
-            'amount' => 100,
-            'unit' => 'ton',
-            'unit_price' => 120000000,
-            'total_price' => 12000000000,
-            'status' => 'approved',
-            'approved_by' => 2,
-            'approved_at' => Carbon::now()->subDays(85),
-        ]);
+        Item::updateOrCreate(
+            [
+                'request_procurement_id' => $request1->request_id,
+                'item_name' => 'Baja High Grade'
+            ], // key untuk check
+            [
+                'item_description' => 'Material baja high grade untuk struktur kapal',
+                'amount' => 100,
+                'unit' => 'ton',
+                'unit_price' => 120000000,
+                'total_price' => 12000000000,
+            ]
+        );
 
         $item2 = Item::create([
             'request_procurement_id' => $request1->request_id,
@@ -352,14 +353,18 @@ class ProjectSeeder extends Seeder
         /**
          * INSPECTION REPORT
          */
-        InspectionReport::create([
-            'project_id' => $project1->project_id,
-            'item_id' => $item1->item_id,
-            'inspection_date' => Carbon::now()->subDays(10),
-            'inspector_id' => 5,
-            'result' => 'passed',
-            'notes' => 'Material sesuai spesifikasi teknis.',
-        ]);
+        InspectionReport::updateOrCreate(
+            [
+                'project_id' => $project1->project_id,
+                'item_id' => 1,
+                'inspection_date' => Carbon::now()->subDays(10)
+            ], // key untuk check
+            [
+                'inspector_id' => 5,
+                'result' => 'passed',
+                'notes' => 'Material sesuai spesifikasi teknis.',
+            ]
+        );
 
         InspectionReport::create([
             'project_id' => $project1->project_id,
@@ -430,16 +435,19 @@ class ProjectSeeder extends Seeder
         /**
          * PROJECT 2–7 - Additional projects
          */
-        Project::create([
-            'project_code' => 'KCJ-202511-002',
-            'project_name' => 'Pengadaan Sistem Radar Navigasi',
-            'description' => 'Pengadaan radar navigasi untuk kapal perang',
-            'owner_division_id' => 2,
-            'priority' => 'tinggi',
-            'start_date' => Carbon::now()->subDays(45),
-            'end_date' => Carbon::now()->addDays(60),
-            'status_project' => 'negosiasi_harga',
-        ]);
+
+        Project::updateOrCreate(
+            ['project_code' => 'KCJ-202511-002'], // key untuk check
+            [
+                'project_name' => 'Pengadaan Sistem Radar Navigasi',
+                'description' => 'Pengadaan radar navigasi untuk kapal perang',
+                'owner_division_id' => 2,
+                'priority' => 'tinggi',
+                'start_date' => Carbon::now()->subDays(45),
+                'end_date' => Carbon::now()->addDays(60),
+                'status_project' => 'negosiasi_harga',
+            ]
+        );
 
         Project::updateOrCreate(
             ['project_code' => 'KCJ-202511-003'], // key untuk check

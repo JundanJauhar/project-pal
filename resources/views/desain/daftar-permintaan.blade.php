@@ -94,11 +94,10 @@
 </style>
 @endpush
 
-@section('content')
+    <h2 class="fw-bold mb-4">Daftar Item</h2>
 
-<h2 class="fw-bold mb-4">Daftar Item</h2>
 
-<div class="row mb-4">
+    <div class="row mb-4">
     <div class="col-12">
         <div class="card card-custom">
             <div class="card-body">
@@ -124,9 +123,9 @@
                     <div class="tambah col-md-2 text-end">
 
                         <a href="{{ route('procurements.create') }}" class="btn btn-primary w-100 btn-custom" wire:navigate>
-=======
                     <!-- <div class="tambah col-md-2 text-end">
                         <a href="{{ route('procurements.create') }}" class="btn btn-primary w-100 btn-custom">
+=======
                             <i class="bi bi-plus-circle"></i> Tambah
                         </a>
                     </div> -->

@@ -87,7 +87,7 @@ class SupplyChainController extends Controller
         ];
 
         return view('supply_chain.vendor.pilih', compact('vendors', 'stats', 'procurement'))
-        ->with('hideNavbar', true);
+            ->with('hideNavbar', true);
     }
 
     public function simpanVendor($procurementId, Request $request)
@@ -120,6 +120,7 @@ class SupplyChainController extends Controller
                 'procurement_id' => $procurementId,
                 'vendor_id' => $validated['vendor_id'],
                 'request_name' => "Request untuk {$procurement->name_procurement}",
+                'department_id' => auth()->user()->department_id,
                 'request_status' => 'submitted',
                 'created_date' => now(),
                 'deadline_date' => $procurement->end_date,

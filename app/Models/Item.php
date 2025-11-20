@@ -10,6 +10,9 @@ class Item extends Model
     protected $table = 'items';
     protected $primaryKey = 'item_id';
 
+    // PERBAIKAN #13 - enable timestamps
+    // public $timestamps = false;
+
     protected $fillable = [
         'request_procurement_id',
         'item_name',
