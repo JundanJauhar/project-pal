@@ -20,9 +20,34 @@ class SupplyChainController extends Controller
     /**
      * Display Supply Chain dashboard
      */
-    public function dashboard()
+    public function dashboard(Request $request)
     {
+        $search = $request->input('search');
+        $statusFilter = $request->input('status');
+        $priorityFilter = $request->input('priority');
+
         $procurements = Procurement::with(['department', 'requestProcurements.vendor'])
+            ->when($search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('code_procurement', 'LIKE', "%{$search}%")
+                        ->orWhere('name_procurement', 'LIKE', "%{$search}%")
+                        ->orWhereHas('department', function ($dept) use ($search) {
+                            $dept->where('department_name', 'LIKE', "%{$search}%");
+                        });
+                });
+            })
+            ->when($priorityFilter, function ($query, $priority) {
+                return $query->where('priority', $priority);
+            })
+            ->when($statusFilter, function ($query, $status) {
+                if ($status === 'belum_ada_vendor') {
+                    return $query->doesntHave('requestProcurements');
+                } else {
+                    return $query->whereHas('requestProcurements', function ($q) use ($status) {
+                        $q->where('request_status', $status);
+                    });
+                }
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
