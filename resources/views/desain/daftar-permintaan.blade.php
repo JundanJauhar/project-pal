@@ -93,7 +93,7 @@
     }
 </style>
 @endpush
-
+@section('content')
     <h2 class="fw-bold mb-4">Daftar Item</h2>
 
 
@@ -119,11 +119,6 @@
                             <option value="satu_minggu">1 Minggu</option>
                             <option value="satu_bulan">1 Bulan</option>
                         </select>
-                    </div>
-                    <div class="tambah col-md-2 text-end">
-                        <a href="{{ route('procurements.create') }}" class="btn btn-primary w-100 btn-custom">
-                            <i class="bi bi-plus-circle"></i> Tambah
-                        </a>
                     </div>
                 </form>
             </div>
