@@ -420,7 +420,7 @@ class ProjectSeeder extends Seeder
         }
 
         // Progress untuk procurement 4 - Baru sampai checkpoint 2 (Pengecekan)
-        foreach ($checkpoints->take(2) as $index => $checkpoint) {
+        foreach ($checkpoints->take(11) as $index => $checkpoint) {
             \App\Models\ProcurementProgress::create([
                 'procurement_id' => $procurement4->procurement_id,
                 'checkpoint_id' => $checkpoint->point_id,
