@@ -24,10 +24,10 @@
 .qa-card h6 { color: #676767; font-size: 14px; margin-bottom: 5px; }
 .qa-card h3 { font-weight: 700; font-size: 32px; }
 
-.qa-card.blue     { border-left: 5px solid #1E90FF; }
-.qa-card.yellow   { border-left: 5px solid #F2C94C; }
-.qa-card.green    { border-left: 5px solid #27AE60; }
-.qa-card.red      { border-left: 5px solid #EB5757; }
+.qa-card.blue   { border-left: 5px solid #1E90FF; }
+.qa-card.yellow { border-left: 5px solid #F2C94C; }
+.qa-card.green  { border-left: 5px solid #27AE60; }
+.qa-card.red    { border-left: 5px solid #EB5757; }
 
 /* ===== TABLE WRAPPER ===== */
 .qa-table-wrapper {
@@ -50,12 +50,12 @@
 /* Search */
 .qa-search-box {
     display: flex;
-    gap: 8px;
     align-items: center;
+    gap: 8px;
     background: #F0F0F0;
-    border-radius: 30px;
-    padding: 3px 14px;
-    width: 450px;
+    border-radius: 25px;
+    padding: 4px 14px;
+    width: 350px;
     border: 1px solid #ddd;
 }
 .qa-search-box input {
@@ -70,20 +70,26 @@
 .qa-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
+
 .qa-table thead th {
-    padding: 14px 8px;
+    padding: 14px 6px;
     border-bottom: 2px solid #C9C9C9;
     font-size: 14px;
     text-transform: uppercase;
     color: #555;
+    text-align: center;
 }
+
 .qa-table tbody td {
-    padding: 18px 8px;
+    padding: 14px 6px;
     border-bottom: 1px solid #DFDFDF;
     font-size: 15px;
     color: #333;
+    text-align: center;
 }
+
 .qa-table tbody tr:hover {
     background: #EFEFEF;
 }
@@ -92,31 +98,34 @@
 .priority-high   { color: #D60000; font-weight: bold; }
 .priority-medium { color: #FF8C00; font-weight: bold; }
 .priority-low    { color: #A9A9A9; font-weight: bold; }
+
+/* INSPECTION STATUS */
+.status-pass  { color: #27AE60; font-weight: bold; }
+.status-fail  { color: #D60000; font-weight: bold; }
+.status-wait  { color: #888; font-weight: bold; }
+
+.status-link { text-decoration: none; font-weight: bold; }
 </style>
 @endpush
 
 @section('content')
 
-{{-- ========================= --}}
-{{-- DASHBOARD STATISTICS --}}
-{{-- ========================= --}}
+{{-- ===== TOP CARDS ===== --}}
 <div class="qa-topcards">
 
-    {{-- Total Pengadaan --}}
+    {{-- Card total --}}
     <div class="qa-card blue">
         <h6>Total Pengadaan</h6>
         <h3>{{ $totalProcurements ?? 0 }}</h3>
     </div>
 
-    {{-- Butuh Inspeksi --}}
-    <a href="{{ route('qa.list-approval') }}" class="text-decoration-none text-dark" style="flex:1;">
-        <div class="qa-card yellow">
-            <h6>Butuh Inspeksi</h6>
-            <h3>{{ $butuhInspeksiCount ?? 0 }}</h3>
-        </div>
-    </a>
+    {{-- Card butuh inspeksi (TIDAK CLICKABLE LAGI) --}}
+    <div class="qa-card yellow">
+        <h6>Butuh Inspeksi</h6>
+        <h3>{{ $butuhInspeksiCount ?? 0 }}</h3>
+    </div>
 
-    {{-- Lolos Inspeksi --}}
+    {{-- Lolos --}}
     <div class="qa-card green">
         <h6>Lolos Inspeksi</h6>
         <h3>{{ $lolosCount ?? 0 }}</h3>
@@ -130,18 +139,13 @@
 
 </div>
 
-
-
-{{-- ========================= --}}
-{{-- TABLE WRAPPER --}}
-{{-- ========================= --}}
+{{-- ===== TABLE ===== --}}
 <div class="qa-table-wrapper">
 
     <div class="qa-table-title">
         <span>Daftar Pengadaan</span>
 
-        {{-- Search Form --}}
-        <form method="GET" action="{{ route('inspections.index') }}">
+        <form method="GET">
             <div class="qa-search-box">
                 <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari...">
                 <i class="bi bi-search"></i>
@@ -149,32 +153,48 @@
         </form>
     </div>
 
-    {{-- TABLE --}}
     <div class="table-responsive">
         <table class="qa-table">
             <thead>
                 <tr>
-                    <th>Kode Pengadaan</th>
+                    <th>Kode</th>
                     <th>Nama Pengadaan</th>
                     <th>Department</th>
                     <th>Vendor</th>
-                    <th>Tanggal Mulai</th>
-                    <th>Tanggal Selesai</th>
+                    <th>Tgl Mulai</th>
+                    <th>Tgl Selesai</th>
                     <th>Prioritas</th>
+                    <th>Status Inspeksi</th>
                 </tr>
             </thead>
 
             <tbody>
             @forelse($procurements as $proc)
+
+                @php
+                    $items = $proc->items ?? collect();
+                    $reports = $items->flatMap->inspectionReports;
+
+                    if ($reports->count() === 0) {
+                        $statusText = "BELUM DIINSPEKSI";
+                        $statusClass = "status-wait";
+                    } elseif ($reports->contains('result', 'failed')) {
+                        $statusText = "TIDAK LOLOS";
+                        $statusClass = "status-fail";
+                    } else {
+                        $statusText = "LOLOS";
+                        $statusClass = "status-pass";
+                    }
+                @endphp
+
                 <tr>
                     <td>{{ $proc->code_procurement }}</td>
                     <td>{{ $proc->name_procurement }}</td>
                     <td>{{ $proc->department->department_name ?? '-' }}</td>
                     <td>{{ $proc->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</td>
-                    <td>{{ $proc->start_date ? $proc->start_date->format('d/m/Y') : '-' }}</td>
-                    <td>{{ $proc->end_date ? $proc->end_date->format('d/m/Y') : '-' }}</td>
+                    <td>{{ $proc->start_date?->format('d/m/Y') ?? '-' }}</td>
+                    <td>{{ $proc->end_date?->format('d/m/Y') ?? '-' }}</td>
 
-                    {{-- PRIORITY COLOR --}}
                     <td>
                         @php
                             $p = strtolower($proc->priority);
@@ -185,13 +205,22 @@
                                 default  => '',
                             };
                         @endphp
-                        <span class="{{ $class }}">{{ strtoupper($proc->priority ?? '-') }}</span>
+                        <span class="{{ $class }}">{{ strtoupper($proc->priority) }}</span>
+                    </td>
+
+                    {{-- ===== STATUS LINK BARU ===== --}}
+                    <td>
+                        <a href="{{ route('qa.detail-approval', ['procurement_id' => $proc->procurement_id]) }}"
+                        class="status-link {{ $statusClass }}">
+                            {{ $statusText }}
+                        </a>
                     </td>
                 </tr>
+
             @empty
                 <tr>
-                    <td colspan="7" class="text-center py-5">
-                        <i class="bi bi-inbox" style="font-size: 40px; color:#bbb"></i>
+                    <td colspan="8" class="text-center py-5">
+                        <i class="bi bi-inbox" style="font-size:40px; color:#bbb;"></i>
                         <p class="text-muted mt-2">Tidak ada pengadaan yang butuh inspeksi</p>
                     </td>
                 </tr>
@@ -200,11 +229,39 @@
         </table>
     </div>
 
-    {{-- PAGINATION --}}
     <div class="mt-3">
         {{ $procurements->links() }}
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const update = localStorage.getItem('inspectionUpdate');
+    if (update) {
+        const data = JSON.parse(update);
+
+        // update card hijau (LOLOS)
+        const cardLolos = document.querySelector('.qa-card.green h3');
+        if (cardLolos) cardLolos.textContent = data.lolos;
+
+        // update card merah (TIDAK LOLOS)
+        const cardGagal = document.querySelector('.qa-card.red h3');
+        if (cardGagal) cardGagal.textContent = data.gagal;
+
+        // update card kuning (BUTUH INSPEKSI)
+        const cardButuh = document.querySelector('.qa-card.yellow h3');
+        if (cardButuh && data.butuh !== null) {
+            cardButuh.textContent = data.butuh;
+        }
+
+        // hapus agar tidak update berkali-kali
+        localStorage.removeItem('inspectionUpdate');
+    }
+});
+</script>
+@endpush
+
 
 @endsection
