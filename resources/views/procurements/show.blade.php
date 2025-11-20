@@ -125,7 +125,9 @@
         <div>
             <h4>Daftar Pengadaan</h4>
             <p><strong>Nama procurement:</strong> {{ $procurement->code_procurement }}</p>
-            <p><strong>Vendor:</strong> {{ $procurement->contracts?->first()?->vendor?->name_vendor ?? '-' }}</p>
+            <p><strong>Vendor:</strong>
+                {{ $procurement->requestProcurements->first()?->vendor?->name_vendor ?? '-' }}
+            </p>
             <p><strong>Deskripsi:</strong> {{ $procurement->description }}</p>
         </div>
 
@@ -194,19 +196,19 @@
         {!! $procurement->sign_notes ?? 'Belum ada tanda tangan' !!}
     </div>
 
-    <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
-            <form action="{{ route('procurements.update', $procurement->procurement_id) }}" method="post">
-                @csrf
-                @method('put')
-                <button type="submit" class="btn btn-sm btn-success btn-custom">
-                    <i class="bi bi-check-lg"></i> Accept
-                </button>
-            </form>
-            <a href="{{ route('procurements.show', $procurement->procurement_id) }}"
-                class="btn btn-sm btn-danger btn-custom">
-                <i class="bi bi-x-lg"></i> Rejected
-            </a>
-    </div>
+    <!-- <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
+        <form action="{{ route('procurements.update', $procurement->procurement_id) }}" method="post">
+            @csrf
+            @method('put')
+            <button type="submit" class="btn btn-sm btn-success btn-custom">
+                <i class="bi bi-check-lg"></i> Accept
+            </button>
+        </form>
+        <a href="{{ route('procurements.show', $procurement->procurement_id) }}"
+            class="btn btn-sm btn-danger btn-custom">
+            <i class="bi bi-x-lg"></i> Rejected
+        </a>
+    </div> -->
 
 </div>
 

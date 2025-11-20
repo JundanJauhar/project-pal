@@ -77,6 +77,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/procurements/{id}/progress', [ProcurementController::class, 'updateProgress'])->name('procurements.update-progress');
     Route::resource('procurements', ProcurementController::class, ['only' => ['index', 'show', 'create', 'store', 'update']]);
 
+
+    // ------ User Procurement ------
+    // Item Evatek
+    Route::post('/items/{itemId}/approve', [DesainListProjectController::class, 'approveItem'])->name('items.approve');
+    Route::post('/items/{itemId}/reject', [DesainListProjectController::class, 'rejectItem'])->name('items.reject');
+
+    // User-specific procurement list (used by 'user' role)
+
     // ------ User Procurement ------
     Route::get('/user/list', function () {
         $procurements = \App\Models\Procurement::with(['department', 'requestProcurements.vendor'])
@@ -95,6 +103,7 @@ Route::middleware(['auth'])->group(function () {
     // ------ Supply Chain ------
     Route::prefix('supply-chain')->name('supply-chain.')->group(function () {
         Route::get('/dashboard', [SupplyChainController::class, 'dashboard'])->name('dashboard');
+        Route::get('/pengadaan/create', [SupplyChainController::class, 'createPengadaan'])->name('pengadaan.create');
         Route::post('/dashboard/store', [SupplyChainController::class, 'storePengadaan'])->name('dashboard.store');
 
         Route::get('/projects/{projectId}/review', [SupplyChainController::class, 'reviewProject'])->name('review-project');
@@ -117,9 +126,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])->name('vendor.kelola');
         Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])->name('vendor.form');
         Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])->name('vendor.store');
-        Route::get('/vendor/pilih', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
         Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])->name('vendor.detail');
         Route::put('/vendor/update/{id_vendor}', [SupplyChainController::class, 'updateVendor'])->name('vendor.update');
+
+        Route::get('/vendor/pilih/{procurementId}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
+        Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])->name('vendor.simpan');
     });
 
     // ------ Payments ------

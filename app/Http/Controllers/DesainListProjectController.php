@@ -77,5 +77,29 @@ class DesainListProjectController extends Controller
 
         return back()->with('success', 'Pengadaan berhasil dikirim!');
     }
+    public function approveItem(Request $request, $itemId)
+{
+    $item = \App\Models\Item::findOrFail($itemId);
 
+    $item->update([
+        'status' => 'approved',
+        'approved_by' => Auth::id(),
+        'approved_at' => now(),
+    ]);
+
+    return redirect()->back()->with('success', 'Item berhasil di-approve');
+}
+
+public function rejectItem(Request $request, $itemId)
+{
+    $item = \App\Models\Item::findOrFail($itemId);
+
+    $item->update([
+        'status' => 'not_approved',
+        'approved_by' => null,
+        'approved_at' => null,
+    ]);
+
+    return redirect()->back()->with('success', 'Item di-reject');
+}
 }

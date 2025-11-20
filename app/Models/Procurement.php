@@ -53,13 +53,13 @@ class Procurement extends Model
     public function getAutoStatusAttribute()
     {
         // ✅ Gunakan relasi yang sudah di-load, bukan query baru
-        $progressCollection = $this->relationLoaded('procurementProgress') 
-            ? $this->procurementProgress 
+        $progressCollection = $this->relationLoaded('procurementProgress')
+            ? $this->procurementProgress
             : $this->procurementProgress()->get();
 
         // Cek apakah ada yang ditolak
         $rejected = $progressCollection->where('status', 'rejected')->isNotEmpty();
-        
+
         if ($rejected) {
             return 'rejected';
         }
@@ -81,8 +81,8 @@ class Procurement extends Model
     public function getCurrentCheckpointAttribute()
     {
         // ✅ Gunakan relasi yang sudah di-load
-        $progressCollection = $this->relationLoaded('procurementProgress') 
-            ? $this->procurementProgress 
+        $progressCollection = $this->relationLoaded('procurementProgress')
+            ? $this->procurementProgress
             : $this->procurementProgress()->with('checkpoint')->get();
 
         // Cari progress yang sedang in_progress
@@ -102,9 +102,6 @@ class Procurement extends Model
         return $latest?->checkpoint?->point_name ?? null;
     }
 
-    /**
-     * Get all vendors through request procurements (PERBAIKAN #14)
-     */
     public function vendors()
     {
         return $this->hasManyThrough(

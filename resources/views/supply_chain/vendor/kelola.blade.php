@@ -116,7 +116,7 @@
 @section('content')
 
 <div class="mb-4 px-4">
-    <a href="{{ route('supply-chain.dashboard') }}" class="text-decoration-none text-primary">
+    <a href="{{ route('supply-chain.dashboard') }}" class="text-decoration-none text-primary" wire:navigate>
 
         <h4><i class="bi bi-arrow-left"></i> </h4>
     </a>
@@ -210,7 +210,7 @@
         <!-- Tambah Vendor -->
         <div>
             @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
-            <a href="{{ route('supply-chain.vendor.form', ['redirect' => 'kelola']) }}" class="btn btn-primary">
+            <a href="{{ route('supply-chain.vendor.form', ['redirect' => 'kelola']) }}" class="btn btn-primary" wire:navigate>
                 <i class="bi bi-plus-circle"></i> Tambah Vendor Baru
             </a>
             @endif
@@ -281,12 +281,12 @@
                                     </td>
                                     <td style="padding: 12px 8px; text-align: center;">
                                         <div class="btn-group" role="group">
-                                            <a href="{{ route('supply-chain.vendor.form', ['id' => $vendor->id_vendor]) }}" class="btn btn-sm btn-primary text-white">
+                                            <a href="{{ route('supply-chain.vendor.form', ['id' => $vendor->id_vendor]) }}" class="btn btn-sm btn-primary text-white" wire:navigate>
                                                 <i class="bi bi-pencil"></i> Edit
                                             </a>
                                         </div>
                                         <div class="btn-group" role="group">
-                                            <a href="{{ route('supply-chain.vendor.detail', ['id' => $vendor->id_vendor]) }}" class="btn btn-sm btn-info text-white">
+                                            <a href="{{ route('supply-chain.vendor.detail', ['id' => $vendor->id_vendor]) }}" class="btn btn-sm btn-info text-white" wire:navigate>
                                                 <i class="bi bi-eye"></i> Detail
                                             </a>
                                         </div>

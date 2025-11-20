@@ -570,7 +570,7 @@
     @if(!isset($hideNavbar) || !$hideNavbar)
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center ms-4" href="{{ route('dashboard') }}">
+            <a class="navbar-brand d-flex align-items-center ms-4" href="{{ route('dashboard') }}" wire:navigate>
                 <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo">
             </a>
 
@@ -582,14 +582,14 @@
                 {{-- nav items placed to the left of user menu --}}
                 <ul class="navbar-nav nav-center ms-auto me-3 padding align-items-center">
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                            <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}" href="{{ route('dashboard') }}" wire:navigate>
                                 Dashboard
                             </a>
                         </li>
 
                         @if(Auth::user()->roles === 'user')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('user.*') ? 'active' : '' }}" href="{{ route('user.list') }}">
+                            <a class="nav-link {{ request()->routeIs('user.*') ? 'active' : '' }}" href="{{ route('user.list') }}" wire:navigate>
                                 Pengadaan
                             </a>
                         </li>
@@ -597,7 +597,7 @@
 
                         @if(in_array(Auth::user()->roles,  ['sekretaris_direksi']))
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
+                            <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}" wire:navigate>
                                 Projects
                             </a>
                         </li>
@@ -605,7 +605,7 @@
 
                         @if(Auth::user()->roles === 'desain')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('desain.list-project*') ? 'active' : '' }}" href="{{ route('desain.list-project') }}">
+                            <a class="nav-link {{ request()->routeIs('desain.list-project*') ? 'active' : '' }}" href="{{ route('desain.list-project') }}" wire:navigate>
                             Projects
                         </a>
 
@@ -622,7 +622,7 @@
 
                         @if(Auth::user()->roles === 'supply_chain')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('supply-chain.dashboard*') ? 'active' : '' }}" href="{{ route('supply-chain.dashboard') }}">
+                            <a class="nav-link {{ request()->routeIs('supply-chain.dashboard*') ? 'active' : '' }}" href="{{ route('supply-chain.dashboard') }}" wire:navigate>
                                 Department
                             </a>
                         </li>
@@ -630,7 +630,7 @@
 
                         @if(Auth::user()->roles === 'supply_chain')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('supply-chain.vendor.kelola*') ? 'active' : '' }}" href="{{ route('supply-chain.vendor.kelola') }}">
+                            <a class="nav-link {{ request()->routeIs('supply-chain.vendor.kelola*') ? 'active' : '' }}" href="{{ route('supply-chain.vendor.kelola') }}" wire:navigate>
                                 Kelola Vendor
                             </a>
                         </li>
@@ -656,8 +656,8 @@
                             <a class="nav-link {{ request()->routeIs('qa.list-approval') ? 'active' : '' }}" href="{{ route('qa.list-approval') }}">
                                 List Approval
                             </a>
-                        </li> -->
-                        
+                        </li>
+
                         <!-- <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('inspections.ncr.index') ? 'active' : '' }}" href="{{ route('inspections.ncr.index') }}">
                                 <i class="bi bi-exclamation-triangle"></i>
@@ -677,7 +677,7 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
-                                <a class="dropdown-item d-flex align-items-center justify-content-between" href="{{ route('notifications.index') }}">
+                                <a class="dropdown-item d-flex align-items-center justify-content-between" href="{{ route('notifications.index') }}" wire:navigate>
                                     <span><i class="bi bi-bell-fill me-2"></i> Notifikasi</span>
                                     <span class="badge rounded-pill bg-danger" id="notif-count-dd" style="display:none;">0</span>
                                 </a>
@@ -756,6 +756,9 @@
             setInterval(loadNotificationCount, 30000);
         });
     </script>
+
+    <!-- Livewire Scripts -->
+    @livewireScripts
 
     @stack('scripts')
 </body>

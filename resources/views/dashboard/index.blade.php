@@ -88,109 +88,13 @@
                 <div class="stat-icon"><div class="stat-icon-inner"><i class="bi bi-check-lg"></i></div></div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card stat-rejected">
-            <div class="stat-content">
-                <div class="stat-title">Ditolak</div>
-                <div class="stat-value">{{ $stats['ditolak'] }}</div>
-            </div>
-            <div class="stat-icon"><div class="stat-icon-inner"><i class="bi bi-x"></i></div></div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header text-black d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Daftar Pengadaan</h5>
-                <div class="position-relative" style="width: 300px;">
-                    <input type="text"
-                           id="searchInput"
-                           class="form-control"
-                           placeholder="Cari pengadaan...">
-                    <button id="clearSearch"
-                            class="btn btn-sm position-absolute"
-                            style="right: 5px; top: 50%; transform: translateY(-50%); display: none;">
-                        <i class="bi bi-x-circle"></i>
-                    </button>
+        <div class="col-md-3">
+            <div class="stat-card stat-rejected">
+                <div class="stat-content">
+                    <div class="stat-title">Ditolak</div>
+                    <div class="stat-value">{{ $stats['ditolak'] }}</div>
                 </div>
-            </div>
-            <div class="card-body">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode Pengadaan</th>
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Pengadaan</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="procurementTableBody">
-                        @forelse($procurements as $procurement)
-                        <tr data-name="{{ strtolower($procurement->name_procurement) }} {{ strtolower($procurement->code_procurement) }}">
-                            <td style="padding: 12px 8px;"><strong>{{ $procurement->code_procurement }}</strong></td>
-                            <td style="padding: 12px 8px;">{{ Str::limit($procurement->name_procurement, 40) }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $procurement->department->department_name ?? '-' }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $procurement->start_date->format('d/m/Y') }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $procurement->end_date->format('d/m/Y') }}</td>
-                            <td style="padding: 12px 8px; text-align: center;">{{ $procurement->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</td>
-
-                            <td style="padding: 12px 8px; text-align: center;">
-                                <span class="badge-priority badge-{{ strtolower($procurement->priority) }}">
-                                    {{ strtoupper($procurement->priority) }}
-                                </span>
-                            </td>
-
-                            <td style="padding: 12px 8px; text-align: center;">
-
-                                @php
-                                    $status = $procurement->auto_status;
-                                    $current = $procurement->current_checkpoint; // ← ini yang kita tambahkan
-
-                                    $badgeColor = match($status) {
-                                        'completed' => '#28AC00',
-                                        'in_progress' => '#ECAD02',
-                                        'not_started' => '#555',
-                                        default => '#BD0000'
-                                    };
-
-                                    $text = match($status) {
-                                        'completed' => 'Selesai',
-                                        'not_started' => 'Belum Dimulai',
-                                        'in_progress' => $current ?? 'Sedang Proses', // ← tampilkan checkpoint!
-                                        default => $status
-                                    };
-                                @endphp
-
-                                <span class="badge"
-                                    style="background-color: {{ $badgeColor }};
-                                        color:white;
-                                        padding:6px 12px;
-                                        font-weight:600;">
-                                    {{ $text }}
-                                </span>
-
-                            </td>
-
-
-                            <td style="padding: 12px 8px; text-align: center;">
-                                <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary">
-                                     Detail
-                                </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="9" class="text-center">Tidak ada data pengadaan</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                <div class="stat-icon"><div class="stat-icon-inner"><i class="bi bi-x"></i></div></div>
             </div>
         </div>
     </div>
@@ -206,9 +110,6 @@
                         <div class="col-md-3">
                             <select class="form-select" name="checkpoint">
                                 <option value="">Semua Checkpoint</option>
-                                <option value="not_started">Belum Dimulai</option>
-                                <option value="PDM">PDM</option>
-                                <option value="Pengecekan">Pengecekan</option>
                                 <option value="Penawaran Permintaan">Penawaran Permintaan</option>
                                 <option value="Evatek">Evatek</option>
                                 <option value="Negosiasi">Negosiasi</option>
@@ -236,7 +137,7 @@
                             </select>
                         </div>
                         <!-- <div class="tambah col-md-2 text-end">
-                            <a href="{{ route('procurements.create') }}" class="btn btn-primary w-100 btn-custom">
+                            <a href="{{ route('procurements.create') }}" class="btn btn-primary w-100 btn-custom" wire:navigate>
                                 <i class="bi bi-plus-circle"></i> Tambah
                             </a>
                         </div> -->
@@ -310,7 +211,7 @@
                                     </span>
                                 </td>
                                 <td style="padding: 12px 8px; text-align: center;">
-                                    <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary">
+                                    <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary" wire:navigate>
                                          Detail
                                     </a>
                                 </td>
@@ -336,60 +237,151 @@
 
 @push('scripts')
 <script>
-    let searchTimeout;
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearch');
-    const tableBody = document.getElementById('procurementTableBody');
-    const rows = tableBody.querySelectorAll('tr[data-name]'); // ✅ Ambil semua row dengan data-name
+function debounce(fn, delay) {
+    let t;
+    return function () {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(this, arguments), delay);
+    };
+}
 
-    // Search dengan debouncing
-    searchInput.addEventListener('input', function() {
-        const value = this.value.trim().toLowerCase();
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.querySelector('input[name="search"]');
+    const checkpointSelect = document.querySelector('select[name="checkpoint"]');
+    const prioritySelect = document.querySelector('select[name="priority"]');
+    const tbody = document.getElementById('procurements-tbody');
+    const paginationWrap = document.getElementById('procurements-pagination');
 
-        // Show/hide clear button
-        clearBtn.style.display = value ? 'block' : 'none';
-
-        // Debounce search
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(function() {
-            performSearch(value);
-        }, 300);
-    });
-
-    // Clear search button
-    clearBtn.addEventListener('click', function() {
-        searchInput.value = '';
-        this.style.display = 'none';
-        performSearch('');
-    });
-
-    // Function untuk filter table rows
-    function performSearch(searchValue) {
-        let visibleCount = 0;
-
-        rows.forEach(row => {
-            const name = row.getAttribute('data-name');
-
-            if (name.includes(searchValue)) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
-            }
-        });
-
-        // Tampilkan pesan jika tidak ada hasil
-        const emptyRow = document.getElementById('emptyRow');
-        if (emptyRow) {
-            emptyRow.remove();
-        }
-
-        if (visibleCount === 0 && searchValue !== '') {
-            const newEmptyRow = document.createElement('tr');
-            newEmptyRow.id = 'emptyRow';
-            newEmptyRow.innerHTML = '<td colspan="9" class="text-center text-muted">Tidak ada pengadaan yang ditemukan untuk "' + searchValue + '"</td>';
-            tableBody.appendChild(newEmptyRow);
-        }
+    if (!searchInput || !checkpointSelect || !prioritySelect || !tbody || !paginationWrap) {
+        console.error('Missing required elements');
+        return;
     }
+
+    let currentPage = 1;
+    let lastPagination = null;
+
+    function getStatusBadge(status, checkpoint) {
+        const statusMap = {
+            'completed': { text: 'Selesai', color: '#28AC00' },
+            'not_started': { text: 'Belum Dimulai', color: '#555' },
+            'in_progress': { text: checkpoint || 'Sedang Proses', color: '#ECAD02' },
+            'rejected': { text: 'Ditolak', color: '#BD0000' }
+        };
+
+        const badge = statusMap[status] || { text: status, color: '#ECAD02' };
+        return `<span class="badge" style="background-color: ${badge.color}; color:white; padding:6px 12px; font-weight:600; border-radius:6px;">
+            ${badge.text}
+        </span>`;
+    }
+
+    function renderRows(items) {
+        if (!Array.isArray(items) || items.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center py-4">
+                        <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                        <p class="text-muted mt-2">Tidak ada data pengadaan</p>
+                    </td>
+                </tr>`;
+            paginationWrap.innerHTML = "";
+            return;
+        }
+
+        tbody.innerHTML = items.map(p => {
+            const priorityClass = p.priority?.toLowerCase() || '';
+            const priorityText = p.priority?.toUpperCase() || '-';
+            
+            return `
+            <tr>
+                <td style="padding: 12px 8px;"><strong>${p.code_procurement}</strong></td>
+                <td style="padding: 12px 8px;">${p.name_procurement?.substring(0, 40) || '-'}</td>
+                <td style="padding: 12px 8px; text-align: center;">${p.department_name || '-'}</td>
+                <td style="padding: 12px 8px; text-align: center;">${p.start_date || '-'}</td>
+                <td style="padding: 12px 8px; text-align: center;">${p.end_date || '-'}</td>
+                <td style="padding: 12px 8px; text-align: center;">${p.vendor_name || '-'}</td>
+                <td style="padding: 12px 8px; text-align: center;">
+                    <span class="badge-priority badge-${priorityClass}">
+                        ${priorityText}
+                    </span>
+                </td>
+                <td style="padding: 12px 8px; text-align: center;">
+                    ${getStatusBadge(p.auto_status, p.current_checkpoint)}
+                </td>
+                <td style="padding: 12px 8px; text-align: center;">
+                    <a href="/procurements/${p.procurement_id}" class="btn btn-sm btn-primary">
+                        Detail
+                    </a>
+                </td>
+            </tr>`;
+        }).join("");
+
+        renderPagination();
+    }
+
+    function renderPagination() {
+        if (!lastPagination) {
+            paginationWrap.innerHTML = '';
+            return;
+        }
+
+        const p = lastPagination;
+        let html = `<nav><ul class="pagination">`;
+
+        html += p.current_page > 1
+            ? `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page - 1})">← Sebelumnya</a></li>`
+            : `<li class="page-item disabled"><span class="page-link">← Sebelumnya</span></li>`;
+
+        for (let i = 1; i <= p.last_page; i++) {
+            html += i === p.current_page
+                ? `<li class="page-item active"><span class="page-link">${i}</span></li>`
+                : `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${i})">${i}</a></li>`;
+        }
+
+        html += p.has_more
+            ? `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page + 1})">Berikutnya →</a></li>`
+            : `<li class="page-item disabled"><span class="page-link">Berikutnya →</span></li>`;
+
+        html += `</ul></nav>`;
+        paginationWrap.innerHTML = html;
+    }
+
+    window.goToPage = function (page) {
+        currentPage = page;
+        fetchProcurements();
+    };
+
+    function fetchProcurements() {
+        const q = encodeURIComponent(searchInput.value.trim());
+        const checkpoint = encodeURIComponent(checkpointSelect.value);
+        const priority = encodeURIComponent(prioritySelect.value);
+
+const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&priority=${priority}&page=${currentPage}`;
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(res => res.json())
+            .then(res => {
+                lastPagination = res.pagination;
+                renderRows(res.data);
+            })
+            .catch(err => {
+                console.error("Search error:", err);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <i class="bi bi-exclamation-circle" style="font-size: 48px; color: #f00;"></i>
+                            <p class="text-danger mt-2">Terjadi kesalahan: ${err.message}</p>
+                        </td>
+                    </tr>`;
+            });
+    }
+
+    const debouncedFetch = debounce(() => {
+        currentPage = 1;
+        fetchProcurements();
+    }, 300);
+
+    searchInput.addEventListener('input', debouncedFetch);
+    checkpointSelect.addEventListener('change', debouncedFetch);
+    prioritySelect.addEventListener('change', debouncedFetch);
+});
 </script>
 @endpush

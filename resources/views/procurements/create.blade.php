@@ -131,7 +131,7 @@
                         </div>
 
                         <div class="col-md-4 mb-3 d-flex align-items-end gap-2">
-                            <a href="{{ route('procurements.index') }}" class="btn btn-secondary btn-custom flex-grow-1">
+                            <a href="{{ route('procurements.index') }}" class="btn btn-secondary btn-custom flex-grow-1" wire:navigate>
                                 <i class="bi bi-x-circle"></i> Batal
                             </a>
                             <button type="submit" class="btn btn-primary btn-custom flex-grow-1">
