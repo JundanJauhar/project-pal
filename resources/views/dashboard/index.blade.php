@@ -110,9 +110,6 @@
                         <div class="col-md-3">
                             <select class="form-select" name="checkpoint">
                                 <option value="">Semua Checkpoint</option>
-                                <option value="not_started">Belum Dimulai</option>
-                                <option value="PDM">PDM</option>
-                                <option value="Pengecekan">Pengecekan</option>
                                 <option value="Penawaran Permintaan">Penawaran Permintaan</option>
                                 <option value="Evatek">Evatek</option>
                                 <option value="Negosiasi">Negosiasi</option>
