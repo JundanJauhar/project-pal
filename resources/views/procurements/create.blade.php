@@ -29,21 +29,30 @@
                 <form method="POST" action="{{ isset($procurement) ? route('procurements.update', $procurement->procurement_id) : route('procurements.store') }}">
                     @csrf
                     @if(isset($procurement))
-                        @method('PUT')
+                    @method('PUT')
                     @endif
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="code_procurement" class="form-label">Kode Procurement <span class="text-danger">*</span></label>
-                            <input type="text"
-                                   class="form-control @error('code_procurement') is-invalid @enderror"
-                                   id="code_procurement"
-                                   name="code_procurement"
-                                   value="{{ old('code_procurement', $procurement->code_procurement ?? '') }}"
-                                   placeholder="PRK-2025987-308"
-                                   {{ isset($procurement) ? 'readonly' : 'required' }}>
+                            <label for="code_procurement" class="form-label">Project <span class="text-danger">*</span></label>
+                            <select class="form-select" aria-label="Default select example" placeholder="Pilih Project" required>
+                                @foreach($divisions as $division)
+                                <option value="{{ $division->department_id }}"
+                                    {{ old('department_procurement', $procurement->department_procurement ?? '') == $division->department_id ? 'selected' : '' }}>
+                                    {{ $division->department_name }}
+                                </option>
+                                @endforeach
+                                <option value="1">W000301</option>
+                                <option value="2">W000302</option>
+                                <option value="3">W000303</option>
+                                <option value="4">W000304</option>
+                                <option value="5">W000305</option>
+                                <option value="6">W000306</option>
+                                <option value="7">W000307</option>
+                                <option value="8">W000308</option>
+                            </select>
                             @error('code_procurement')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                             <small class="text-muted">Format: PRK-YYYYMMM-XXX</small>
                         </div>
@@ -51,19 +60,19 @@
                         <div class="col-md-6 mb-3">
                             <label for="department_procurement" class="form-label">Department <span class="text-danger">*</span></label>
                             <select class="form-select @error('department_procurement') is-invalid @enderror"
-                                    id="department_procurement"
-                                    name="department_procurement"
-                                    required>
+                                id="department_procurement"
+                                name="department_procurement"
+                                required>
                                 <option value="">Pilih Department</option>
                                 @foreach($divisions as $division)
                                 <option value="{{ $division->department_id }}"
-                                        {{ old('department_procurement', $procurement->department_procurement ?? '') == $division->department_id ? 'selected' : '' }}>
+                                    {{ old('department_procurement', $procurement->department_procurement ?? '') == $division->department_id ? 'selected' : '' }}>
                                     {{ $division->department_name }}
                                 </option>
                                 @endforeach
                             </select>
                             @error('department_procurement')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
@@ -71,26 +80,26 @@
                     <div class="mb-3">
                         <label for="name_procurement" class="form-label">Nama Procurement <span class="text-danger">*</span></label>
                         <input type="text"
-                               class="form-control @error('name_procurement') is-invalid @enderror"
-                               id="name_procurement"
-                               name="name_procurement"
-                               value="{{ old('name_procurement', $procurement->name_procurement ?? '') }}"
-                               placeholder="Pengadaan Material & Komponen"
-                               required>
+                            class="form-control @error('name_procurement') is-invalid @enderror"
+                            id="name_procurement"
+                            name="name_procurement"
+                            value="{{ old('name_procurement', $procurement->name_procurement ?? '') }}"
+                            placeholder="Pengadaan Material & Komponen"
+                            required>
                         @error('name_procurement')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="mb-3">
                         <label for="description" class="form-label">Deskripsi</label>
                         <textarea class="form-control @error('description') is-invalid @enderror"
-                                  id="description"
-                                  name="description"
-                                  rows="4"
-                                  placeholder="Deskripsi detail procurement...">{{ old('description', $procurement->description ?? '') }}</textarea>
+                            id="description"
+                            name="description"
+                            rows="4"
+                            placeholder="Deskripsi detail procurement...">{{ old('description', $procurement->description ?? '') }}</textarea>
                         @error('description')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
@@ -98,22 +107,22 @@
                         <div class="col-md-4 mb-3">
                             <label for="end_date" class="form-label">Tanggal Target <span class="text-danger">*</span></label>
                             <input type="date"
-                                   class="form-control @error('end_date') is-invalid @enderror"
-                                   id="end_date"
-                                   name="end_date"
-                                   value="{{ old('end_date', isset($procurement) ? $procurement->end_date->format('Y-m-d') : '') }}"
-                                   required>
+                                class="form-control @error('end_date') is-invalid @enderror"
+                                id="end_date"
+                                name="end_date"
+                                value="{{ old('end_date', isset($procurement) ? $procurement->end_date->format('Y-m-d') : '') }}"
+                                required>
                             @error('end_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="col-md-4 mb-3">
                             <label for="priority" class="form-label">Prioritas <span class="text-danger">*</span></label>
                             <select class="form-select @error('priority') is-invalid @enderror"
-                                    id="priority"
-                                    name="priority"
-                                    required>
+                                id="priority"
+                                name="priority"
+                                required>
                                 <option value="">Pilih Prioritas</option>
                                 <option value="rendah" {{ old('priority', $procurement->priority ?? '') === 'rendah' ? 'selected' : '' }}>
                                     RENDAH
@@ -126,12 +135,12 @@
                                 </option>
                             </select>
                             @error('priority')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="col-md-4 mb-3 d-flex align-items-end gap-2">
-                            <a href="{{ route('procurements.index') }}" class="btn btn-secondary btn-custom flex-grow-1" wire:navigate>
+                            <a href="javascript:history.back()" class="btn btn-secondary btn-custom flex-grow-1" wire:navigate>
                                 <i class="bi bi-x-circle"></i> Batal
                             </a>
                             <button type="submit" class="btn btn-primary btn-custom flex-grow-1">
@@ -144,35 +153,6 @@
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card card-custom">
-            <div class="card-header-custom">
-                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi</h5>
-            </div>
-            <div class="card-body">
-                <h6>Petunjuk Pengisian:</h6>
-                <ul class="small">
-                    <li><strong>Kode Procurement:</strong> Format PRK-YYYYMMM-XXX</li>
-                    <li><strong>Nama Procurement:</strong> Deskripsi singkat procurement</li>
-                    <li><strong>Department:</strong> Divisi yang mengajukan</li>
-                    <li><strong>Prioritas:</strong>
-                        <ul>
-                            <li>Rendah: Tidak urgent</li>
-                            <li>Sedang: Perlu perhatian</li>
-                            <li>Tinggi: Urgent & critical</li>
-                        </ul>
-                    </li>
-                </ul>
-
-                @if(!isset($procurement))
-                <div class="alert alert-info mt-3">
-                    <i class="bi bi-lightbulb"></i>
-                    <small>Setelah procurement dibuat, status akan otomatis "Draft" dan akan dikirim notifikasi ke tim Supply Chain untuk review.</small>
-                </div>
-                @endif
-            </div>
-        </div>
-    </div>
 </div>
 @endsection
 
@@ -180,7 +160,11 @@
 <script>
     // Auto-generate procurement code suggestion
     document.addEventListener('DOMContentLoaded', function() {
-        const isEdit = {{ isset($procurement) ? 'true' : 'false' }};
+        const isEdit = {
+            {
+                isset($procurement) ? 'true' : 'false'
+            }
+        };
 
         if (!isEdit) {
             const codeInput = document.getElementById('code_procurement');

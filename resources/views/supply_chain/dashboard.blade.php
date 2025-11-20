@@ -13,6 +13,11 @@
     .priority-tinggi { color: #BD0000; }
     .priority-sedang { color: #FFBB00; }
     .priority-rendah { color: #6f6f6f; }
+
+    .tambah .btn{
+        background: #003d82;
+        border-color: #003d82;
+    }
 </style>
 @endpush
 
@@ -36,7 +41,7 @@
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <h2><i class="bi bi-box-seam"></i> Daftar Pengadaan</h2> 
+            <h2><i class="bi bi-box-seam"></i> Daftar Pengadaan</h2>
         </div>
     </div>
 
@@ -96,23 +101,23 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Kode Pengadaan</th>
-                            <th>Nama Pengadaan</th>
-                            <th>Department</th>
-                            <th>Vendor</th>
-                            <th>Tanggal Mulai</th>
-                            <th>Tempat Selesai</th>
-                            <th>Prioritas</th>
-                            <th>Aksi</th>
+                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode Pengadaan</th>
+                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Pengadaan</th>
+                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Department</th>
+                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Vendor</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
                         @forelse($procurements as $procurement)
                         <tr data-name="{{ strtolower($procurement->name_procurement) }} {{ strtolower($procurement->code_procurement) }}">
-                            <td><strong>{{ $procurement->code_procurement }}</strong></td>
-                            <td>{{ Str::limit($procurement->name_procurement, 40) }}</td>
-                            <td>{{ $procurement->department->department_name ?? '-' }}</td>
-                            <td>
+                            <td style="padding: 12px 8px; text-align: left;  color: #000;"><strong>{{ $procurement->code_procurement }}</strong></td>
+                            <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ Str::limit($procurement->name_procurement, 40) }}</td>
+                            <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ $procurement->department->department_name ?? '-' }}</td>
+                            <td style="padding: 12px 8px; text-align: left;  color: #000;">
                                 @php
                                     $requestProcurement = $procurement->requestProcurements->first();
                                     $vendor = $requestProcurement?->vendor;
@@ -121,18 +126,7 @@
                                 @if($vendor)
                                     <div class="d-flex flex-column">
                                         <div>
-                                            <strong>{{ $vendor->name_vendor }}</strong>
-                                            @if($requestProcurement->request_status)
-                                                @php
-                                                    $statusMap = [
-                                                        'submitted' => ['Submitted', 'info'],
-                                                        'approved' => ['Approved', 'success'],
-                                                        'rejected' => ['Rejected', 'danger'],
-                                                    ];
-                                                    [$statusText, $badgeColor] = $statusMap[$requestProcurement->request_status] ?? ['Pending', 'warning'];
-                                                @endphp
-                                                <span class="badge bg-{{ $badgeColor }} ms-2">{{ $statusText }}</span>
-                                            @endif
+                                            {{ $vendor->name_vendor }}
                                         </div>
                                     </div>
                                 @else
@@ -142,14 +136,14 @@
                                     </a>
                                 @endif
                             </td>
-                            <td>{{ $procurement->start_date->format('d/m/Y') }}</td>
-                            <td>{{ $procurement->end_date->format('d/m/Y') }}</td>
-                            <td>
+                            <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->start_date->format('d/m/Y') }}</td>
+                            <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->end_date->format('d/m/Y') }}</td>
+                            <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
                                 <span class="priority-badge priority-{{ strtolower($procurement->priority) }}">
                                     {{ strtoupper($procurement->priority) }}
                                 </span>
                             </td>
-                            <td>
+                            <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
                                 <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary" wire:navigate>
                                     Detail
                                 </a>
