@@ -1,178 +1,187 @@
 @extends('layouts.app')
 
-@section('title', 'Supply Chain Dashboard')
+@section('title', 'Daftar Pengadaan - Supply Chain')
+
+@push('styles')
+<style>
+    .priority-badge {
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .priority-tinggi { color: #BD0000; }
+    .priority-sedang { color: #FFBB00; }
+    .priority-rendah { color: #6f6f6f; }
+</style>
+@endpush
 
 @section('content')
-
-
-<div class="row mb-4">
-    <div class="col-12">
-        <h2><i class="bi bi-truck"></i> Supply Chain Dashboard</h2>
-        <p class="text-muted">Kelola pengadaan material dan vendor</p>
+<div class="container-fluid px-4">
+    <!-- Success/Error Messages -->
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle"></i> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-</div>
+    @endif
 
-<!-- Statistics -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card card-custom" style="border-left: 4px solid #667eea;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-1">Pending Review</h6>
-                        <h3 class="mb-0">{{ $stats['pending_review'] }}</h3>
-                    </div>
-                    <i class="bi bi-clock-history" style="font-size: 36px; color: #667eea;"></i>
-                </div>
-            </div>
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-circle"></i> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    @endif
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-box-seam"></i> Daftar Pengadaan</h2>
+            <p class="text-muted">{{ Auth::user()->department->department_name ?? 'Department' }}</p>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card card-custom" style="border-left: 4px solid #f093fb;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-1">Active Negotiations</h6>
-                        <h3 class="mb-0">{{ $stats['active_negotiations'] }}</h3>
-                    </div>
-                    <i class="bi bi-chat-dots" style="font-size: 36px; color: #f093fb;"></i>
-                </div>
-            </div>
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <input type="text" id="searchInput" class="form-control" placeholder="Cari pengadaan...">
+        </div>
+        <div class="col-md-3">
+            <select id="statusFilter" class="form-select">
+                <option value="">Semua Status</option>
+                <option value="draft">Draft</option>
+                <option value="submitted">Submitted</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select id="priorityFilter" class="form-select">
+                <option value="">Semua Prioritas</option>
+                <option value="tinggi">Tinggi</option>
+                <option value="sedang">Sedang</option>
+                <option value="rendah">Rendah</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <a href="{{ route('supply-chain.pengadaan.create') }}" class="btn btn-primary w-100" wire:navigate>
+                <i class="bi bi-plus-circle"></i> Tambah
+            </a>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card card-custom" style="border-left: 4px solid #4facfe;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-1">Pending Contracts</h6>
-                        <h3 class="mb-0">{{ $stats['pending_contracts'] }}</h3>
-                    </div>
-                    <i class="bi bi-file-earmark-text" style="font-size: 36px; color: #4facfe;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Kode Pengadaan</th>
+                            <th>Nama Pengadaan</th>
+                            <th>Department</th>
+                            <th>Vendor</th>
+                            <th>Tanggal Mulai</th>
+                            <th>Tempat Selesai</th>
+                            <th>Prioritas</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        @forelse($procurements as $procurement)
+                        <tr data-name="{{ strtolower($procurement->name_procurement) }} {{ strtolower($procurement->code_procurement) }}">
+                            <td><strong>{{ $procurement->code_procurement }}</strong></td>
+                            <td>{{ Str::limit($procurement->name_procurement, 40) }}</td>
+                            <td>{{ $procurement->department->department_name ?? '-' }}</td>
+                            <td>
+                                @php
+                                    $requestProcurement = $procurement->requestProcurements->first();
+                                    $vendor = $requestProcurement?->vendor;
+                                @endphp
 
-    <div class="col-md-3">
-        <div class="card card-custom" style="border-left: 4px solid #fa709a;">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="text-muted mb-1">Material Requests</h6>
-                        <h3 class="mb-0">{{ $stats['material_requests'] }}</h3>
-                    </div>
-                    <i class="bi bi-box-seam" style="font-size: 36px; color: #fa709a;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card card-custom">
-            <div class="card-header-custom" style="background: #003d82;">
-                <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ route('supply-chain.material-requests') }}" class="btn btn-outline-primary w-100 btn-custom">
-                            <i class="bi bi-box-seam"></i> Material Requests
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ route('supply-chain.vendors') }}" class="btn btn-outline-primary w-100 btn-custom">
-                            <i class="bi bi-people"></i> Vendor Management
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ route('supply-chain.negotiations') }}" class="btn btn-outline-primary w-100 btn-custom">
-                            <i class="bi bi-chat-dots"></i> Negotiations
-                        </a>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <a href="{{ route('supply-chain.material-shipping') }}" class="btn btn-outline-primary w-100 btn-custom">
-                            <i class="bi bi-truck"></i> Material Shipping
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- procurements Needing Attention -->
-<div class="row">
-    <div class="col-12">
-        <div class="card card-custom">
-            <div class="card-header-custom" style="background: #003d82;">
-                <h5 class="mb-0"><i class="bi bi-exclamation-circle"></i> procurements Needing Attention</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover table-custom">
-                        <thead>
-                            <tr>
-                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kode procurement</th>
-                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama procurement</th>
-                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
-                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
-                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
-                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($procurements as $procurement)
-                            <tr>
-                                <td><strong>{{ $procurement->code_procurement }}</strong></td>
-                                <td>{{ Str::limit($procurement->name_procurement, 50) }}</td>
-                                <td style="padding: 12px 8px; text-align: center;">{{ $procurement->department->department_name ?? '-' }}</td>
-                                <td style="padding: 12px 8px; text-align: center;">
-                                    <span class="badge-priority badge-{{ strtolower($procurement->priority) }}">
-                                        {{ strtoupper($procurement->priority) }}
-                                    </span>
-                                </td>
-                                <td style="padding: 12px 8px; text-align: center;" >
-                                    @php
-                                        $statusMap = [
-                                            'draft' => ['Draft', 'secondary'],
-                                            'submitted' => ['Submitted', 'warning'],
-                                            'reviewed' => ['Reviewed', 'info'],
-                                            'approved' => ['Approved', 'success'],
-                                            'rejected' => ['Rejected', 'danger'],
-                                            'in_progress' => ['In Progress', 'primary'],
-                                            'completed' => ['Completed', 'success'],
-                                            'cancelled' => ['Cancelled', 'dark'],
-                                        ];
-                                        [$statusText, $badgeColor] = $statusMap[$procurement->status_procurement] ?? [ucfirst($procurement->status_procurement), 'warning'];
-                                    @endphp
-                                    <span class="badge bg-{{ $badgeColor }}">{{ $statusText }}</span>
-                                </td>
-                                <td style="padding: 12px 8px; text-align: center;">
-                                    <a href="{{ route('procurements.show', $procurement->procurement_id) }}"
-                                       class="btn btn-sm btn-primary btn-custom">
-                                        <i class="bi bi-eye"></i> Detail
+                                @if($vendor)
+                                    <div class="d-flex flex-column">
+                                        <div>
+                                            <strong>{{ $vendor->name_vendor }}</strong>
+                                            @if($requestProcurement->request_status)
+                                                @php
+                                                    $statusMap = [
+                                                        'submitted' => ['Submitted', 'info'],
+                                                        'approved' => ['Approved', 'success'],
+                                                        'rejected' => ['Rejected', 'danger'],
+                                                    ];
+                                                    [$statusText, $badgeColor] = $statusMap[$requestProcurement->request_status] ?? ['Pending', 'warning'];
+                                                @endphp
+                                                <span class="badge bg-{{ $badgeColor }} ms-2">{{ $statusText }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @else
+                                    <a href="{{ route('supply-chain.vendor.pilih', $procurement->procurement_id) }}"
+                                       class="btn btn-sm btn-primary" wire:navigate>
+                                        <i class="bi bi-plus-circle"></i> Kelola Vendor
                                     </a>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="6" class="text-center py-4">
-                                    <i class="bi bi-check-circle" style="font-size: 48px; color: #28a745;"></i>
-                                    <p class="text-muted mt-2">Tidak ada procurement yang memerlukan perhatian</p>
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                                @endif
+                            </td>
+                            <td>{{ $procurement->start_date->format('d/m/Y') }}</td>
+                            <td>{{ $procurement->end_date->format('d/m/Y') }}</td>
+                            <td>
+                                <span class="priority-badge priority-{{ strtolower($procurement->priority) }}">
+                                    {{ strtoupper($procurement->priority) }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary" wire:navigate>
+                                    Detail
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="8" class="text-center">Tidak ada data pengadaan</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const priorityFilter = document.getElementById('priorityFilter');
+    const tableBody = document.getElementById('tableBody');
+
+    function filterTable() {
+        const searchValue = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value.toLowerCase();
+        const priorityValue = priorityFilter.value.toLowerCase();
+        const rows = tableBody.querySelectorAll('tr[data-name]');
+
+        rows.forEach(row => {
+            const name = row.getAttribute('data-name');
+            const status = row.querySelector('td:nth-child(8)')?.textContent.toLowerCase() || '';
+            const priority = row.querySelector('.priority-badge')?.textContent.toLowerCase() || '';
+
+            const matchSearch = name.includes(searchValue);
+            const matchStatus = !statusValue || status.includes(statusValue);
+            const matchPriority = !priorityValue || priority.includes(priorityValue);
+
+            row.style.display = (matchSearch && matchStatus && matchPriority) ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(filterTable, 300);
+    });
+
+    statusFilter.addEventListener('change', filterTable);
+    priorityFilter.addEventListener('change', filterTable);
+</script>
+@endpush
+

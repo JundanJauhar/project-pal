@@ -94,11 +94,10 @@
 </style>
 @endpush
 
-@section('content')
+    <h2 class="fw-bold mb-4">Daftar Item</h2>
 
-<h2 class="fw-bold mb-4">Daftar Item</h2>
 
-<div class="row mb-4">
+    <div class="row mb-4">
     <div class="col-12">
         <div class="card card-custom">
             <div class="card-body">

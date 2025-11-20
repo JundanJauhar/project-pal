@@ -12,10 +12,13 @@ return new class extends Migration
             $table->id('request_id');
 
             // FK ke procurement
-            $table->unsignedBigInteger('procurement_id');
+            $table->unsignedBigInteger('procurement_id')->nullable();
 
-            // Vendor optional
-            $table->unsignedBigInteger('vendor_id')->nullable();
+            // FK ke project (PERBAIKAN #1)
+            $table->unsignedBigInteger('project_id')->nullable();
+
+            // Vendor optional - PERBAIKAN FK: ubah ke string untuk match vendors.id_vendor
+            $table->string('vendor_id', 20)->nullable();
 
             $table->string('request_name', 200);
             $table->date('created_date');
@@ -26,7 +29,7 @@ return new class extends Migration
             ])->default('draft');
 
             // department
-            $table->unsignedBigInteger('department_id');
+            $table->unsignedBigInteger('department_id')->nullable();
 
             $table->timestamps();
             $table->softDeletes();
@@ -35,7 +38,12 @@ return new class extends Migration
             $table->foreign('procurement_id')
                   ->references('procurement_id')
                   ->on('procurement')
-                  ->cascadeOnDelete();
+                  ->nullOnDelete();
+
+            $table->foreign('project_id')
+                  ->references('project_id')
+                  ->on('projects')
+                  ->nullOnDelete();
 
             $table->foreign('vendor_id')
                   ->references('id_vendor')
