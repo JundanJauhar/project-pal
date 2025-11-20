@@ -5,7 +5,6 @@
 @push('styles')
 <style>
 
-/* BACK BUTTON */
 .back-btn {
     display: inline-block;
     background: #e0e0e0;
@@ -17,10 +16,6 @@
     margin-bottom: 15px;
     cursor: pointer;
 }
-
-/* ===================================== */
-/* ============= HEADER ================= */
-/* ===================================== */
 .eq-name {
     font-size: 16px;
     font-weight: 400;
@@ -35,9 +30,6 @@
     margin-bottom: 35px;
 }
 
-/* ===================================== */
-/* ========== FINAL STATUS CARD ========= */
-/* ===================================== */
 .status-card {
     background: #f8f8f8;
     border-radius: 14px;
@@ -104,9 +96,6 @@
     color: #333;
 }
 
-/* ===================================== */
-/* ============ TRACKING =============== */
-/* ===================================== */
 .tracking-card {
     background: #ffffff;
     border-radius: 14px;
@@ -197,9 +186,6 @@
     cursor: pointer;
 }
 
-/* ===================================== */
-/* ============ LOG ACTIVITY ============ */
-/* ===================================== */
 .log-card {
     background: #f8f8f8;
     border-radius: 14px;
@@ -232,7 +218,6 @@
     );
 }
 
-/* ===================================== */
 .content-wrapper {
     display: grid;
     grid-template-columns: 3fr 1fr;
@@ -246,16 +231,13 @@
 
 @section('content')
 
-{{-- BACK BUTTON --}}
 <button class="back-btn" onclick="goBack()">← Back</button>
 
-{{-- HEADER --}}
 <p class="eq-name">{{ $request->request_name }}</p>
 <h2 class="vendor-name">{{ $request->vendor->name_vendor ?? '-' }}</h2>
 
 
 
-{{-- ================= FINAL STATUS ================= --}}
 <div id="statusCard" class="status-card">
 
     <div class="status-header" onclick="toggleFinalStatus()">
