@@ -77,15 +77,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/procurements/{id}/progress', [ProcurementController::class, 'updateProgress'])->name('procurements.update-progress');
     Route::resource('procurements', ProcurementController::class, ['only' => ['index', 'show', 'create', 'store', 'update']]);
 
-
-    // ------ User Procurement ------
     // Item Evatek
     Route::post('/items/{itemId}/approve', [DesainListProjectController::class, 'approveItem'])->name('items.approve');
     Route::post('/items/{itemId}/reject', [DesainListProjectController::class, 'rejectItem'])->name('items.reject');
 
     // User-specific procurement list (used by 'user' role)
-
-    // ------ User Procurement ------
     Route::get('/user/list', function () {
         $procurements = \App\Models\Procurement::with(['department', 'requestProcurements.vendor'])
             ->orderBy('created_at', 'desc')
