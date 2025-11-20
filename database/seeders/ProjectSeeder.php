@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Contract;
 use Illuminate\Database\Seeder;
 use App\Models\Project;
 use App\Models\RequestProcurement;
@@ -201,21 +202,6 @@ class ProjectSeeder extends Seeder
         /**
          * ITEMS — DENGAN STATUS APPROVED/NOT_APPROVED
          */
-<<<<<<< HEAD
-        Item::updateOrCreate(
-            [
-                'request_procurement_id' => $request1->request_id,
-                'item_name' => 'Baja High Grade'
-            ], // key untuk check
-            [
-                'item_description' => 'Material baja high grade untuk struktur kapal',
-                'amount' => 100,
-                'unit' => 'ton',
-                'unit_price' => 120000000,
-                'total_price' => 12000000000,
-            ]
-        );
-=======
         $item1 = Item::create([
             'request_procurement_id' => $request1->request_id,
             'item_name' => 'Baja High Grade',
@@ -228,7 +214,6 @@ class ProjectSeeder extends Seeder
             'approved_by' => 2,
             'approved_at' => Carbon::now()->subDays(85),
         ]);
->>>>>>> 25d9dd12ae669830998e9012af27d461237ae50a
 
         $item2 = Item::create([
             'request_procurement_id' => $request1->request_id,
@@ -303,21 +288,20 @@ class ProjectSeeder extends Seeder
         ]);
 
         /**
-<<<<<<< HEAD
          * CONTRACT FOR PROJECT 1
          */
-        $contract1 = Contract::updateOrCreate(
-            ['contract_number' => 'CTR/PAL/2025/001'], // key untuk check
-            [
-                'project_id' => $project1->project_id,
-                'vendor_id' => 1,
-                'contract_value' => 14500000000,
-                'start_date' => Carbon::now()->subDays(70),
-                'end_date' => Carbon::now()->addDays(30),
-                'status' => 'active',
-                'created_by' => 2, // user_id
-            ]
-        );
+        // $contract1 = Contract::updateOrCreate(
+        //     ['contract_number' => 'CTR/PAL/2025/001'], // key untuk check
+        //     [
+        //         'project_id' => $project1->project_id,
+        //         'vendor_id' => 1,
+        //         'contract_value' => 14500000000,
+        //         'start_date' => Carbon::now()->subDays(70),
+        //         'end_date' => Carbon::now()->addDays(30),
+        //         'status' => 'active',
+        //         'created_by' => 2, // user_id
+        //     ]
+        // );
 
         /**
          * PAYMENT SCHEDULES
@@ -325,7 +309,7 @@ class ProjectSeeder extends Seeder
         PaymentSchedule::updateOrCreate(
             [
                 'project_id' => $project1->project_id,
-                'contract_id' => $contract1->contract_id,
+                // 'contract_id' => $contract1->contract_id,
                 'payment_type' => 'dp'
             ], // key untuk check
             [
@@ -338,22 +322,6 @@ class ProjectSeeder extends Seeder
                 'payment_date' => Carbon::now()->subDays(65),
             ]
         );
-=======
-         * PAYMENT SCHEDULES (tanpa contract_id jika tidak ada Contract)
-         */
-        PaymentSchedule::create([
-            'project_id' => $project1->project_id,
-            'contract_id' => null, // Set null jika tidak ada Contract
-            'payment_type' => 'dp',
-            'amount' => 4350000000,
-            'percentage' => 30,
-            'due_date' => Carbon::now()->subDays(65),
-            'status' => 'paid',
-            'verified_by_treasury' => 3,
-            'verified_by_accounting' => 4,
-            'payment_date' => Carbon::now()->subDays(65),
-        ]);
->>>>>>> 25d9dd12ae669830998e9012af27d461237ae50a
 
         PaymentSchedule::create([
             'project_id' => $project1->project_id,
@@ -384,20 +352,6 @@ class ProjectSeeder extends Seeder
         /**
          * INSPECTION REPORT
          */
-<<<<<<< HEAD
-        InspectionReport::updateOrCreate(
-            [
-                'project_id' => $project1->project_id,
-                'item_id' => 1,
-                'inspection_date' => Carbon::now()->subDays(10)
-            ], // key untuk check
-            [
-                'inspector_id' => 5,
-                'result' => 'passed',
-                'notes' => 'Material sesuai spesifikasi teknis.',
-            ]
-        );
-=======
         InspectionReport::create([
             'project_id' => $project1->project_id,
             'item_id' => $item1->item_id,
@@ -406,7 +360,6 @@ class ProjectSeeder extends Seeder
             'result' => 'passed',
             'notes' => 'Material sesuai spesifikasi teknis.',
         ]);
->>>>>>> 25d9dd12ae669830998e9012af27d461237ae50a
 
         InspectionReport::create([
             'project_id' => $project1->project_id,
@@ -477,21 +430,6 @@ class ProjectSeeder extends Seeder
         /**
          * PROJECT 2–7 - Additional projects
          */
-<<<<<<< HEAD
-
-        Project::updateOrCreate(
-            ['project_code' => 'KCJ-202511-002'], // key untuk check
-            [
-                'project_name' => 'Pengadaan Sistem Radar Navigasi',
-                'description' => 'Pengadaan radar navigasi untuk kapal perang',
-                'owner_division_id' => 2,
-                'priority' => 'tinggi',
-                'start_date' => Carbon::now()->subDays(45),
-                'end_date' => Carbon::now()->addDays(60),
-                'status_project' => 'negosiasi_harga',
-            ]
-        );
-=======
         Project::create([
             'project_code' => 'KCJ-202511-002',
             'project_name' => 'Pengadaan Sistem Radar Navigasi',
@@ -502,7 +440,6 @@ class ProjectSeeder extends Seeder
             'end_date' => Carbon::now()->addDays(60),
             'status_project' => 'negosiasi_harga',
         ]);
->>>>>>> 25d9dd12ae669830998e9012af27d461237ae50a
 
         Project::updateOrCreate(
             ['project_code' => 'KCJ-202511-003'], // key untuk check
