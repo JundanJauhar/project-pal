@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\Evatek;
+use App\Models\Item; // Sesuaikan dengan model Anda
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DesainController extends Controller
@@ -25,11 +27,6 @@ class DesainController extends Controller
         return view('desain.dashboard', compact('projects', 'stats'));
     }
 
-    public function inputEquipment()
-    {
-        return view('desain.input-equipment');
-    }
-
    
     public function statusEvatek($projectId)
     {
@@ -46,5 +43,36 @@ class DesainController extends Controller
         );
 
         return view('desain.status-evatek-detail', compact('project', 'evatek'));
+    }
+
+    // ✅ TAMBAHKAN METHOD INI
+    public function inputItem()
+    {
+        // Cek authorization (opsional, jika belum pakai middleware)
+        if (Auth::user()->roles !== 'supply_chain') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Ambil data yang diperlukan untuk form
+        $projects = Project::all(); // atau sesuaikan query
+        
+        return view('desain.input-item', compact('projects'));
+    }
+
+    // ✅ METHOD UNTUK MENYIMPAN DATA
+    public function storeItem(Request $request)
+    {
+        // Validasi
+        $validated = $request->validate([
+            'project_id' => 'required|exists:projects,project_id',
+            'item_name' => 'required|string|max:255',
+            // tambahkan validasi lainnya sesuai kebutuhan
+        ]);
+
+        // Simpan data
+        Item::create($validated);
+
+        return redirect()->route('desain.list-project')
+            ->with('success', 'Item berhasil ditambahkan!');
     }
 }

@@ -156,10 +156,13 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('desain')->name('desain.')->group(function () {
         Route::get('/dashboard', [DesainController::class, 'dashboard'])->name('dashboard');
         Route::get('/list-project', [DesainListProjectController::class, 'list'])->name('list-project');
-        Route::get('/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPermintaan'])->name('daftar-permintaan');
+        Route::get('/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPengadaan'])->name('daftar-pengadaan');
         Route::get('/project/{id}/pengadaan', [DesainListProjectController::class, 'formPengadaan'])->name('permintaan-pengadaan');
         Route::post('/project/{id}/pengadaan/kirim', [DesainListProjectController::class, 'kirimPengadaan'])->name('kirim-pengadaan');
         Route::get('/evatek/{request_id}', [DesainListProjectController::class, 'reviewEvatek'])->name('review-evatek');
+
+        Route::get('/input-item', [DesainController::class, 'inputItem'])->name('input-item');
+        Route::post('/input-item/store', [DesainController::class, 'storeItem'])->name('input-item.store');
     });
 
     // Route untuk Sekretaris Direksi
