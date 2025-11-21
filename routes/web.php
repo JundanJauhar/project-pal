@@ -17,7 +17,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\DesainController;
 use App\Http\Controllers\DesainListProjectController;
 use App\Http\Controllers\ListApprovalController;
-
+use App\Http\Controllers\SekdirController;
 
 // =================== PUBLIC ROUTES ===================
 Route::get('/', fn() => redirect()->route('login'));
@@ -148,7 +148,8 @@ Route::middleware(['auth'])->group(function () {
     // =================== QA LIST APPROVAL ===================
     Route::get('/qa/list-approval', [ListApprovalController::class, 'index'])->name('qa.list-approval');
 
-    Route::post('/qa/inspection/save-item',
+    Route::post(
+        '/qa/inspection/save-item',
         [ListApprovalController::class, 'saveInspectionItem']
     )->name('qa.inspection.save-item');
 
@@ -163,4 +164,18 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/evatek/{request_id}', [DesainListProjectController::class, 'reviewEvatek'])->name('review-evatek');
     });
 
+    // Route untuk Sekretaris Direksi
+    Route::prefix('sekdir')->name('sekdir.')->group(function () {
+        Route::get('/approval', [SekdirController::class, 'approval'])
+            ->name('approval');
+
+        Route::get('/approvals', [SekdirController::class, 'approvals'])
+            ->name('approvals');
+
+        Route::get('/approval-detail/{procurement_id}', [SekdirController::class, 'approvalDetail'])
+            ->name('approval-detail');
+
+        Route::post('/approve/{projectId}', [SekdirController::class, 'approve'])
+            ->name('approve');
+    });
 });

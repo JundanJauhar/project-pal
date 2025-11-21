@@ -674,9 +674,11 @@
                     </li>
                     @endif
 
-                    @if(Auth::user() -> roles === 'sekretaris_direksi')
+                    @if(Auth::user()->roles === 'sekretaris')
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}" href="{{ route('dashboard') }}" wire:navigate>
+                        <a class="nav-link {{ request()->routeIs('sekdir.approval*') ? 'active' : '' }}"
+                            href="{{ route('sekdir.approval') }}"
+                            wire:navigate>
                             Department
                         </a>
                     </li>
@@ -740,7 +742,7 @@
                         </a>
                     </li>
 
-                        <!-- <li class="nav-item">
+                    <!-- <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('qa.list-approval') ? 'active' : '' }}" href="{{ route('qa.list-approval') }}">
                                 List Approval
                             </a>

@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Procurement;
 use App\Models\Project;
 use App\Models\RequestProcurement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SekdirController extends Controller
 {
@@ -32,6 +34,28 @@ class SekdirController extends Controller
             ->get();
 
         return view('sekdir.dashboard', compact('stats', 'recentProjects'));
+    }
+
+    /**
+     * Halaman approval untuk sekretaris_direksi
+     */
+    public function approval()
+    {
+        // Get projects awaiting secretary director approval
+        $procurements = Project::with(['ownerDivision', 'contracts.vendor'])
+            ->where('status_project', 'persetujuan_sekretaris')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Stats for this page
+        $stats = [
+            'total' => Project::count(),
+            'pending' => Project::where('status_project', 'persetujuan_sekretaris')->count(),
+            'approved' => Project::where('status_project', 'pemilihan_vendor')->count(),
+            'rejected' => Project::where('status_project', 'rejected')->count(),
+        ];
+
+        return view('sekdir.approval', compact('procurements', 'stats'));
     }
 
     /**
@@ -65,6 +89,7 @@ class SekdirController extends Controller
 
         // Validate
         $request->validate([
+            'document_link' => 'required|url',
             'notes' => 'nullable|string',
             'approval_decision' => 'required|in:approved,rejected',
         ]);
@@ -73,17 +98,25 @@ class SekdirController extends Controller
             // Move to next stage (pemilihan_vendor)
             $project->update([
                 'status_project' => 'pemilihan_vendor',
+                'approval_document_link' => $request->document_link,
+                'approval_notes' => $request->notes,
+                'approved_at' => now(),
+                'approved_by' => Auth::id(),
             ]);
-            $message = 'Project approved and moved to vendor selection stage.';
+            $message = 'Project berhasil disetujui dan dipindahkan ke tahap pemilihan vendor.';
         } else {
             // Reject project
             $project->update([
                 'status_project' => 'rejected',
+                'approval_document_link' => $request->document_link,
+                'approval_notes' => $request->notes,
+                'rejected_at' => now(),
+                'rejected_by' => Auth::id(),
             ]);
-            $message = 'Project rejected.';
+            $message = 'Project ditolak.';
         }
 
-        return redirect()->route('sekdir.approvals')
+        return redirect()->route('sekdir.approval')
             ->with('success', $message);
     }
 
@@ -92,12 +125,20 @@ class SekdirController extends Controller
      */
     public function approvalDetail($projectId)
     {
-        $project = Project::with([
+        $procurement = Procurement::with([
             'ownerDivision',
             'contracts.vendor',
-            'approvals',
-        ])->findOrFail($projectId);
+            'procurements.department',
+            'procurements.requestProcurements.items',
+        ])->find($projectId);
 
-        return view('sekdir.approval-detail', compact('project'));
+        if (!$procurement) {
+            return redirect()->route('sekdir.approval')
+                ->with('error', 'Data tidak ditemukan atau sudah dihapus.');
+        }
+
+        return view('sekdir.approval-detail', compact('procurement'));
     }
+
+
 }
