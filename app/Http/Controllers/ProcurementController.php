@@ -122,13 +122,13 @@ class ProcurementController extends Controller
         // Get the current stage index based on procurement progress
         $currentStageIndex = 0;
 
-$latestProgress = $procurement->procurementProgress
-    ->sortByDesc(fn($p) => $p->checkpoint?->point_sequence ?? 0)
-    ->first();
+        $latestProgress = $procurement->procurementProgress
+            ->sortByDesc(fn($p) => $p->checkpoint?->point_sequence ?? 0)
+            ->first();
 
-if ($latestProgress && $latestProgress->checkpoint) {
-    $currentStageIndex = $latestProgress->checkpoint->point_sequence - 1;
-}
+        if ($latestProgress && $latestProgress->checkpoint) {
+            $currentStageIndex = $latestProgress->checkpoint->point_sequence - 1;
+        }
 
 
         return view('procurements.show', compact('procurement', 'checkpoints', 'currentStageIndex'));

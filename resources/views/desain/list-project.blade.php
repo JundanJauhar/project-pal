@@ -138,7 +138,7 @@
                             class="form-control pe-5"
                             name="search"
                             id="searchInput"
-                            placeholder="Cari Vendor..."
+                            placeholder="Cari Project..."
                             autocomplete="off">
                         <button type="button"
                             class="btn btn-link position-absolute end-0 top-50 translate-middle-y text-danger pe-2"

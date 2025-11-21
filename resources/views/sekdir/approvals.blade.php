@@ -107,7 +107,6 @@
                                 </td>
                                 <td>
                                     <span class="badge bg-light text-dark">
-                                        {{ $project->requestProcurements->sum(fn($r) => $r->items->count()) }} items
                                     </span>
                                 </td>
                                 <td>

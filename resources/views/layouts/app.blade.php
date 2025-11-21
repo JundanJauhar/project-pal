@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +16,7 @@
         html {
             overflow-y: scroll;
         }
+
         :root {
             --pal-primary: #003d82;
             --pal-secondary: #0056b3;
@@ -45,7 +47,7 @@
         .navbar-custom {
             background: #ffffff;
             height: 60px;
-            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
         }
 
         /* sidebar removed in favor of top navbar */
@@ -59,7 +61,8 @@
         }
 
         .navbar-custom .nav-link {
-            height: 60px; /* match navbar height */
+            height: 60px;
+            /* match navbar height */
             display: flex;
             align-items: center;
             padding-top: 0;
@@ -84,7 +87,7 @@
             padding: 20px;
             margin-bottom: 20px;
             color: white;
-            box-shadow: 0 4px 6px rgba(0,0,0,.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, .1);
             transition: transform 0.3s;
         }
 
@@ -105,6 +108,7 @@
             overflow: hidden;
             gap: 24px;
         }
+
         .stat-total::before {
             content: '';
             position: absolute;
@@ -115,11 +119,13 @@
             border-radius: 5px;
             background: #7dade8;
         }
+
         .stat-total .stat-content {
             display: flex;
             flex-direction: column;
             z-index: 1;
         }
+
         .stat-total .stat-title {
             color: #5e6a77;
             font-size: 16px;
@@ -127,6 +133,7 @@
             margin-bottom: 10px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .stat-total .stat-value {
             color: #000000;
             font-size: var(--stat-value-size, 40px);
@@ -134,6 +141,7 @@
             line-height: 1;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .stat-total .stat-icon {
             position: relative;
             width: 64px;
@@ -144,21 +152,27 @@
             align-items: center;
             justify-content: center;
         }
+
         .stat-total .stat-icon-inner {
             width: 44px;
             height: 44px;
             border-radius: 50%;
             border: 2px solid #056ce8;
-            background: rgba(255,255,255,0.5);
+            background: rgba(255, 255, 255, 0.5);
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
         .stat-total .stat-icon-inner i {
             font-size: 24px;
             color: #056ce8;
         }
-        .stat-progress { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+
+        .stat-progress {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
         /* Modern minimal style for stat-success (green theme) */
         .stat-success {
             background: #f2f2f2 !important;
@@ -171,8 +185,9 @@
             padding: 24px 28px !important;
             overflow: hidden;
             gap: 24px;
-            box-shadow: 0 4px 6px rgba(0,0,0,.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, .05);
         }
+
         .stat-success::before {
             content: '';
             position: absolute;
@@ -181,20 +196,25 @@
             bottom: 16px;
             width: 5px;
             border-radius: 5px;
-            background: #28a745; /* green accent */
+            background: #28a745;
+            /* green accent */
         }
+
         .stat-success .stat-content {
             display: flex;
             flex-direction: column;
             z-index: 1;
         }
+
         .stat-success .stat-title {
-            color: #6c757d; /* gray */
+            color: #6c757d;
+            /* gray */
             font-size: 16px;
             font-weight: 700;
             margin-bottom: 10px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .stat-success .stat-value {
             color: #000000;
             font-size: var(--stat-value-size, 40px);
@@ -202,30 +222,37 @@
             line-height: 1;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .stat-success .stat-icon {
             position: relative;
             width: 64px;
             height: 64px;
             border-radius: 50%;
-            background: #28a745; /* green circle */
+            background: #28a745;
+            /* green circle */
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
         .stat-success .stat-icon-inner {
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            border: 2px solid #0b6b1c; /* darker green ring */
-            background: rgba(255,255,255,0.4);
+            border: 2px solid #0b6b1c;
+            /* darker green ring */
+            background: rgba(255, 255, 255, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
         .stat-success .stat-icon-inner i {
             font-size: 22px;
-            color: #0b6b1c; /* icon color */
+            color: #0b6b1c;
+            /* icon color */
         }
+
         /* Modern minimal style for stat-rejected (red theme) */
         .stat-rejected {
             background: #f2f2f2 !important;
@@ -238,8 +265,9 @@
             padding: 24px 28px !important;
             overflow: hidden;
             gap: 24px;
-            box-shadow: 0 4px 6px rgba(0,0,0,.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, .05);
         }
+
         .stat-rejected::before {
             content: '';
             position: absolute;
@@ -248,20 +276,25 @@
             bottom: 16px;
             width: 5px;
             border-radius: 5px;
-            background: #dc3545; /* red accent */
+            background: #dc3545;
+            /* red accent */
         }
+
         .stat-rejected .stat-content {
             display: flex;
             flex-direction: column;
             z-index: 1;
         }
+
         .stat-rejected .stat-title {
-            color: #6c757d; /* gray */
+            color: #6c757d;
+            /* gray */
             font-size: 16px;
             font-weight: 700;
             margin-bottom: 10px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .stat-rejected .stat-value {
             color: #000000;
             font-size: var(--stat-value-size, 40px);
@@ -269,29 +302,35 @@
             line-height: 1;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .stat-rejected .stat-icon {
             position: relative;
             width: 64px;
             height: 64px;
             border-radius: 50%;
-            background: #c8102e; /* deep red circle */
+            background: #c8102e;
+            /* deep red circle */
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
         .stat-rejected .stat-icon-inner {
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            border: 2px solid #7a0f16; /* darker ring */
-            background: rgba(255,255,255,0.35);
+            border: 2px solid #7a0f16;
+            /* darker ring */
+            background: rgba(255, 255, 255, 0.35);
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
         .stat-rejected .stat-icon-inner i {
             font-size: 22px;
-            color: #7a0f16; /* icon color */
+            color: #7a0f16;
+            /* icon color */
         }
 
         /* Modern minimal style for stat-progress (yellow theme) */
@@ -306,8 +345,9 @@
             padding: 24px 28px !important;
             overflow: hidden;
             gap: 24px;
-            box-shadow: 0 4px 6px rgba(0,0,0,.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, .05);
         }
+
         .stat-progress::before {
             content: '';
             position: absolute;
@@ -316,20 +356,25 @@
             bottom: 16px;
             width: 5px;
             border-radius: 5px;
-            background: #ffc107; /* yellow accent */
+            background: #ffc107;
+            /* yellow accent */
         }
+
         .stat-progress .stat-content {
             display: flex;
             flex-direction: column;
             z-index: 1;
         }
+
         .stat-progress .stat-title {
-            color: #6c757d; /* gray */
+            color: #6c757d;
+            /* gray */
             font-size: 16px;
             font-weight: 700;
             margin-bottom: 10px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .stat-progress .stat-value {
             color: #000000;
             font-size: var(--stat-value-size, 40px);
@@ -337,34 +382,41 @@
             line-height: 1;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
         .stat-progress .stat-icon {
             position: relative;
             width: 64px;
             height: 64px;
             border-radius: 50%;
-            background: #ffc107; /* yellow circle */
+            background: #ffc107;
+            /* yellow circle */
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
         .stat-progress .stat-icon-inner {
             width: 44px;
             height: 44px;
             border-radius: 50%;
-            border: 2px solid #b37f00; /* darker yellow/brown ring */
-            background: rgba(255,255,255,0.4);
+            border: 2px solid #b37f00;
+            /* darker yellow/brown ring */
+            background: rgba(255, 255, 255, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
         }
+
         .stat-progress .stat-icon-inner i {
             font-size: 22px;
-            color: #b37f00; /* icon color */
+            color: #b37f00;
+            /* icon color */
         }
+
         .card-custom {
             border: none;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
             margin-bottom: 20px;
         }
 
@@ -432,8 +484,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(240, 147, 251, 0.7); }
-            50% { box-shadow: 0 0 0 10px rgba(240, 147, 251, 0); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(240, 147, 251, 0.7);
+            }
+
+            50% {
+                box-shadow: 0 0 0 10px rgba(240, 147, 251, 0);
+            }
         }
 
         .timeline-label {
@@ -455,10 +514,12 @@
             background: var(--priority-rendah);
             color: var(--priority-rendah-text);
         }
+
         .badge-priority.badge-sedang {
             background: var(--priority-sedang);
             color: var(--priority-sedang-text);
         }
+
         .badge-priority.badge-tinggi {
             background: var(--priority-tinggi);
             color: var(--priority-tinggi-text);
@@ -473,10 +534,25 @@
             font-size: 13px;
         }
 
-        .vendor-status-process { background: var(--vendor-process); color: var(--vendor-process-text); }
-        .vendor-status-completed { background: var(--vendor-completed); color: var(--vendor-completed-text); }
-        .vendor-status-rejected { background: var(--vendor-rejected); color: var(--vendor-rejected-text); }
-        .vendor-status-neutral { background: var(--vendor-neutral); color: var(--vendor-neutral-text); }
+        .vendor-status-process {
+            background: var(--vendor-process);
+            color: var(--vendor-process-text);
+        }
+
+        .vendor-status-completed {
+            background: var(--vendor-completed);
+            color: var(--vendor-completed-text);
+        }
+
+        .vendor-status-rejected {
+            background: var(--vendor-rejected);
+            color: var(--vendor-rejected-text);
+        }
+
+        .vendor-status-neutral {
+            background: var(--vendor-neutral);
+            color: var(--vendor-neutral-text);
+        }
 
         .badge-status {
             padding: 6px 12px;
@@ -530,7 +606,8 @@
 
         .logo-pal {
             height: 100%;
-            max-height: 120px; /* keep within 60px navbar */
+            max-height: 120px;
+            /* keep within 60px navbar */
             object-fit: contain;
             margin-right: 15px;
             margin-top: 0;
@@ -538,7 +615,7 @@
             display: block;
         }
 
-        .navbar-nav{
+        .navbar-nav {
             margin-left: 100px;
         }
 
@@ -547,7 +624,8 @@
             .navbar .nav-center {
                 position: static;
                 transform: none;
-                margin-left: auto; /* push nav group to the right side */
+                margin-left: auto;
+                /* push nav group to the right side */
             }
         }
 
@@ -565,6 +643,7 @@
     </style>
     @stack('styles')
 </head>
+
 <body>
     <!-- Navbar -->
     @if(!isset($hideNavbar) || !$hideNavbar)
@@ -581,68 +660,79 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 {{-- nav items placed to the left of user menu --}}
                 <ul class="navbar-nav nav-center ms-auto me-3 padding align-items-center">
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}" href="{{ route('dashboard') }}" wire:navigate>
-                                Dashboard
-                            </a>
-                        </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}" href="{{ route('dashboard') }}" wire:navigate>
+                            Dashboard
+                        </a>
+                    </li>
 
-                        @if(Auth::user()->roles === 'user')
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('user.*') ? 'active' : '' }}" href="{{ route('user.list') }}" wire:navigate>
-                                Pengadaan
-                            </a>
-                        </li>
-                        @endif
+                    @if(Auth::user()->roles === 'user')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('user.*') ? 'active' : '' }}" href="{{ route('user.list') }}" wire:navigate>
+                            Pengadaan
+                        </a>
+                    </li>
+                    @endif
 
-                        @if(in_array(Auth::user()->roles,  ['sekretaris_direksi']))
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}" wire:navigate>
-                                Projects
-                            </a>
-                        </li>
-                        @endif
+                    @if(Auth::user()->roles === 'sekretaris')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('sekdir.approval*') ? 'active' : '' }}"
+                            href="{{ route('sekdir.approval') }}"
+                            wire:navigate>
+                            Department
+                        </a>
+                    </li>
+                    @endif
 
-                        @if(Auth::user()->roles === 'desain')
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('desain.list-project*') ? 'active' : '' }}" href="{{ route('desain.list-project') }}" wire:navigate>
+
+                    @if(in_array(Auth::user()->roles, ['sekretaris_direksi']))
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}" wire:navigate>
+                            Projects
+                        </a>
+                    </li>
+                    @endif
+
+                    @if(Auth::user()->roles === 'desain')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('desain.list-project*') ? 'active' : '' }}" href="{{ route('desain.list-project') }}" wire:navigate>
                             Projects
                         </a>
 
-                        </li>
-                        @endif
+                    </li>
+                    @endif
 
-                        @if(Auth::user()->roles === 'sekretaris_direksi')
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('sekdir.approvals*') ? 'active' : '' }}" href="{{ route('sekdir.approvals') }}">
-                                Persetujuan Pengadaan
-                            </a>
-                        </li>
-                        @endif
+                    @if(Auth::user()->roles === 'sekretaris_direksi')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('sekdir.approvals*') ? 'active' : '' }}" href="{{ route('sekdir.approvals') }}">
+                            Persetujuan Pengadaan
+                        </a>
+                    </li>
+                    @endif
 
-                        @if(Auth::user()->roles === 'supply_chain')
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('supply-chain.dashboard*') ? 'active' : '' }}" href="{{ route('supply-chain.dashboard') }}" wire:navigate>
-                                Department
-                            </a>
-                        </li>
-                        @endif
+                    @if(Auth::user()->roles === 'supply_chain')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('supply-chain.dashboard*') ? 'active' : '' }}" href="{{ route('supply-chain.dashboard') }}" wire:navigate>
+                            Department
+                        </a>
+                    </li>
+                    @endif
 
-                        @if(Auth::user()->roles === 'supply_chain')
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('supply-chain.vendor.kelola*') ? 'active' : '' }}" href="{{ route('supply-chain.vendor.kelola') }}" wire:navigate>
-                                Kelola Vendor
-                            </a>
-                        </li>
-                        @endif
+                    @if(Auth::user()->roles === 'supply_chain')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('supply-chain.vendor.kelola*') ? 'active' : '' }}" href="{{ route('supply-chain.vendor.kelola') }}" wire:navigate>
+                            Kelola Vendor
+                        </a>
+                    </li>
+                    @endif
 
-                        @if(in_array(Auth::user()->roles, ['treasury', 'accounting']))
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('payments*') ? 'active' : '' }}" href="{{ route('payments.index') }}">
-                                Payments
-                            </a>
-                        </li>
-                        @endif
+                    @if(in_array(Auth::user()->roles, ['treasury', 'accounting']))
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('payments*') ? 'active' : '' }}" href="{{ route('payments.index') }}">
+                            Payments
+                        </a>
+                    </li>
+                    @endif
 
 
                         @if(Auth::user()->roles === 'qa')
@@ -669,7 +759,9 @@
                                     <span class="badge rounded-pill bg-danger" id="notif-count-dd" style="display:none;">0</span>
                                 </a>
                             </li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}" class="d-inline">
                                     @csrf
@@ -730,8 +822,16 @@
                 const $dot = $('#notif-dot');
 
                 $ddBadge.text(count);
-                if (count > 0) { $ddBadge.show(); } else { $ddBadge.hide(); }
-                if (count > 0) { $dot.show(); } else { $dot.hide(); }
+                if (count > 0) {
+                    $ddBadge.show();
+                } else {
+                    $ddBadge.hide();
+                }
+                if (count > 0) {
+                    $dot.show();
+                } else {
+                    $dot.hide();
+                }
             });
         }
 
@@ -746,4 +846,5 @@
 
     @stack('scripts')
 </body>
+
 </html>
