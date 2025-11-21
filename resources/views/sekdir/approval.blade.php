@@ -5,36 +5,92 @@
 @push('styles')
 <style>
     .stat-card {
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 20px;
-        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #fff;
+        padding: 22px 20px;
+        border-radius: 14px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        transition: 0.3s;
+        height: 130px;
     }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+    }
+
+    .stat-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #555;
+    }
+
+    .stat-value {
+        font-size: 34px;
+        font-weight: 700;
+        margin-top: 8px;
+        color: #222;
+    }
+
+    .stat-icon i {
+        font-size: 46px;
+        opacity: 0.2;
+    }
+
+    .stat-total i { color: #0d6efd; }
+    .stat-progress i { color: #ffc107; }
+    .stat-success i { color: #198754; }
+    .stat-rejected i { color: #dc3545; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .stat-card {
+            height: auto;
+            padding: 18px;
+            margin-bottom: 14px;
+        }
+        .stat-value {
+            font-size: 28px;
+        }
+        .stat-icon i {
+            font-size: 38px;
+        }
+    }
+
     .stat-total {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
+
     .stat-progress {
         background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     }
+
     .stat-success {
         background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     }
+
     .stat-rejected {
         background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
     }
+
     .stat-content {
         position: relative;
         z-index: 1;
     }
+
     .stat-title {
         font-size: 14px;
         margin-bottom: 10px;
         opacity: 0.9;
     }
+
     .stat-value {
         font-size: 32px;
         font-weight: bold;
     }
+
     .stat-icon {
         position: absolute;
         right: 20px;
@@ -43,6 +99,7 @@
         font-size: 50px;
         opacity: 0.2;
     }
+
     .badge-priority {
         padding: 5px 12px;
         border-radius: 20px;
@@ -50,14 +107,17 @@
         font-weight: 600;
         display: inline-block;
     }
+
     .badge-priority.badge-tinggi {
         color: #BD0000;
         font-size: 14px;
     }
+
     .badge-priority.badge-sedang {
         color: #FFBB00;
         font-size: 14px;
     }
+
     .badge-priority.badge-rendah {
         color: #6f6f6f;
         font-size: 14px;
@@ -71,44 +131,47 @@
     <h2 class="mb-4">Approval Pengadaan</h2>
 
     <!-- Statistics Cards -->
-    <div class="row">
-        <div class="col-md-3">
-            <div class="stat-card stat-total">
-                <div class="stat-content">
-                    <div class="stat-title">Total Project</div>
-                    <div class="stat-value">{{ $stats['total'] }}</div>
-                </div>
-                <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
+  <div class="row g-3">
+    <div class="col-md-3 col-6">
+        <div class="stat-card stat-total">
+            <div>
+                <div class="stat-title">Total Project</div>
+                <div class="stat-value">{{ $stats['total'] }}</div>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card stat-progress">
-                <div class="stat-content">
-                    <div class="stat-title">Menunggu Approval</div>
-                    <div class="stat-value">{{ $stats['pending'] }}</div>
-                </div>
-                <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card stat-success">
-                <div class="stat-content">
-                    <div class="stat-title">Disetujui</div>
-                    <div class="stat-value">{{ $stats['approved'] }}</div>
-                </div>
-                <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card stat-rejected">
-                <div class="stat-content">
-                    <div class="stat-title">Ditolak</div>
-                    <div class="stat-value">{{ $stats['rejected'] }}</div>
-                </div>
-                <div class="stat-icon"><i class="bi bi-x-circle"></i></div>
-            </div>
+            <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
         </div>
     </div>
+
+    <div class="col-md-3 col-6">
+        <div class="stat-card stat-progress">
+            <div>
+                <div class="stat-title">Menunggu Approval</div>
+                <div class="stat-value">{{ $stats['pending'] }}</div>
+            </div>
+            <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-6">
+        <div class="stat-card stat-success">
+            <div>
+                <div class="stat-title">Disetujui</div>
+                <div class="stat-value">{{ $stats['approved'] }}</div>
+            </div>
+            <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-6">
+        <div class="stat-card stat-rejected">
+            <div>
+                <div class="stat-title">Ditolak</div>
+                <div class="stat-value">{{ $stats['rejected'] }}</div>
+            </div>
+            <div class="stat-icon"><i class="bi bi-x-circle"></i></div>
+        </div>
+    </div>
+</div>
 
     <!-- Projects Table -->
     <div class="card">
@@ -139,38 +202,39 @@
                     <tbody>
                         @forelse($procurements as $procurement)
                         <tr>
-                            <td><strong>{{ $procurement->project_code ?? '-' }}</strong></td>
-                            <td>{{ Str::limit($procurement->project_name, 40) }}</td>
-                            <td>{{ $procurement->ownerDivision->division_name ?? '-' }}</td>
-                            <td>{{ $procurement->contracts->first()?->vendor?->name_vendor ?? '-' }}</td>
+                            <td><strong>{{ $procurement->code_procurement ?? '-' }}</strong></td>
+                            <td>{{ Str::limit($procurement->name_procurement, 40) }}</td>
+                            <td>{{ $procurement->project->ownerDivision->division_name ?? '-' }}</td>
+                            <td>{{$procurement->requestProcurements->first()?->vendor?->name_vendor ?? '-' }}</td>
                             <td>{{ $procurement->created_at->format('d/m/Y') }}</td>
                             <td>
                                 <a href="{{ route('sekdir.approval-detail', $procurement->project_id) }}">
 
                                     @php
                                     $statusColors = [
-                                        'draft' => 'secondary',
-                                        'persetujuan_sekretaris' => 'warning',
-                                        'Persetujuan_dokumen' => 'info',
-                                        'approved' => 'success',
-                                        'rejected' => 'danger',
+                                    'draft' => 'secondary',
+                                    'persetujuan_sekretaris' => 'warning',
+                                    'Persetujuan_dokumen' => 'info',
+                                    'approved' => 'success',
+                                    'rejected' => 'danger',
                                     ];
-                                    $badgeColor = $statusColors[$procurement->status_project] ?? 'secondary';
+                                    $badgeColor = $statusColors[$procurement->project->status_project
+                                    ] ?? 'secondary';
                                     $statusText = [
-                                        'persetujuan_sekretaris' => 'Verifikasi Dokumen',
-                                        'Persetujuan_dokumen' => 'Dokumen Disetujui',
-                                        'rejected' => 'Dokumen Ditolak',
+                                    'persetujuan_sekretaris' => 'Verifikasi Dokumen',
+                                    'Persetujuan_dokumen' => 'Dokumen Disetujui',
+                                    'rejected' => 'Dokumen Ditolak',
                                     ];
                                     @endphp
                                     <span class="badge bg-{{ $badgeColor }}">
-                                        {{ $statusText[$procurement->status_project] ?? ucfirst($procurement->status_project) }}
+                                        {{ $statusText[$procurement->project->status_project] ?? ucfirst($procurement->project->status_project) }}
                                     </span>
                                 </a>
                             </td>
                             <td>
-                                <a href="{{ route('sekdir.approval-detail', $procurement->project_id) }}"
-                                   class="btn btn-sm btn-primary"
-                                   wire:navigate>
+                                <a href="{{ route('sekdir.approval-detail', $procurement->id) }}"
+                                    class="btn btn-sm btn-primary"
+                                    wire:navigate>
                                     <i class="bi bi-eye"></i> Detail
                                 </a>
                             </td>

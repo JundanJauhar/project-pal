@@ -40,23 +40,29 @@ class SekdirController extends Controller
      * Halaman approval untuk sekretaris_direksi
      */
     public function approval()
-    {
-        // Get projects awaiting secretary director approval
-        $procurements = Project::with(['ownerDivision', 'contracts.vendor'])
-            ->where('status_project', 'persetujuan_sekretaris')
-            ->orderBy('created_at', 'desc')
-            ->get();
+{
+    // Ambil procurement yang status PROJECT-nya menunggu sekretaris
+    $procurements = Procurement::with([
+        'project.ownerDivision',
+        'project.contracts.vendor'
+    ])
+    ->whereHas('project', function ($q) {
+        $q->where('status_project', 'persetujuan_sekretaris');
+    })
+    ->orderBy('created_at', 'desc')
+    ->get();
 
-        // Stats for this page
-        $stats = [
-            'total' => Project::count(),
-            'pending' => Project::where('status_project', 'persetujuan_sekretaris')->count(),
-            'approved' => Project::where('status_project', 'pemilihan_vendor')->count(),
-            'rejected' => Project::where('status_project', 'rejected')->count(),
-        ];
+    // Statistik
+    $stats = [
+        'total' => Project::count(),
+        'pending' => Project::where('status_project', 'persetujuan_sekretaris')->count(),
+        'approved' => Project::where('status_project', 'pemilihan_vendor')->count(),
+        'rejected' => Project::where('status_project', 'rejected')->count(),
+    ];
 
-        return view('sekdir.approval', compact('procurements', 'stats'));
-    }
+    return view('sekdir.approval', compact('procurements', 'stats'));
+}
+
 
     /**
      * Persetujuan Pengadaan - list requests awaiting approval
@@ -123,22 +129,17 @@ class SekdirController extends Controller
     /**
      * View detail of a project for approval
      */
-    public function approvalDetail($projectId)
-    {
-        $procurement = Procurement::with([
-            'ownerDivision',
-            'contracts.vendor',
-            'procurements.department',
-            'procurements.requestProcurements.items',
-        ])->find($projectId);
+    public function approvalDetail($procurementId)
+{
+    $procurement = Procurement::with([
+        'project.ownerDivision',
+        'project.contracts.vendor',
+        'department',
+        'requestProcurements.items'
+    ])->findOrFail($procurementId);
 
-        if (!$procurement) {
-            return redirect()->route('sekdir.approval')
-                ->with('error', 'Data tidak ditemukan atau sudah dihapus.');
-        }
-
-        return view('sekdir.approval-detail', compact('procurement'));
-    }
+    return view('sekdir.approval-detail', compact('procurement'));
+}
 
 
 }
