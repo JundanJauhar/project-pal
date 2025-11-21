@@ -26,39 +26,84 @@ class ProcurementController extends Controller
         return view('procurements.index', compact('procurements'));
     }
 
-    /**
-     * Show the form for creating a new procurement
-     */
-    public function create()
+    
+     public function create()
     {
-        $divisions = Department::all();
-        return view('procurements.create', compact('divisions'));
-    }
+            
+    $departments = Department::all();
+    $projects = Project::withCount('procurements')->get();
+
+    return view('procurements.create', compact('departments', 'projects'));
+    }   
+
 
     /**
      * Store a newly created procurement
      */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'code_procurement' => 'required|string|unique:procurement,code_procurement',
-            'name_procurement' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'department_procurement' => 'required|exists:departments,department_id',
-            'priority' => 'required|in:rendah,sedang,tinggi',
-            'end_date' => 'required|date|after:today',
-        ]);
+   public function store(Request $request)
+{
+    // validasi: code_procurement tidak perlu di-unique terhadap projects (salah semula).
+    // kita validasi unique terhadap tabel procurements.
+    $validated = $request->validate([
+        'project_code' => 'required|string|exists:projects,project_code',
+        'code_procurement' => 'nullable|string', // akan di-generate server-side (boleh terisi sebagai suggestion)
+        'name_procurement' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'department_procurement' => 'required|exists:departments,department_id',
+        'priority' => 'required|in:rendah,sedang,tinggi',
+        'end_date' => 'required|date|after:today',
+    ]);
 
-        $validated['start_date'] = Carbon::now()->format('Y-m-d');
-        $validated['status_procurement'] = 'draft';
+    // Atur start_date & default status
+    $validated['start_date'] = Carbon::now()->format('Y-m-d');
+    $validated['status_procurement'] = 'draft';
 
-        $procurement = Procurement::create($validated);
+    $projectCode = $validated['project_code'];
 
-        // $this->notifySupplyChain($procurement, 'Procurement baru telah dibuat dan menunggu review');
+    // Ambil nomor urut terakhir untuk project ini dari tabel procurements
+    // Menggunakan query yang mencari kode yang diawali projectCode- dan mengambil max sequence
+    // Asumsi format kode di DB: PROJECTCODE-<NN> (dua digit)
+    $last = Procurement::where('code_procurement', 'like', $projectCode . '-%')
+        ->orderByRaw("LENGTH(code_procurement) desc")
+        ->orderBy('code_procurement', 'desc')
+        ->first();
 
-        return redirect()->route('procurements.show', $procurement->procurement_id)
-            ->with('success', 'Procurement berhasil dibuat');
+    if ($last && preg_match('/-(\d+)$/', $last->code_procurement, $m)) {
+        $lastSeq = intval($m[1]);
+    } else {
+        // alternatif: hitung langsung jumlah existing - safer fallback
+        $lastSeq = Procurement::where('code_procurement', 'like', $projectCode . '-%')->count();
     }
+
+    $nextSeq = $lastSeq + 1;
+    $seqStr = str_pad($nextSeq, 2, '0', STR_PAD_LEFT); // 01, 02, ...
+
+    $finalCode = $projectCode . '-' . $seqStr;
+
+    // Pastikan unik — jika sudah ada (race condition kecil), lakukan loop increment sampai unik
+    while (Procurement::where('code_procurement', $finalCode)->exists()) {
+        $nextSeq++;
+        $seqStr = str_pad($nextSeq, 2, '0', STR_PAD_LEFT);
+        $finalCode = $projectCode . '-' . $seqStr;
+    }
+
+    $validated['code_procurement'] = $finalCode;
+
+    // Optionally, simpan project_id if you have project PK: (find project by project_code)
+    $project = Project::where('project_code', $projectCode)->first();
+    if ($project) {
+        // sesuaikan nama kolom foreign key di procurement model (misal: project_id)
+        $validated['project_id'] = $project->project_id ?? $project->id ?? null;
+    }
+
+    // create procurement
+    $procurement = Procurement::create($validated);
+
+    // Redirect ke halaman show procurement
+    return redirect()->route('procurements.show', $procurement->procurement_id)
+        ->with('success', 'Procurement berhasil dibuat dengan kode ' . $finalCode);
+}
+
 
     /**
      * Show the specified procurement

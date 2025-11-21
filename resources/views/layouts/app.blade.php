@@ -735,27 +735,14 @@
                     @endif
 
 
-                    @if(Auth::user()->roles === 'qa')
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('inspections.index') ? 'active' : '' }}" href="{{ route('inspections.index') }}">
-                            Department
-                        </a>
-                    </li>
-
-                    <!-- <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('qa.list-approval') ? 'active' : '' }}" href="{{ route('qa.list-approval') }}">
-                                List Approval
+                        @if(Auth::user()->roles === 'qa')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('inspections.index') ? 'active' : '' }}" href="{{ route('inspections.index') }}">
+                                Department
                             </a>
                         </li>
-
-                    <!-- <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('inspections.ncr.index') ? 'active' : '' }}" href="{{ route('inspections.ncr.index') }}">
-                                <i class="bi bi-exclamation-triangle"></i>
-                                NCR Reports
-                            </a>
-                        </li> -->
-                    @endif
-                </ul>
+                        @endif
+                    </ul>
 
                 {{-- right side notifications + user --}}
                 <ul class="navbar-nav align-items-center me-5">

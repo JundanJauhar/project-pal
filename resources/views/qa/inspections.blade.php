@@ -24,15 +24,15 @@
 .qa-card h6 { color: #676767; font-size: 14px; margin-bottom: 5px; }
 .qa-card h3 { font-weight: 700; font-size: 32px; }
 
-.qa-card.blue     { border-left: 5px solid #1E90FF; }
-.qa-card.yellow   { border-left: 5px solid #F2C94C; }
-.qa-card.green    { border-left: 5px solid #27AE60; }
-.qa-card.red      { border-left: 5px solid #EB5757; }
+.qa-card.blue   { border-left: 5px solid #1E90FF; }
+.qa-card.yellow { border-left: 5px solid #F2C94C; }
+.qa-card.green  { border-left: 5px solid #27AE60; }
+.qa-card.red    { border-left: 5px solid #EB5757; }
 
 /* ===== TABLE WRAPPER ===== */
 .qa-table-wrapper {
     background: #F6F6F6;
-    padding: 35px;
+    padding: 25px;
     border-radius: 14px;
     border: 1px solid #E0E0E0;
 }
@@ -41,49 +41,73 @@
 .qa-table-title {
     font-size: 26px;
     font-weight: 700;
-    margin-bottom: 25px;
+    margin-bottom: 18px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
+/* Search + Filters container */
+.filters-wrap {
+    display:flex;
+    gap:12px;
+    align-items:center;
+}
+
 /* Search */
 .qa-search-box {
     display: flex;
-    gap: 8px;
     align-items: center;
+    gap: 8px;
     background: #F0F0F0;
-    border-radius: 30px;
-    padding: 3px 14px;
-    width: 450px;
+    border-radius: 25px;
+    padding: 6px 12px;
+    width: 240px;
     border: 1px solid #ddd;
+    font-size:14px;
 }
 .qa-search-box input {
     border: none;
     background: transparent;
     width: 100%;
     outline: none;
+    font-size:14px;
 }
-.qa-search-box i { font-size: 18px; color: #777; }
+.qa-search-box i { font-size: 14px; color: #777; }
+
+/* Filter selects */
+.filter-select {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding:6px 10px;
+    border-radius:8px;
+    font-size:14px;
+}
 
 /* ===== TABLE STYLE ===== */
 .qa-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
+
 .qa-table thead th {
-    padding: 14px 8px;
+    padding: 14px 6px;
     border-bottom: 2px solid #C9C9C9;
     font-size: 14px;
     text-transform: uppercase;
     color: #555;
+    text-align: center;
 }
+
 .qa-table tbody td {
-    padding: 18px 8px;
+    padding: 14px 6px;
     border-bottom: 1px solid #DFDFDF;
     font-size: 15px;
     color: #333;
+    text-align: center;
 }
+
 .qa-table tbody tr:hover {
     background: #EFEFEF;
 }
@@ -92,34 +116,44 @@
 .priority-high   { color: #D60000; font-weight: bold; }
 .priority-medium { color: #FF8C00; font-weight: bold; }
 .priority-low    { color: #A9A9A9; font-weight: bold; }
+
+/* INSPECTION STATUS */
+.status-pass  { color: #27AE60; font-weight: bold; }
+.status-fail  { color: #D60000; font-weight: bold; }
+.status-wait  { color: #888; font-weight: bold; }
+.status-inprogress { color: #F2C94C; font-weight: bold; }
+
+.status-link { text-decoration: none; font-weight: bold; }
+
+/* responsive tweaks */
+@media (max-width: 900px) {
+    .qa-topcards { flex-direction: column; }
+    .filters-wrap { flex-direction: column; align-items:flex-end; gap:8px; }
+}
 </style>
 @endpush
 
 @section('content')
 
-{{-- ========================= --}}
-{{-- DASHBOARD STATISTICS --}}
-{{-- ========================= --}}
+{{-- ===== TOP CARDS (modified order) ===== --}}
 <div class="qa-topcards">
 
-    {{-- Total Pengadaan --}}
-    <div class="qa-card blue">
-        <h6>Total Pengadaan</h6>
-        <h3>{{ $totalProcurements ?? 0 }}</h3>
-    </div>
-
     {{-- Butuh Inspeksi --}}
-    <a href="{{ route('qa.list-approval') }}" class="text-decoration-none text-dark" style="flex:1;">
-        <div class="qa-card yellow">
-            <h6>Butuh Inspeksi</h6>
-            <h3>{{ $butuhInspeksiCount ?? 0 }}</h3>
-        </div>
-    </a>
+    <div class="qa-card yellow">
+        <h6>Butuh Inspeksi</h6>
+        <h3>{{ $butuhInspeksiCount ?? 0 }}</h3>
+    </div>
 
     {{-- Lolos Inspeksi --}}
     <div class="qa-card green">
         <h6>Lolos Inspeksi</h6>
         <h3>{{ $lolosCount ?? 0 }}</h3>
+    </div>
+
+    {{-- Sedang Proses Inspeksi --}}
+    <div class="qa-card blue">
+        <h6>Sedang Proses Inspeksi</h6>
+        <h3>{{ $sedangProsesCount ?? 0 }}</h3>
     </div>
 
     {{-- Tidak Lolos --}}
@@ -130,54 +164,95 @@
 
 </div>
 
-
-
-{{-- ========================= --}}
-{{-- TABLE WRAPPER --}}
-{{-- ========================= --}}
+{{-- ===== TABLE ===== --}}
 <div class="qa-table-wrapper">
 
     <div class="qa-table-title">
         <span>Daftar Pengadaan</span>
 
-        {{-- Search Form --}}
-        <form method="GET" action="{{ route('inspections.index') }}">
-            <div class="qa-search-box">
-                <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari...">
-                <i class="bi bi-search"></i>
+        <form method="GET" style="margin:0;">
+            <div class="filters-wrap">
+                <div class="qa-search-box" title="Cari kode atau nama pengadaan">
+                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari..." />
+                    <i class="bi bi-search"></i>
+                </div>
+
+                <select name="priority" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Semua Prioritas</option>
+                    <option value="tinggi" {{ request('priority') === 'tinggi' ? 'selected' : '' }}>Tinggi</option>
+                    <option value="sedang" {{ request('priority') === 'sedang' ? 'selected' : '' }}>Sedang</option>
+                    <option value="rendah" {{ request('priority') === 'rendah' ? 'selected' : '' }}>Rendah</option>
+                </select>
+
+                <select name="result" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Semua Hasil Inspeksi</option>
+                    <option value="passed" {{ request('result') === 'passed' ? 'selected' : '' }}>Lolos</option>
+                    <option value="in_progress" {{ request('result') === 'in_progress' ? 'selected' : '' }}>Sedang Proses</option>
+                    <option value="failed" {{ request('result') === 'failed' ? 'selected' : '' }}>Tidak Lolos</option>
+                    <option value="not_inspected" {{ request('result') === 'not_inspected' ? 'selected' : '' }}>Belum Diinspeksi</option>
+                </select>
+
+                <button type="submit" class="filter-select" style="cursor:pointer;">Terapkan</button>
             </div>
         </form>
     </div>
 
-    {{-- TABLE --}}
     <div class="table-responsive">
         <table class="qa-table">
             <thead>
                 <tr>
-                    <th>Kode Pengadaan</th>
+                    <th>Kode</th>
                     <th>Nama Pengadaan</th>
                     <th>Department</th>
                     <th>Vendor</th>
-                    <th>Tanggal Mulai</th>
-                    <th>Tanggal Selesai</th>
+                    <th>Tgl Mulai</th>
+                    <th>Tgl Selesai</th>
                     <th>Prioritas</th>
+                    <th>Status Inspeksi</th>
                 </tr>
             </thead>
 
             <tbody>
             @forelse($procurements as $proc)
+
+                @php
+                    // Collect all items via requestProcurements
+                    $items = $proc->requestProcurements->flatMap->items ?? collect();
+                    // Gather all inspection reports linked to those items
+                    $reports = $items->flatMap->inspectionReports;
+
+                    // Determine status for row:
+                    if ($reports->count() === 0) {
+                        $statusText = "BELUM DIINSPEKSI";
+                        $statusClass = "status-wait";
+                    } elseif ($reports->contains('result', 'failed')) {
+                        $statusText = "TIDAK LOLOS";
+                        $statusClass = "status-fail";
+                    } elseif ($reports->contains('result', 'passed') && !$reports->contains('result', 'failed') && $items->count() > 0 && ($reports->count() >= $items->count())) {
+                        // crude check: if reports exist and none failed and number of reports >= items => treat as LOLOS
+                        $statusText = "LOLOS";
+                        $statusClass = "status-pass";
+                    } elseif ($reports->contains('result', 'passed')) {
+                        $statusText = "SEDANG PROSES";
+                        $statusClass = "status-inprogress";
+                    } else {
+                        // fallback
+                        $statusText = "SEDANG PROSES";
+                        $statusClass = "status-inprogress";
+                    }
+                @endphp
+
                 <tr>
                     <td>{{ $proc->code_procurement }}</td>
-                    <td>{{ $proc->name_procurement }}</td>
+                    <td style="text-align:left;">{{ $proc->name_procurement }}</td>
                     <td>{{ $proc->department->department_name ?? '-' }}</td>
                     <td>{{ $proc->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</td>
-                    <td>{{ $proc->start_date ? $proc->start_date->format('d/m/Y') : '-' }}</td>
-                    <td>{{ $proc->end_date ? $proc->end_date->format('d/m/Y') : '-' }}</td>
+                    <td>{{ $proc->start_date?->format('d/m/Y') ?? '-' }}</td>
+                    <td>{{ $proc->end_date?->format('d/m/Y') ?? '-' }}</td>
 
-                    {{-- PRIORITY COLOR --}}
                     <td>
                         @php
-                            $p = strtolower($proc->priority);
+                            $p = strtolower($proc->priority ?? '');
                             $class = match($p) {
                                 'tinggi' => 'priority-high',
                                 'sedang' => 'priority-medium',
@@ -187,12 +262,20 @@
                         @endphp
                         <span class="{{ $class }}">{{ strtoupper($proc->priority ?? '-') }}</span>
                     </td>
+
+                    <td>
+                        <a href="{{ route('qa.detail-approval', ['procurement_id' => $proc->procurement_id]) }}"
+                           class="status-link {{ $statusClass }}">
+                            {{ $statusText }}
+                        </a>
+                    </td>
                 </tr>
+
             @empty
                 <tr>
-                    <td colspan="7" class="text-center py-5">
-                        <i class="bi bi-inbox" style="font-size: 40px; color:#bbb"></i>
-                        <p class="text-muted mt-2">Tidak ada pengadaan yang butuh inspeksi</p>
+                    <td colspan="8" class="text-center py-5">
+                        <i class="bi bi-inbox" style="font-size:40px; color:#bbb;"></i>
+                        <p class="text-muted mt-2">Tidak ada pengadaan yang sesuai filter</p>
                     </td>
                 </tr>
             @endforelse
@@ -200,11 +283,49 @@
         </table>
     </div>
 
-    {{-- PAGINATION --}}
     <div class="mt-3">
         {{ $procurements->links() }}
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // If detail-approval set a localStorage flag after save, update cards on this page
+    const update = localStorage.getItem('inspectionUpdate');
+    if (update) {
+        try {
+            const data = JSON.parse(update);
+
+            // update card hijau (LOLOS)
+            const cardLolos = document.querySelector('.qa-card.green h3');
+            if (cardLolos && typeof data.lolos !== 'undefined' && data.lolos !== null) cardLolos.textContent = data.lolos;
+
+            // update card merah (TIDAK LOLOS)
+            const cardGagal = document.querySelector('.qa-card.red h3');
+            if (cardGagal && typeof data.gagal !== 'undefined' && data.gagal !== null) cardGagal.textContent = data.gagal;
+
+            // update card kuning (BUTUH INSPEKSI)
+            const cardButuh = document.querySelector('.qa-card.yellow h3');
+            if (cardButuh && typeof data.butuh !== 'undefined' && data.butuh !== null) {
+                cardButuh.textContent = data.butuh;
+            }
+
+            // update card biru (SEDANG PROSES)
+            const cardProses = document.querySelector('.qa-card.blue h3');
+            if (cardProses && typeof data.sedang_proses !== 'undefined' && data.sedang_proses !== null) {
+                cardProses.textContent = data.sedang_proses;
+            }
+        } catch (e) {
+            console.warn('inspectionUpdate parse error', e);
+        } finally {
+            // hapus agar tidak update berkali-kali
+            localStorage.removeItem('inspectionUpdate');
+        }
+    }
+});
+</script>
+@endpush
 
 @endsection

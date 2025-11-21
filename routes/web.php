@@ -16,6 +16,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\DesainController;
 use App\Http\Controllers\DesainListProjectController;
+use App\Http\Controllers\DetailApprovalController;
 use App\Http\Controllers\ListApprovalController;
 use App\Http\Controllers\SekdirController;
 
@@ -146,12 +147,9 @@ Route::middleware(['auth'])->group(function () {
 
 
     // =================== QA LIST APPROVAL ===================
-    Route::get('/qa/list-approval', [ListApprovalController::class, 'index'])->name('qa.list-approval');
+     Route::get('/qa/detail-approval/{procurement_id}', [DetailApprovalController::class, 'show']) ->name('qa.detail-approval');
 
-    Route::post(
-        '/qa/inspection/save-item',
-        [ListApprovalController::class, 'saveInspectionItem']
-    )->name('qa.inspection.save-item');
+    Route::post('/qa/detail-approval/{procurement_id}/save', [DetailApprovalController::class, 'saveAll'])->name('qa.detail-approval.save');
 
 
     // =================== DESAIN ===================

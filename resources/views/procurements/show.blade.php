@@ -9,55 +9,77 @@
         background: white;
     }
 
-    .timeline-container {
-        display: flex;
-        justify-content: space-between;
-        margin: 40px 0;
-        position: relative;
-        width: 50px;
-    }
+.timeline-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;               /* jarak antar titik */
+    margin: 40px auto;
+    padding: 0 20px;         /* biar garis tidak terlalu mepet */
+    width: fit-content;      /* mengikuti lebar titik-titik saja */
+}
 
-    .timeline-container::before {
-        content: "";
-        position: absolute;
-        top: 24px;
-        left: 0;
-        width: 100%;
-        height: 3px;
-        background: #c7e5c6;
-        z-index: 1;
-    }
+.timeline-container::before {
+    content: "";
+    position: absolute;
+    top: 24px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #c7e5c6;
 
-    .timeline-step {
-        text-align: center;
-        position: relative;
-        width: 90px;
-        z-index: 3;
-    }
+    width: calc(100% - 45px);  /* 🔥 garis hanya sepanjang isi */
+    margin: auto;
+    z-index: 1;
+}
 
-    .timeline-icon {
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        background: #c7e5c6;
-        color: green;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 20px;
-        margin: auto;
-    }
+.timeline-step {
+    text-align: center;
+    width: 90px;
+    z-index: 2;
 
-    .timeline-step.active .timeline-icon {
-        background: #ECAD02;
-        color: white;
-        font-weight: bold;
-    }
+    /* 🔥 Samakan tinggi setiap step */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
 
-    .timeline-step.completed .timeline-icon {
-        background: #28AC00;
-        color: white;
-    }
+.timeline-step small {
+    margin-top: 6px;
+
+    /* 🔥 Fix agar tinggi teks sama */
+    height: 38px;              /* sesuaikan */
+    display: flex;
+    align-items: center;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.timeline-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: #c7e5c6;
+    color: green;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    margin: auto;
+}
+
+.timeline-step.active .timeline-icon {
+    background: #ECAD02;
+    color: white;
+}
+
+.timeline-step.completed .timeline-icon {
+    background: #28AC00;
+    color: white;
+}
+
 
     .section-title {
         font-weight: bold;

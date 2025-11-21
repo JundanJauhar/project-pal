@@ -2,6 +2,14 @@
 
 @section('title', isset($procurement) ? 'Edit Procurement' : 'Tambah Procurement Baru')
 
+<style>
+.card-custom {
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+</style>
+
 @section('content')
 <div class="row mb-4">
     <div class="col-12">
@@ -34,47 +42,49 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="code_procurement" class="form-label">Project <span class="text-danger">*</span></label>
-                            <select class="form-select" aria-label="Default select example" placeholder="Pilih Project" required>
-                                @foreach($divisions as $division)
-                                <option value="{{ $division->department_id }}"
-                                    {{ old('department_procurement', $procurement->department_procurement ?? '') == $division->department_id ? 'selected' : '' }}>
-                                    {{ $division->department_name }}
-                                </option>
+                            <label for="project_code" class="form-label">Project <span class="text-danger">*</span></label>
+                            <select name="project_code" class="form-select" aria-label="Default select example" required>
+                                <option value="">Pilih Project</option>
+                                @foreach($projects as $project)
+                                    <option value="{{ $project->project_code }}">
+                                        {{ $project->project_code }}
+                                    </option>
                                 @endforeach
-                                <option value="1">W000301</option>
-                                <option value="2">W000302</option>
-                                <option value="3">W000303</option>
-                                <option value="4">W000304</option>
-                                <option value="5">W000305</option>
-                                <option value="6">W000306</option>
-                                <option value="7">W000307</option>
-                                <option value="8">W000308</option>
                             </select>
-                            @error('code_procurement')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            @error('project_code')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
-                            <small class="text-muted">Format: PRK-YYYYMMM-XXX</small>
                         </div>
 
+                    <div class="col-md-6 mb-3">
+                        <label for="code_procurement" class="form-label">Kode Procurement <span class="text-danger">*</span></label>
+                        <input type="text"
+                            id="code_procurement"
+                            name="code_procurement"
+                            class="form-control @error('code_procurement') is-invalid @enderror"
+                            value="{{ old('code_procurement', $procurement->code_procurement ?? '') }}"
+                            placeholder="Akan ter-generate berdasarkan project"
+                            readonly
+                            required>
+                        @error('code_procurement')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                         <div class="col-md-6 mb-3">
-                            <label for="department_procurement" class="form-label">Department <span class="text-danger">*</span></label>
-                            <select class="form-select @error('department_procurement') is-invalid @enderror"
-                                id="department_procurement"
-                                name="department_procurement"
-                                required>
-                                <option value="">Pilih Department</option>
-                                @foreach($divisions as $division)
-                                <option value="{{ $division->department_id }}"
-                                    {{ old('department_procurement', $procurement->department_procurement ?? '') == $division->department_id ? 'selected' : '' }}>
-                                    {{ $division->department_name }}
-                                </option>
-                                @endforeach
-                            </select>
-                            @error('department_procurement')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                    <label for="department_procurement" class="form-label">Department <span class="text-danger">*</span></label>
+                    <select name="department_procurement" class="form-select" aria-label="Default select example" required>
+                        <option value="">Pilih Department</option>
+                        @foreach($departments as $department)
+                            <option value="{{ $department->department_id }}">
+                                {{ $department->department_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('department_procurement')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
                     </div>
 
                     <div class="mb-3">
@@ -152,6 +162,20 @@
             </div>
         </div>
     </div>
+    <div class="col-md-4">
+    <div class="card card-custom" style="border-radius:12px;">
+        <div class="card-header-custom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Item</h5>
+            <button type="button" id="btnAddItem" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Tambah
+            </button>
+        </div>
+
+        <div class="card-body" id="itemsContainer">
+            <!-- Card item akan muncul di sini lewat JS -->
+        </div>
+    </div>
+</div>
 
 </div>
 @endsection
@@ -186,4 +210,108 @@
         });
     });
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const container = document.getElementById("itemsContainer");
+    const btnAdd = document.getElementById("btnAddItem");
+
+    let itemIndex = 0;
+
+    function createItemCard() {
+        itemIndex++;
+
+        return `
+        <div class="card p-3 mb-3 shadow-sm" style="border-radius:12px;">
+            <h5><strong>Item ${itemIndex}</strong></h5>
+
+            <div class="mb-2">
+                <label class="form-label">Nama Item*</label>
+                <input type="text" name="items[${itemIndex}][item_name]" class="form-control">
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label">Deskripsi</label>
+                <textarea name="items[${itemIndex}][description]" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Jumlah*</label>
+                    <input type="number" name="items[${itemIndex}][quantity]" class="form-control">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Unit*</label>
+                    <input type="text" name="items[${itemIndex}][unit]" class="form-control">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Harga Estimasi*</label>
+                    <input type="number" name="items[${itemIndex}][estimated_price]" class="form-control">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Harga Total*</label>
+                    <input type="number" name="items[${itemIndex}][total_price]" class="form-control" readonly>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    btnAdd.addEventListener("click", () => {
+        container.innerHTML += createItemCard();
+    });
+});
+</script>
+
 @endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Ambil semua project dan jumlah procurement sudah ada (dari server)
+    // Data ini di-render server-side ke JS object
+    const projectsData = {
+        @foreach($projects as $p)
+            "{{ $p->project_code }}": {{ $p->procurements_count ?? 0 }},
+        @endforeach
+    };
+
+    const projectSelect = document.querySelector('select[name="project_code"]');
+    const codeInput = document.getElementById('code_procurement');
+
+    function padSeq(n) {
+        return String(n).padStart(2, '0'); // 01, 02, ...
+    }
+
+    function generateSuggestedCode(projectCode) {
+        // gunakan count (jumlah procurement yang sudah ada) + 1 => sequence
+        const count = projectsData[projectCode] ?? 0;
+        const seq = padSeq(count + 1);
+        // format: PROJECTCODE-01  (ubah format jika mau PROJECTCODE01 atau lainnya)
+        return `${projectCode}-${seq}`;
+    }
+
+    if (projectSelect) {
+        // ketika load, jika sudah ada value selected (old input), generate suggestion
+        const initialProject = projectSelect.value;
+        if (initialProject && !codeInput.value) {
+            codeInput.value = generateSuggestedCode(initialProject);
+        }
+
+        projectSelect.addEventListener('change', function() {
+            const pc = this.value;
+            if (!pc) {
+                codeInput.value = '';
+                return;
+            }
+            codeInput.value = generateSuggestedCode(pc);
+        });
+    }
+
+    // jika form di-edit (procurement sudah ada), biarkan code existing (readonly)
+});
+</script>
+@endpush
+
