@@ -651,19 +651,6 @@
                                 Department
                             </a>
                         </li>
-
-                        <!-- <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('qa.list-approval') ? 'active' : '' }}" href="{{ route('qa.list-approval') }}">
-                                List Approval
-                            </a>
-                        </li>
-
-                        <!-- <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('inspections.ncr.index') ? 'active' : '' }}" href="{{ route('inspections.ncr.index') }}">
-                                <i class="bi bi-exclamation-triangle"></i>
-                                NCR Reports
-                            </a>
-                        </li> -->
                         @endif
                     </ul>
 
