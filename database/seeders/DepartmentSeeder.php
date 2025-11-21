@@ -10,10 +10,12 @@ class DepartmentSeeder extends Seeder
     public function run(): void
     {
         $departments = [
-            [ 'department_name' => 'General Procurement', 'description' => 'Department default untuk pengadaan' ],
-            [ 'department_name' => 'Engineering', 'description' => 'Engineering Department' ],
-            [ 'department_name' => 'Finance', 'description' => 'Finance Department' ],
-            [ 'department_name' => 'Operations', 'description' => 'Operations Department' ],
+            [ 'department_name' => 'Departemen Hull Construction', 'description' => 'Department Lumbung' ],
+            [ 'department_name' => 'Departemen Outfitting', 'description' => 'Department Outfit' ],
+            [ 'department_name' => 'Departemen Machinery', 'description' => 'Department Mesin' ],
+            [ 'department_name' => 'Departemen Electrical', 'description' => 'Department Listrik' ],
+            [ 'department_name' => 'Departemen Quality Control', 'description' => 'Department Kualitas' ],
+            [ 'department_name' => 'Departemen Engine', 'description' => 'Department Mesin-mesin' ],
         ];
 
         foreach ($departments as $d) {

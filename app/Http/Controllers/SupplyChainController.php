@@ -48,7 +48,7 @@ class SupplyChainController extends Controller
                     });
                 }
             })
-            ->orderBy('created_at', 'desc')
+            ->orderBy('start_date', 'desc')
             ->get();
 
         return view('supply_chain.dashboard', compact('procurements'));
