@@ -693,13 +693,14 @@
                     </li>
                     @endif
 
-                    @if(Auth::user()->roles === 'desain')
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('desain.list-project*') ? 'active' : '' }}" href="{{ route('desain.list-project') }}" wire:navigate>
-                            Projects
-                        </a>
-
-                    </li>
+                    @if(in_array(Auth::user()->roles, ['desain', 'supply_chain']))
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('desain.list-project*') ? 'active' : '' }}" 
+                            href="{{ route('desain.list-project') }}" 
+                            wire:navigate>
+                                Projects
+                            </a>
+                        </li>
                     @endif
 
                     @if(Auth::user()->roles === 'sekretaris_direksi')

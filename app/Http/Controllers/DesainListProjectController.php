@@ -16,11 +16,21 @@ class DesainListProjectController extends Controller
     }
 
     public function daftarPengadaan($id)
-    {
-        $project = Project::with('requests')->findOrFail($id);
+{
+    $project = Project::with([
+        'requests',                         // relasi project → request_procurement
+        'requests.items',                   // relasi request → items
+        'requests.vendor',                  // relasi request → vendor
+        'procurements',                     // relasi project → procurement
+        'procurements.requestProcurements', // relasi procurement → request_procurement
+        'procurements.requestProcurements.items',
+        'procurements.requestProcurements.vendor',
+    ])->findOrFail($id);
 
-        return view('desain.daftar-permintaan', compact('project'));
-    }
+    return view('desain.daftar-permintaan', compact('project'));
+}
+
+
 
     public function reviewEvatek($requestId)
     {

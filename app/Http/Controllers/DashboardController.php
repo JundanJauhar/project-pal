@@ -45,6 +45,7 @@ class DashboardController extends Controller
     private function getProcurementsByRole($user)
 {
     $query = Procurement::with([
+        'project',
         'department', 
         'requestProcurements.vendor',
         'procurementProgress.checkpoint' // ✅ Tambahkan ini
@@ -60,6 +61,7 @@ class DashboardController extends Controller
    public function search(Request $request)
 {
     $query = Procurement::with([
+        'project',
         'department', 
         'requestProcurements.vendor',
         'procurementProgress.checkpoint'

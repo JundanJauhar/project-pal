@@ -26,7 +26,13 @@ class SupplyChainController extends Controller
         $statusFilter = $request->input('status');
         $priorityFilter = $request->input('priority');
 
-        $procurements = Procurement::with(['department', 'requestProcurements.vendor'])
+        $procurements = Procurement::with([
+                'project',
+                'department',
+                'requestProcurements',
+                'requestProcurements.vendor'
+            ])
+
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
                     $q->where('code_procurement', 'LIKE', "%{$search}%")
