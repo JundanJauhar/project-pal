@@ -2,6 +2,14 @@
 
 @section('title', isset($procurement) ? 'Edit Procurement' : 'Tambah Procurement Baru')
 
+<style>
+.card-custom {
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+</style>
+
 @section('content')
 <div class="row mb-4">
     <div class="col-12">
@@ -154,6 +162,20 @@
             </div>
         </div>
     </div>
+    <div class="col-md-4">
+    <div class="card card-custom" style="border-radius:12px;">
+        <div class="card-header-custom d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Item</h5>
+            <button type="button" id="btnAddItem" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Tambah
+            </button>
+        </div>
+
+        <div class="card-body" id="itemsContainer">
+            <!-- Card item akan muncul di sini lewat JS -->
+        </div>
+    </div>
+</div>
 
 </div>
 @endsection
@@ -188,6 +210,61 @@
         });
     });
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const container = document.getElementById("itemsContainer");
+    const btnAdd = document.getElementById("btnAddItem");
+
+    let itemIndex = 0;
+
+    function createItemCard() {
+        itemIndex++;
+
+        return `
+        <div class="card p-3 mb-3 shadow-sm" style="border-radius:12px;">
+            <h5><strong>Item ${itemIndex}</strong></h5>
+
+            <div class="mb-2">
+                <label class="form-label">Nama Item*</label>
+                <input type="text" name="items[${itemIndex}][item_name]" class="form-control">
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label">Deskripsi</label>
+                <textarea name="items[${itemIndex}][description]" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Jumlah*</label>
+                    <input type="number" name="items[${itemIndex}][quantity]" class="form-control">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Unit*</label>
+                    <input type="text" name="items[${itemIndex}][unit]" class="form-control">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Harga Estimasi*</label>
+                    <input type="number" name="items[${itemIndex}][estimated_price]" class="form-control">
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Harga Total*</label>
+                    <input type="number" name="items[${itemIndex}][total_price]" class="form-control" readonly>
+                </div>
+            </div>
+        </div>`;
+    }
+
+    btnAdd.addEventListener("click", () => {
+        container.innerHTML += createItemCard();
+    });
+});
+</script>
+
 @endpush
 
 @push('scripts')
