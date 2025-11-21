@@ -50,7 +50,7 @@ class DashboardController extends Controller
         'procurementProgress.checkpoint' // ✅ Tambahkan ini
     ]);
 
-    return $query->orderBy('created_at', 'desc')
+    return $query->orderBy('start_date', 'desc')
         ->paginate(10);
 }
 
@@ -77,10 +77,17 @@ class DashboardController extends Controller
     // Priority filter
     if ($request->filled('priority')) {
         $query->where('priority', $request->priority);
-    }
+    } 
+    
+    if ($request->filled('project')) {
+    $query->whereHas('project', function ($q) use ($request) {
+        $q->where('project_code', $request->project);
+    });
+}
+
     
     // ✅ Ambil semua data dulu (dengan eager loading)
-    $allProcurements = $query->orderBy('created_at', 'desc')->get();
+    $allProcurements = $query->orderBy('start_date', 'desc')->get();
     
     // ✅ Filter berdasarkan checkpoint SETELAH data di-load
     if ($request->filled('checkpoint')) {
@@ -120,6 +127,7 @@ class DashboardController extends Controller
     $data = $procurements->map(function($p) {
         return [
             'procurement_id' => $p->procurement_id,
+            'project_code' => $p->project->project_code ?? '-',
             'code_procurement' => $p->code_procurement,
             'name_procurement' => $p->name_procurement,
             'department_name' => $p->department->department_name ?? '-',
