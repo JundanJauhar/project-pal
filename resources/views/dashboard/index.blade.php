@@ -104,10 +104,22 @@
             <div class="card card-custom">
                 <div class="card-body">
                     <form id="filter-form" class="row g-3 align-items-end">
-                        <div class="col-md-4">
+                        <div class="col-md-5">
                             <input type="text" class="form-control" name="search" placeholder="Cari Pengadaan..." value="">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
+                            <select class="form-select" name="project">
+                                <option value="">Semua Project</option>
+                                <option value="W000301">W000301</option>
+                                <option value="W000302">W000302</option>
+                                <option value="W000303">W000303</option>
+                                <option value="W000304">W000304</option>
+                                <option value="W000305">W000305</option>
+                                <option value="W000306">W000306</option>
+                                <option value="W000307">W000307</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
                             <select class="form-select" name="checkpoint">
                                 <option value="">Semua Checkpoint</option>
                                 <option value="Penawaran Permintaan">Penawaran Permintaan</option>
@@ -128,7 +140,7 @@
                                 <option value="rejected">Ditolak</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <select class="form-select" name="priority">
                                 <option value="">Semua Prioritas</option>
                                 <option value="rendah">Rendah</option>
@@ -251,6 +263,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const searchInput = document.querySelector('input[name="search"]');
     const checkpointSelect = document.querySelector('select[name="checkpoint"]');
     const prioritySelect = document.querySelector('select[name="priority"]');
+    const projectSelect = document.querySelector('select[name="project"]');
     const tbody = document.getElementById('procurements-tbody');
     const paginationWrap = document.getElementById('procurements-pagination');
 
@@ -295,7 +308,8 @@ document.addEventListener('DOMContentLoaded', function () {
             
             return `
             <tr>
-                <td style="padding: 12px 8px;"><strong>${p.code_procurement}</strong></td>
+                <td style="padding: 12px 8px; text-align:center;"><strong>${p.project_code}</strong></td>
+                <td style="padding: 12px 8px; text-align:center"><strong>${p.code_procurement}</strong></td>
                 <td style="padding: 12px 8px;">${p.name_procurement?.substring(0, 40) || '-'}</td>
                 <td style="padding: 12px 8px; text-align: center;">${p.department_name || '-'}</td>
                 <td style="padding: 12px 8px; text-align: center;">${p.start_date || '-'}</td>
@@ -356,8 +370,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const q = encodeURIComponent(searchInput.value.trim());
         const checkpoint = encodeURIComponent(checkpointSelect.value);
         const priority = encodeURIComponent(prioritySelect.value);
+        const project = encodeURIComponent(projectSelect.value);    
 
-const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&priority=${priority}&page=${currentPage}`;
+const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&priority=${priority}&project=${project}&page=${currentPage}`;
         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(res => res.json())
             .then(res => {
@@ -384,6 +399,7 @@ const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&pri
     searchInput.addEventListener('input', debouncedFetch);
     checkpointSelect.addEventListener('change', debouncedFetch);
     prioritySelect.addEventListener('change', debouncedFetch);
+    projectSelect.addEventListener('change', debouncedFetch);
 });
 </script>
 @endpush
