@@ -12,12 +12,8 @@ use App\Models\Checkpoint;
 
 class DetailApprovalController extends Controller
 {
-    /**
-     * Show detail approval page for a procurement (cards per item).
-     */
     public function show(Request $request, $procurement_id)
     {
-        // load procurement + items + vendor + inspection reports
         $procurement = Procurement::with([
             'requestProcurements.vendor',
             'requestProcurements.items' => function ($q) {
@@ -29,13 +25,12 @@ class DetailApprovalController extends Controller
         $items = collect();
         foreach ($procurement->requestProcurements as $req) {
             foreach ($req->items as $it) {
-                // attach vendor & request for easier access in view
                 $it->vendor = $req->vendor ?? null;
                 $items->push($it);
             }
         }
 
-        // KPI counts for cards in inspections.blade.php
+        // KPI counts for cards in inspections.blade.php (global)
         $inspectionCheckpointId = Checkpoint::where('point_name', 'Inspeksi Barang')->value('point_id') ?? 13;
         $totalProcurements = Procurement::count();
         $butuhInspeksiCount = Procurement::whereHas('procurementProgress', function ($q) use ($inspectionCheckpointId) {
@@ -43,7 +38,6 @@ class DetailApprovalController extends Controller
               ->whereIn('status', ['not_started', 'in_progress', 'blocked']);
         })->count();
 
-        // global inspection counts (can be used to update top-cards)
         $lolosCount = InspectionReport::where('result', 'passed')->distinct('item_id')->count('item_id');
         $gagalCount = InspectionReport::where('result', 'failed')->distinct('item_id')->count('item_id');
 
@@ -57,11 +51,6 @@ class DetailApprovalController extends Controller
         ));
     }
 
-    /**
-     * Save results for ALL items for this procurement (AJAX).
-     * Expects payload:
-     *  - items: [ { item_id, result: 'passed'|'failed', notes: string|null }, ... ]
-     */
     public function saveAll(Request $request, $procurement_id)
     {
         $data = $request->validate([
@@ -79,7 +68,6 @@ class DetailApprovalController extends Controller
             $item = Item::find($it['item_id']);
             if (!$item) continue;
 
-            // notes required if failed
             if ($it['result'] === 'failed' && empty(trim($it['notes'] ?? ''))) {
                 return response()->json([
                     'success' => false,
@@ -133,6 +121,28 @@ class DetailApprovalController extends Controller
         $lolosCount = InspectionReport::where('result', 'passed')->distinct('item_id')->count('item_id');
         $gagalCount = InspectionReport::where('result', 'failed')->distinct('item_id')->count('item_id');
 
+        // recompute sedang_proses and butuh
+        // butuh = number of procurements that have 0 inspected items
+        $allProcs = Procurement::with(['requestProcurements.items.inspectionReports'])->get();
+        $butuh = 0;
+        $sedang_proses = 0;
+        foreach ($allProcs as $proc) {
+            $items = $proc->requestProcurements->flatMap->items;
+            $totalItemsProc = $items->count();
+            if ($totalItemsProc === 0) { $butuh++; continue; }
+            $latestResults = $items->map(function ($it) {
+                $latest = $it->inspectionReports->sortByDesc('inspection_date')->first();
+                return $latest?->result ?? null;
+            });
+            $inspectedCountProc = $latestResults->filter(fn($r) => !is_null($r))->count();
+            if ($inspectedCountProc === 0) { $butuh++; continue; }
+            if ($inspectedCountProc < $totalItemsProc) { $sedang_proses++; continue; }
+            if ($latestResults->every(fn($r) => $r === 'passed')) { /* counted in lolosCount separately */ }
+            elseif ($latestResults->every(fn($r) => $r === 'failed')) { /* counted in gagalCount */ }
+            else { $sedang_proses++; }
+        }
+
+        // return JSON including top-cards numbers
         return response()->json([
             'success' => true,
             'message' => 'Semua hasil inspeksi berhasil disimpan.',
@@ -142,6 +152,8 @@ class DetailApprovalController extends Controller
             'total_items' => $totalItems,
             'lolos_count' => $lolosCount,
             'gagal_count' => $gagalCount,
+            'butuh' => $butuh,
+            'sedang_proses' => $sedang_proses,
         ]);
     }
 }

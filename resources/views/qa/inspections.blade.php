@@ -121,7 +121,7 @@
 .status-pass  { color: #27AE60; font-weight: bold; }
 .status-fail  { color: #D60000; font-weight: bold; }
 .status-wait  { color: #888; font-weight: bold; }
-.status-inprogress { color: #F2C94C; font-weight: bold; }
+.status-inprogress { color: #1E90FF; font-weight: bold; }
 
 .status-link { text-decoration: none; font-weight: bold; }
 
@@ -141,25 +141,25 @@
     {{-- Butuh Inspeksi --}}
     <div class="qa-card yellow">
         <h6>Butuh Inspeksi</h6>
-        <h3>{{ $butuhInspeksiCount ?? 0 }}</h3>
+        <h3>{{ $butuh ?? $butuhInspeksiCount ?? 0 }}</h3>
     </div>
 
     {{-- Lolos Inspeksi --}}
     <div class="qa-card green">
         <h6>Lolos Inspeksi</h6>
-        <h3>{{ $lolosCount ?? 0 }}</h3>
+        <h3>{{ $lolos ?? $lolosCount ?? 0 }}</h3>
     </div>
 
     {{-- Sedang Proses Inspeksi --}}
     <div class="qa-card blue">
         <h6>Sedang Proses Inspeksi</h6>
-        <h3>{{ $sedangProsesCount ?? 0 }}</h3>
+        <h3>{{ $sedang ?? ($sedang ?? 0) }}</h3>
     </div>
 
     {{-- Tidak Lolos --}}
     <div class="qa-card red">
         <h6>Tidak Lolos Inspeksi</h6>
-        <h3>{{ $gagalCount ?? 0 }}</h3>
+        <h3>{{ $gagal ?? $gagalCount ?? 0 }}</h3>
     </div>
 
 </div>
@@ -216,29 +216,35 @@
             @forelse($procurements as $proc)
 
                 @php
-                    // Collect all items via requestProcurements
                     $items = $proc->requestProcurements->flatMap->items ?? collect();
-                    // Gather all inspection reports linked to those items
                     $reports = $items->flatMap->inspectionReports;
-
-                    // Determine status for row:
-                    if ($reports->count() === 0) {
+                    if ($items->count() === 0) {
                         $statusText = "BELUM DIINSPEKSI";
                         $statusClass = "status-wait";
-                    } elseif ($reports->contains('result', 'failed')) {
-                        $statusText = "TIDAK LOLOS";
-                        $statusClass = "status-fail";
-                    } elseif ($reports->contains('result', 'passed') && !$reports->contains('result', 'failed') && $items->count() > 0 && ($reports->count() >= $items->count())) {
-                        // crude check: if reports exist and none failed and number of reports >= items => treat as LOLOS
-                        $statusText = "LOLOS";
-                        $statusClass = "status-pass";
-                    } elseif ($reports->contains('result', 'passed')) {
-                        $statusText = "SEDANG PROSES";
-                        $statusClass = "status-inprogress";
                     } else {
-                        // fallback
-                        $statusText = "SEDANG PROSES";
-                        $statusClass = "status-inprogress";
+                        $latestResults = $items->map(function($it){
+                            $latest = $it->inspectionReports->sortByDesc('inspection_date')->first();
+                            return $latest?->result ?? null;
+                        });
+                        $inspectedCount = $latestResults->filter(fn($r)=>!is_null($r))->count();
+                        if ($inspectedCount === 0) {
+                            $statusText = "BELUM DIINSPEKSI";
+                            $statusClass = "status-wait";
+                        } elseif ($inspectedCount < $items->count()) {
+                            $statusText = "SEDANG PROSES";
+                            $statusClass = "status-inprogress";
+                        } else {
+                            if ($latestResults->every(fn($r) => $r === 'passed')) {
+                                $statusText = "LOLOS";
+                                $statusClass = "status-pass";
+                            } elseif ($latestResults->every(fn($r) => $r === 'failed')) {
+                                $statusText = "TIDAK LOLOS";
+                                $statusClass = "status-fail";
+                            } else {
+                                $statusText = "SEDANG PROSES";
+                                $statusClass = "status-inprogress";
+                            }
+                        }
                     }
                 @endphp
 
@@ -298,29 +304,20 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const data = JSON.parse(update);
 
-            // update card hijau (LOLOS)
+            const cardButuh = document.querySelector('.qa-card.yellow h3');
+            if (cardButuh && typeof data.butuh !== 'undefined' && data.butuh !== null) cardButuh.textContent = data.butuh;
+
             const cardLolos = document.querySelector('.qa-card.green h3');
             if (cardLolos && typeof data.lolos !== 'undefined' && data.lolos !== null) cardLolos.textContent = data.lolos;
 
-            // update card merah (TIDAK LOLOS)
+            const cardSedang = document.querySelector('.qa-card.blue h3');
+            if (cardSedang && typeof data.sedang_proses !== 'undefined' && data.sedang_proses !== null) cardSedang.textContent = data.sedang_proses;
+
             const cardGagal = document.querySelector('.qa-card.red h3');
             if (cardGagal && typeof data.gagal !== 'undefined' && data.gagal !== null) cardGagal.textContent = data.gagal;
-
-            // update card kuning (BUTUH INSPEKSI)
-            const cardButuh = document.querySelector('.qa-card.yellow h3');
-            if (cardButuh && typeof data.butuh !== 'undefined' && data.butuh !== null) {
-                cardButuh.textContent = data.butuh;
-            }
-
-            // update card biru (SEDANG PROSES)
-            const cardProses = document.querySelector('.qa-card.blue h3');
-            if (cardProses && typeof data.sedang_proses !== 'undefined' && data.sedang_proses !== null) {
-                cardProses.textContent = data.sedang_proses;
-            }
         } catch (e) {
             console.warn('inspectionUpdate parse error', e);
         } finally {
-            // hapus agar tidak update berkali-kali
             localStorage.removeItem('inspectionUpdate');
         }
     }

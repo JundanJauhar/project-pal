@@ -7,165 +7,182 @@ use App\Models\Procurement;
 use App\Models\Checkpoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class InspectionController extends Controller
 {
-    /**
-     * Display inspection reports (LIST) or procurements for QA
-     */
     public function index(Request $request)
     {
         $user = Auth::user();
 
-        // Cari checkpoint "Inspeksi Barang" (fallback ke id 13 bila tidak ditemukan)
+        // checkpoint "Inspeksi Barang"
         $inspectionCheckpointId = Checkpoint::where('point_name', 'Inspeksi Barang')->value('point_id') ?? 13;
 
-        // COMMON KPIs (hitung di awal agar selalu tersedia untuk view)
-        $totalProcurements = Procurement::count();
+        // common: load all procurements with nested relations needed for status computation
+        // Note: for QA we will still restrict the listing to procurements at the inspection checkpoint,
+        // but cards should reflect overall procurement statuses across system.
+        $allProcurements = Procurement::with([
+            'department',
+            'requestProcurements.items.inspectionReports',
+            'requestProcurements.vendor'
+        ])->orderBy('created_at', 'desc')->get();
 
-        $butuhInspeksiCount = Procurement::whereHas('procurementProgress', function ($q) use ($inspectionCheckpointId) {
-            $q->where('checkpoint_id', $inspectionCheckpointId)
-              ->whereIn('status', ['not_started', 'in_progress', 'blocked']);
-        })->count();
+        // Compute counts (per-procurement classification)
+        $totalProcurements = $allProcurements->count();
+        $countButuh = 0; // belum ada item yang diinspeksi
+        $countSedang = 0; // sebagian item sudah diinspeksi / mixed
+        $countLolos = 0;
+        $countGagal = 0;
 
-        // Hitung jumlah item yang pernah dilaporkan passed / failed (distinct per item_id)
-        $lolosCount = InspectionReport::where('result', 'passed')
-            ->distinct('item_id')->count('item_id');
+        foreach ($allProcurements as $proc) {
+            // flatten items
+            $items = $proc->requestProcurements->flatMap->items;
+            $totalItems = $items->count();
 
-        $gagalCount = InspectionReport::where('result', 'failed')
-            ->distinct('item_id')->count('item_id');
+            // gather latest result per item (null if never inspected)
+            $latestResults = $items->map(function ($it) {
+                $latest = $it->inspectionReports->sortByDesc('inspection_date')->first();
+                return $latest?->result ?? null;
+            });
 
-        // Hitung jumlah procurement "sedang proses inspeksi" (memiliki item yang sudah diinspeksi
-        // tetapi belum semua item di procurement tersebut diinspeksi).
-        // Kita cari procurement yang memiliki setidaknya 1 item yang punya report dan setidaknya
-        // 1 item yang belum punya report.
-        $sedangProsesCount = Procurement::whereHas('requestProcurements.items', function ($q) {
-                $q->whereHas('inspectionReports');
-            })
-            ->whereHas('requestProcurements.items', function ($q) {
-                $q->whereDoesntHave('inspectionReports');
-            })
-            ->count();
+            $inspectedCount = $latestResults->filter(fn($r) => !is_null($r))->count();
 
-        // =========================
-        //  UNTUK USER ROLE QA
-        //  Tampilkan hanya pengadaan yang berada pada checkpoint "Inspeksi Barang"
-        //  dengan dukungan filter GET (q, priority, result)
-        // =========================
+            if ($totalItems === 0) {
+                // if no items, treat as butuh inspeksi (nothing to inspect yet)
+                $countButuh++;
+                continue;
+            }
+
+            if ($inspectedCount === 0) {
+                $countButuh++;
+                continue;
+            }
+
+            if ($inspectedCount < $totalItems) {
+                // some inspected, some not => sedang proses
+                $countSedang++;
+                continue;
+            }
+
+            // all items have latest results
+            $allPassed = $latestResults->every(fn($r) => $r === 'passed');
+            $allFailed = $latestResults->every(fn($r) => $r === 'failed');
+
+            if ($allPassed) {
+                $countLolos++;
+            } elseif ($allFailed) {
+                $countGagal++;
+            } else {
+                // mixed (some passed, some failed) -> treat as 'sedang proses' (consistent, not ambiguous)
+                $countSedang++;
+            }
+        }
+
+        // Build the cards values to pass to view
+        $cards = [
+            'total' => $totalProcurements,
+            'butuh' => $countButuh,
+            'sedang' => $countSedang,
+            'lolos' => $countLolos,
+            'gagal' => $countGagal,
+        ];
+
+        // === Build listing (for QA only show procurements at inspection checkpoint) ===
         if ($user->roles === 'qa') {
-
-            // Base query: procurement yang punya progress pada checkpoint inspeksi dan belum selesai untuk checkpoint itu
-            $baseQuery = Procurement::with(['department', 'requestProcurements.vendor', 'requestProcurements.items.inspectionReports'])
+            // base query for QA listing (procurements at inspection checkpoint)
+            $baseQuery = Procurement::with(['department', 'requestProcurements.items.inspectionReports', 'requestProcurements.vendor'])
                 ->whereHas('procurementProgress', function ($q) use ($inspectionCheckpointId) {
                     $q->where('checkpoint_id', $inspectionCheckpointId)
                       ->whereIn('status', ['not_started', 'in_progress', 'blocked']);
                 })
                 ->orderBy('created_at', 'desc');
 
-            // Filters
-            $q = $request->query('q');
-            $priority = $request->query('priority');
-            $result = $request->query('result');
+            // fetch and then apply collection filters (search, priority, result)
+            $collection = $baseQuery->get();
 
-            if ($q) {
-                $baseQuery->where(function ($qq) use ($q) {
-                    $qq->where('code_procurement', 'like', "%{$q}%")
-                       ->orWhere('name_procurement', 'like', "%{$q}%");
-                });
+            // apply search q
+            $q = trim($request->query('q', ''));
+            if ($q !== '') {
+                $collection = $collection->filter(function ($proc) use ($q) {
+                    $qLower = mb_strtolower($q);
+                    return mb_stripos($proc->code_procurement, $q) !== false
+                        || mb_stripos($proc->name_procurement, $q) !== false;
+                })->values();
             }
 
+            // filter priority
+            $priority = $request->query('priority', '');
             if ($priority) {
-                $baseQuery->where('priority', $priority);
+                $collection = $collection->filter(function ($proc) use ($priority) {
+                    return mb_strtolower($proc->priority ?? '') === mb_strtolower($priority);
+                })->values();
             }
 
-            if ($result) {
-                switch ($result) {
-                    case 'failed':
-                        // procurement that has at least one failed report
-                        $baseQuery->whereHas('requestProcurements.items.inspectionReports', function ($rr) {
-                            $rr->where('result', 'failed');
-                        });
-                        break;
+            // filter result (passed|failed|in_progress|not_inspected)
+            $resultFilter = $request->query('result', '');
+            if ($resultFilter) {
+                $collection = $collection->filter(function ($proc) use ($resultFilter) {
+                    $items = $proc->requestProcurements->flatMap->items;
+                    $totalItems = $items->count();
+                    $results = $items->map(function ($it) {
+                        $latest = $it->inspectionReports->sortByDesc('inspection_date')->first();
+                        return $latest?->result ?? null;
+                    });
+                    $inspectedCount = $results->filter(fn($r) => !is_null($r))->count();
 
-                    case 'passed':
-                        // procurement that has inspectionReports and none failed
-                        $baseQuery->whereHas('requestProcurements.items.inspectionReports')
-                                  ->whereDoesntHave('requestProcurements.items.inspectionReports', function ($rr) {
-                                      $rr->where('result', 'failed');
-                                  });
-                        break;
+                    if ($resultFilter === 'not_inspected') {
+                        return $inspectedCount === 0;
+                    }
 
-                    case 'not_inspected':
-                        // procurement with zero inspection reports on any item
-                        $baseQuery->whereDoesntHave('requestProcurements.items.inspectionReports');
-                        break;
+                    if ($inspectedCount === 0) {
+                        return false;
+                    }
 
-                    case 'in_progress':
-                        // procurement that has some items inspected and some not inspected
-                        $baseQuery->whereHas('requestProcurements.items', function ($qq) {
-                                $qq->whereHas('inspectionReports');
-                            })
-                            ->whereHas('requestProcurements.items', function ($qq) {
-                                $qq->whereDoesntHave('inspectionReports');
-                            });
-                        break;
+                    if ($inspectedCount < $totalItems) {
+                        return $resultFilter === 'in_progress';
+                    }
 
-                    default:
-                        // ignore unknown
-                }
+                    // all items inspected
+                    if ($results->every(fn($r) => $r === 'passed')) {
+                        return $resultFilter === 'passed';
+                    }
+                    if ($results->every(fn($r) => $r === 'failed')) {
+                        return $resultFilter === 'failed';
+                    }
+                    // mixed -> treat as in_progress
+                    return $resultFilter === 'in_progress';
+                })->values();
             }
 
-            // Pagination untuk tabel (20 per page)
-            $procurements = (clone $baseQuery)->paginate(20)->withQueryString();
+            // paginate collection (server-side)
+            $page = (int) $request->query('page', 1);
+            $perPage = 20;
+            $offset = ($page - 1) * $perPage;
+            $paged = $collection->slice($offset, $perPage)->values();
 
-            // Pastikan butuhInspeksiCount konsisten (dari baseQuery tanpa pagination)
-            $butuhInspeksiCount = (clone $baseQuery)->get()->count();
+            $procurements = new LengthAwarePaginator($paged, $collection->count(), $perPage, $page, [
+                'path' => url()->current(),
+                'query' => $request->query(),
+            ]);
 
-            return view('qa.inspections', compact(
-                'procurements',
-                'butuhInspeksiCount',
-                'totalProcurements',
-                'lolosCount',
-                'gagalCount',
-                'sedangProsesCount'
-            ));
+            return view('qa.inspections', array_merge($cards, [
+                'procurements' => $procurements,
+            ]));
         }
 
-        // =========================
-        //  UNTUK ROLE SELAIN QA
-        //  Tampilkan daftar inspection reports
-        // =========================
-        $inspections = InspectionReport::with([
-            'project',
-            'project.department',
-            'item',
-        ])
-        ->orderBy('inspection_date', 'desc')
-        ->paginate(20);
+        // === Non-QA branch: show inspection reports listing (unchanged) ===
+        // We'll show inspections (paginated) but still pass the cards variable for top UI
+        $inspections = InspectionReport::with(['project', 'project.department', 'item'])
+            ->orderBy('inspection_date', 'desc')
+            ->paginate(20);
 
-        // Untuk non-QA, juga siapkan KPI agar blade dapat menampilkan top-cards
-        $totalInspections = $inspections->total();
-        $butuhInspeksiCountPending = InspectionReport::where('result', 'pending')->count();
-
-        // Kirimkan variabel agar blade konsisten
-        return view('qa.inspections', [
+        return view('qa.inspections', array_merge($cards, [
             'inspections' => $inspections,
-            'butuhInspeksiCount' => $butuhInspeksiCountPending,
-            'totalInspections' => $totalInspections,
-            'totalProcurements' => $totalProcurements,
-            'lolosCount' => $lolosCount,
-            'gagalCount' => $gagalCount,
-            'sedangProsesCount' => $sedangProsesCount,
-        ]);
+        ]));
     }
 
-    /**
-     * DISABLED — show detail (tidak dipakai)
-     */
     public function show($id)
     {
         abort(404);
     }
-
-    // Note: metode lain (store, createNcrReport, etc.) tidak diubah di sini.
 }
