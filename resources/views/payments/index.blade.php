@@ -2,169 +2,355 @@
 
 @section('title', 'Payment Management')
 
+@push('styles')
+<style>
+/* ===== DASHBOARD CARDS ===== */
+.payment-topcards {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    margin-top: 10px;
+}
+.payment-card {
+    flex: 1;
+    padding: 22px;
+    border-radius: 12px;
+    background: #F4F4F4;
+    border: 1px solid #E0E0E0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.payment-card h6 { color: #676767; font-size: 14px; margin-bottom: 5px; }
+.payment-card h3 { font-weight: 700; font-size: 32px; }
+
+.payment-card.yellow { border-left: 5px solid #F2C94C; }
+.payment-card.cyan   { border-left: 5px solid #17a2b8; }
+.payment-card.blue   { border-left: 5px solid #1E90FF; }
+.payment-card.green  { border-left: 5px solid #27AE60; }
+
+/* ===== TABLE WRAPPER ===== */
+.payment-table-wrapper {
+    background: #F6F6F6;
+    padding: 25px;
+    border-radius: 14px;
+    border: 1px solid #E0E0E0;
+}
+
+/* Title */
+.payment-table-title {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Search + Filters container */
+.filters-wrap {
+    display:flex;
+    gap:12px;
+    align-items:center;
+}
+
+/* Search */
+.payment-search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #F0F0F0;
+    border-radius: 25px;
+    padding: 6px 12px;
+    width: 240px;
+    border: 1px solid #ddd;
+    font-size:14px;
+}
+.payment-search-box input {
+    border: none;
+    background: transparent;
+    width: 100%;
+    outline: none;
+    font-size:14px;
+}
+.payment-search-box i { font-size: 14px; color: #777; }
+
+/* Filter selects */
+.filter-select {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding:6px 10px;
+    border-radius:8px;
+    font-size:14px;
+}
+
+/* ===== TABLE STYLE ===== */
+.payment-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.payment-table thead th {
+    padding: 14px 6px;
+    border-bottom: 2px solid #C9C9C9;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: #555;
+    text-align: center;
+}
+
+.payment-table tbody td {
+    padding: 14px 6px;
+    border-bottom: 1px solid #DFDFDF;
+    font-size: 15px;
+    color: #333;
+    text-align: center;
+}
+
+.payment-table tbody tr:hover {
+    background: #EFEFEF;
+}
+
+/* STATUS COLORS */
+.status-pending    { color: #F2C94C; font-weight: bold; }
+.status-accounting { color: #17a2b8; font-weight: bold; }
+.status-treasury   { color: #1E90FF; font-weight: bold; }
+.status-paid       { color: #27AE60; font-weight: bold; }
+.status-rejected   { color: #D60000; font-weight: bold; }
+
+/* BUTTONS */
+.btn-action {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-action.btn-view {
+    background: #17a2b8;
+    color: white;
+}
+.btn-action.btn-view:hover {
+    background: #138496;
+}
+
+.btn-action.btn-verify {
+    background: #27AE60;
+    color: white;
+}
+.btn-action.btn-verify:hover {
+    background: #229954;
+}
+
+.btn-action.btn-pay {
+    background: #1E90FF;
+    color: white;
+}
+.btn-action.btn-pay:hover {
+    background: #1873CC;
+}
+
+.action-group {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+/* Verified icons */
+.verified-info {
+    font-size: 13px;
+    line-height: 1.4;
+}
+.verified-info i {
+    font-size: 12px;
+}
+
+/* responsive tweaks */
+@media (max-width: 900px) {
+    .payment-topcards { flex-direction: column; }
+    .filters-wrap { flex-direction: column; align-items:flex-end; gap:8px; }
+}
+</style>
+@endpush
+
 @section('content')
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h2><i class="bi bi-credit-card"></i> Payment Management</h2>
-        <p class="text-muted">Kelola pembayaran dan verifikasi dokumen</p>
+
+{{-- ===== TOP CARDS ===== --}}
+<div class="payment-topcards">
+
+    {{-- Perlu Verifikasi Accounting (semua role) --}}
+    <div class="payment-card yellow">
+        <h6>Perlu Verifikasi Accounting</h6>
+        <h3>{{ $pendingAccountingCount ?? 0 }}</h3>
     </div>
-    <div class="col-md-4 text-end">
-        <button class="btn btn-primary btn-custom" data-bs-toggle="modal" data-bs-target="#createPaymentModal">
-            <i class="bi bi-plus-circle"></i> Buat Jadwal Pembayaran
-        </button>
+
+    @if(Auth::user()->roles !== 'accounting')
+    {{-- Perlu Dibayar Treasury (hidden untuk accounting) --}}
+    <div class="payment-card blue">
+        <h6>Perlu Dibayar Treasury</h6>
+        <h3>{{ $needPaymentCount ?? 0 }}</h3>
     </div>
+    @endif
+
+    @if(Auth::user()->roles !== 'treasury')
+    {{-- Sudah Diverifikasi Accounting (hidden untuk treasury) --}}
+    <div class="payment-card cyan">
+        <h6>Sudah Diverifikasi Accounting</h6>
+        <h3>{{ $verifiedAccountingCount ?? 0 }}</h3>
+    </div>
+    @endif
+
+    {{-- Sudah Terbayar (semua role) --}}
+    <div class="payment-card green">
+        <h6>Sudah Terbayar</h6>
+        <h3>{{ $paidCount ?? 0 }}</h3>
+    </div>
+
 </div>
 
-<!-- Payment Statistics -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card card-custom" style="border-left: 4px solid #ffc107;">
-            <div class="card-body">
-                <h6 class="text-muted mb-1">Pending</h6>
-                <h4 class="mb-0" id="stat-pending">Rp 0</h4>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card card-custom" style="border-left: 4px solid #17a2b8;">
-            <div class="card-body">
-                <h6 class="text-muted mb-1">Verified Accounting</h6>
-                <h4 class="mb-0" id="stat-accounting">Rp 0</h4>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card card-custom" style="border-left: 4px solid #007bff;">
-            <div class="card-body">
-                <h6 class="text-muted mb-1">Verified Treasury</h6>
-                <h4 class="mb-0" id="stat-treasury">Rp 0</h4>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card card-custom" style="border-left: 4px solid #28a745;">
-            <div class="card-body">
-                <h6 class="text-muted mb-1">Paid</h6>
-                <h4 class="mb-0" id="stat-paid">Rp 0</h4>
-            </div>
-        </div>
-    </div>
-</div>
+{{-- ===== TABLE ===== --}}
+<div class="payment-table-wrapper">
 
-<!-- Payments Table -->
-<div class="row">
-    <div class="col-12">
-        <div class="card card-custom">
-            <div class="card-header-custom">
-                <h5 class="mb-0"><i class="bi bi-table"></i> Daftar Pembayaran</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover table-custom">
-                        <thead>
-                            <tr>
-                                <th>Project</th>
-                                <th>Type</th>
-                                <th>Amount</th>
-                                <th>Due Date</th>
-                                <th>Status</th>
-                                <th>Verified By</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($payments as $payment)
-                            <tr>
-                                <td>
-                                    <strong>{{ $payment->project->code_project }}</strong><br>
-                                    <small class="text-muted">{{ Str::limit($payment->project->name_project, 30) }}</small>
-                                </td>
-                                <td>
-                                    <span class="badge bg-secondary">{{ strtoupper($payment->payment_type) }}</span>
-                                </td>
-                                <td><strong>Rp {{ number_format($payment->amount, 0, ',', '.') }}</strong></td>
-                                <td>{{ $payment->due_date ? $payment->due_date->format('d/m/Y') : '-' }}</td>
-                                <td>
-                                    @php
-                                        $statusClass = match($payment->status) {
-                                            'paid' => 'success',
-                                            'verified_treasury', 'verified_accounting' => 'info',
-                                            'rejected' => 'danger',
-                                            default => 'warning'
-                                        };
-                                        $statusText = str_replace('_', ' ', ucwords($payment->status));
-                                    @endphp
-                                    <span class="badge bg-{{ $statusClass }}">{{ $statusText }}</span>
-                                </td>
-                                <td>
-                                    <small>
-                                        @if($payment->verified_by_accounting)
-                                            <i class="bi bi-check-circle text-success"></i> Accounting<br>
-                                        @endif
-                                        @if($payment->verified_by_treasury)
-                                            <i class="bi bi-check-circle text-success"></i> Treasury
-                                        @endif
-                                        @if(!$payment->verified_by_accounting && !$payment->verified_by_treasury)
-                                            <span class="text-muted">-</span>
-                                        @endif
-                                    </small>
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ route('payments.show', $payment->payment_schedule_id) }}"
-                                           class="btn btn-sm btn-info btn-custom">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
+    <div class="payment-table-title">
+        <span>Daftar Pembayaran</span>
 
-                                        @if(Auth::user()->roles === 'accounting' && $payment->status === 'pending')
-                                        <button class="btn btn-sm btn-success btn-custom"
-                                                onclick="verifyAccounting({{ $payment->payment_schedule_id }})">
-                                            <i class="bi bi-check"></i> Verify
-                                        </button>
-                                        @endif
-
-                                        @if(Auth::user()->roles === 'treasury' && $payment->status === 'verified_accounting')
-                                        <button class="btn btn-sm btn-primary btn-custom"
-                                                onclick="verifyTreasury({{ $payment->payment_schedule_id }})">
-                                            <i class="bi bi-wallet2"></i> Pay
-                                        </button>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="7" class="text-center py-4">
-                                    <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
-                                    <p class="text-muted mt-2">Tidak ada data pembayaran</p>
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+        <form method="GET" style="margin:0;">
+            <div class="filters-wrap">
+                <div class="payment-search-box" title="Cari kode project">
+                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari project..." />
+                    <i class="bi bi-search"></i>
                 </div>
 
-                <div class="mt-3">
-                    {{ $payments->links() }}
-                </div>
+                <select name="status" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Semua Status</option>
+                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                    <option value="verified_accounting" {{ request('status') === 'verified_accounting' ? 'selected' : '' }}>Verified Accounting</option>
+                    <option value="verified_treasury" {{ request('status') === 'verified_treasury' ? 'selected' : '' }}>Verified Treasury</option>
+                    <option value="paid" {{ request('status') === 'paid' ? 'selected' : '' }}>Paid</option>
+                    <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                </select>
+
+                <select name="type" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Semua Tipe</option>
+                    <option value="dp" {{ request('type') === 'dp' ? 'selected' : '' }}>DP</option>
+                    <option value="termin" {{ request('type') === 'termin' ? 'selected' : '' }}>Termin</option>
+                    <option value="pelunasan" {{ request('type') === 'pelunasan' ? 'selected' : '' }}>Pelunasan</option>
+                </select>
+
+                <button type="submit" class="filter-select" style="cursor:pointer;">Terapkan</button>
             </div>
-        </div>
+        </form>
     </div>
+
+    <div class="table-responsive">
+        <table class="payment-table">
+            <thead>
+                <tr>
+                    <th>Project</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Verified By</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            @forelse($payments as $payment)
+                @php
+                    $statusClass = match($payment->status) {
+                        'paid' => 'status-paid',
+                        'verified_treasury' => 'status-treasury',
+                        'verified_accounting' => 'status-accounting',
+                        'rejected' => 'status-rejected',
+                        default => 'status-pending'
+                    };
+                    $statusText = str_replace('_', ' ', strtoupper($payment->status));
+                @endphp
+
+                <tr>
+                    <td style="text-align:left;">
+                        <strong>{{ $payment->project->code_project }}</strong><br>
+                        <small class="text-muted">{{ Str::limit($payment->project->name_project, 30) }}</small>
+                    </td>
+                    <td>
+                        <span style="background:#6c757d; color:white; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">
+                            {{ strtoupper($payment->payment_type) }}
+                        </span>
+                    </td>
+                    <td><strong>Rp {{ number_format($payment->amount, 0, ',', '.') }}</strong></td>
+                    <td>{{ $payment->due_date ? $payment->due_date->format('d/m/Y') : '-' }}</td>
+                    <td>
+                        <span class="{{ $statusClass }}">{{ $statusText }}</span>
+                    </td>
+                    <td>
+                        <div class="verified-info">
+                            @if($payment->verified_by_accounting)
+                                <div><i class="bi bi-check-circle text-success"></i> Accounting</div>
+                            @endif
+                            @if($payment->verified_by_treasury)
+                                <div><i class="bi bi-check-circle text-success"></i> Treasury</div>
+                            @endif
+                            @if(!$payment->verified_by_accounting && !$payment->verified_by_treasury)
+                                <span class="text-muted">-</span>
+                            @endif
+                        </div>
+                    </td>
+                    <td>
+                        <div class="action-group">
+                            <a href="{{ route('payments.show', $payment->payment_schedule_id) }}"
+                               class="btn-action btn-view">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+
+                            @if(Auth::user()->roles === 'accounting' && $payment->status === 'pending')
+                            <button class="btn-action btn-verify"
+                                    onclick="verifyAccounting({{ $payment->payment_schedule_id }})">
+                                <i class="bi bi-check"></i> Verify
+                            </button>
+                            @endif
+
+                            @if(Auth::user()->roles === 'treasury' && $payment->status === 'verified_accounting')
+                            <button class="btn-action btn-pay"
+                                    onclick="verifyTreasury({{ $payment->payment_schedule_id }})">
+                                <i class="bi bi-wallet2"></i> Pay
+                            </button>
+                            @endif
+                        </div>
+                    </td>
+                </tr>
+
+            @empty
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <i class="bi bi-inbox" style="font-size:40px; color:#bbb;"></i>
+                        <p class="text-muted mt-2">Tidak ada data pembayaran</p>
+                    </td>
+                </tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-3">
+        {{ $payments->links() }}
+    </div>
+
 </div>
+
 @endsection
 
 @push('scripts')
 <script>
-// Load payment statistics
-function loadStats() {
-    $.get("{{ route('payments.statistics') }}", function(data) {
-        $('#stat-pending').text('Rp ' + new Intl.NumberFormat('id-ID').format(data.pending));
-        $('#stat-accounting').text('Rp ' + new Intl.NumberFormat('id-ID').format(data.verified_accounting));
-        $('#stat-treasury').text('Rp ' + new Intl.NumberFormat('id-ID').format(data.verified_treasury));
-        $('#stat-paid').text('Rp ' + new Intl.NumberFormat('id-ID').format(data.paid));
-    });
-}
-
 function verifyAccounting(paymentId) {
     if (!confirm('Apakah Anda yakin ingin memverifikasi pembayaran ini?')) return;
 
@@ -200,7 +386,7 @@ function verifyTreasury(paymentId) {
 }
 
 $(document).ready(function() {
-    loadStats();
+    // Stats are already loaded from controller, no need to fetch
 });
 </script>
 @endpush

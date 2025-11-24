@@ -127,13 +127,15 @@ Route::middleware(['auth'])->group(function () {
 
     // =================== PAYMENTS ===================
     Route::prefix('payments')->name('payments.')->group(function () {
-        Route::get('/', [PaymentController::class, 'index'])->name('index');
-        Route::get('/create/{projectId}', [PaymentController::class, 'create'])->name('create');
-        Route::post('/', [PaymentController::class, 'store'])->name('store');
-        Route::get('/{id}', [PaymentController::class, 'show'])->name('show');
-        Route::post('/{id}/accounting-verification', [PaymentController::class, 'accountingVerification'])->name('accounting-verification');
-        Route::post('/{id}/treasury-verification', [PaymentController::class, 'treasuryVerification'])->name('treasury-verification');
-    });
+    Route::get('/', [PaymentController::class, 'index'])->name('index');
+    Route::get('/create/{projectId}', [PaymentController::class, 'create'])->name('create');
+    Route::post('/', [PaymentController::class, 'store'])->name('store');
+    Route::get('/{id}', [PaymentController::class, 'show'])->name('show');
+    Route::post('/{id}/accounting-verification', [PaymentController::class, 'accountingVerification'])->name('accounting-verification');
+    Route::post('/{id}/treasury-verification', [PaymentController::class, 'treasuryVerification'])->name('treasury-verification');
+    Route::get('/statistics', [PaymentController::class, 'statistics'])->name('statistics');
+});
+
 
 
     // =================== QA INSPECTIONS ===================
