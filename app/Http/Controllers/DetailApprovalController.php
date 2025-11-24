@@ -8,82 +8,66 @@ use Carbon\Carbon;
 use App\Models\Procurement;
 use App\Models\Item;
 use App\Models\InspectionReport;
-use App\Models\Checkpoint;
 
 class DetailApprovalController extends Controller
 {
     /**
-     * Show detail approval page for a procurement (cards per item).
+     * Tampilkan halaman detail inspeksi untuk satu pengadaan.
      */
     public function show(Request $request, $procurement_id)
     {
-        // load procurement + items + vendor + inspection reports
+        // Ambil pengadaan + relasi yang dibutuhkan untuk halaman detail
         $procurement = Procurement::with([
+            'project',
+            'department',
             'requestProcurements.vendor',
-            'requestProcurements.items' => function ($q) {
-                $q->with('inspectionReports');
-            }
+            'requestProcurements.items.inspectionReports',
         ])->findOrFail($procurement_id);
 
-        // flatten items (through requestProcurements)
-        $items = collect();
-        foreach ($procurement->requestProcurements as $req) {
-            foreach ($req->items as $it) {
-                // attach vendor & request for easier access in view
-                $it->vendor = $req->vendor ?? null;
-                $items->push($it);
-            }
-        }
+        // Flatten semua item dari setiap request pengadaan
+        $items = $procurement->requestProcurements
+            ->flatMap(function ($req) {
+                // sisipkan vendor ke masing-masing item untuk dipakai di view (kalau perlu)
+                return $req->items->map(function ($item) use ($req) {
+                    $item->vendor = $req->vendor ?? null;
+                    return $item;
+                });
+            });
 
-        // KPI counts for cards in inspections.blade.php
-        $inspectionCheckpointId = Checkpoint::where('point_name', 'Inspeksi Barang')->value('point_id') ?? 13;
-        $totalProcurements = Procurement::count();
-        $butuhInspeksiCount = Procurement::whereHas('procurementProgress', function ($q) use ($inspectionCheckpointId) {
-            $q->where('checkpoint_id', $inspectionCheckpointId)
-              ->whereIn('status', ['not_started', 'in_progress', 'blocked']);
-        })->count();
-
-        // global inspection counts (can be used to update top-cards)
-        $lolosCount = InspectionReport::where('result', 'passed')->distinct('item_id')->count('item_id');
-        $gagalCount = InspectionReport::where('result', 'failed')->distinct('item_id')->count('item_id');
-
-        return view('qa.detail-approval', compact(
-            'procurement',
-            'items',
-            'totalProcurements',
-            'butuhInspeksiCount',
-            'lolosCount',
-            'gagalCount'
-        ));
+        // Tidak perlu hitung kartu KPI di sini; kartu sudah dihandle di halaman Department/Inspeksi.
+        return view('qa.detail-approval', [
+            'procurement' => $procurement,
+            'items'       => $items,
+        ]);
     }
 
     /**
-     * Save results for ALL items for this procurement (AJAX).
-     * Expects payload:
-     *  - items: [ { item_id, result: 'passed'|'failed', notes: string|null }, ... ]
+     * Simpan hasil inspeksi untuk beberapa item dalam satu pengadaan (AJAX).
      */
     public function saveAll(Request $request, $procurement_id)
     {
         $data = $request->validate([
-            'items' => 'required|array|min:1',
+            'items'           => 'required|array|min:1',
             'items.*.item_id' => 'required|integer|exists:items,item_id',
             'items.*.result'  => 'required|string|in:passed,failed',
             'items.*.notes'   => 'nullable|string|max:2000',
         ]);
 
-        $now = Carbon::now();
+        $now   = Carbon::now();
         $saved = [];
         $itemIds = [];
 
         foreach ($data['items'] as $it) {
             $item = Item::find($it['item_id']);
-            if (!$item) continue;
+            if (!$item) {
+                continue;
+            }
 
-            // notes required if failed
+            // notes wajib untuk result failed
             if ($it['result'] === 'failed' && empty(trim($it['notes'] ?? ''))) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Keterangan wajib diisi untuk item id {$item->item_id} yang tidak lolos."
+                    'message' => "Keterangan wajib diisi untuk item id {$item->item_id} yang tidak lolos.",
                 ], 422);
             }
 
@@ -91,23 +75,23 @@ class DetailApprovalController extends Controller
 
             if ($existing) {
                 $existing->update([
-                    'result' => $it['result'],
-                    'notes' => $it['notes'] ?? null,
+                    'result'          => $it['result'],
+                    'notes'           => $it['notes'] ?? null,
                     'inspection_date' => $now->format('Y-m-d'),
-                    'inspector_id' => Auth::id(),
-                    'updated_at' => $now,
+                    'inspector_id'    => Auth::id(),
+                    'updated_at'      => $now,
                 ]);
                 $saved[] = $existing;
             } else {
                 $report = InspectionReport::create([
-                    'project_id' => $item->requestProcurement?->project_id ?? null,
-                    'item_id' => $item->item_id,
-                    'inspector_id' => Auth::id(),
+                    'project_id'      => $item->requestProcurement?->project_id ?? null,
+                    'item_id'         => $item->item_id,
+                    'inspector_id'    => Auth::id(),
                     'inspection_date' => $now->format('Y-m-d'),
-                    'result' => $it['result'],
-                    'notes' => $it['notes'] ?? null,
-                    'created_at' => $now,
-                    'updated_at' => $now,
+                    'result'          => $it['result'],
+                    'notes'           => $it['notes'] ?? null,
+                    'created_at'      => $now,
+                    'updated_at'      => $now,
                 ]);
                 $saved[] = $report;
             }
@@ -115,33 +99,79 @@ class DetailApprovalController extends Controller
             $itemIds[] = $item->item_id;
         }
 
-        // recompute per-procurement inspection status
+        // Hitung ulang info dasar untuk response (kalau mau dipakai di JS)
         $totalItems = Item::whereHas('requestProcurement', function ($q) use ($procurement_id) {
             $q->where('procurement_id', $procurement_id);
         })->count();
 
         $inspectedItems = InspectionReport::whereIn('item_id', function ($q) use ($procurement_id) {
             $q->select('item_id')->from('items')
-              ->whereIn('request_procurement_id', function ($qq) use ($procurement_id) {
-                  $qq->select('request_id')->from('request_procurement')->where('procurement_id', $procurement_id);
-              });
+                ->whereIn('request_procurement_id', function ($qq) use ($procurement_id) {
+                    $qq->select('request_id')
+                        ->from('request_procurement')
+                        ->where('procurement_id', $procurement_id);
+                });
         })->distinct('item_id')->count('item_id');
 
         $all_inspected = ($totalItems > 0 && $inspectedItems >= $totalItems);
 
-        // global counters (to update top-cards)
-        $lolosCount = InspectionReport::where('result', 'passed')->distinct('item_id')->count('item_id');
-        $gagalCount = InspectionReport::where('result', 'failed')->distinct('item_id')->count('item_id');
+        // global counters untuk kartu (berdasarkan jumlah item yang lolos/gagal)
+        $lolosCount = InspectionReport::where('result', 'passed')
+            ->distinct('item_id')->count('item_id');
+        $gagalCount = InspectionReport::where('result', 'failed')
+            ->distinct('item_id')->count('item_id');
+
+        // hitung butuh & sedang_proses per pengadaan (opsional, jika masih dipakai di JS)
+        $allProcs = Procurement::with(['requestProcurements.items.inspectionReports'])->get();
+        $butuh = 0;
+        $sedang_proses = 0;
+
+        foreach ($allProcs as $proc) {
+            $items = $proc->requestProcurements->flatMap->items;
+            $totalItemsProc = $items->count();
+
+            if ($totalItemsProc === 0) {
+                $butuh++;
+                continue;
+            }
+
+            $latestResults = $items->map(function ($it) {
+                $latest = $it->inspectionReports->sortByDesc('inspection_date')->first();
+                return $latest?->result ?? null;
+            });
+
+            $inspectedCountProc = $latestResults->filter(fn ($r) => !is_null($r))->count();
+
+            if ($inspectedCountProc === 0) {
+                $butuh++;
+                continue;
+            }
+
+            if ($inspectedCountProc < $totalItemsProc) {
+                $sedang_proses++;
+                continue;
+            }
+
+            if ($latestResults->every(fn ($r) => $r === 'passed')) {
+                // sudah dihitung di $lolosCount (per item)
+            } elseif ($latestResults->every(fn ($r) => $r === 'failed')) {
+                // sudah dihitung di $gagalCount
+            } else {
+                $sedang_proses++;
+            }
+        }
 
         return response()->json([
-            'success' => true,
-            'message' => 'Semua hasil inspeksi berhasil disimpan.',
-            'saved_count' => count($saved),
-            'all_inspected' => $all_inspected,
+            'success'         => true,
+            'message'         => 'Semua hasil inspeksi berhasil disimpan.',
+            'saved_count'     => count($saved),
+            'all_inspected'   => $all_inspected,
             'inspected_items' => $inspectedItems,
-            'total_items' => $totalItems,
-            'lolos_count' => $lolosCount,
-            'gagal_count' => $gagalCount,
+            'total_items'     => $totalItems,
+            'lolos_count'     => $lolosCount,
+            'gagal_count'     => $gagalCount,
+            'butuh'           => $butuh,
+            'sedang_proses'   => $sedang_proses,
         ]);
     }
 }
