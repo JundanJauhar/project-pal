@@ -375,19 +375,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            // set localStorage flag so list page can read it (and update cards)
-            try {
-                const update = {
-                    lolos: json.lolos_count ?? null,
-                    gagal: json.gagal_count ?? null,
-                    butuh: json.butuh ?? null,
-                    sedang_proses: json.sedang_proses ?? null
-                };
-                localStorage.setItem('inspectionUpdate', JSON.stringify(update));
-            } catch (e) {
-                // ignore storage errors
-            }
-
             alert('Hasil inspeksi berhasil disimpan.');
             setEditMode(false);
         } catch (err) {
