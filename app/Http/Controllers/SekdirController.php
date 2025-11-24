@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\RequestProcurement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Checkpoint;
 
 class SekdirController extends Controller
 {
@@ -40,28 +41,30 @@ class SekdirController extends Controller
      * Halaman approval untuk sekretaris_direksi
      */
     public function approval()
-{
-    // Ambil procurement yang status PROJECT-nya menunggu sekretaris
-    $procurements = Procurement::with([
-        'project.ownerDivision',
-        'project.contracts.vendor'
-    ])
-    ->whereHas('project', function ($q) {
-        $q->where('status_project', 'persetujuan_sekretaris');
-    })
-    ->orderBy('created_at', 'desc')
-    ->get();
+    {
+        // Ambil procurement yang status PROJECT-nya menunggu sekretaris
+        $procurements = Procurement::with([
+            'project.ownerDivision',
+            'project.contracts.vendor',
+            'requestProcurements.vendor'
 
-    // Statistik
-    $stats = [
-        'total' => Project::count(),
-        'pending' => Project::where('status_project', 'persetujuan_sekretaris')->count(),
-        'approved' => Project::where('status_project', 'pemilihan_vendor')->count(),
-        'rejected' => Project::where('status_project', 'rejected')->count(),
-    ];
+        ])
+            ->whereHas('project', function ($q) {
+                $q->where('status_project', 'persetujuan_sekretaris');
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-    return view('sekdir.approval', compact('procurements', 'stats'));
-}
+        // Statistik
+        $stats = [
+            'total' => Project::count(),
+            'pending' => Project::where('status_project', 'persetujuan_sekretaris')->count(),
+            'approved' => Project::where('status_project', 'pemilihan_vendor')->count(),
+            'rejected' => Project::where('status_project', 'rejected')->count(),
+        ];
+
+        return view('sekdir.approval', compact('procurements', 'stats'));
+    }
 
 
     /**
@@ -122,6 +125,7 @@ class SekdirController extends Controller
             $message = 'Project ditolak.';
         }
 
+
         return redirect()->route('sekdir.approval')
             ->with('success', $message);
     }
@@ -130,16 +134,49 @@ class SekdirController extends Controller
      * View detail of a project for approval
      */
     public function approvalDetail($procurementId)
+    {
+        $procurement = Procurement::with([
+            'project.ownerDivision',
+            'project.contracts.vendor',
+            'department',
+            'requestProcurements.items'
+        ])->findOrFail($procurementId);
+
+        $checkpoints = Checkpoint::orderBy('point_sequence')->get();
+
+        return view('sekdir.approval-detail', compact(
+            'procurement',
+            'checkpoints',
+
+        ));;
+    }
+
+public function approvalSubmit(Request $request, $projectId)
 {
-    $procurement = Procurement::with([
-        'project.ownerDivision',
-        'project.contracts.vendor',
-        'department',
-        'requestProcurements.items'
-    ])->findOrFail($procurementId);
+    // validasi
+    $request->validate([
+        'procurement_link' => 'required|url',
+        'notes' => 'nullable|string',
+    ]);
 
-    return view('sekdir.approval-detail', compact('procurement'));
+    $procurement = Procurement::where('project_id', $projectId)->firstOrFail();
+
+    // simpan link dan catatan
+    $procurement->procurement_link = $request->procurement_link;
+    $procurement->notes = $request->notes;
+
+    // jika procurement_link terisi → status completed
+    if (!empty($request->procurement_link)) {
+        $procurement->status_procurement = 'completed';
+    } else {
+        $procurement->status_procurement = 'reviewed';
+    }
+
+    $procurement->save();
+
+    return redirect()
+        ->route('sekdir.approval')
+        ->with('success', 'Review berhasil disimpan!');
 }
-
 
 }

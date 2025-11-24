@@ -139,23 +139,6 @@
     </div>
 
 
-    {{-- Timeline --}}
-    <div class="timeline-container">
-        @forelse($checkpoints as $index => $checkpoint)
-        <div
-            class="timeline-step
-                        {{ $currentStageIndex !== null && $index < $currentStageIndex ? 'completed' : ($currentStageIndex !== null && $index == $currentStageIndex ? 'active' : '') }}">
-            <div class="timeline-icon">
-                <i class="bi bi-check-circle"></i>
-            </div>
-            <small>{{ $checkpoint->point_name }}</small>
-        </div>
-        @empty
-        <div class="text-center">Tidak ada checkpoint yang tersedia</div>
-        @endforelse
-    </div>
-
-
     {{-- Detail Pengadaan --}}
     <h5 class="section-title">Detail Pengadaan</h5>
     <table class="table table-bordered">
@@ -186,29 +169,51 @@
 
     {{-- REVIEW DOCUMENT --}}
     <h5 class="section-title mt-4">Review Document</h5>
-    <div class="doc-card">
-        {!! $procurement->review_notes ?? 'Belum ada review' !!}
-    </div>
 
-    {{-- SIGN DOCUMENT --}}
-    <h5 class="section-title">Sign Document</h5>
-    <div class="doc-card">
-        {!! $procurement->sign_notes ?? 'Belum ada tanda tangan' !!}
-    </div>
+   <form action="{{ route('sekdir.approval.submit', $procurement->project_id) }}" method="POST">
+    @csrf
+    <div class="card shadow-sm border-0 mt-3">
+        <div class="card-body">
 
-    <!-- <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
-        <form action="{{ route('procurements.update', $procurement->procurement_id) }}" method="post">
-            @csrf
-            @method('put')
-            <button type="submit" class="btn btn-sm btn-success btn-custom">
-                <i class="bi bi-check-lg"></i> Accept
-            </button>
-        </form>
-        <a href="{{ route('procurements.show', $procurement->procurement_id) }}"
-            class="btn btn-sm btn-danger btn-custom">
-            <i class="bi bi-x-lg"></i> Rejected
-        </a>
-    </div> -->
+            {{-- Link Pengadaan --}}
+            <div class="mb-3">
+                <label for="procurement_link" class="form-label fw-semibold">Link Dokumen Pengadaan</label>
+                <input type="url"
+                       class="form-control @error('procurement_link') is-invalid @enderror"
+                       id="procurement_link"
+                       name="procurement_link"
+                       placeholder="https://contoh.com/dokumen"
+                       value="{{ old('procurement_link', $procurement->procurement_link) }}"> <!-- Ambil dari DB -->
+
+                @error('procurement_link')
+                <small class="text-danger">{{ $message }}</small>
+                @enderror
+            </div>
+
+            {{-- Catatan --}}
+            <div class="mb-3">
+                <label for="notes" class="form-label fw-semibold">Catatan</label>
+                <textarea class="form-control @error('notes') is-invalid @enderror"
+                          id="notes"
+                          name="notes"
+                          rows="4"
+                          placeholder="Tambahkan catatan persetujuan atau alasan penolakan...">{{ old('notes', $procurement->notes) }}</textarea> <!-- Ambil dari DB -->
+
+                @error('notes')
+                <small class="text-danger">{{ $message }}</small>
+                @enderror
+            </div>
+
+            {{-- Tombol Submit --}}
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-success me-2">
+                    <i class="bi bi-check-circle"></i> Ke Step Berikutnya
+                </button>
+            </div>
+        </div>
+</form>
+
+
 
 </div>
 
