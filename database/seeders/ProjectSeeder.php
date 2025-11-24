@@ -389,7 +389,7 @@ $procurement4 = \App\Models\Procurement::create([
         $checkpoints = \App\Models\Checkpoint::orderBy('point_sequence')->get();
 
         // Progress untuk procurement 1 - Sudah sampai checkpoint 13 (Inspeksi Barang)
-        foreach ($checkpoints->take(13) as $index => $checkpoint) {
+        foreach ($checkpoints->take(11) as $index => $checkpoint) {
             \App\Models\ProcurementProgress::create([
                 'procurement_id' => $procurement1->procurement_id,
                 'checkpoint_id' => $checkpoint->point_id,
@@ -402,7 +402,7 @@ $procurement4 = \App\Models\Procurement::create([
         }
 
         // Progress untuk procurement 2 - Baru sampai checkpoint 7 (Pengesahan Kontrak)
-        foreach ($checkpoints->take(7) as $index => $checkpoint) {
+        foreach ($checkpoints->take(11) as $index => $checkpoint) {
             \App\Models\ProcurementProgress::create([
                 'procurement_id' => $procurement2->procurement_id,
                 'checkpoint_id' => $checkpoint->point_id,

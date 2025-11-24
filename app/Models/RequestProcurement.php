@@ -22,7 +22,7 @@ class RequestProcurement extends Model
         'deadline_date',
         'request_status',
         'department_id',
-        'project_id', // pastikan kolom ini ada di migration
+        'project_id',
     ];
 
     protected $casts = [
@@ -31,7 +31,7 @@ class RequestProcurement extends Model
     ];
 
     /**
-     * Get the procurement for this request
+     * Get the procurement that owns this request
      */
     public function procurement(): BelongsTo
     {
@@ -39,7 +39,7 @@ class RequestProcurement extends Model
     }
 
     /**
-     * Get the project for this request (PERBAIKAN #1)
+     * Get the project for this request
      */
     public function project(): BelongsTo
     {
@@ -51,7 +51,13 @@ class RequestProcurement extends Model
      */
     public function vendor(): BelongsTo
     {
-        return $this->belongsTo(Vendor::class, 'vendor_id', 'id_vendor');
+        // Foreign key: vendor_id di request_procurement
+        // Owner key: id_vendor di vendors (primary key)
+        return $this->belongsTo(
+            Vendor::class, 
+            'vendor_id',    // foreign key di request_procurement
+            'id_vendor'     // owner key di vendors (primary key)
+        );
     }
 
     /**
@@ -63,11 +69,28 @@ class RequestProcurement extends Model
     }
 
     /**
-     * Get items for this request
+     * Get all items for this request
      */
     public function items(): HasMany
     {
         return $this->hasMany(Item::class, 'request_procurement_id', 'request_id');
     }
 
+    /**
+     * Calculate total amount from items
+     */
+    public function calculateTotalAmount()
+    {
+        return $this->items()->sum('total_price');
+    }
+
+    /**
+     * Update total amount
+     */
+    public function updateTotalAmount()
+    {
+        $this->update([
+            'total_amount' => $this->calculateTotalAmount()
+        ]);
+    }
 }
