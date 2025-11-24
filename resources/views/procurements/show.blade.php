@@ -9,77 +9,71 @@
         background: white;
     }
 
-.timeline-container {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;               /* jarak antar titik */
-    margin: 40px auto;
-    padding: 0 20px;         /* biar garis tidak terlalu mepet */
-    width: fit-content;      /* mengikuti lebar titik-titik saja */
-}
+    .timeline-container {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        margin: 40px auto;
+        padding: 0 20px;
+        width: fit-content;
+    }
 
-.timeline-container::before {
-    content: "";
-    position: absolute;
-    top: 24px;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: #c7e5c6;
+    .timeline-container::before {
+        content: "";
+        position: absolute;
+        top: 24px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: #c7e5c6;
+        width: calc(100% - 45px);
+        margin: auto;
+        z-index: 1;
+    }
 
-    width: calc(100% - 45px);  /* 🔥 garis hanya sepanjang isi */
-    margin: auto;
-    z-index: 1;
-}
+    .timeline-step {
+        text-align: center;
+        width: 90px;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+    }
 
-.timeline-step {
-    text-align: center;
-    width: 90px;
-    z-index: 2;
+    .timeline-step small {
+        margin-top: 6px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        text-align: center;
+        line-height: 1.2;
+    }
 
-    /* 🔥 Samakan tinggi setiap step */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-}
+    .timeline-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: #c7e5c6;
+        color: green;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 20px;
+        margin: auto;
+    }
 
-.timeline-step small {
-    margin-top: 6px;
+    .timeline-step.active .timeline-icon {
+        background: #ECAD02;
+        color: white;
+    }
 
-    /* 🔥 Fix agar tinggi teks sama */
-    height: 38px;              /* sesuaikan */
-    display: flex;
-    align-items: center;
-    text-align: center;
-    line-height: 1.2;
-}
-
-.timeline-icon {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    background: #c7e5c6;
-    color: green;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 20px;
-    margin: auto;
-}
-
-.timeline-step.active .timeline-icon {
-    background: #ECAD02;
-    color: white;
-}
-
-.timeline-step.completed .timeline-icon {
-    background: #28AC00;
-    color: white;
-}
-
+    .timeline-step.completed .timeline-icon {
+        background: #28AC00;
+        color: white;
+    }
 
     .section-title {
         font-weight: bold;
@@ -101,11 +95,8 @@
 
     .logo {
         height: 100px;
-
-        ;
     }
 
-    /* Posisikan logo ke tengah */
     .header-logo-wrapper {
         width: 100%;
         display: flex;
@@ -119,13 +110,10 @@
         object-fit: contain;
     }
 
-    /* Tanda X ke kiri mengikuti margin konten */
     .close-btn {
         position: absolute;
         right: 90px;
-        /* Geser ke kiri sesuai kebutuhan */
         top: 110px;
-        /* Sejajarkan dengan konten berikutnya */
         font-size: 28px;
         color: #DA3B3B;
         cursor: pointer;
@@ -134,39 +122,128 @@
     .close-btn:hover {
         opacity: 0.7;
     }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .info-item {
+        margin-bottom: 10px;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #666;
+        margin-bottom: 5px;
+    }
+
+    .info-value {
+        color: #333;
+    }
+
+    .badge-priority {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-rendah {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-sedang {
+        background-color: #ffc107;
+        color: #333;
+    }
+
+    .badge-tinggi {
+        background-color: #dc3545;
+        color: white;
+    }
 </style>
+
 <div class="header-logo-wrapper">
     <img src="{{ asset('images/logo-pal.png') }}" alt="Logo PAL" class="logo">
 </div>
+
 <a href="javascript:history.back()" class="close-btn">
     <i class="bi bi-x-circle"></i>
 </a>
+
 <div class="procurement-header">
     {{-- Header procurement --}}
-    <div class="d-flex justify-content-between align-items-start">
+    <h3 class="mb-4">Detail Procurement</h3>
+    
+    <div class="info-grid">
         <div>
-            <h4>Daftar Pengadaan</h4>
-            <p><strong>Nama procurement:</strong> {{ $procurement->code_procurement }}</p>
-            <p><strong>Vendor:</strong>
-                {{ $procurement->requestProcurements->first()?->vendor?->name_vendor ?? '-' }}
-            </p>
-            <p><strong>Deskripsi:</strong> {{ $procurement->description }}</p>
+            <div class="info-item">
+                <div class="info-label">Project</div>
+                <div class="info-value"><strong>{{ $procurement->code_procurement }}</strong></div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">Nama Procurement</div>
+                <div class="info-value">{{ $procurement->name_procurement }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Department</div>
+                <div class="info-value">{{ $procurement->department->department_name ?? '-' }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Vendor</div>
+                <div class="info-value">
+                    {{ $procurement->requestProcurements->first()?->vendor?->name_vendor ?? 'Belum ditentukan' }}
+                </div>
+            </div>
+
+            @if($procurement->description)
+            <div class="info-item mb-4">
+                <div class="info-label">Deskripsi</div>
+                <div class="info-value">{{ $procurement->description }}</div>
+            </div>
+            @endif
         </div>
 
-        <div class="text-end">
-            <p><strong>Prioritas:</strong> {{ strtoupper($procurement->priority) }}</p>
-            <p><strong>Tanggal Dibuat:</strong> {{ $procurement->created_at->format('d/m/Y') }}</p>
-            <p><strong>Tanggal Target:</strong> {{ $procurement->end_date->format('d/m/Y') }}</p>
+        <div>
+            <div class="info-item">
+                <div class="info-label">Prioritas</div>
+                <div class="info-value">
+                    <span class="badge-priority badge-{{ $procurement->priority }}">
+                        {{ strtoupper($procurement->priority) }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Status</div>
+                <div class="info-value">
+                    <span class="badge bg-secondary">{{ strtoupper($procurement->status_procurement) }}</span>
+                </div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Tanggal Mulai</div>
+                <div class="info-value">{{ $procurement->start_date ? $procurement->start_date->format('d/m/Y') : '-' }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">Tanggal Target</div>
+                <div class="info-value">{{ $procurement->end_date->format('d/m/Y') }}</div>
+            </div>
         </div>
     </div>
-
 
     {{-- Timeline --}}
     <div class="timeline-container">
         @forelse($checkpoints as $index => $checkpoint)
-        <div
-            class="timeline-step
-                        {{ $currentStageIndex !== null && $index < $currentStageIndex ? 'completed' : ($currentStageIndex !== null && $index == $currentStageIndex ? 'active' : '') }}">
+        <div class="timeline-step {{ $currentStageIndex !== null && $index < $currentStageIndex ? 'completed' : ($currentStageIndex !== null && $index == $currentStageIndex ? 'active' : '') }}">
             <div class="timeline-icon">
                 <i class="bi bi-check-circle"></i>
             </div>
@@ -177,63 +254,86 @@
         @endforelse
     </div>
 
+    {{-- Detail Items Pengadaan --}}
+    <h5 class="section-title mt-4">Detail Item Pengadaan</h5>
+    
+    @php
+        $grandTotal = 0;
+    @endphp
 
-    {{-- Detail Pengadaan --}}
-    <h5 class="section-title">Detail Pengadaan</h5>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Nama Pengadaan</th>
-                <th>Spesifikasi</th>
-                <th>Jumlah</th>
-                <th>Harga Estimasi</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($procurement->requestProcurements as $req)
-            @foreach ($req->items as $item)
-            <tr>
-                <td>{{ $item->item_name }}</td>
-                <td>{{ $item->specification }}</td>
-                <td>{{ $item->quantity }} {{ $item->unit }}</td>
-                <td>Rp {{ number_format($item->estimated_price, 0, ',', '.') }}</td>
-                <td>Rp {{ number_format($item->estimated_price * $item->quantity, 0, ',', '.') }}</td>
-            </tr>
-            @endforeach
-            @endforeach
-        </tbody>
-    </table>
-
+    @forelse($procurement->requestProcurements as $request)
+        @if($request->items->count() > 0)
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th width="5%">No</th>
+                        <th width="25%">Nama Item</th>
+                        <th width="25%">Spesifikasi</th>
+                        <th width="10%">Jumlah</th>
+                        <th width="15%">Harga Satuan</th>
+                        <th width="15%">Total Harga</th>
+                        <th width="5%">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($request->items as $index => $item)
+                    @php
+                        $itemTotal = $item->unit_price * $item->amount;
+                        $grandTotal += $itemTotal;
+                    @endphp
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+                        <td><strong>{{ $item->item_name }}</strong></td>
+                        <td>{{ $item->item_description ?? $item->specification ?? '-' }}</td>
+                        <td>{{ $item->amount }} {{ $item->unit }}</td>
+                        <td>Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
+                        <td><strong>Rp {{ number_format($itemTotal, 0, ',', '.') }}</strong></td>
+                        <td>
+                            <span class="badge bg-{{ $item->status === 'approved' ? 'success' : ($item->status === 'rejected' ? 'danger' : 'warning') }}">
+                                {{ ucfirst($item->status) }}
+                            </span>
+                        </td>
+                    </tr>
+                    @endforeach
+                    <tr class="table-active">
+                        <td colspan="5" class="text-end"><strong>Grand Total:</strong></td>
+                        <td colspan="2"><strong>Rp {{ number_format($grandTotal, 0, ',', '.') }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        @endif
+    @empty
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Belum ada item untuk procurement ini.
+        </div>
+    @endforelse
 
     {{-- REVIEW DOCUMENT --}}
     <h5 class="section-title mt-4">Review Document</h5>
     <div class="doc-card">
-        {!! $procurement->review_notes ?? 'Belum ada review' !!}
+        {!! $procurement->review_notes ?? '<em class="text-muted">Belum ada review</em>' !!}
     </div>
 
     {{-- SIGN DOCUMENT --}}
     <h5 class="section-title">Sign Document</h5>
     <div class="doc-card">
-        {!! $procurement->sign_notes ?? 'Belum ada tanda tangan' !!}
+        {!! $procurement->sign_notes ?? '<em class="text-muted">Belum ada tanda tangan</em>' !!}
     </div>
 
-    <!-- <div class="d-flex justify-content-center align-items-center gap-3 mt-4">
-        <form action="{{ route('procurements.update', $procurement->procurement_id) }}" method="post">
-            @csrf
-            @method('put')
-            <button type="submit" class="btn btn-sm btn-success btn-custom">
-                <i class="bi bi-check-lg"></i> Accept
-            </button>
-        </form>
-        <a href="{{ route('procurements.show', $procurement->procurement_id) }}"
-            class="btn btn-sm btn-danger btn-custom">
-            <i class="bi bi-x-lg"></i> Rejected
-        </a>
-    </div> -->
-
+@if(session('success'))
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div class="toast show" role="alert">
+        <div class="toast-header bg-success text-white">
+            <strong class="me-auto">Success</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">
+            {{ session('success') }}
+        </div>
+    </div>
 </div>
-
-
+@endif
 
 @endsection
