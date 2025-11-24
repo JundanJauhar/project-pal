@@ -31,6 +31,8 @@ return new class extends Migration
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
 
+
+            // Status alur procurement
             // Status alur procurement
             $table->enum('status_procurement', [
                 'draft',
@@ -42,6 +44,9 @@ return new class extends Migration
                 'completed',
                 'cancelled'
             ])->default('draft');
+
+            $table->string('procurement_link')->nullable();
+            $table->text('notes')->nullable();
 
             $table->timestamps();
 

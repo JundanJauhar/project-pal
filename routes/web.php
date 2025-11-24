@@ -147,7 +147,7 @@ Route::middleware(['auth'])->group(function () {
 
 
     // =================== QA LIST APPROVAL ===================
-     Route::get('/qa/detail-approval/{procurement_id}', [DetailApprovalController::class, 'show']) ->name('qa.detail-approval');
+    Route::get('/qa/detail-approval/{procurement_id}', [DetailApprovalController::class, 'show'])->name('qa.detail-approval');
 
     Route::post('/qa/detail-approval/{procurement_id}/save', [DetailApprovalController::class, 'saveAll'])->name('qa.detail-approval.save');
 
@@ -166,17 +166,19 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Route untuk Sekretaris Direksi
-    Route::prefix('sekdir')->name('sekdir.')->group(function () {
-        Route::get('/approval', [SekdirController::class, 'approval'])
-            ->name('approval');
+   Route::prefix('sekdir')->name('sekdir.')->group(function () {
 
-        Route::get('/approvals', [SekdirController::class, 'approvals'])
-            ->name('approvals');
+    Route::get('/approval', [SekdirController::class, 'approval'])
+        ->name('approval');
 
-        Route::get('/approval-detail/{procurement_id}', [SekdirController::class, 'approvalDetail'])
-            ->name('approval-detail');
+    Route::get('/approvals', [SekdirController::class, 'approvals'])
+        ->name('approvals');
 
-        Route::post('/approve/{projectId}', [SekdirController::class, 'approve'])
-            ->name('approve');
-    });
+    Route::get('/approval-detail/{procurement_id}', [SekdirController::class, 'approvalDetail'])
+        ->name('approval-detail');
+
+    Route::post('/approval/{projectId}', [SekdirController::class, 'approvalSubmit'])
+        ->name('approval.submit');
+});
+
 });

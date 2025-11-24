@@ -11,6 +11,8 @@ use App\Models\Vendor;
 use App\Models\PaymentSchedule;
 use App\Models\InspectionReport;
 use Carbon\Carbon;
+use App\Models\Procurement;   // <-- WAJIB
+
 
 class ProjectSeeder extends Seeder
 {
@@ -495,6 +497,56 @@ $procurement4 = \App\Models\Procurement::create([
                 'status_project' => 'persetujuan_sekretaris',
             ]
         );
+
+          $project1 = Project::create([
+            'project_code'       => 'W000A01',
+            'project_name'       => 'Pengadaan Barang Tes 1',
+            'description'        => 'Project untuk testing approval - 1',
+            'owner_division_id'  => 1,
+            'priority'           => 'sedang',
+            'start_date'         => Carbon::now()->subDays(2),
+            'end_date'           => Carbon::now()->addDays(20),
+            'status_project'     => 'persetujuan_sekretaris',
+        ]);
+
+        Procurement::create([
+            'project_id'            => $project1->project_id,
+            'code_procurement'      => $project1->project_code . '-P1',
+            'name_procurement'      => 'Procurement Tes Pertama',
+            'description'           => 'Procurement 1 untuk testing approval',
+            'department_procurement'=> 1,
+            'priority'              => 'sedang',
+            'start_date'            => Carbon::now(),
+            'end_date'              => Carbon::now()->addDays(7),
+            'status_procurement'    => 'submitted',
+        ]);
+
+        // -------------------------
+        // DATA 2
+        // -------------------------
+        $project2 = Project::create([
+            'project_code'       => 'W000A02',
+            'project_name'       => 'Pengadaan Barang Tes 2',
+            'description'        => 'Project untuk testing approval - 2',
+            'owner_division_id'  => 1,
+            'priority'           => 'tinggi',
+            'start_date'         => Carbon::now()->subDays(1),
+            'end_date'           => Carbon::now()->addDays(25),
+            'status_project'     => 'persetujuan_sekretaris',
+        ]);
+
+        Procurement::create([
+            'project_id'            => $project2->project_id,
+            'code_procurement'      => $project2->project_code . '-P1',
+            'name_procurement'      => 'Procurement Tes Kedua',
+            'description'           => 'Procurement 2 untuk testing approval',
+            'department_procurement'=> 1,
+            'priority'              => 'tinggi',
+            'start_date'            => Carbon::now(),
+            'end_date'              => Carbon::now()->addDays(10),
+            'status_procurement'    => 'submitted',
+        ]);
+
 
         Project::updateOrCreate(
             ['project_code' => 'W000306'], // key untuk check
