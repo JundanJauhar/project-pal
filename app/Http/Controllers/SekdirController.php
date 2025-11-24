@@ -8,6 +8,8 @@ use App\Models\RequestProcurement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Checkpoint;
+use App\Models\Approval;
+
 
 class SekdirController extends Controller
 {
@@ -45,13 +47,17 @@ class SekdirController extends Controller
         // Ambil procurement yang status PROJECT-nya menunggu sekretaris
         $procurements = Procurement::with([
             'project.ownerDivision',
-            'project.contracts.vendor',
-            'requestProcurements.vendor'
+                'project.contracts.vendor',
+                'requestProcurements.vendor',
+                'procurementProgress.checkpoint'
+            ])
+            ->whereHas('procurementProgress', function ($q) {
+            $q->where('status', 'in_progress')
+            ->whereHas('checkpoint', function ($c) {
+                $c->where('point_name', 'Pengesahan Kontrak');
+            });
+        })
 
-        ])
-            ->whereHas('project', function ($q) {
-                $q->where('status_project', 'persetujuan_sekretaris');
-            })
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -102,6 +108,18 @@ class SekdirController extends Controller
             'notes' => 'nullable|string',
             'approval_decision' => 'required|in:approved,rejected',
         ]);
+
+        Approval::create([
+    'module' => 'project',
+    'module_id' => $project->project_id,
+    'approver_id' => Auth::id(),
+    'status' => $request->approval_decision,
+    'approval_document_link' => $request->document_link,
+    'approval_notes' => $request->notes,
+    'approved_at' => now(),
+    'approved_by' => Auth::id(),
+]);
+
 
         if ($request->approval_decision === 'approved') {
             // Move to next stage (pemilihan_vendor)

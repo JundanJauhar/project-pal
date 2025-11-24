@@ -149,7 +149,7 @@
             <div class="stat-card stat-total">
                 <div>
                     <div class="stat-title">Total Project</div>
-                    <div class="stat-value">{{ $stats['total'] }}</div>
+                    <div class="stat-value">{{ $total ?? $totalProcurements ?? 0 }}</div>
                 </div>
                 <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
             </div>
