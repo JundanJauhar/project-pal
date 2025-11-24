@@ -36,7 +36,7 @@ class InspectionController extends Controller
             return $latest?->result ?? null;
         });
 
-        $inspectedCount = $latestResults->filter(fn ($r) => !is_null($r))->count();
+        $inspectedCount = $latestResults->filter(fn($r) => !is_null($r))->count();
 
         // Belum ada item yang diinspeksi
         if ($inspectedCount === 0) {
@@ -49,8 +49,8 @@ class InspectionController extends Controller
         }
 
         // Semua item sudah diinspeksi → cek komposisi hasilnya
-        $allPassed = $latestResults->every(fn ($r) => $r === 'passed');
-        $allFailed = $latestResults->every(fn ($r) => $r === 'failed');
+        $allPassed = $latestResults->every(fn($r) => $r === 'passed');
+        $allFailed = $latestResults->every(fn($r) => $r === 'failed');
 
         if ($allPassed) {
             return 'lolos';
@@ -76,16 +76,23 @@ class InspectionController extends Controller
         // ROLE QA
         // =========================
         if ($user->roles === 'qa') {
-            // Base query: hanya pengadaan yang sedang ada di checkpoint Inspeksi Barang
+            /**
+             * Base query:
+             * Ambil SEMUA pengadaan yang punya progress di checkpoint "Inspeksi Barang",
+             * tanpa membatasi status progress (completed / in_progress / not_started / blocked).
+             *
+             * Status kartu & kolom "Status Inspeksi" ditentukan dari hasil inspeksi item,
+             * bukan dari status di procurement_progress.
+             */
             $baseQuery = Procurement::with([
                     'project',
                     'department',
                     'requestProcurements.items.inspectionReports',
-                    'requestProcurements.vendor'
+                    'requestProcurements.vendor',
+                    'procurementProgress',
                 ])
                 ->whereHas('procurementProgress', function ($q) use ($inspectionCheckpointId) {
-                    $q->where('checkpoint_id', $inspectionCheckpointId)
-                        ->whereIn('status', ['not_started', 'in_progress', 'blocked']);
+                    $q->where('checkpoint_id', $inspectionCheckpointId);
                 })
                 ->orderBy('created_at', 'desc');
 
@@ -101,6 +108,7 @@ class InspectionController extends Controller
 
             foreach ($qaProcurements as $proc) {
                 $status = $this->classifyProcurementStatus($proc);
+
                 switch ($status) {
                     case 'butuh':
                         $countButuh++;
@@ -128,14 +136,18 @@ class InspectionController extends Controller
             // ====== LIST TABEL (koleksi yang bisa difilter) ======
             $collection = $qaProcurements;
 
-            // Search (kode / nama pengadaan) – server-side
+            // Search (kode / nama pengadaan / project) – server-side
             $q = trim($request->query('q', ''));
             if ($q !== '') {
                 $collection = $collection->filter(function ($proc) use ($q) {
                     $qLower = mb_strtolower($q);
-                    return mb_stripos($proc->code_procurement, $qLower) !== false
-                        || mb_stripos($proc->name_procurement, $qLower) !== false
-                        || mb_stripos(optional($proc->project)->project_name ?? '', $qLower) !== false;
+
+                    $codeMatch = mb_stripos($proc->code_procurement, $qLower) !== false;
+                    $nameMatch = mb_stripos($proc->name_procurement, $qLower) !== false;
+                    $projectMatch = mb_stripos(optional($proc->project)->project_name ?? '', $qLower) !== false;
+                    $projectCodeMatch = mb_stripos(optional($proc->project)->project_code ?? '', $qLower) !== false;
+
+                    return $codeMatch || $nameMatch || $projectMatch || $projectCodeMatch;
                 })->values();
             }
 
@@ -195,7 +207,7 @@ class InspectionController extends Controller
                 'project',
                 'department',
                 'requestProcurements.items.inspectionReports',
-                'requestProcurements.vendor'
+                'requestProcurements.vendor',
             ])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -205,11 +217,20 @@ class InspectionController extends Controller
 
         foreach ($allProcurements as $proc) {
             $status = $this->classifyProcurementStatus($proc);
+
             switch ($status) {
-                case 'butuh':  $countButuh++;  break;
-                case 'sedang': $countSedang++; break;
-                case 'lolos':  $countLolos++;  break;
-                case 'gagal':  $countGagal++;  break;
+                case 'butuh':
+                    $countButuh++;
+                    break;
+                case 'sedang':
+                    $countSedang++;
+                    break;
+                case 'lolos':
+                    $countLolos++;
+                    break;
+                case 'gagal':
+                    $countGagal++;
+                    break;
             }
         }
 
