@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Notification extends Model
 {
     protected $table = 'notifications';
-    protected $primaryKey = 'notification_id';
+    protected $primaryKey = 'notification_id'; // Sesuaikan dengan table Anda
 
     protected $fillable = [
         'user_id',
@@ -28,7 +28,7 @@ class Notification extends Model
     ];
 
     /**
-     * Get the user who receives this notification
+     * Get the user that owns the notification.
      */
     public function user(): BelongsTo
     {
@@ -36,21 +36,10 @@ class Notification extends Model
     }
 
     /**
-     * Get the user who sent this notification
+     * Get the sender of the notification.
      */
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_id', 'user_id');
-    }
-
-    /**
-     * Mark notification as read
-     */
-    public function markAsRead(): void
-    {
-        $this->update([
-            'is_read' => true,
-            'read_at' => now(),
-        ]);
     }
 }

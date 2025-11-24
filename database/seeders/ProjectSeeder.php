@@ -313,52 +313,6 @@ $procurement4 = \App\Models\Procurement::create([
         // );
 
         /**
-         * PAYMENT SCHEDULES
-         */
-        PaymentSchedule::updateOrCreate(
-            [
-                'project_id' => $project1->project_id,
-                // 'contract_id' => $contract1->contract_id,
-                'payment_type' => 'dp'
-            ], // key untuk check
-            [
-                'amount' => 4350000000,
-                'percentage' => 30,
-                'due_date' => Carbon::now()->subDays(65),
-                'status' => 'paid',
-                'verified_by_treasury' => 3,
-                'verified_by_accounting' => 4,
-                'payment_date' => Carbon::now()->subDays(65),
-            ]
-        );
-
-        PaymentSchedule::create([
-            'project_id' => $project1->project_id,
-            'contract_id' => null,
-            'payment_type' => 'progress',
-            'amount' => 5075000000,
-            'percentage' => 35,
-            'due_date' => Carbon::now()->addDays(15),
-            'status' => 'pending',
-            'verified_by_treasury' => null,
-            'verified_by_accounting' => null,
-            'payment_date' => null,
-        ]);
-
-        PaymentSchedule::create([
-            'project_id' => $project1->project_id,
-            'contract_id' => null,
-            'payment_type' => 'final',
-            'amount' => 5075000000,
-            'percentage' => 35,
-            'due_date' => Carbon::now()->addDays(45),
-            'status' => 'pending',
-            'verified_by_treasury' => null,
-            'verified_by_accounting' => null,
-            'payment_date' => null,
-        ]);
-
-        /**
          * INSPECTION REPORT
          */
         InspectionReport::updateOrCreate(
