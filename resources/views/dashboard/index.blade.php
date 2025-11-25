@@ -4,22 +4,41 @@
 
 @push('styles')
 <style>
-    .stat-card {
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 20px;
+    /* Override stat card border to be more visible */
+    .stat-total::before {
+        width: 6px !important;
+        background: #4F9DFD !important;
+        left: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        border-radius: 18px 0 0 18px !important;
     }
-    .stat-total {
-        border-left: 5px solid #4F9DFD;
+    
+    .stat-progress::before {
+        width: 6px !important;
+        background: #ECAD02 !important;
+        left: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        border-radius: 18px 0 0 18px !important;
     }
-    .stat-progress {
-        border-left: 5px solid #ECAD02;
+    
+    .stat-success::before {
+        width: 6px !important;
+        background: #28AC00 !important;
+        left: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        border-radius: 18px 0 0 18px !important;
     }
-    .stat-success {
-        border-left: 5px solid #28AC00;
-    }
-    .stat-rejected {
-        border-left: 5px solid #F10303;
+    
+    .stat-rejected::before {
+        width: 6px !important;
+        background: #F10303 !important;
+        left: 0 !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        border-radius: 18px 0 0 18px !important;
     }
     .badge-priority {
         padding: 5px 12px;
@@ -160,7 +179,11 @@
                     <div class="stat-title">Total Pengadaan</div>
                     <div class="stat-value">{{ $stats['total_pengadaan'] }}</div>
                 </div>
-                <div class="stat-icon"><div class="stat-icon-inner"><i class="bi bi-check-lg"></i></div></div>
+                <div class="stat-icon">
+                    <div class="stat-icon-inner">
+                        <i class="bi bi-list-check"></i>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
@@ -169,7 +192,11 @@
                     <div class="stat-title">Sedang Proses</div>
                     <div class="stat-value">{{ $stats['sedang_proses'] }}</div>
                 </div>
-                <div class="stat-icon"><div class="stat-icon-inner"><i class="bi bi-box"></i></div></div>
+                <div class="stat-icon">
+                    <div class="stat-icon-inner">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
@@ -178,7 +205,11 @@
                     <div class="stat-title">Selesai</div>
                     <div class="stat-value">{{ $stats['selesai'] }}</div>
                 </div>
-                <div class="stat-icon"><div class="stat-icon-inner"><i class="bi bi-check-lg"></i></div></div>
+                <div class="stat-icon">
+                    <div class="stat-icon-inner">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-md-3">
@@ -187,7 +218,11 @@
                     <div class="stat-title">Ditolak</div>
                     <div class="stat-value">{{ $stats['ditolak'] }}</div>
                 </div>
-                <div class="stat-icon"><div class="stat-icon-inner"><i class="bi bi-x"></i></div></div>
+                <div class="stat-icon">
+                    <div class="stat-icon-inner">
+                        <i class="bi bi-x-circle"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
