@@ -5,11 +5,12 @@
 @push('styles')
 <style>
     .big-card {
-        background: #ebebeb;
+        /* background: #ebebeb; */
         border-radius: 18px;
         padding: 40px 50px;
         min-height: 550px;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+        box-shadow: 0 8px 12px rgba(0,0,0,0.12);
+        border: none;
     }
 
     .search-wrapper {

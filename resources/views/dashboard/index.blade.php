@@ -41,18 +41,112 @@
         color: #6f6f6f;
         font-size: 16px;
     }
+    
+    .dashboard-table-wrapper {
+        padding: 25px;
+        border-radius: 14px;
+        margin-top: 20px;
+        box-shadow: 0 8px 12px rgba(0,0,0,0.12);
+        background: #FFFFFF;
+    }
+
+    .dashboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    /* Title (mirip Payment) */
+    .dashboard-table-title {
+        font-size: 26px;
+        font-weight: 700;
+        margin-bottom: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Filter wrapper */
+    .filters-wrap {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    /* Search box styling */
+    .dashboard-search-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #F0F0F0;
+        border-radius: 25px;
+        padding: 6px 12px;
+        width: 240px;
+        border: 1px solid #ddd;
+        font-size: 14px;
+    }
+    .dashboard-search-box input {
+        border: none;
+        background: transparent;
+        width: 100%;
+        outline: none;
+        font-size: 14px;
+    }
+    .dashboard-search-box i {
+        font-size: 14px;
+        color: #777;
+    }
+
+    /* Filter selects */
+    .filter-select {
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
     .card-header {
         background-color: #ffffff;
     }
-    table thead th {
+
+    .dashboard-table thead th {
+        padding: 14px 6px;
+        border-bottom: 2px solid #C9C9C9;
+        font-size: 14px;
+        text-transform: uppercase;
+        color: #555;
+        text-align: center;
         vertical-align: middle;
     }
-    table tbody td {
-        vertical-align: middle;
+
+    .dashboard-table tbody tr:hover {
+        background: #EFEFEF;
     }
-    .tambah .btn{
+
+    .dashboard-table tbody td {
+        padding: 14px 6px;
+        border-bottom: 1px solid #DFDFDF;
+        font-size: 15px;
+        color: #333;
+        text-align: center;
+    }
+
+    .tambah .btn {
         background: #003d82;
         border-color: #003d82;
+    }
+
+    .search .card-custom {
+        border: 1px solid #E0E0E0;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+
+    .tambah .btn:hover{
+        background: #002e5c;
+        border-color: #002e5c;
     }
 </style>
 @endpush
@@ -99,14 +193,15 @@
         </div>
     </div>
 
-    <div class="row mb-4">
+    <div class="search row mb-4">
         <div class="col-12">
             <div class="card card-custom">
                 <div class="card-body">
                     <form id="filter-form" class="row g-3 align-items-end">
-                        <div class="col-md-5">
+                        <div class="col-md-4">
                             <input type="text" class="form-control" name="search" placeholder="Cari Pengadaan..." value="">
                         </div>
+                        <div class="col-md-2"></div>
                         <div class="col-md-2">
                             <select class="form-select" name="project">
                                 <option value="">Semua Project</option>
@@ -148,101 +243,102 @@
                                 <option value="tinggi">Tinggi</option>
                             </select>
                         </div>
-                        <!-- <div class="tambah col-md-2 text-end">
-                            <a href="{{ route('procurements.create') }}" class="btn btn-primary w-100 btn-custom" wire:navigate>
-                                <i class="bi bi-plus-circle"></i> Tambah
-                            </a>
-                        </div> -->
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header text-black">
-                    <h5 class="mb-0">Daftar Pengadaan</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
-                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode Pengadaan</th>
-                                <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Pengadaan</th>
-                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
-                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
-                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
-                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
-                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
-                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
-                                <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="procurements-tbody">
-                            @forelse($procurements as $procurement)
-                            <tr>
-                                <td style="padding: 12px 8px; text-align: center;"><strong>{{ $procurement->project->project_code ?? '-' }}</strong></td>
-                                <td style="padding: 12px 8px; text-align: center;"><strong>{{ $procurement->code_procurement }}</strong></td>
-                                <td style="padding: 12px 8px;">{{ Str::limit($procurement->name_procurement, 40) }}</td>
-                                <td style="padding: 12px 8px; text-align: center;">{{ $procurement->department->department_name ?? '-' }}</td>
-                                <td style="padding: 12px 8px; text-align: center;">{{ $procurement->start_date->format('d/m/Y') }}</td>
-                                <td style="padding: 12px 8px; text-align: center;">{{ $procurement->end_date->format('d/m/Y') }}</td>
-                                <td style="padding: 12px 8px; text-align: center;">{{ $procurement->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</td>
-                                <td style="padding: 12px 8px; text-align: center;">
-                                    <span class="badge-priority badge-{{ strtolower($procurement->priority) }}">
-                                        {{ strtoupper($procurement->priority) }}
-                                    </span>
-                                </td>
-                                <td style="padding: 12px 8px; text-align: center;">
-                                    @php
-                                        $status = $procurement->auto_status;
-                                        $current = $procurement->current_checkpoint;
+    {{-- ===== TABLE (dengan gaya mirip Payment) ===== --}}
+    <div class="dashboard-table-wrapper">
 
-                                        $badgeColor = match($status) {
-                                            'completed' => '#28AC00',
-                                            'in_progress' => '#ECAD02',
-                                            'not_started' => '#555',
-                                            default => '#BD0000'
-                                        };
+        <div class="dashboard-table-title">
+            <span>Daftar Pengadaan</span>
+        </div>
 
-                                        $text = match($status) {
-                                            'completed' => 'Selesai',
-                                            'not_started' => 'Belum Dimulai',
-                                            'in_progress' => $current ?? 'Sedang Proses',
-                                            default => $status
-                                        };
-                                    @endphp
+        <div class="table-responsive">
+            <table class="dashboard-table">
+                <thead>
+                    <tr>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode Pengadaan</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Nama Pengadaan</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="procurements-tbody">
+                    @forelse($procurements as $procurement)
+                    <tr>
+                        <td style="padding: 12px 8px; text-align: center;"><strong>{{ $procurement->project->project_code ?? '-' }}</strong></td>
+                        <td style="padding: 12px 8px; text-align: center;"><strong>{{ $procurement->code_procurement }}</strong></td>
+                        <td style="padding: 12px 8px;">{{ Str::limit($procurement->name_procurement, 40) }}</td>
+                        <td style="padding: 12px 8px; text-align: center;">{{ $procurement->department->department_name ?? '-' }}</td>
+                        <td style="padding: 12px 8px; text-align: center;">{{ $procurement->start_date->format('d/m/Y') }}</td>
+                        <td style="padding: 12px 8px; text-align: center;">{{ $procurement->end_date->format('d/m/Y') }}</td>
+                        <td style="padding: 12px 8px; text-align: center;">{{ $procurement->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</td>
+                        <td style="padding: 12px 8px; text-align: center;">
+                            <span class="badge-priority badge-{{ strtolower($procurement->priority) }}">
+                                {{ strtoupper($procurement->priority) }}
+                            </span>
+                        </td>
+                        <td style="padding: 12px 8px; text-align: center;">
+                            @php
+                                $status = $procurement->auto_status;
+                                $current = $procurement->current_checkpoint;
 
-                                    <span class="badge"
-                                        style="background-color: {{ $badgeColor }};
-                                            color:white;
-                                            padding:6px 12px;
-                                            font-weight:600;">
-                                        {{ $text }}
-                                    </span>
-                                </td>
-                                <td style="padding: 12px 8px; text-align: center;">
-                                    <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary" wire:navigate>
-                                         Detail
-                                    </a>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr><td colspan="9" class="text-center">Tidak ada data pengadaan</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                <div class="mt-3">
-                    <div id="procurements-pagination">
-                        {{ $procurements->links() }}
-                    </div>
-                </div>
+                                $badgeColor = match($status) {
+                                    'completed' => '#28AC00',
+                                    'in_progress' => '#ECAD02',
+                                    'not_started' => '#555',
+                                    default => '#BD0000'
+                                };
+
+                                $text = match($status) {
+                                    'completed' => 'Selesai',
+                                    'not_started' => 'Belum Dimulai',
+                                    'in_progress' => $current ?? 'Sedang Proses',
+                                    default => $status
+                                };
+                            @endphp
+
+                            <span class="badge"
+                                style="background-color: {{ $badgeColor }};
+                                    color:white;
+                                    padding:6px 12px;
+                                    font-weight:600;">
+                                {{ $text }}
+                            </span>
+                        </td>
+                        <td style="padding: 12px 8px; text-align: center;">
+                            <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary" wire:navigate>
+                                 Detail
+                            </a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="10" class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size:40px; color:#bbb;"></i>
+                            <p class="text-muted mt-2">Tidak ada data pengadaan</p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-3">
+            <div id="procurements-pagination">
+                {{ $procurements->links() }}
             </div>
         </div>
+
     </div>
 </div>
 
@@ -293,8 +389,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!Array.isArray(items) || items.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="9" class="text-center py-4">
-                        <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                    <td colspan="10" class="text-center py-5">
+                        <i class="bi bi-inbox" style="font-size: 40px; color: #bbb;"></i>
                         <p class="text-muted mt-2">Tidak ada data pengadaan</p>
                     </td>
                 </tr>`;
@@ -372,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const priority = encodeURIComponent(prioritySelect.value);
         const project = encodeURIComponent(projectSelect.value);    
 
-const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&priority=${priority}&project=${project}&page=${currentPage}`;
+        const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&priority=${priority}&project=${project}&page=${currentPage}`;
         fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(res => res.json())
             .then(res => {
@@ -383,7 +479,7 @@ const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&pri
                 console.error("Search error:", err);
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="9" class="text-center py-4">
+                        <td colspan="10" class="text-center py-5">
                             <i class="bi bi-exclamation-circle" style="font-size: 48px; color: #f00;"></i>
                             <p class="text-danger mt-2">Terjadi kesalahan: ${err.message}</p>
                         </td>

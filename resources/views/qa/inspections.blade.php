@@ -47,10 +47,12 @@
 
 /* ===== TABLE WRAPPER ===== */
 .qa-table-wrapper {
-    background: #F6F6F6;
     padding: 25px;
     border-radius: 14px;
-    border: 1px solid #E0E0E0;
+    /* border: 1px solid #E0E0E0; */
+    box-shadow: 0 8px 12px rgba(0,0,0,0.12);
+    background: #FFFFFF;
+    margin-top: 60px;
 }
 
 /* Title */
@@ -230,7 +232,7 @@
     <div class="qa-table-title">
         <span>Daftar Pengadaan</span>
 
-        <form method="GET" style="margin:0;">
+        <!-- <form method="GET" style="margin:0;">
             <div class="filters-wrap">
                 {{-- Search live (client-side) --}}
                 <div class="qa-search-box" title="Cari project atau nama pengadaan">
@@ -255,21 +257,21 @@
                     <option value="failed"        {{ request('result') === 'failed'        ? 'selected' : '' }}>Tidak Lolos</option>
                 </select>
             </div>
-        </form>
+        </form> -->
     </div>
 
     <div class="table-responsive">
         <table class="qa-table">
             <thead>
                 <tr>
-                    <th>Project</th>
-                    <th>Nama Pengadaan</th>
-                    <th>Department</th>
-                    <th>Vendor</th>
-                    <th>Tgl Mulai</th>
-                    <th>Tgl Selesai</th>
-                    <th>Prioritas</th>
-                    <th>Status Inspeksi</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Nama Pengadaan</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tgl Mulai</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tgl Selesai</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status Inspeksi</th>
                 </tr>
             </thead>
 
@@ -314,21 +316,21 @@
 
                 <tr>
                     {{-- Project --}}
-                    <td data-col="project">
-                        {{ optional($proc->project)->project_code ?? '-' }}
+                    <td style="padding: 12px 8px; text-align: center;">
+                        <strong>{{ optional($proc->project)->project_code ?? '-' }}</strong>
                     </td>
 
                     {{-- Nama Pengadaan --}}
-                    <td style="text-align:left;" data-col="name">
+                    <td style="padding: 12px 8px; text-align: center;">
                         {{ $proc->name_procurement }}
                     </td>
 
-                    <td>{{ $proc->department->department_name ?? '-' }}</td>
-                    <td>{{ $proc->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</td>
-                    <td>{{ $proc->start_date?->format('d/m/Y') ?? '-' }}</td>
-                    <td>{{ $proc->end_date?->format('d/m/Y') ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center;">{{ $proc->department->department_name ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center;">{{ $proc->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center;">{{ $proc->start_date?->format('d/m/Y') ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center;">{{ $proc->end_date?->format('d/m/Y') ?? '-' }}</td>
 
-                    <td>
+                    <td style="padding: 12px 8px; text-align: center;">
                         @php
                             $p = strtolower($proc->priority ?? '');
                             $class = match($p) {
@@ -341,7 +343,7 @@
                         <span class="{{ $class }}">{{ strtoupper($proc->priority ?? '-') }}</span>
                     </td>
 
-                    <td>
+                    <td style="padding: 12px 8px; text-align: center;">
                         <a href="{{ route('qa.detail-approval', ['procurement_id' => $proc->procurement_id]) }}"
                            class="status-link {{ $statusClass }}">
                             {{ $statusText }}
@@ -396,7 +398,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // === Hapus mekanisme localStorage lama (kalau masih ada data sisa) ===
     localStorage.removeItem('inspectionUpdate');
-});
+    });
 </script>
 @endpush
 

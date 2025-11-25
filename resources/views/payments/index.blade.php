@@ -31,10 +31,11 @@
 
 /* ===== TABLE WRAPPER ===== */
 .payment-table-wrapper {
-    background: #F6F6F6;
     padding: 25px;
     border-radius: 14px;
-    border: 1px solid #E0E0E0;
+    margin-top: 20px;
+    box-shadow: 0 8px 12px rgba(0,0,0,0.12);
+    background: #FFFFFF;
 }
 
 /* Title */
@@ -111,6 +112,15 @@
 .payment-table tbody tr:hover {
     background: #EFEFEF;
 }
+
+    .vendor-table-title {
+        font-size: 26px;
+        font-weight: 700;
+        margin-bottom: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
 /* STATUS COLORS */
 .status-pending    { color: #F2C94C; font-weight: bold; }
@@ -218,8 +228,16 @@
 
 {{-- ===== TABLE ===== --}}
 <div class="payment-table-wrapper">
-
-    <div class="payment-table-title">
+    <div class="vendor-table-title">
+        <span>
+            @if(Auth::user()->roles === 'treasury')
+                Daftar Pembayaran
+            @elseif(Auth::user()->roles === 'accounting')
+                Daftar Verifikasi
+            @endif
+        </span>
+    </div>
+    <!-- <div class="payment-table-title">
         <span>Daftar Pembayaran</span>
 
         <form method="GET" style="margin:0;">
@@ -248,19 +266,19 @@
                 <button type="submit" class="filter-select" style="cursor:pointer;">Terapkan</button>
             </div>
         </form>
-    </div>
+    </div> -->
 
     <div class="table-responsive">
         <table class="payment-table">
             <thead>
                 <tr>
-                    <th>Project</th>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Due Date</th>
-                    <th>Status</th>
-                    <th>Verified By</th>
-                    <th>Aksi</th>
+                    <th  style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
+                    <th  style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Type</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Amount</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Due Date</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Verified By</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                 </tr>
             </thead>
 
@@ -278,21 +296,21 @@
                 @endphp
 
                 <tr>
-                    <td style="text-align:left;">
+                    <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
                         <strong>{{ $payment->project->code_project }}</strong><br>
                         <small class="text-muted">{{ Str::limit($payment->project->name_project, 30) }}</small>
                     </td>
-                    <td>
+                    <td  style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
                         <span style="background:#6c757d; color:white; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:600;">
                             {{ strtoupper($payment->payment_type) }}
                         </span>
                     </td>
                     <td><strong>Rp {{ number_format($payment->amount, 0, ',', '.') }}</strong></td>
                     <td>{{ $payment->due_date ? $payment->due_date->format('d/m/Y') : '-' }}</td>
-                    <td>
+                    <td  style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
                         <span class="{{ $statusClass }}">{{ $statusText }}</span>
                     </td>
-                    <td>
+                    <td  style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
                         <div class="verified-info">
                             @if($payment->verified_by_accounting)
                                 <div><i class="bi bi-check-circle text-success"></i> Accounting</div>
@@ -305,7 +323,7 @@
                             @endif
                         </div>
                     </td>
-                    <td>
+                    <td  style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
                         <div class="action-group">
                             <a href="{{ route('payments.show', $payment->payment_schedule_id) }}"
                                class="btn-action btn-view">
