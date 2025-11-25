@@ -163,59 +163,67 @@
             </tr>
             @endforeach
             @endforeach
-        </tbody>
+        </tbody>    
     </table>
 
 
     {{-- REVIEW DOCUMENT --}}
-    <h5 class="section-title mt-4">Review Document</h5>
+   <div class="procurement-header">
+    {{-- Header procurement --}}
+    {{-- Detail Pengadaan --}}
+    <h5 class="section-title">Detail Pengadaan</h5>
+    {{-- REVIEW DOCUMENT (FORM UTAMA) --}}
+    <h5 class="section-title mt-4">Keputusan Approval Sekretaris Direksi</h5>
 
-   <form action="{{ route('sekdir.approval.submit', $procurement->project_id) }}" method="POST">
-    @csrf
-    <div class="card shadow-sm border-0 mt-3">
-        <div class="card-body">
+    {{-- PASTIKAN RUTE INI BENAR SESUAI NAMA METHOD DI CONTROLLER ANDA --}}
+    <form action="{{ route('sekdir.approval.submit', $procurement->procurement_id) }}" method="POST">
+        @csrf
+        <div class="card shadow-sm border-0 mt-3">
+            <div class="card-body">
 
-            {{-- Link Pengadaan --}}
-            <div class="mb-3">
-                <label for="procurement_link" class="form-label fw-semibold">Link Dokumen Pengadaan</label>
-                <input type="url"
-                       class="form-control @error('procurement_link') is-invalid @enderror"
-                       id="procurement_link"
-                       name="procurement_link"
-                       placeholder="https://contoh.com/dokumen"
-                       value="{{ old('procurement_link', $procurement->procurement_link) }}"> <!-- Ambil dari DB -->
+                {{-- Link Pengadaan (Ditambahkan REQUIRED) --}}
+                <div class="mb-3">
+                    <label for="procurement_link" class="form-label fw-semibold">Link Dokumen Pengadaan (Wajib Diisi)</label>
+                    <input type="url"
+                           class="form-control @error('procurement_link') is-invalid @enderror"
+                           id="procurement_link"
+                           name="procurement_link"
+                           placeholder="https://contoh.com/dokumen-final"
+                           value="{{ old('procurement_link', $procurement->procurement_link) }}"
+                           required> @error('procurement_link')
+                    <small class="text-danger">{{ $message }}</small>
+                    @enderror
+                </div>
 
-                @error('procurement_link')
-                <small class="text-danger">{{ $message }}</small>
-                @enderror
-            </div>
+                {{-- Catatan --}}
+                <div class="mb-3">
+                    <label for="notes" class="form-label fw-semibold">Catatan</label>
+                    <textarea class="form-control @error('notes') is-invalid @enderror"
+                              id="notes"
+                              name="notes"
+                              rows="4"
+                              placeholder="Tambahkan catatan persetujuan atau alasan penolakan...">{{ old('notes', $procurement->notes) }}</textarea>
 
-            {{-- Catatan --}}
-            <div class="mb-3">
-                <label for="notes" class="form-label fw-semibold">Catatan</label>
-                <textarea class="form-control @error('notes') is-invalid @enderror"
-                          id="notes"
-                          name="notes"
-                          rows="4"
-                          placeholder="Tambahkan catatan persetujuan atau alasan penolakan...">{{ old('notes', $procurement->notes) }}</textarea> <!-- Ambil dari DB -->
+                    @error('notes')
+                    <small class="text-danger">{{ $message }}</small>
+                    @enderror
+                </div>
 
-                @error('notes')
-                <small class="text-danger">{{ $message }}</small>
-                @enderror
-            </div>
+                {{-- Tombol Submit (Mengirimkan 'action' untuk Approve atau Reject) --}}
+                <div class="d-flex justify-content-end pt-3 border-top">
+                    <button type="submit" name="action" value="reject" class="btn btn-reject me-2"
+                            onclick="return confirm('Apakah Anda yakin ingin MENOLAK pengadaan ini? Pastikan Anda sudah mengisi Catatan/Alasan Penolakan.')">
+                        <i class="bi bi-x-octagon"></i> Tolak
+                    </button>
 
-            {{-- Tombol Submit --}}
-            <div class="d-flex justify-content-end">
-                <button type="submit" class="btn btn-success me-2">
-                    <i class="bi bi-check-circle"></i> Ke Step Berikutnya
-                </button>
+                    <button type="submit" name="action" value="approve" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Ke Step Berikutnya
+                    </button>
+                </div>
             </div>
         </div>
-</form>
-
-
-
-</div>
+    </form>
+</div></div>
 
 
 

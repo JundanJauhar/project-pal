@@ -391,27 +391,27 @@ $procurement4 = \App\Models\Procurement::create([
         $checkpoints = \App\Models\Checkpoint::orderBy('point_sequence')->get();
 
         // Progress untuk procurement 1 - Sudah sampai checkpoint 13 (Inspeksi Barang)
-        foreach ($checkpoints->take(13) as $index => $checkpoint) {
+        foreach ($checkpoints->take(5) as $index => $checkpoint) {
             \App\Models\ProcurementProgress::create([
                 'procurement_id' => $procurement1->procurement_id,
                 'checkpoint_id' => $checkpoint->point_id,
                 'user_id' => ($index % 3 === 0) ? 2 : (($index % 3 === 1) ? 3 : 5),
-                'status' => $index < 12 ? 'completed' : 'in_progress',
+                'status' => $index < 4 ? 'completed' : 'in_progress',
                 'start_date' => Carbon::now()->subDays(90 - ($index * 6)),
-                'end_date' => $index < 12 ? Carbon::now()->subDays(88 - ($index * 6)) : null,
+                'end_date' => $index < 4 ? Carbon::now()->subDays(88 - ($index * 6)) : null,
                 'note' => 'Checkpoint ' . ($index + 1) . ': ' . $checkpoint->point_name . ' - ' . ($index < 12 ? 'Selesai' : 'Sedang Berjalan'),
             ]);
         }
 
         // Progress untuk procurement 2 - Baru sampai checkpoint 7 (Pengesahan Kontrak)
-        foreach ($checkpoints->take(7) as $index => $checkpoint) {
+        foreach ($checkpoints->take(5) as $index => $checkpoint) {
             \App\Models\ProcurementProgress::create([
                 'procurement_id' => $procurement2->procurement_id,
                 'checkpoint_id' => $checkpoint->point_id,
                 'user_id' => ($index % 2 === 0) ? 2 : 3,
-                'status' => $index < 6 ? 'completed' : 'in_progress',
+                'status' => $index < 4 ? 'completed' : 'in_progress',
                 'start_date' => Carbon::now()->subDays(60 - ($index * 8)),
-                'end_date' => $index < 6 ? Carbon::now()->subDays(57 - ($index * 8)) : null,
+                'end_date' => $index < 4 ? Carbon::now()->subDays(57 - ($index * 8)) : null,
                 'note' => 'Checkpoint ' . ($index + 1) . ': ' . $checkpoint->point_name . ' - ' . ($index < 6 ? 'Selesai' : 'Sedang Berjalan'),
             ]);
         }
@@ -430,14 +430,14 @@ $procurement4 = \App\Models\Procurement::create([
         }
 
         // Progress untuk procurement 4 - Baru sampai checkpoint 2 (Pengecekan)
-        foreach ($checkpoints->take(11) as $index => $checkpoint) {
+        foreach ($checkpoints->take(5) as $index => $checkpoint) {
             \App\Models\ProcurementProgress::create([
                 'procurement_id' => $procurement4->procurement_id,
                 'checkpoint_id' => $checkpoint->point_id,
                 'user_id' => 2,
-                'status' => $index < 1 ? 'completed' : 'in_progress',
+                'status' => $index < 4 ? 'completed' : 'in_progress',
                 'start_date' => Carbon::now()->subDays(20 - ($index * 5)),
-                'end_date' => $index < 1 ? Carbon::now()->subDays(18 - ($index * 5)) : null,
+                'end_date' => $index < 4 ? Carbon::now()->subDays(18 - ($index * 5)) : null,
                 'note' => 'Checkpoint ' . ($index + 1) . ': ' . $checkpoint->point_name . ' - ' . ($index < 1 ? 'Selesai' : 'Sedang Berjalan'),
             ]);
         }
