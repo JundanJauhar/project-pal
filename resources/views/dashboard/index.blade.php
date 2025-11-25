@@ -8,19 +8,18 @@
         border-radius: 10px;
         padding: 20px;
         margin-bottom: 20px;
-        color: white;
     }
     .stat-total {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-left: 5px solid #4F9DFD;
     }
     .stat-progress {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border-left: 5px solid #ECAD02;
     }
     .stat-success {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        border-left: 5px solid #28AC00;
     }
     .stat-rejected {
-        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        border-left: 5px solid #F10303;
     }
     .badge-priority {
         padding: 5px 12px;
