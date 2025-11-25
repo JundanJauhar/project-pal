@@ -138,58 +138,119 @@ public function approval()
             ->with('success', $message);
     }
 
-    public function approvalDetail($procurementId)
+ public function approvalDetail($procurementId)
 {
+    // Memuat Procurement dengan relasi yang diperlukan, termasuk progress-nya
     $procurement = Procurement::with([
-        // Ganti 'department' yang kemungkinan salah, dengan 'project' jika itu adalah relasi yang benar
         'project.ownerDivision', 
         'requestProcurements.items',
-        // Tambahkan relasi lain jika diperlukan, misal: progress
-        'procurementProgress' 
+        'procurementProgress' // WAJIB: Memuat progress yang sudah ada
     ])->findOrFail($procurementId);
 
+    // Memuat semua checkpoints yang berurutan
     $checkpoints = Checkpoint::orderBy('point_sequence')->get();
+
+    // --- LOGIKA MENENTUKAN STAGE SAAT INI ---
+    
+    // 1. Ambil semua ID Checkpoint yang sudah 'completed' atau 'rejected'
+    $completedCheckpointIds = $procurement->procurementProgress
+        ->whereIn('status', ['completed', 'rejected']) // Mengambil yang sudah selesai/ditolak
+        ->pluck('checkpoint_id');
+
+    // 2. Tentukan Checkpoint ID yang sedang 'in_progress'
+    $inProgressCheckpoint = $procurement->procurementProgress
+        ->where('status', 'in_progress')
+        ->first();
+    
+    $currentCheckpointId = $inProgressCheckpoint ? $inProgressCheckpoint->checkpoint_id : null;
+    
+    // 3. Tentukan Index (Urutan) dari Checkpoint yang sedang aktif
+    $currentStageIndex = null;
+    if ($currentCheckpointId) {
+        // Cari urutan (index 0-based) checkpoint yang sedang aktif di collection $checkpoints
+        $currentStageIndex = $checkpoints->search(function ($checkpoint) use ($currentCheckpointId) {
+            return $checkpoint->checkpoint_id === $currentCheckpointId;
+        });
+    }
+
+    // Jika tidak ada yang 'in_progress', asumsikan stage berikutnya adalah yang pertama belum selesai
+    if ($currentStageIndex === false || $currentStageIndex === null) {
+        $lastCompleted = $checkpoints->whereIn('checkpoint_id', $completedCheckpointIds)->last();
+        $lastCompletedIndex = $lastCompleted ? $checkpoints->search($lastCompleted) : -1;
+        
+        // Stage berikutnya (jika ada) adalah index setelah yang terakhir selesai.
+        if ($lastCompletedIndex < $checkpoints->count() - 1) {
+            $currentStageIndex = $lastCompletedIndex + 1;
+        }
+    }
+    // --- AKHIR LOGIKA STAGE ---
+    
+    
+    // Jika currentStageIndex adalah boolean (false), ubah menjadi null
+    if ($currentStageIndex === false) {
+        $currentStageIndex = null;
+    }
+
 
     return view('sekdir.approval-detail', compact(
         'procurement',
         'checkpoints',
+        'currentStageIndex' // VARIABEL BARU YANG DILEWATKAN
     ));
 }
 
   public function approvalSubmit(Request $request, $procurement_id)
 {
-    // ... (Kode sebelumnya)
+    // ... (Validasi dan pengambilan data) ...
 
     $action = $request->input('action');
-    $sekdirCheckpointId = 5; 
+    $sekdirCheckpointId = 5; // Pengesahan Kontrak
+    $nextCheckpointId = 6;   // Pengiriman Material
+
+    // ... (Update data utama dan firstOrNew progress Checkpoint 5) ...
 
     // 1. Update data utama (link dan catatan)
     $procurement = Procurement::findOrFail($procurement_id);
     $procurement->procurement_link = $request->input('procurement_link');
     $procurement->notes = $request->input('notes');
     
-    // 2. Cari atau inisialisasi record progress Sekdir
+    // 2. Cari atau inisialisasi record progress Sekdir (ID 5)
     $progress = ProcurementProgress::firstOrNew([
         'procurement_id' => $procurement->procurement_id,
         'checkpoint_id' => $sekdirCheckpointId,
     ]);
 
     if ($action === 'approve') {
-        // Aksi Approval
+        // --- Aksi Approval (Checkpoint 5 Completed) ---
         $progress->status = 'completed';
         
-        // --- PERBAIKAN DI SINI ---
-        // Ganti $procurement->status menjadi $procurement->status_procurement
+        // Update status di tabel utama procurements
         $procurement->status_procurement = 'approved'; 
         
-        $message = 'Pengadaan ' . $procurement->code_procurement . ' berhasil disetujui dan dilanjutkan.';
+        // --- LOGIKA MAJU KE CHECKPOINT 6 ---
+        // 1. Buat record baru untuk Checkpoint 6 (Pengiriman Material)
+        $nextProgress = ProcurementProgress::firstOrCreate(
+            [
+                'procurement_id' => $procurement->procurement_id,
+                'checkpoint_id' => $nextCheckpointId,
+            ],
+            [
+                'status' => 'in_progress',
+                'start_date' => now(),
+            ]
+        );
+        // Pastikan statusnya di-update jika sudah ada record tetapi statusnya bukan 'in_progress' (misalnya 'pending' atau NULL)
+        if ($nextProgress->status !== 'in_progress') {
+             $nextProgress->status = 'in_progress';
+             $nextProgress->save();
+        }
+        // --- AKHIR LOGIKA MAJU KE CHECKPOINT 6 ---
+
+        $message = 'Pengadaan ' . $procurement->code_procurement . ' berhasil disetujui dan dilanjutkan ke tahap Pengiriman Material.';
 
     } elseif ($action === 'reject') {
         // Aksi Penolakan
         $progress->status = 'rejected';
-        
-        // --- PERBAIKAN DI SINI ---
-        // Ganti $procurement->status menjadi $procurement->status_procurement
         $procurement->status_procurement = 'rejected';
         
         $message = 'Pengadaan ' . $procurement->code_procurement . ' berhasil DITOLAK.';
@@ -197,7 +258,7 @@ public function approval()
 
     // 3. Simpan perubahan ke Database
     $progress->save();
-    $procurement->save(); // Baris ini yang sebelumnya gagal karena nama kolom salah
+    $procurement->save();
 
     return redirect()->route('sekdir.approval')->with('success', $message);
 }
