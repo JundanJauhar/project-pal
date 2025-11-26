@@ -20,7 +20,6 @@ use App\Http\Controllers\DetailApprovalController;
 use App\Http\Controllers\ListApprovalController;
 use App\Http\Controllers\SekdirController;
 
-// =================== PUBLIC ROUTES ===================
 Route::get('/', fn() => redirect()->route('login'));
 
 Route::get('/login', fn() => view('auth.login'))
@@ -50,37 +49,29 @@ Route::post('/logout', function (Request $request) {
     return redirect()->route('login');
 })->name('logout');
 
-
-
-// =================== PROTECTED ROUTES ===================
 Route::middleware(['auth'])->group(function () {
 
-    // ------ Dashboard ------
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/division/{divisionId}', [DashboardController::class, 'divisionDashboard'])->name('dashboard.division');
     Route::get('/dashboard/statistics', [DashboardController::class, 'getStatistics'])->name('dashboard.statistics');
     Route::get('/dashboard/timeline/{projectId}', [DashboardController::class, 'getProcurementTimeline'])->name('dashboard.timeline');
     Route::get('/dashboard/search', [DashboardController::class, 'search'])->name('dashboard.search');
 
-    // ------ Projects ------
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
     Route::post('/projects/upload-review', [ProjectController::class, 'uploadReview'])->name('projects.uploadReview');
     Route::post('/projects/save-review-notes', [ProjectController::class, 'saveReviewNotes'])->name('projects.saveReviewNotes');
     Route::resource('projects', ProjectController::class);
     Route::post('/projects/{id}/status', [ProjectController::class, 'updateStatus'])->name('projects.update-status');
 
-    // ------ Procurements ------
     Route::get('/procurements/search', [ProcurementController::class, 'search'])->name('procurements.search');
     Route::get('/procurements/by-project/{projectId}', [ProcurementController::class, 'byProject'])->name('procurements.by-project');
     Route::get('/procurements/{id}/progress', [ProcurementController::class, 'getProgress'])->name('procurements.progress');
     Route::post('/procurements/{id}/progress', [ProcurementController::class, 'updateProgress'])->name('procurements.update-progress');
     Route::resource('procurements', ProcurementController::class, ['only' => ['index', 'show', 'create', 'store', 'update']]);
 
-    // Item Evatek
     Route::post('/items/{itemId}/approve', [DesainListProjectController::class, 'approveItem'])->name('items.approve');
     Route::post('/items/{itemId}/reject', [DesainListProjectController::class, 'rejectItem'])->name('items.reject');
 
-    // User-specific procurement list (used by 'user' role)
     Route::get('/user/list', function () {
         $procurements = \App\Models\Procurement::with(['department', 'requestProcurements.vendor'])
             ->orderBy('created_at', 'desc')
@@ -89,34 +80,24 @@ Route::middleware(['auth'])->group(function () {
         return view('user.list', compact('procurements'));
     })->name('user.list');
 
-    // ------ Notifications ------
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 
-
-    // =================== SUPPLY CHAIN ===================
     Route::prefix('supply-chain')->name('supply-chain.')->group(function () {
-
         Route::get('/dashboard', [SupplyChainController::class, 'dashboard'])->name('dashboard');
         Route::post('/dashboard/store', [SupplyChainController::class, 'storePengadaan'])->name('dashboard.store');
-
         Route::get('/projects/{projectId}/review', [SupplyChainController::class, 'reviewProject'])->name('review-project');
         Route::post('/projects/{projectId}/approve', [SupplyChainController::class, 'approveReview'])->name('approve-review');
-
         Route::get('/material-requests', [SupplyChainController::class, 'materialRequests'])->name('material-requests');
         Route::post('/material-requests/{requestId}', [SupplyChainController::class, 'updateMaterialRequest'])->name('update-material-request');
-
         Route::get('/vendors', [SupplyChainController::class, 'vendors'])->name('vendors');
         Route::post('/projects/{projectId}/select-vendor', [SupplyChainController::class, 'selectVendor'])->name('select-vendor');
-
         Route::get('/negotiations', [SupplyChainController::class, 'negotiations'])->name('negotiations');
         Route::post('/projects/{projectId}/negotiation', [SupplyChainController::class, 'createNegotiation'])->name('create-negotiation');
-
         Route::get('/material-shipping', [SupplyChainController::class, 'materialShipping'])->name('material-shipping');
         Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])->name('material-arrival');
-
         Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])->name('vendor.kelola');
         Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])->name('vendor.form');
         Route::get('/vendor/pilih/{id}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
@@ -125,21 +106,16 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])->name('vendor.simpan');
     });
 
-
-    // =================== PAYMENTS ===================
     Route::prefix('payments')->name('payments.')->group(function () {
-    Route::get('/', [PaymentController::class, 'index'])->name('index');
-    Route::get('/create/{projectId}', [PaymentController::class, 'create'])->name('create');
-    Route::post('/', [PaymentController::class, 'store'])->name('store');
-    Route::get('/{id}', [PaymentController::class, 'show'])->name('show');
-    Route::post('/{id}/accounting-verification', [PaymentController::class, 'accountingVerification'])->name('accounting-verification');
-    Route::post('/{id}/treasury-verification', [PaymentController::class, 'treasuryVerification'])->name('treasury-verification');
-    Route::get('/statistics', [PaymentController::class, 'statistics'])->name('statistics');
-});
+        Route::get('/', [PaymentController::class, 'index'])->name('index');
+        Route::get('/create/{projectId}', [PaymentController::class, 'create'])->name('create');
+        Route::post('/', [PaymentController::class, 'store'])->name('store');
+        Route::get('/{id}', [PaymentController::class, 'show'])->name('show');
+        Route::post('/{id}/accounting-verification', [PaymentController::class, 'accountingVerification'])->name('accounting-verification');
+        Route::post('/{id}/treasury-verification', [PaymentController::class, 'treasuryVerification'])->name('treasury-verification');
+        Route::get('/statistics', [PaymentController::class, 'statistics'])->name('statistics');
+    });
 
-
-
-    // =================== QA INSPECTIONS ===================
     Route::prefix('inspections')->name('inspections.')->group(function () {
         Route::get('/', [InspectionController::class, 'index'])->name('index');
         Route::get('/ncr', [InspectionController::class, 'ncrReports'])->name('ncr.index');
@@ -148,14 +124,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/ncr/{id}/verify', [InspectionController::class, 'verifyNcr'])->name('ncr.verify');
     });
 
-
-    // =================== QA LIST APPROVAL ===================
     Route::get('/qa/detail-approval/{procurement_id}', [DetailApprovalController::class, 'show'])->name('qa.detail-approval');
-
     Route::post('/qa/detail-approval/{procurement_id}/save', [DetailApprovalController::class, 'saveAll'])->name('qa.detail-approval.save');
 
-
-    // =================== DESAIN ===================
     Route::prefix('desain')->name('desain.')->group(function () {
         Route::get('/dashboard', [DesainController::class, 'dashboard'])->name('dashboard');
         Route::get('/list-project', [DesainListProjectController::class, 'list'])->name('list-project');
@@ -163,25 +134,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/project/{id}/pengadaan', [DesainListProjectController::class, 'formPengadaan'])->name('permintaan-pengadaan');
         Route::post('/project/{id}/pengadaan/kirim', [DesainListProjectController::class, 'kirimPengadaan'])->name('kirim-pengadaan');
         Route::get('/evatek/{request_id}', [DesainListProjectController::class, 'reviewEvatek'])->name('review-evatek');
-
         Route::get('/input-item', [DesainController::class, 'inputItem'])->name('input-item');
         Route::post('/input-item/store', [DesainController::class, 'storeItem'])->name('input-item.store');
     });
 
-    // Route untuk Sekretaris Direksi
-   Route::prefix('sekdir')->name('sekdir.')->group(function () {
-
-    Route::get('/approval', [SekdirController::class, 'approval'])
-        ->name('approval');
-
-    Route::get('/approvals', [SekdirController::class, 'approvals'])
-        ->name('approvals');
-
-    Route::get('/approval-detail/{procurement_id}', [SekdirController::class, 'approvalDetail'])
-        ->name('approval-detail');
-
-    Route::post('/approval/{projectId}', [SekdirController::class, 'approvalSubmit'])
-        ->name('approval.submit');
-});
-
+    Route::prefix('sekdir')->name('sekdir.')->group(function () {
+        Route::get('/approval', [SekdirController::class, 'approval'])->name('approval');
+        Route::get('/approvals', [SekdirController::class, 'approvals'])->name('approvals');
+        Route::get('/approval-detail/{procurement_id}', [SekdirController::class, 'approvalDetail'])->name('approval-detail');
+        Route::post('/approval-detail/{procurement_id}/save', [SekdirController::class, 'approvalDetailSave'])->name('approval-detail.save');
+        Route::post('/approval/{projectId}', [SekdirController::class, 'approvalSubmit'])->name('approval.submit');
+    });
 });

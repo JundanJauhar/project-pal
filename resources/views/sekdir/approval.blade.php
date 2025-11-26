@@ -142,14 +142,13 @@
 
 <div class="container-fluid px-4">
     <h2 class="mb-4">Approval Pengadaan</h2>
-
     <!-- Statistics Cards -->
     <div class="row g-3">
         <div class="col-md-3 col-6">
             <div class="stat-card stat-total">
                 <div>
                     <div class="stat-title">Total Project</div>
-                    <div class="stat-value">{{ $total ?? $totalProcurements ?? 0 }}</div>
+                    <div class="stat-value">{{ $totalProcurements }}</div>
                 </div>
                 <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
             </div>
@@ -192,19 +191,12 @@
             <h5 class="mb-0">Daftar Project yang Perlu Approval</h5>
         </div>
         <div class="card-body">
-            @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle"></i> {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            @endif
-
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>Kode Project</th>
-                            <th>Nama Project</th>
+                            <th>Nama Pengadaan</th>
                             <th>Division</th>
                             <th>Vendor</th>
                             <th>Tanggal Dibuat</th>
@@ -221,37 +213,39 @@
                             <td>{{$procurement->requestProcurements->first()?->vendor?->name_vendor ?? '-' }}</td>
                             <td>{{ $procurement->created_at->format('d/m/Y') }}</td>
                             <td>
-                                <a href="{{ route('sekdir.approval-detail', $procurement->project_id) }}">
+                                <a href="{{ route('sekdir.approval-detail', $procurement->procurement_id) }}">
 
                                     @php
-                                    // Ambil auto status dan checkpoint dari procurement
-                                    $status = $procurement->auto_status;
+                                    // 1. Ambil progress khusus checkpoint_id 5 (Pengesahan Kontrak)
+                                    $contractProgress = $procurement->procurementProgress
+                                    ->firstWhere('checkpoint_id', 5);
 
-                                    // Warna badge mengikuti rule auto_status
-                                    $badgeColor = match($status) {
-                                    'completed' => 'success', // hijau
-                                    'in_progress' => 'warning', // kuning
-                                    default => 'danger'
-                                    };
+                                    $statusText = 'Menunggu Proses Dokumen';
+                                    $badgeColor = '#BD0000'; // Default: Merah (Menunggu)
 
-                                    // Teks badge mengikuti rule: in_progress -> Proses Pengesahan Kontrak
-                                    $statusText = match($status) {
-                                    'completed' => 'Selesai',
-                                    'in_progress' => 'Proses Pengesahan Kontrak',
-                                    default => ucfirst($status)
-                                    };
+                                    if ($contractProgress) {
+                                    if ($contractProgress->status === 'completed') {
+                                    $statusText = 'Dokumen Selesai (Disetujui)';
+                                    $badgeColor = '#28AC00'; // Hijau (Selesai)
+                                    } elseif ($contractProgress->status === 'rejected') {
+                                    $statusText = 'Ditolak Sekretaris';
+                                    $badgeColor = '#dc3545'; // Merah gelap (Ditolak)
+                                    } else {
+                                    // Status 'in_progress' atau status lain yang masih aktif
+                                    $statusText = $contractProgress->checkpoint->point_name ?? 'Dalam Proses';
+                                    $badgeColor = '#ECAD02'; // Kuning (Proses)
+                                    }
+                                    }
                                     @endphp
 
-
-                                    <span class="badge bg-{{ $badgeColor }}">
+                                    <span class="badge" style="background-color: {{ $badgeColor }};">
                                         {{ $statusText }}
                                     </span>
-
                                 </a>
                             </td>
 
                             <td>
-                                <a href="{{ route('sekdir.approval-detail', $procurement->project_id) }}"
+                                <a href="{{ route('sekdir.approval-detail', $procurement->procurement_id) }}"
                                     class="btn btn-sm btn-primary"
                                     wire:navigate>
                                     <i class="bi bi-eye"></i> Detail
