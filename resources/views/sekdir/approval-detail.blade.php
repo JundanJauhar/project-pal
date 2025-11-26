@@ -211,11 +211,6 @@
 
                 {{-- Tombol Submit (Mengirimkan 'action' untuk Approve atau Reject) --}}
                 <div class="d-flex justify-content-end pt-3 border-top">
-                    <button type="submit" name="action" value="reject" class="btn btn-reject me-2"
-                            onclick="return confirm('Apakah Anda yakin ingin MENOLAK pengadaan ini? Pastikan Anda sudah mengisi Catatan/Alasan Penolakan.')">
-                        <i class="bi bi-x-octagon"></i> Tolak
-                    </button>
-
                     <button type="submit" name="action" value="approve" class="btn btn-success">
                         <i class="bi bi-check-circle"></i> Ke Step Berikutnya
                     </button>

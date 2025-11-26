@@ -93,16 +93,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/material-requests', [SupplyChainController::class, 'materialRequests'])->name('material-requests');
         Route::post('/material-requests/{requestId}', [SupplyChainController::class, 'updateMaterialRequest'])->name('update-material-request');
         Route::get('/vendors', [SupplyChainController::class, 'vendors'])->name('vendors');
-        Route::post('/projects/{projectId}/select-vendor', [SupplyChainController::class, 'selectVendor'])->name('select-vendor');
+        Route::post('/projects/select-vendor/{procurement_id}', [SupplyChainController::class, 'selectVendor'])->name('select-vendor');
         Route::get('/negotiations', [SupplyChainController::class, 'negotiations'])->name('negotiations');
         Route::post('/projects/{projectId}/negotiation', [SupplyChainController::class, 'createNegotiation'])->name('create-negotiation');
         Route::get('/material-shipping', [SupplyChainController::class, 'materialShipping'])->name('material-shipping');
         Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])->name('material-arrival');
         Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])->name('vendor.kelola');
         Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])->name('vendor.form');
-        Route::post('/vendor/pilih', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
+        Route::post('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
         Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])->name('vendor.detail');
         Route::put('/vendor/update/{id_vendor}', [SupplyChainController::class, 'updateVendor'])->name('vendor.update');
+        Route::get('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
     });
 
     Route::prefix('payments')->name('payments.')->group(function () {

@@ -11,6 +11,7 @@ use App\Models\Hps;
 use App\Models\Contract;
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -27,11 +28,11 @@ class SupplyChainController extends Controller
         $priorityFilter = $request->input('priority');
 
         $procurements = Procurement::with([
-                'project',
-                'department',
-                'requestProcurements',
-                'requestProcurements.vendor'
-            ])
+            'project',
+            'department',
+            'requestProcurements',
+            'requestProcurements.vendor'
+        ])
 
             ->when($search, function ($query, $search) {
                 return $query->where(function ($q) use ($search) {
@@ -395,30 +396,31 @@ class SupplyChainController extends Controller
     /**
      * Select vendor forprocurement
      */
-    public function selectVendor(Request $request, $procurementId)
+    public function selectVendor(Request $request, $procurement_id)
     {
-        $validated = $request->validate([
-            'vendor_id' => 'required|exists:vendors,vendor_id',
+        $request->validate([
+            'vendor_id' => 'required'
         ]);
 
-        $procurement = procurement::findOrFail($procurementId);
+        // Cek apakah vendor sudah dipilih sebelumnya
+        $existing = RequestProcurement::where('procurement_id', $procurement_id)->first();
 
-        // Create or update contract with vendor
-        Contract::create([
-            'project_id' => $procurement->project_id,
-            'vendor_id' => $validated['vendor_id'],
-            'status' => 'draft',
-            'created_by' => Auth::id(),
-        ]);
+        if ($existing) {
+            $existing->update([
+                'vendor_id' => $request->vendor_id
+            ]);
+        } else {
+            RequestProcurement::create([
+                'procurement_id' => $procurement_id,
+                'vendor_id' => $request->vendor_id,
+                'request_name'   => 'Pemilihan Vendor', // bebas isi sesuai kebutuhan
+                'created_date'   => Carbon::now(), // WAJIB karena tidak ada defaultn
 
-        $procurement->update([
-            'status_procurement' => 'pengecekan_legalitas'
-        ]);
+            ]);
+        }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Vendor selected successfully'
-        ]);
+        return redirect()
+            ->route('supply-chain.dashboard'); // arahkan ke halaman daftar pengadaan
     }
 
     /**

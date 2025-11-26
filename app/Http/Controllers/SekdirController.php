@@ -53,7 +53,7 @@ public function approval()
 
     // --- PERHITUNGAN STATISTIK ---
     // Menggunakan model Project untuk statistik dashboard yang lebih luas
-    $totalProjects = Project::count();
+    $totalProjects = Procurement::count();
 
     $stats = [
         'total' => $totalProjects, 
@@ -248,14 +248,7 @@ public function approval()
 
         $message = 'Pengadaan ' . $procurement->code_procurement . ' berhasil disetujui dan dilanjutkan ke tahap Pengiriman Material.';
 
-    } elseif ($action === 'reject') {
-        // Aksi Penolakan
-        $progress->status = 'rejected';
-        $procurement->status_procurement = 'rejected';
-        
-        $message = 'Pengadaan ' . $procurement->code_procurement . ' berhasil DITOLAK.';
     }
-
     // 3. Simpan perubahan ke Database
     $progress->save();
     $procurement->save();

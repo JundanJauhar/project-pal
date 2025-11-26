@@ -10,7 +10,7 @@
                 <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi Vendor</h5>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ isset($vendor) ? route('supply-chain.vendor.update', $vendor->id_vendor) : route('supply-chain.vendor.store') }}">
+                <form method="POST" action="{{ isset($vendor) ? route('supply-chain.vendor.update', $vendor->id_vendor) : route('supply-chain.vendor.kelola') }}">
                     @csrf
                     @if(isset($vendor))
                     @method('PUT')

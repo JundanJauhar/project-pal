@@ -10,11 +10,20 @@
         font-size: 12px;
         font-weight: 600;
     }
-    .priority-tinggi { color: #BD0000; }
-    .priority-sedang { color: #FFBB00; }
-    .priority-rendah { color: #6f6f6f; }
 
-    .tambah .btn{
+    .priority-tinggi {
+        color: #BD0000;
+    }
+
+    .priority-sedang {
+        color: #FFBB00;
+    }
+
+    .priority-rendah {
+        color: #6f6f6f;
+    }
+
+    .tambah .btn {
         background: #003d82;
         border-color: #003d82;
     }
@@ -121,21 +130,26 @@
                             <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ $procurement->department->department_name ?? '-' }}</td>
                             <td style="padding: 12px 8px; text-align: center;  color: #000;">
                                 @php
-                                    $requestProcurement = $procurement->requestProcurements->first();
-                                    $vendor = $requestProcurement?->vendor;
+                                $requestProcurement = $procurement->requestProcurements->first();
+                                $vendor = $requestProcurement?->vendor;
                                 @endphp
 
                                 @if($vendor)
-                                    <div class="d-flex flex-column">
-                                        <div>
-                                            {{ $vendor->name_vendor }}
-                                        </div>
+                                <div class="d-flex flex-column">
+                                    <div>
+                                        {{ $vendor->name_vendor }}
                                     </div>
+                                </div>
                                 @else
-                                    <a href="{{ route('supply-chain.vendor.pilih', $procurement->procurement_id) }}"
-                                       class="btn btn-sm btn-primary" wire:navigate>
+                                <form action="{{ route('supply-chain.vendor.pilih', $procurement->procurement_id) }}"
+                                    method="POST"
+                                    class="btn btn-sm btn-primary" wire:navigate>
+                                    @csrf
+                                    <button href="{{ route('supply-chain.vendor.pilih', $procurement->procurement_id) }}"
+                                        class="btn btn-sm btn-primary" wire:navigate>
                                         <i class="bi bi-plus-circle"></i> Kelola Vendor
-                                    </a>
+                                    </button>
+                                </form>
                                 @endif
                             </td>
                             <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->start_date->format('d/m/Y') }}</td>
@@ -199,4 +213,3 @@
     priorityFilter.addEventListener('change', filterTable);
 </script>
 @endpush
-

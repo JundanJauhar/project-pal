@@ -257,7 +257,7 @@
                                     </td>
                                     <td style="padding: 12px 8px; text-align: center;">
                                         <div class="btn-group" role="group">
-                                            <form action="{{ route('supply-chain.vendor.simpan', $procurement->procurement_id) }}"
+                                            <form action="{{ route('supply-chain.select-vendor', $procurement->procurement_id) }}"
                                                 method="POST"
                                                 class="d-inline"
                                                 onsubmit="return confirm('Pilih vendor {{ $vendor->name_vendor }} untuk pengadaan ini?')">
