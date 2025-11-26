@@ -72,6 +72,11 @@
         border-color: #003d82;
     }
 
+    .tambah .btn:hover{
+        background: #002e5c;
+        border-color: #002e5c;
+    }
+
     /* Status badge styling */
     .status-badge {
         padding: 6px 16px;

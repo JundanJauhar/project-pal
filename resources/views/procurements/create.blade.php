@@ -2,21 +2,79 @@
 
 @section('title', isset($procurement) ? 'Edit Procurement' : 'Tambah Procurement Baru')
 
+@push('styles')
 <style>
-.card-custom {
-    border-radius: 12px;
+/* Card styling */
+.card .card-custom {
+    /* border-radius: 12px; */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border: none;
 }
 
-.card-header-custom {
-    background-color: #0d6efd;
+/* Header card - KEDUA BIRU dengan ukuran sama */
+.card-header-custom,
+.card-header-custom-white {
+    background-color: #03418C;
+    background: #03418C;
     color: white;
     padding: 1rem 1.25rem;
     border-radius: 12px 12px 0 0;
     min-height: 60px;
     display: flex;
     align-items: center;
+}
+
+.card-header-custom h5,
+.card-header-custom-white h5 {
+    color: white;
+    margin: 0;  
+    font-size: 1.25rem;
+}
+
+/* Tombol Tambah - PUTIH dengan text BIRU */
+.btn-add-item-custom {
+    background-color: white;
+    background: white;
+    color: #03418C;
+    border: 1px solid #03418C;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-add-item-custom:hover {
+    background-color: #f0f0f0;
+    background: #f0f0f0;
+    color: #03418C;
+    border-color: #03418C;
+}
+
+/* Tombol Simpan - BIRU dengan hover */
+.btn-primary.btn-custom {
+    background-color: #03418C;
+    background: #03418C;
+    border-color: #03418C;
+    color: white;
+}
+
+.btn-primary.btn-custom:hover {
+    background-color: #022d5f;
+    background: #022d5f;
+    border-color: #022d5f;
+    color: white;
+}
+
+/* Tombol Batal tetap abu-abu */
+.btn-secondary.btn-custom {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-secondary.btn-custom:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
 }
 
 .btn-remove-item {
@@ -36,18 +94,16 @@
 .btn-remove-item:hover {
     background-color: #c82333;
 }
+
+.card-body {
+    border: none;
+}
 </style>
+@endpush
 
 @section('content')
 <div class="row mb-4">
     <div class="col-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('procurements.index') }}">Procurements</a></li>
-                <li class="breadcrumb-item active">{{ isset($procurement) ? 'Edit' : 'Tambah Baru' }}</li>
-            </ol>
-        </nav>
         <h2>
             <i class="bi bi-{{ isset($procurement) ? 'pencil' : 'plus-circle' }}"></i>
             {{ isset($procurement) ? 'Edit Procurement' : 'Tambah Procurement Baru' }}
@@ -194,9 +250,9 @@
 
         <div class="col-md-4">
             <div class="card card-custom" style="border-radius:12px;">
-                <div class="card-header-custom d-flex justify-content-between align-items-center">
+                <div class="card-header-custom-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-box"></i> Item</h5>
-                    <button type="button" id="btnAddItem" class="btn btn-light btn-sm">
+                    <button type="button" id="btnAddItem" class="btn btn-add-item-custom">
                         <i class="bi bi-plus-lg"></i> Tambah
                     </button>
                 </div>

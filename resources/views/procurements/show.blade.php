@@ -165,6 +165,60 @@
         background-color: #dc3545;
         color: white;
     }
+
+    /* Dashboard Table Styling */
+    .dashboard-table-wrapper {
+        padding: 25px;
+        border-radius: 14px;
+        /* border: 1px solid #E0E0E0; */
+        margin-top: 20px;
+        margin-bottom: 30px;
+        background: #fff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .dashboard-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .dashboard-table thead th {
+        padding: 14px 8px;
+        border-bottom: 2px solid #C9C9C9;
+        font-size: 14px;
+        text-transform: uppercase;
+        color: #555;
+        text-align: center;
+        vertical-align: middle;
+        font-weight: 600;
+    }
+
+    .dashboard-table tbody tr:hover {
+        background: #EFEFEF;
+    }
+
+    .dashboard-table tbody td {
+        padding: 14px 8px;
+        border-bottom: 1px solid #DFDFDF;
+        font-size: 15px;
+        color: #333;
+        text-align: center;
+    }
+
+    .dashboard-table tbody tr:last-child {
+        background: #F8F9FA;
+        font-weight: 600;
+    }
+
+    .dashboard-table tbody tr:last-child:hover {
+        background: #E9ECEF;
+    }
+
+    .dashboard-table tbody tr:last-child td {
+        border-bottom: none;
+        font-weight: 600;
+        color: #000;
+    }
 </style>
 
 <div class="header-logo-wrapper">
@@ -263,45 +317,41 @@
 
     @forelse($procurement->requestProcurements as $request)
         @if($request->items->count() > 0)
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th width="5%">No</th>
-                        <th width="25%">Nama Item</th>
-                        <th width="25%">Spesifikasi</th>
-                        <th width="10%">Jumlah</th>
-                        <th width="15%">Harga Satuan</th>
-                        <th width="15%">Total Harga</th>
-                        <th width="5%">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($request->items as $index => $item)
-                    @php
-                        $itemTotal = $item->unit_price * $item->amount;
-                        $grandTotal += $itemTotal;
-                    @endphp
-                    <tr>
-                        <td class="text-center">{{ $index + 1 }}</td>
-                        <td><strong>{{ $item->item_name }}</strong></td>
-                        <td>{{ $item->item_description ?? $item->specification ?? '-' }}</td>
-                        <td>{{ $item->amount }} {{ $item->unit }}</td>
-                        <td>Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
-                        <td><strong>Rp {{ number_format($itemTotal, 0, ',', '.') }}</strong></td>
-                        <td>
-                            <span class="badge bg-{{ $item->status === 'approved' ? 'success' : ($item->status === 'rejected' ? 'danger' : 'warning') }}">
-                                {{ ucfirst($item->status) }}
-                            </span>
-                        </td>
-                    </tr>
-                    @endforeach
-                    <tr class="table-active">
-                        <td colspan="5" class="text-end"><strong>Grand Total:</strong></td>
-                        <td colspan="2"><strong>Rp {{ number_format($grandTotal, 0, ',', '.') }}</strong></td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="dashboard-table-wrapper">
+            <div class="table-responsive">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%; padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">No</th>
+                            <th style="width: 25%; padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Item</th>
+                            <th style="width: 25%; padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Spesifikasi</th>
+                            <th style="width: 10%; padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Jumlah</th>
+                            <th style="width: 15%; padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Harga Satuan</th>
+                            <th style="width: 15%; padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Total Harga</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($request->items as $index => $item)
+                        @php
+                            $itemTotal = $item->unit_price * $item->amount;
+                            $grandTotal += $itemTotal;
+                        @endphp
+                        <tr>
+                            <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $index + 1 }}</td>
+                            <td style="padding: 12px 8px; text-align: left; color: #000;"><strong>{{ $item->item_name }}</strong></td>
+                            <td style="padding: 12px 8px; text-align: left; color: #000;">{{ $item->item_description ?? $item->specification ?? '-' }}</td>
+                            <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $item->amount }} {{ $item->unit }}</td>
+                            <td style="padding: 12px 8px; text-align: center; color: #000;">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
+                            <td style="padding: 12px 8px; text-align: center; color: #000;"><strong>Rp {{ number_format($itemTotal, 0, ',', '.') }}</strong></td>
+                        </tr>
+                        @endforeach
+                        <tr>
+                            <td colspan="5" style="padding: 14px 8px; text-align: center; font-weight: 600; color: #000;"><strong>Grand Total:</strong></td>
+                            <td style="padding: 14px 8px; text-align: center; font-weight: 700; color: #000; font-size: 16px;"><strong>Rp {{ number_format($grandTotal, 0, ',', '.') }}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
         @endif
     @empty
@@ -321,19 +371,5 @@
     <div class="doc-card">
         {!! $procurement->sign_notes ?? '<em class="text-muted">Belum ada tanda tangan</em>' !!}
     </div>
-
-@if(session('success'))
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-    <div class="toast show" role="alert">
-        <div class="toast-header bg-success text-white">
-            <strong class="me-auto">Success</strong>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
-        </div>
-        <div class="toast-body">
-            {{ session('success') }}
-        </div>
-    </div>
-</div>
-@endif
 
 @endsection

@@ -413,19 +413,8 @@
             /* icon color */
         }
 
-        .card-custom {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
-            margin-bottom: 20px;
-        }
-
-        .card-header-custom {
-            background: linear-gradient(135deg, var(--pal-primary) 0%, var(--pal-secondary) 100%);
-            color: white;
-            border-radius: 12px 12px 0 0 !important;
-            padding: 15px 20px;
-        }
+        /* REMOVED - card-custom styling that was conflicting */
+        /* REMOVED - card-header-custom styling that was conflicting */
 
         .timeline-progress {
             display: flex;
