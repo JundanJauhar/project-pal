@@ -28,7 +28,8 @@ class Procurement extends Model
         'end_date' => 'date',
     ];
 
-    protected $appends = ['auto_status', 'current_checkpoint'];
+    // Appends untuk akses mudah di blade
+    protected $appends = ['current_checkpoint'];
 
     public function project(): BelongsTo
     {
@@ -50,25 +51,117 @@ class Procurement extends Model
         return $this->hasMany(ProcurementProgress::class, 'procurement_id', 'procurement_id');
     }
 
+    /**
+     * Get current checkpoint name for in_progress procurement
+     * Returns the checkpoint name of the LATEST active progress
+     * 
+     * Logic:
+     * 1. If status is not 'in_progress', return null
+     * 2. Find progress with status 'in_progress' (current active checkpoint)
+     * 3. If not found, find the last 'completed' checkpoint (fallback)
+     * 4. Return the checkpoint name (point_name)
+     */
+    public function getCurrentCheckpointAttribute()
+    {
+        // Only applicable for in_progress status
+        if ($this->status_procurement !== 'in_progress') {
+            return null;
+        }
+
+        // Use already loaded relation to avoid N+1
+        $progressCollection = $this->relationLoaded('procurementProgress')
+            ? $this->procurementProgress
+            : $this->procurementProgress()->with('checkpoint')->get();
+
+        // Find the checkpoint that is currently in_progress
+        $currentProgress = $progressCollection
+            ->filter(function($progress) {
+                return $progress->status === 'in_progress' && $progress->checkpoint;
+            })
+            ->sortBy(function($progress) {
+                return $progress->checkpoint->point_sequence ?? 999;
+            })
+            ->first();
+
+        // If found in_progress checkpoint, return its name
+        if ($currentProgress && $currentProgress->checkpoint) {
+            return $currentProgress->checkpoint->point_name;
+        }
+
+        // Fallback: Find the LAST completed checkpoint
+        // This means the next checkpoint should be "in_progress" but hasn't been created yet
+        $lastCompleted = $progressCollection
+            ->filter(function($progress) {
+                return $progress->status === 'completed' && $progress->checkpoint;
+            })
+            ->sortByDesc(function($progress) {
+                return $progress->checkpoint->point_sequence ?? 0;
+            })
+            ->first();
+
+        if ($lastCompleted && $lastCompleted->checkpoint) {
+            // Get the next checkpoint after the last completed one
+            $nextCheckpointSequence = $lastCompleted->checkpoint->point_sequence + 1;
+            $nextCheckpoint = \App\Models\Checkpoint::where('point_sequence', $nextCheckpointSequence)->first();
+            
+            if ($nextCheckpoint) {
+                return $nextCheckpoint->point_name;
+            }
+            
+            // If no next checkpoint, return the last completed checkpoint name
+            return $lastCompleted->checkpoint->point_name;
+        }
+
+        // If no progress at all, return the first checkpoint
+        $firstCheckpoint = \App\Models\Checkpoint::orderBy('point_sequence')->first();
+        return $firstCheckpoint ? $firstCheckpoint->point_name : null;
+    }
+
+    /**
+     * Get progress percentage based on completed checkpoints
+     */
+    public function getProgressPercentageAttribute()
+    {
+        $totalCheckpoints = \App\Models\Checkpoint::count();
+        if ($totalCheckpoints === 0) {
+            return 0;
+        }
+
+        $completedCheckpoints = $this->procurementProgress()
+            ->where('status', 'completed')
+            ->count();
+
+        return round(($completedCheckpoints / $totalCheckpoints) * 100, 2);
+    }
+
+    /**
+     * DEPRECATED: This accessor is not aligned with actual status_procurement enum
+     * Use status_procurement directly instead
+     * 
+     * Actual enum values: 'in_progress', 'completed', 'cancelled'
+     * This accessor returns: 'not_started', 'in_progress', 'completed', 'rejected'
+     */
     public function getAutoStatusAttribute()
     {
-        // ✅ Gunakan relasi yang sudah di-load, bukan query baru
+        // ⚠️ WARNING: This method returns values that don't match the database enum
+        // It's kept for backward compatibility but should not be used
+        
         $progressCollection = $this->relationLoaded('procurementProgress')
             ? $this->procurementProgress
             : $this->procurementProgress()->get();
 
-        // Cek apakah ada yang ditolak
-        $rejected = $progressCollection->where('status', 'rejected')->isNotEmpty();
+        // Check for blocked/rejected status
+        $blocked = $progressCollection->where('status', 'blocked')->isNotEmpty();
 
-        if ($rejected) {
-            return 'rejected';
+        if ($blocked) {
+            return 'rejected'; // Maps to 'cancelled' in real status
         }
 
         $totalCheckpoint = \App\Models\Checkpoint::count();
         $completed = $progressCollection->where('status', 'completed')->count();
 
         if ($completed === 0) {
-            return 'not_started';
+            return 'not_started'; // This status doesn't exist in enum!
         }
 
         if ($completed >= $totalCheckpoint) {
@@ -76,30 +169,6 @@ class Procurement extends Model
         }
 
         return 'in_progress';
-    }
-
-    public function getCurrentCheckpointAttribute()
-    {
-        // ✅ Gunakan relasi yang sudah di-load
-        $progressCollection = $this->relationLoaded('procurementProgress')
-            ? $this->procurementProgress
-            : $this->procurementProgress()->with('checkpoint')->get();
-
-        // Cari progress yang sedang in_progress
-        $latest = $progressCollection
-            ->where('status', 'in_progress')
-            ->sortByDesc('checkpoint_id')
-            ->first();
-
-        // Jika tidak ada yang in_progress, ambil yang terakhir completed
-        if (!$latest) {
-            $latest = $progressCollection
-                ->where('status', 'completed')
-                ->sortByDesc('checkpoint_id')
-                ->first();
-        }
-
-        return $latest?->checkpoint?->point_name ?? null;
     }
 
     public function vendors()

@@ -23,8 +23,9 @@ return new class extends Migration
             // FK ke users
             $table->unsignedBigInteger('user_id')->nullable();
 
-            $table->enum('status', ['not_started', 'in_progress', 'completed', 'blocked'])
-                  ->default('not_started');
+            // Updated enum: 3 nilai sesuai dengan status_procurement
+            $table->enum('status', ['in_progress', 'completed', 'cancelled'])
+                  ->default('in_progress');
 
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();

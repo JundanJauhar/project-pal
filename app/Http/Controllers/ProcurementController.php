@@ -63,7 +63,7 @@ class ProcurementController extends Controller
         DB::beginTransaction();
         try {
             $validated['start_date'] = Carbon::now()->format('Y-m-d');
-            $validated['status_procurement'] = 'draft';
+            $validated['status_procurement'] = 'in_progress';
 
             $projectCode = $validated['project_code'];
 
@@ -151,14 +151,14 @@ class ProcurementController extends Controller
 
         $checkpoints = \App\Models\Checkpoint::orderBy('point_sequence', 'asc')->get();
 
-        $currentStageIndex = 0;
+        $currentStageIndex = 1;
 
         $latestProgress = $procurement->procurementProgress
             ->sortByDesc(fn($p) => $p->checkpoint?->point_sequence ?? 0)
             ->first();
 
         if ($latestProgress && $latestProgress->checkpoint) {
-            $currentStageIndex = $latestProgress->checkpoint->point_sequence - 1;
+            $currentStageIndex = $latestProgress->checkpoint->point_sequence;
         }
 
         return view('procurements.show', compact('procurement', 'checkpoints', 'currentStageIndex'));
@@ -211,18 +211,6 @@ class ProcurementController extends Controller
         return redirect()->back()->with('success', 'Progress procurement berhasil diperbarui');
     }
 
-    public function update(Request $request, $id)
-    {
-        $procurement = Procurement::findOrFail($id);
-
-        $procurement->update([
-            'status_procurement' => 'approved',
-        ]);
-
-        return redirect()->route('procurements.show', $id)
-            ->with('success', 'Procurement berhasil disetujui');
-    }
-
     public function byProject($projectId)
     {
         $project = Project::findOrFail($projectId);
@@ -242,7 +230,7 @@ class ProcurementController extends Controller
         $priority = $request->query('priority', '');
         $page = $request->query('page', 1);
 
-        $procurementsQuery = Procurement::with(['department', 'requestProcurements.vendor']);
+        $procurementsQuery = Procurement::with(['project', 'department', 'requestProcurements.vendor', 'procurementProgress.checkpoint']);
 
         if (!empty($q)) {
             $procurementsQuery->where('name_procurement', 'LIKE', "%{$q}%")
@@ -265,14 +253,16 @@ class ProcurementController extends Controller
 
             return [
                 'procurement_id' => $p->procurement_id,
+                'project_code' => $p->project->project_code ?? '-',
                 'code_procurement' => $p->code_procurement,
                 'name_procurement' => $p->name_procurement,
                 'department_name' => $p->department ? $p->department->department_name : '-',
                 'start_date' => $p->start_date ? $p->start_date->format('d/m/Y') : '-',
                 'end_date' => $p->end_date ? $p->end_date->format('d/m/Y') : '-',
-                'vendor' => $vendor,
+                'vendor_name' => $vendor,
                 'priority' => $p->priority,
                 'status_procurement' => $p->status_procurement,
+                'current_checkpoint' => $p->current_checkpoint, // TAMBAHKAN INI
             ];
         });
 
