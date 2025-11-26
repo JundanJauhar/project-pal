@@ -51,16 +51,6 @@ class Procurement extends Model
         return $this->hasMany(ProcurementProgress::class, 'procurement_id', 'procurement_id');
     }
 
-    /**
-     * Get current checkpoint name for in_progress procurement
-     * Returns the checkpoint name of the LATEST active progress
-     * 
-     * Logic:
-     * 1. If status is not 'in_progress', return null
-     * 2. Find progress with status 'in_progress' (current active checkpoint)
-     * 3. If not found, find the last 'completed' checkpoint (fallback)
-     * 4. Return the checkpoint name (point_name)
-     */
     public function getCurrentCheckpointAttribute()
     {
         // Only applicable for in_progress status
