@@ -69,7 +69,7 @@ public function approval()
     ];
     
     // TotalProcurements harus sesuai dengan variabel yang digunakan di Blade (dashboard view)
-    $totalProcurements = $totalProjects; 
+    $totalProcurements = ProcurementProgress::where('checkpoint_id', 5)->count(); 
 
     return view('sekdir.approval', compact('procurements', 'stats', 'totalProcurements'));
 }
