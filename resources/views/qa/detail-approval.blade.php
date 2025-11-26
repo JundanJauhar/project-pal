@@ -15,12 +15,12 @@
 /* info grid (top left / right) */
 .proc-info {
   display:grid;
-  grid-template-columns: 1fr 360px; /* left flexible, right fixed */
+  grid-template-columns: 1fr 320px;
   gap:20px;
   align-items:start;
   margin-bottom:26px;
 }
-.proc-block { background:transparent; display:flex; flex-direction:column; gap:12px; }
+.proc-block { background:transparent; }
 
 /* big table-card */
 .table-card {
@@ -65,6 +65,7 @@
 }
 .row-item:nth-child(odd) { background: rgba(255,255,255,0.04); }
 
+/* columns same sizes */
 .row-item .col {
   padding:0 12px;
   font-size:15px;
@@ -97,7 +98,6 @@
   border:1px solid #e6e6e6;
   resize:vertical;
   font-size:14px;
-  display:block;
 }
 
 /* saved badge */
@@ -111,9 +111,10 @@
 .btn-save { background:#138a33; color:#fff; padding:8px 16px; border-radius:8px; border:0; cursor:pointer; }
 .btn-edit { background:#f0f0f0; padding:8px 12px; border-radius:8px; border:1px solid #ddd; cursor:pointer; }
 
+/* responsive */
 @media (max-width:1000px) {
   .proc-info { grid-template-columns: 1fr; }
-  .table-head { display:none; }
+  .table-head { display:none; } 
   .table-card { padding:8px; }
   .row-item { flex-direction:column; align-items:flex-start; gap:8px; padding:12px; }
   .col { padding:6px 0; width:100%; }
@@ -131,9 +132,11 @@
             <div class="text-muted da-sub">{{ $procurement->code_procurement }}</div>
         </div>
 
-        <button class="da-close btn btn-light" title="Close" onclick="window.location='{{ route('inspections.index') }}'">
-            <i class="bi bi-x-lg"></i>
-        </button>
+        <div style="display:flex; align-items:center; gap:12px;">
+            <button class="da-close btn btn-light" title="Close" onclick="window.location='{{ route('inspections.index') }}'">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
     </div>
 
     <div class="proc-info">
@@ -235,52 +238,51 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const csrf = document.querySelector('meta[name="csrf-token"]').content;
+    const procurementId = "{{ $procurement->procurement_id }}";
 
-    // Setup rows: toggle behavior (click to set, click again to unset)
+    // Initialize rows
     document.querySelectorAll('.row-item').forEach(row => {
         const pass = row.querySelector('.toggle-pass');
         const fail = row.querySelector('.toggle-fail');
         const notes = row.querySelector('.notes-input');
 
-        // initial visibility: show textarea only if fail is active
-        if (fail.classList.contains('fail')) {
-            notes.style.display = 'block';
+        // show/hide notes depending on initial state
+        if (pass.classList.contains('pass')) {
+            if (notes) notes.style.display = 'none';
+        } else if (fail.classList.contains('fail')) {
+            if (notes) notes.style.display = 'block';
         } else {
-            notes.style.display = 'none';
+            if (notes) notes.style.display = 'none';
         }
 
+        // click handlers with toggle/clear-on-second-click
         pass.addEventListener('click', () => {
-            const already = pass.classList.contains('pass');
-            if (already) {
-                // toggle off
+            if (pass.classList.contains('pass')) {
+                // clear
                 pass.classList.remove('pass');
-                // no selection -> hide notes
-                notes.style.display = 'none';
+                if (notes) notes.style.display = 'none';
             } else {
-                // set pass, unset fail
                 pass.classList.add('pass');
                 fail.classList.remove('fail');
-                notes.style.display = 'none';
+                if (notes) notes.style.display = 'none';
             }
         });
 
         fail.addEventListener('click', () => {
-            const already = fail.classList.contains('fail');
-            if (already) {
-                // toggle off
+            if (fail.classList.contains('fail')) {
+                // clear
                 fail.classList.remove('fail');
-                notes.style.display = 'none';
+                if (notes) notes.style.display = 'none';
             } else {
-                // set fail, unset pass
                 fail.classList.add('fail');
                 pass.classList.remove('pass');
-                notes.style.display = 'block';
+                if (notes) notes.style.display = 'block';
             }
         });
     });
 
-    // Edit toggle
-    let editMode = true; // default editable as requested
+    // edit mode toggling
+    let editMode = true; // default editable
     const btnEdit = document.getElementById('btnEdit');
     const btnSave = document.getElementById('btnSave');
 
@@ -288,20 +290,12 @@ document.addEventListener('DOMContentLoaded', function () {
         editMode = flag;
         btnEdit.textContent = editMode ? 'Batal' : 'Edit';
         document.querySelectorAll('.row-item').forEach(row => {
-            const pass = row.querySelector('.toggle-pass');
-            const fail = row.querySelector('.toggle-fail');
-            const notes = row.querySelector('.notes-input');
-
-            pass.style.pointerEvents = editMode ? 'auto' : 'none';
-            fail.style.pointerEvents = editMode ? 'auto' : 'none';
-            if (notes) {
-                if (editMode) {
-                    notes.removeAttribute('readonly');
-                    notes.style.pointerEvents = 'auto';
-                } else {
-                    notes.setAttribute('readonly', true);
-                    notes.style.pointerEvents = 'none';
-                }
+            row.querySelectorAll('.toggle-box').forEach(tb => tb.style.pointerEvents = editMode ? 'auto' : 'none');
+            const ni = row.querySelector('.notes-input');
+            if (ni) {
+                if (editMode) ni.removeAttribute('readonly');
+                else ni.setAttribute('readonly', true);
+                ni.style.pointerEvents = editMode ? 'auto' : 'none';
             }
         });
     }
@@ -312,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setEditMode(!editMode);
     });
 
-    // Save all
+    // save
     btnSave.addEventListener('click', async () => {
         const payloadItems = [];
         let valid = true;
@@ -328,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (failActive) result = 'failed';
 
             if (!result) {
-                // skip if not selected
+                // skip unselected
                 return;
             }
 
@@ -338,11 +332,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 valid = false;
             }
 
-            payloadItems.push({
-                item_id: itemId,
-                result,
-                notes
-            });
+            payloadItems.push({ item_id: itemId, result, notes });
         });
 
         if (!valid) return;
@@ -371,52 +361,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // show saved per item
+            // show saved per item + lock notes for passed
             payloadItems.forEach(it => {
                 const row = document.querySelector(`.row-item[data-item-id="${it.item_id}"]`);
-                if (row) {
-                    const badge = row.querySelector('.saved-badge');
-                    if (badge) badge.style.display = 'inline-block';
-
-                    // hide/show textarea according to result
-                    const notes = row.querySelector('.notes-input');
-                    if (it.result === 'passed') {
-                        if (notes) notes.style.display = 'none';
-                    } else {
-                        if (notes) notes.style.display = 'block';
-                    }
+                if (!row) return;
+                const badge = row.querySelector('.saved-badge');
+                if (badge) badge.style.display = 'inline-block';
+                const notes = row.querySelector('.notes-input');
+                if (it.result === 'passed') {
+                    if (notes) notes.style.display = 'none';
+                } else {
+                    if (notes) notes.style.display = 'block';
                 }
             });
-
-            // Update top-cards in this page (if present in DOM)
-            if (typeof json.lolos_count !== 'undefined') {
-                const topLolos = document.querySelector('.qa-card.green h3');
-                if (topLolos) topLolos.textContent = json.lolos_count;
-            }
-            if (typeof json.gagal_count !== 'undefined') {
-                const topGagal = document.querySelector('.qa-card.red h3');
-                if (topGagal) topGagal.textContent = json.gagal_count;
-            }
-
-            // If all inspected
-            if (typeof json.all_inspected !== 'undefined' && json.all_inspected === true) {
-                const butuh = document.querySelector('.qa-card.yellow h3');
-                if (butuh) butuh.textContent = 0;
-            }
-
-            // Save a small payload to localStorage so inspections page can update UI
-            const store = {
-                lolos: (typeof json.lolos_count !== 'undefined') ? json.lolos_count : null,
-                gagal: (typeof json.gagal_count !== 'undefined') ? json.gagal_count : null,
-                butuh: (typeof json.all_inspected !== 'undefined') ? (json.all_inspected ? 0 : null) : null,
-                // a simple hint for "sedang proses": if not all inspected and at least 1 inspected -> 1 (hint)
-                sedang_proses: (typeof json.inspected_items !== 'undefined' && typeof json.total_items !== 'undefined')
-                                ? ((json.inspected_items > 0 && json.inspected_items < json.total_items) ? 1 : null)
-                                : null
-            };
-            try {
-                localStorage.setItem('inspectionUpdate', JSON.stringify(store));
-            } catch (e) { /* ignore */ }
 
             alert('Hasil inspeksi berhasil disimpan.');
             setEditMode(false);

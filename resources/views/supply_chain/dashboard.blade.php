@@ -27,6 +27,98 @@
         background: #003d82;
         border-color: #003d82;
     }
+
+    .tambah .btn:hover{
+        background: #002e5c;
+        border-color: #002e5c;
+    }
+
+    .dashboard-table thead th {
+        padding: 14px 6px;
+        border-bottom: 2px solid #C9C9C9;
+        font-size: 14px;
+        text-transform: uppercase;
+        color: #555;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .dashboard-table tbody tr:hover {
+        background: #EFEFEF;
+    }
+
+    .dashboard-table tbody td {
+        padding: 14px 6px;
+        border-bottom: 1px solid #DFDFDF;
+        font-size: 15px;
+        color: #333;
+        text-align: center;
+    }
+
+        .dashboard-table-wrapper {
+        /* background: #F6F6F6; */
+        padding: 25px;
+        border-radius: 14px;
+        border: 1px solid #E0E0E0;
+        margin-top: 20px;
+    }
+
+    .dashboard-table {
+        width: 100%;
+        border-collapse: collapse;
+        /* table-layout: fixed; */
+    }
+
+    /* Title (mirip Payment) */
+    .dashboard-table-title {
+        font-size: 26px;
+        font-weight: 700;
+        margin-bottom: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Filter wrapper */
+    .filters-wrap {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    /* Search box styling */
+    .dashboard-search-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #F0F0F0;
+        border-radius: 25px;
+        padding: 6px 12px;
+        width: 240px;
+        border: 1px solid #ddd;
+        font-size: 14px;
+    }
+    .dashboard-search-box input {
+        border: none;
+        background: transparent;
+        width: 100%;
+        outline: none;
+        font-size: 14px;
+    }
+    .dashboard-search-box i {
+        font-size: 14px;
+        color: #777;
+    }
+
+    /* Filter selects */
+    .filter-select {
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 14px;
+    }
 </style>
 @endpush
 
@@ -50,7 +142,7 @@
     <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <h2><i class="bi bi-box-seam"></i> Daftar Pengadaan</h2>
+            <h2>Daftar Pengadaan</h2>
         </div>
     </div>
 
@@ -104,10 +196,9 @@
     </div>
 
     <!-- Table -->
-    <div class="card">
-        <div class="card-body">
+        <div class="dashboard-table-wrapper">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="dashboard-table">
                     <thead>
                         <tr>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
@@ -174,7 +265,6 @@
                 </table>
             </div>
         </div>
-    </div>
 </div>
 @endsection
 

@@ -6,9 +6,9 @@
 <style>
     /* --- Page Container --- */
     .page-container {
-        background: #e8e8e8;
         min-height: calc(100vh - 100px);
-        padding: 40px 60px;
+        padding: 20px 60px;
+        border-radius: 12px;
     }
 
     /* --- Header Section --- */
@@ -209,7 +209,7 @@
         <h1 class="page-title">LIST PROJECT</h1>
         
         <!-- SEARCH BAR -->
-        <div class="search-wrapper">
+        <!-- <div class="search-wrapper">
             <input type="text"
                 class="search-input"
                 id="searchInput"
@@ -225,7 +225,7 @@
             <span class="search-icon">
                 <i class="bi bi-search"></i>
             </span>
-        </div>
+        </div> -->
     </div>
 
     <!-- GRID PROJECT -->
@@ -246,12 +246,6 @@
                 <h3 class="project-name">
                     {{ $project->project_code ?? 'Nama Tidak Ditemukan' }}
                 </h3>
-
-                <a class="project-link" 
-                   href="{{ route('desain.daftar-pengadaan', $project->project_id) }}"
-                   onclick="event.stopPropagation()">
-                    GO TO PROJECT <i class="bi bi-arrow-right"></i>
-                </a>
             </div>
         </div>
         @endforeach

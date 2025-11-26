@@ -8,6 +8,34 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border: none;
 }
+
+.card-header-custom {
+    background-color: #0d6efd;
+    color: white;
+    padding: 1rem 1.25rem;
+    border-radius: 12px 12px 0 0;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+}
+
+.btn-remove-item {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-remove-item:hover {
+    background-color: #c82333;
+}
 </style>
 
 @section('content')
@@ -27,26 +55,27 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card card-custom">
-            <div class="card-header-custom">
-                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi Procurement</h5>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{{ isset($procurement) ? route('procurements.update', $procurement->procurement_id) : route('procurements.store') }}">
-                    @csrf
-                    @if(isset($procurement))
-                    @method('PUT')
-                    @endif
+<form method="POST" action="{{ isset($procurement) ? route('procurements.update', $procurement->procurement_id) : route('procurements.store') }}" id="mainForm">
+    @csrf
+    @if(isset($procurement))
+    @method('PUT')
+    @endif
 
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card card-custom">
+                <div class="card-header-custom">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi Procurement</h5>
+                </div>
+                <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="project_code" class="form-label">Project <span class="text-danger">*</span></label>
-                            <select name="project_code" class="form-select" aria-label="Default select example" required>
+                            <select name="project_code" id="project_code" class="form-select" required>
                                 <option value="">Pilih Project</option>
                                 @foreach($projects as $project)
-                                    <option value="{{ $project->project_code }}">
+                                    <option value="{{ $project->project_code }}" 
+                                        {{ old('project_code', $procurement->project_code ?? '') == $project->project_code ? 'selected' : '' }}>
                                         {{ $project->project_code }}
                                     </option>
                                 @endforeach
@@ -56,35 +85,36 @@
                             @enderror
                         </div>
 
-                    <div class="col-md-6 mb-3">
-                        <label for="code_procurement" class="form-label">Kode Procurement <span class="text-danger">*</span></label>
-                        <input type="text"
-                            id="code_procurement"
-                            name="code_procurement"
-                            class="form-control @error('code_procurement') is-invalid @enderror"
-                            value="{{ old('code_procurement', $procurement->code_procurement ?? '') }}"
-                            placeholder="Akan ter-generate berdasarkan project"
-                            readonly
-                            required>
-                        @error('code_procurement')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-                    </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="code_procurement" class="form-label">Kode Procurement <span class="text-danger">*</span></label>
+                            <input type="text"
+                                id="code_procurement"
+                                name="code_procurement"
+                                class="form-control @error('code_procurement') is-invalid @enderror"
+                                value="{{ old('code_procurement', $procurement->code_procurement ?? '') }}"
+                                placeholder="Akan ter-generate berdasarkan project"
+                                readonly
+                                required>
+                            @error('code_procurement')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
 
                         <div class="col-md-6 mb-3">
-                    <label for="department_procurement" class="form-label">Department <span class="text-danger">*</span></label>
-                    <select name="department_procurement" class="form-select" aria-label="Default select example" required>
-                        <option value="">Pilih Department</option>
-                        @foreach($departments as $department)
-                            <option value="{{ $department->department_id }}">
-                                {{ $department->department_name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('department_procurement')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
-                </div>
+                            <label for="department_procurement" class="form-label">Department <span class="text-danger">*</span></label>
+                            <select name="department_procurement" id="department_procurement" class="form-select" required>
+                                <option value="">Pilih Department</option>
+                                @foreach($departments as $department)
+                                    <option value="{{ $department->department_id }}"
+                                        {{ old('department_procurement', $procurement->department_procurement ?? '') == $department->department_id ? 'selected' : '' }}>
+                                        {{ $department->department_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('department_procurement')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -150,65 +180,90 @@
                         </div>
 
                         <div class="col-md-4 mb-3 d-flex align-items-end gap-2">
-                            <a href="javascript:history.back()" class="btn btn-secondary btn-custom flex-grow-1" wire:navigate>
+                            <a href="javascript:history.back()" class="btn btn-secondary btn-custom flex-grow-1">
                                 <i class="bi bi-x-circle"></i> Batal
                             </a>
                             <button type="submit" class="btn btn-primary btn-custom flex-grow-1">
-                                <i class="bi bi-save"></i> {{ isset($procurement) ? 'Update' : 'Simpan' }} Procurement
+                                <i class="bi bi-save"></i> {{ isset($procurement) ? 'Update' : 'Simpan' }}
                             </button>
                         </div>
                     </div>
-                </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card card-custom" style="border-radius:12px;">
+                <div class="card-header-custom d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-box"></i> Item</h5>
+                    <button type="button" id="btnAddItem" class="btn btn-light btn-sm">
+                        <i class="bi bi-plus-lg"></i> Tambah
+                    </button>
+                </div>
+
+                <div class="card-body" id="itemsContainer">
+                    <!-- Card item akan muncul di sini lewat JS -->
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-    <div class="card card-custom" style="border-radius:12px;">
-        <div class="card-header-custom d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Item</h5>
-            <button type="button" id="btnAddItem" class="btn btn-primary">
-                <i class="bi bi-plus-lg"></i> Tambah
-            </button>
-        </div>
-
-        <div class="card-body" id="itemsContainer">
-            <!-- Card item akan muncul di sini lewat JS -->
-        </div>
-    </div>
-</div>
-
-</div>
+</form>
 @endsection
 
 @push('scripts')
 <script>
-    // Auto-generate procurement code suggestion
-    document.addEventListener('DOMContentLoaded', function() {
-        const isEdit = {
-            {
-                isset($procurement) ? 'true' : 'false'
-            }
-        };
+document.addEventListener('DOMContentLoaded', function() {
+    // Data projects dari server
+    const projectsData = {
+        @foreach($projects as $p)
+            "{{ $p->project_code }}": {{ $p->procurements_count ?? 0 }},
+        @endforeach
+    };
 
-        if (!isEdit) {
-            const codeInput = document.getElementById('code_procurement');
-            if (codeInput && !codeInput.value) {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const random = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-                codeInput.value = `PRK-${year}${month}987-${random}`;
-            }
+    const projectSelect = document.getElementById('project_code');
+    const codeInput = document.getElementById('code_procurement');
+
+    function padSeq(n) {
+        return String(n).padStart(2, '0');
+    }
+
+    function generateSuggestedCode(projectCode) {
+        const count = projectsData[projectCode] ?? 0;
+        const seq = padSeq(count + 1);
+        return `${projectCode}-${seq}`;
+    }
+
+    if (projectSelect) {
+        const initialProject = projectSelect.value;
+        const isEdit = {{ isset($procurement) ? 'true' : 'false' }};
+        
+        if (initialProject && !isEdit) {
+            codeInput.value = generateSuggestedCode(initialProject);
         }
 
-        // Validate end date > start date
-        const startDate = document.getElementById('start_date');
-        const endDate = document.getElementById('end_date');
-
-        startDate.addEventListener('change', function() {
-            endDate.min = this.value;
+        projectSelect.addEventListener('change', function() {
+            const pc = this.value;
+            if (!pc) {
+                codeInput.value = '';
+                return;
+            }
+            if (!isEdit) {
+                codeInput.value = generateSuggestedCode(pc);
+            }
         });
+    }
+
+    // Validasi sebelum submit - pastikan ada minimal 1 item
+    const mainForm = document.getElementById('mainForm');
+    mainForm.addEventListener('submit', function(e) {
+        const items = document.querySelectorAll('#itemsContainer .card');
+        if (items.length === 0) {
+            e.preventDefault();
+            alert('Minimal harus ada 1 item untuk procurement ini!');
+            return false;
+        }
     });
+});
 </script>
 
 <script>
@@ -221,97 +276,83 @@ document.addEventListener("DOMContentLoaded", function () {
     function createItemCard() {
         itemIndex++;
 
-        return `
-        <div class="card p-3 mb-3 shadow-sm" style="border-radius:12px;">
-            <h5><strong>Item ${itemIndex}</strong></h5>
+        const card = document.createElement('div');
+        card.className = 'card p-3 mb-3 shadow-sm position-relative';
+        card.style.borderRadius = '12px';
+        card.dataset.itemId = itemIndex;
+
+        card.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0"><strong>Item ${itemIndex}</strong></h6>
+                <button type="button" class="btn-remove-item" onclick="removeItem(${itemIndex})">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
 
             <div class="mb-2">
-                <label class="form-label">Nama Item*</label>
-                <input type="text" name="items[${itemIndex}][item_name]" class="form-control">
+                <label class="form-label">Nama Item <span class="text-danger">*</span></label>
+                <input type="text" name="items[${itemIndex}][item_name]" class="form-control" required>
             </div>
 
             <div class="mb-2">
                 <label class="form-label">Deskripsi</label>
-                <textarea name="items[${itemIndex}][description]" class="form-control" rows="3"></textarea>
+                <textarea name="items[${itemIndex}][description]" class="form-control" rows="2"></textarea>
             </div>
 
             <div class="row">
-                <div class="col-md-6 mb-2">
-                    <label class="form-label">Jumlah*</label>
-                    <input type="number" name="items[${itemIndex}][quantity]" class="form-control">
+                <div class="col-6 mb-2">
+                    <label class="form-label">Jumlah <span class="text-danger">*</span></label>
+                    <input type="number" name="items[${itemIndex}][quantity]" class="form-control item-quantity" data-index="${itemIndex}" min="1" required>
                 </div>
-                <div class="col-md-6 mb-2">
-                    <label class="form-label">Unit*</label>
-                    <input type="text" name="items[${itemIndex}][unit]" class="form-control">
+                <div class="col-6 mb-2">
+                    <label class="form-label">Unit <span class="text-danger">*</span></label>
+                    <input type="text" name="items[${itemIndex}][unit]" class="form-control" placeholder="pcs, kg, dll" required>
                 </div>
             </div>
 
             <div class="row">
-                <div class="col-md-6 mb-2">
-                    <label class="form-label">Harga Estimasi*</label>
-                    <input type="number" name="items[${itemIndex}][estimated_price]" class="form-control">
+                <div class="col-6 mb-2">
+                    <label class="form-label">Harga Estimasi <span class="text-danger">*</span></label>
+                    <input type="number" name="items[${itemIndex}][estimated_price]" class="form-control item-price" data-index="${itemIndex}" min="0" required>
                 </div>
-                <div class="col-md-6 mb-2">
-                    <label class="form-label">Harga Total*</label>
-                    <input type="number" name="items[${itemIndex}][total_price]" class="form-control" readonly>
+                <div class="col-6 mb-2">
+                    <label class="form-label">Harga Total</label>
+                    <input type="number" name="items[${itemIndex}][total_price]" class="form-control item-total" data-index="${itemIndex}" readonly>
                 </div>
             </div>
-        </div>`;
-    }
+        `;
 
-    btnAdd.addEventListener("click", () => {
-        container.innerHTML += createItemCard();
-    });
-});
-</script>
+        container.appendChild(card);
 
-@endpush
+        // Add event listeners untuk kalkulasi otomatis
+        const quantityInput = card.querySelector('.item-quantity');
+        const priceInput = card.querySelector('.item-price');
+        const totalInput = card.querySelector('.item-total');
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Ambil semua project dan jumlah procurement sudah ada (dari server)
-    // Data ini di-render server-side ke JS object
-    const projectsData = {
-        @foreach($projects as $p)
-            "{{ $p->project_code }}": {{ $p->procurements_count ?? 0 }},
-        @endforeach
-    };
-
-    const projectSelect = document.querySelector('select[name="project_code"]');
-    const codeInput = document.getElementById('code_procurement');
-
-    function padSeq(n) {
-        return String(n).padStart(2, '0'); // 01, 02, ...
-    }
-
-    function generateSuggestedCode(projectCode) {
-        // gunakan count (jumlah procurement yang sudah ada) + 1 => sequence
-        const count = projectsData[projectCode] ?? 0;
-        const seq = padSeq(count + 1);
-        // format: PROJECTCODE-01  (ubah format jika mau PROJECTCODE01 atau lainnya)
-        return `${projectCode}-${seq}`;
-    }
-
-    if (projectSelect) {
-        // ketika load, jika sudah ada value selected (old input), generate suggestion
-        const initialProject = projectSelect.value;
-        if (initialProject && !codeInput.value) {
-            codeInput.value = generateSuggestedCode(initialProject);
+        function calculateTotal() {
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const price = parseFloat(priceInput.value) || 0;
+            totalInput.value = quantity * price;
         }
 
-        projectSelect.addEventListener('change', function() {
-            const pc = this.value;
-            if (!pc) {
-                codeInput.value = '';
-                return;
-            }
-            codeInput.value = generateSuggestedCode(pc);
-        });
+        quantityInput.addEventListener('input', calculateTotal);
+        priceInput.addEventListener('input', calculateTotal);
     }
 
-    // jika form di-edit (procurement sudah ada), biarkan code existing (readonly)
+    // Fungsi untuk menghapus item
+    window.removeItem = function(index) {
+        const card = container.querySelector(`[data-item-id="${index}"]`);
+        if (card) {
+            card.remove();
+        }
+    };
+
+    btnAdd.addEventListener("click", () => {
+        createItemCard();
+    });
+
+    // Tambah 1 item default saat halaman load
+    createItemCard();
 });
 </script>
 @endpush
-

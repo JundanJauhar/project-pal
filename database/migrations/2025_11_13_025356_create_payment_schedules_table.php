@@ -21,7 +21,7 @@ return new class extends Migration
             $table->date('due_date')->nullable();
             $table->date('payment_date')->nullable();
 
-            $table->enum('status', ['pending', 'paid', 'verified'])->default('pending');
+            $table->enum('status', ['pending', 'paid', 'verified',  'verified_accounting', 'verified_treasury', 'cancelled', 'rejected'])->default('pending');
 
             $table->unsignedBigInteger('verified_by_accounting')->nullable();
             $table->unsignedBigInteger('verified_by_treasury')->nullable();

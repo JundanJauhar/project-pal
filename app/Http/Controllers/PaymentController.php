@@ -15,13 +15,52 @@ class PaymentController extends Controller
     /**
      * Display payment schedules
      */
-    public function index()
+    public function index(Request $request)
     {
-        $payments = PaymentSchedule::with(['project', 'contract'])
-            ->orderBy('due_date', 'desc')
-            ->paginate(20);
-
-        return view('payments.index', compact('payments'));
+        $query = PaymentSchedule::with(['project', 'contract']);
+        
+        // Filter berdasarkan pencarian
+        if ($request->has('q') && $request->q) {
+            $search = $request->q;
+            $query->whereHas('project', function($q) use ($search) {
+                $q->where('code_project', 'like', "%{$search}%")
+                  ->orWhere('name_project', 'like', "%{$search}%");
+            });
+        }
+        
+        // Filter berdasarkan status
+        if ($request->has('status') && $request->status) {
+            $query->where('status', $request->status);
+        }
+        
+        // Filter berdasarkan tipe pembayaran
+        if ($request->has('type') && $request->type) {
+            $query->where('payment_type', $request->type);
+        }
+        
+        // Pagination
+        $payments = $query->orderBy('due_date', 'asc')->paginate(15);
+        
+        // Hitung statistik untuk cards
+        // Card 1: Perlu Verifikasi Accounting (pending) - semua role
+        $pendingAccountingCount = PaymentSchedule::where('status', 'pending')->count();
+        
+        // Card 2: Perlu Dibayar Treasury (verified_accounting) - hidden untuk accounting
+        $needPaymentCount = PaymentSchedule::where('status', 'verified_accounting')->count();
+        
+        // Card 3: Sudah Diverifikasi Accounting - hidden untuk treasury
+        $verifiedAccountingCount = PaymentSchedule::whereIn('status', ['verified_accounting', 'verified_treasury'])->count();
+        
+        // Card 4: Sudah Terbayar (paid) - semua role
+        $paidCount = PaymentSchedule::where('status', 'paid')->count();
+        
+        return view('payments.index', compact(
+            'payments',
+            'pendingAccountingCount',
+            'needPaymentCount',
+            'verifiedAccountingCount',
+            'paidCount'
+        ));
     }
 
     /**
@@ -82,7 +121,9 @@ class PaymentController extends Controller
             'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
-        DB::transaction(function () use ($payment, $validated, $request) {
+        try {
+            DB::beginTransaction();
+
             $attachmentPath = null;
             if ($request->hasFile('attachment')) {
                 $attachmentPath = $request->file('attachment')->store('payment_documents', 'public');
@@ -91,7 +132,7 @@ class PaymentController extends Controller
             $updateData = [
                 'verified_by_accounting' => Auth::id(),
                 'verified_at_accounting' => now(),
-                'notes' => $validated['notes'],
+                'notes' => $validated['notes'] ?? 'Verified by accounting',
             ];
 
             if ($attachmentPath) {
@@ -101,19 +142,33 @@ class PaymentController extends Controller
             if ($validated['action'] === 'approve') {
                 $updateData['status'] = 'verified_accounting';
 
+                // Update payment
+                $payment->update($updateData);
+
                 // Notify Treasury for LC/TT opening
                 $this->notifyTreasury($payment, 'Dokumen pembayaran telah diverifikasi Accounting');
             } else {
                 $updateData['status'] = 'rejected';
+                $payment->update($updateData);
             }
 
-            $payment->update($updateData);
-        });
+            DB::commit();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Verifikasi accounting berhasil'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Verifikasi accounting berhasil'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            \Log::error('Accounting verification failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memverifikasi: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -137,16 +192,21 @@ class PaymentController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($payment, $validated) {
+        try {
+            DB::beginTransaction();
+
             $updateData = [
                 'verified_by_treasury' => Auth::id(),
                 'verified_at_treasury' => now(),
-                'notes' => $validated['notes'],
+                'notes' => $validated['notes'] ?? 'Payment processed by treasury',
             ];
 
             if ($validated['action'] === 'approve') {
                 $updateData['status'] = 'paid';
                 $updateData['payment_date'] = $validated['payment_date'];
+
+                // Update payment
+                $payment->update($updateData);
 
                 // Update project status if final payment
                 if ($payment->payment_type === 'final') {
@@ -154,15 +214,26 @@ class PaymentController extends Controller
                 }
             } else {
                 $updateData['status'] = 'cancelled';
+                $payment->update($updateData);
             }
 
-            $payment->update($updateData);
-        });
+            DB::commit();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Verifikasi treasury berhasil'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Verifikasi treasury berhasil'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            \Log::error('Treasury verification failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memverifikasi: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -243,18 +314,34 @@ class PaymentController extends Controller
      */
     private function notifyTreasury($payment, $message)
     {
+        // Load project relation if not loaded
+        if (!$payment->relationLoaded('project')) {
+            $payment->load('project');
+        }
+
+        // Get treasury users using user_id as primary key
         $treasuryUsers = \App\Models\User::where('roles', 'treasury')->get();
 
+        if ($treasuryUsers->isEmpty()) {
+            \Log::warning('No treasury users found for notification');
+            return;
+        }
+
         foreach ($treasuryUsers as $user) {
-            Notification::create([
-                'user_id' => $user->id,
-                'sender_id' => Auth::id(),
-                'type' => 'payment_verification',
-                'title' => 'Verifikasi Pembayaran',
-                'message' => $message . ' - Proyek: ' . $payment->project->name_project,
-                'reference_type' => 'App\Models\PaymentSchedule',
-                'reference_id' => $payment->payment_schedule_id,
-            ]);
+            try {
+                Notification::create([
+                    'user_id' => $user->user_id, // Use user_id consistently
+                    'sender_id' => Auth::id(),
+                    'type' => 'payment_verification',
+                    'title' => 'Verifikasi Pembayaran',
+                    'message' => $message . ' - Proyek: ' . ($payment->project->name_project ?? 'N/A'),
+                    'reference_type' => 'App\Models\PaymentSchedule',
+                    'reference_id' => $payment->payment_schedule_id,
+                ]);
+            } catch (\Exception $e) {
+                // Log error but don't stop the main process
+                \Log::error('Failed to create notification for user ' . $user->user_id . ': ' . $e->getMessage());
+            }
         }
     }
 }

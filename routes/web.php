@@ -100,10 +100,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])->name('material-arrival');
         Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])->name('vendor.kelola');
         Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])->name('vendor.form');
-        Route::post('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
+        Route::get('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
         Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])->name('vendor.detail');
         Route::put('/vendor/update/{id_vendor}', [SupplyChainController::class, 'updateVendor'])->name('vendor.update');
-        Route::get('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
+        Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])->name('vendor.simpan');
     });
 
     Route::prefix('payments')->name('payments.')->group(function () {

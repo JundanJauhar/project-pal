@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -46,6 +45,22 @@ class User extends Authenticatable
 
     public function procurementProgress(): HasMany
     {
-        return $this->hasMany(ProcurementProgress::class, 'user_id');
+        return $this->hasMany(ProcurementProgress::class, 'user_id', 'user_id');
+    }
+
+    /**
+     * Get all notifications for the user
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class, 'user_id', 'user_id');
+    }
+
+    /**
+     * Get notifications sent by this user
+     */
+    public function sentNotifications(): HasMany
+    {
+        return $this->hasMany(Notification::class, 'sender_id', 'user_id');
     }
 }

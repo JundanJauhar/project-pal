@@ -84,11 +84,6 @@
         background-color: #003d82;
     }
 
-    .card-header {
-        background: #003d82;
-        color: white;
-    }
-
     .vendor-status {
         padding: 5px 10px;
         border-radius: 5px;
@@ -110,24 +105,113 @@
         background-color: #FFBB00;
         color: black;
     }
+
+        .vendor-table thead th {
+        padding: 14px 6px;
+        border-bottom: 2px solid #C9C9C9;
+        font-size: 14px;
+        text-transform: uppercase;
+        color: #555;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .vendor-table tbody tr:hover {
+        background: #EFEFEF;
+    }
+
+    .vendor-table tbody td {
+        padding: 14px 6px;
+        border-bottom: 1px solid #DFDFDF;
+        font-size: 15px;
+        color: #333;
+        text-align: center;
+    }
+
+    .vendor-table-wrapper {
+        /* background: #F6F6F6; */
+        padding: 25px;
+        border-radius: 14px;
+        border: 1px solid #E0E0E0;
+        margin-top: 20px;
+    }
+
+    .vendor-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+
+    /* Title (mirip Payment) */
+    .vendor-table-title {
+        font-size: 26px;
+        font-weight: 700;
+        margin-bottom: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Filter wrapper */
+    .filters-wrap {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    /* Search box styling */
+    .vendor-search-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #F0F0F0;
+        border-radius: 25px;
+        padding: 6px 12px;
+        width: 240px;
+        border: 1px solid #ddd;
+        font-size: 14px;
+    }
+    .vendor-search-box input {
+        border: none;
+        background: transparent;
+        width: 100%;
+        outline: none;
+        font-size: 14px;
+    }
+    .vendor-search-box i {
+        font-size: 14px;
+        color: #777;
+    }
+
+    /* Filter selects */
+    .filter-select {
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .tambah .btn {
+        background: #003d82;
+        border-color: #003d82;
+    }
+
+    .tambah .btn:hover{
+        background: #002e5c;
+        border-color: #002e5c;
+    }
 </style>
 @endpush
 
 @section('content')
-
-<div class="mb-4 px-4">
-    <a href="{{ route('supply-chain.dashboard') }}" class="text-decoration-none text-primary" wire:navigate>
-
-        <h4><i class="bi bi-arrow-left"></i> </h4>
-    </a>
-</div>
 <div class="container-fluid px-4">
 
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="mb-1">Kelola Vendor</h2>
-            <p class="text-muted mb-0">Kelola dan pilih vendor untuk pengadaan material</p>
         </div>
     </div>
 
@@ -208,30 +292,26 @@
         </form>
 
         <!-- Tambah Vendor -->
-        <div>
+        <div class="tambah col-md-2">
             @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
-            <a href="{{ route('supply-chain.vendor.form', ['redirect' => 'kelola']) }}" class="btn btn-primary" wire:navigate>
-                <i class="bi bi-plus-circle"></i> Tambah Vendor Baru
+            <a href="{{ route('supply-chain.vendor.form', ['redirect' => 'kelola']) }}" class="btn btn-primary w-100 btn-custom" wire:navigate>
+                <i class="bi bi-plus-circle"></i> Tambah
             </a>
             @endif
         </div>
     </div>
 
     <!-- Vendors Table -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        Daftar Vendor
-                    </h5>
-                </div>
-                <div class="card-body p-0">
+    <div class="vendor-table-wrapper">
+        <div class="card-header">
+            <div class="vendor-table-title">
+                <span>Daftar Vendor</span>
+            </div>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                        <table class="vendor-table">
+                            <thead>
                                 <tr>
-                                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">ID Vendor</th>
+                                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">ID Vendor</th>
                                     <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Vendor</th>
                                     <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Alamat</th>
                                     <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Kontak</th>
@@ -245,7 +325,7 @@
                             <tbody id="vendorTableBody">
                                 @forelse($vendors as $vendor)
                                 <tr>
-                                    <td style="padding: 12px 8px; text-align: left;"><strong>{{ $vendor->id_vendor }}</strong></td>
+                                    <td style="padding: 12px 8px; text-align: center;"><strong>{{ $vendor->id_vendor }}</strong></td>
                                     <td style="padding: 12px 8px; text-align: left;">{{ $vendor->name_vendor }}</td>
                                     <td style="padding: 12px 8px; text-align: left;">{{ Str::limit($vendor->address ?? '-', 30) }}</td>
                                     <td style="padding: 12px 8px; text-align: left;">{{ $vendor->phone_number ?? '-' }}</td>
@@ -303,11 +383,8 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
         </div>
     </div>
-
 </div>
 
 @endsection

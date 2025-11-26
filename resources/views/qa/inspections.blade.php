@@ -13,28 +13,46 @@
 }
 .qa-card {
     flex: 1;
-    padding: 22px;
+    padding: 18px 20px;
     border-radius: 12px;
     background: #F4F4F4;
     border: 1px solid #E0E0E0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
 }
-.qa-card h6 { color: #676767; font-size: 14px; margin-bottom: 5px; }
-.qa-card h3 { font-weight: 700; font-size: 32px; }
+.qa-card-inner{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.qa-card h6 { color: #676767; font-size: 14px; margin-bottom: 6px; }
+.qa-card h3 { font-weight: 700; font-size: 30px; margin:0; }
 
 .qa-card.blue   { border-left: 5px solid #1E90FF; }
 .qa-card.yellow { border-left: 5px solid #F2C94C; }
 .qa-card.green  { border-left: 5px solid #27AE60; }
 .qa-card.red    { border-left: 5px solid #EB5757; }
+.qa-card.gray   { border-left: 5px solid #9E9E9E; }
+
+.qa-card-icon{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#ffffff;
+    box-shadow:0 2px 4px rgba(0,0,0,0.08);
+    font-size:20px;
+    color:#555;
+}
 
 /* ===== TABLE WRAPPER ===== */
 .qa-table-wrapper {
-    background: #F6F6F6;
     padding: 25px;
     border-radius: 14px;
-    border: 1px solid #E0E0E0;
+    /* border: 1px solid #E0E0E0; */
+    box-shadow: 0 8px 12px rgba(0,0,0,0.12);
+    background: #FFFFFF;
+    margin-top: 60px;
 }
 
 /* Title */
@@ -118,14 +136,17 @@
 .priority-low    { color: #A9A9A9; font-weight: bold; }
 
 /* INSPECTION STATUS */
-.status-pass  { color: #27AE60; font-weight: bold; }
-.status-fail  { color: #D60000; font-weight: bold; }
-.status-wait  { color: #888; font-weight: bold; }
-.status-inprogress { color: #F2C94C; font-weight: bold; }
+.status-pass       { color: #27AE60; font-weight: bold; }
+.status-fail       { color: #D60000; font-weight: bold; }
+.status-wait       { color: #888;    font-weight: bold; }
+.status-inprogress { color: #1E90FF; font-weight: bold; }
 
 .status-link { text-decoration: none; font-weight: bold; }
 
 /* responsive tweaks */
+@media (max-width: 1100px) {
+    .qa-topcards { flex-wrap: wrap; }
+}
 @media (max-width: 900px) {
     .qa-topcards { flex-direction: column; }
     .filters-wrap { flex-direction: column; align-items:flex-end; gap:8px; }
@@ -135,31 +156,72 @@
 
 @section('content')
 
-{{-- ===== TOP CARDS (modified order) ===== --}}
+{{-- ===== TOP CARDS ===== --}}
 <div class="qa-topcards">
+
+    {{-- Total Pengadaan --}}
+    <div class="qa-card gray">
+        <div class="qa-card-inner">
+            <div>
+                <h6>Total Pengadaan</h6>
+                <h3>{{ $total ?? $totalProcurements ?? 0 }}</h3>
+            </div>
+            <div class="qa-card-icon">
+                <i class="bi bi-clipboard2-data"></i>
+            </div>
+        </div>
+    </div>
 
     {{-- Butuh Inspeksi --}}
     <div class="qa-card yellow">
-        <h6>Butuh Inspeksi</h6>
-        <h3>{{ $butuhInspeksiCount ?? 0 }}</h3>
+        <div class="qa-card-inner">
+            <div>
+                <h6>Butuh Inspeksi</h6>
+                <h3>{{ $butuh ?? $butuhInspeksiCount ?? 0 }}</h3>
+            </div>
+            <div class="qa-card-icon">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+        </div>
     </div>
 
     {{-- Lolos Inspeksi --}}
     <div class="qa-card green">
-        <h6>Lolos Inspeksi</h6>
-        <h3>{{ $lolosCount ?? 0 }}</h3>
+        <div class="qa-card-inner">
+            <div>
+                <h6>Lolos Inspeksi</h6>
+                <h3>{{ $lolos ?? $lolosCount ?? 0 }}</h3>
+            </div>
+            <div class="qa-card-icon">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+        </div>
     </div>
 
     {{-- Sedang Proses Inspeksi --}}
     <div class="qa-card blue">
-        <h6>Sedang Proses Inspeksi</h6>
-        <h3>{{ $sedangProsesCount ?? 0 }}</h3>
+        <div class="qa-card-inner">
+            <div>
+                <h6>Sedang Proses Inspeksi</h6>
+                <h3>{{ $sedang ?? $sedangProsesCount ?? 0 }}</h3>
+            </div>
+            <div class="qa-card-icon">
+                <i class="bi bi-arrow-repeat"></i>
+            </div>
+        </div>
     </div>
 
-    {{-- Tidak Lolos --}}
+    {{-- Tidak Lolos Inspeksi --}}
     <div class="qa-card red">
-        <h6>Tidak Lolos Inspeksi</h6>
-        <h3>{{ $gagalCount ?? 0 }}</h3>
+        <div class="qa-card-inner">
+            <div>
+                <h6>Tidak Lolos Inspeksi</h6>
+                <h3>{{ $gagal ?? $gagalCount ?? 0 }}</h3>
+            </div>
+            <div class="qa-card-icon">
+                <i class="bi bi-x-circle-fill"></i>
+            </div>
+        </div>
     </div>
 
 </div>
@@ -170,13 +232,15 @@
     <div class="qa-table-title">
         <span>Daftar Pengadaan</span>
 
-        <form method="GET" style="margin:0;">
+        <!-- <form method="GET" style="margin:0;">
             <div class="filters-wrap">
-                <div class="qa-search-box" title="Cari kode atau nama pengadaan">
-                    <input type="text" name="q" value="{{ request('q') }}" placeholder="Cari..." />
+                {{-- Search live (client-side) --}}
+                <div class="qa-search-box" title="Cari project atau nama pengadaan">
+                    <input type="text" id="searchInput" name="q" value="{{ request('q') }}" placeholder="Cari..." />
                     <i class="bi bi-search"></i>
                 </div>
 
+                {{-- Prioritas --}}
                 <select name="priority" class="filter-select" onchange="this.form.submit()">
                     <option value="">Semua Prioritas</option>
                     <option value="tinggi" {{ request('priority') === 'tinggi' ? 'selected' : '' }}>Tinggi</option>
@@ -184,31 +248,30 @@
                     <option value="rendah" {{ request('priority') === 'rendah' ? 'selected' : '' }}>Rendah</option>
                 </select>
 
+                {{-- Status Inspeksi --}}
                 <select name="result" class="filter-select" onchange="this.form.submit()">
                     <option value="">Semua Hasil Inspeksi</option>
-                    <option value="passed" {{ request('result') === 'passed' ? 'selected' : '' }}>Lolos</option>
-                    <option value="in_progress" {{ request('result') === 'in_progress' ? 'selected' : '' }}>Sedang Proses</option>
-                    <option value="failed" {{ request('result') === 'failed' ? 'selected' : '' }}>Tidak Lolos</option>
-                    <option value="not_inspected" {{ request('result') === 'not_inspected' ? 'selected' : '' }}>Belum Diinspeksi</option>
+                    <option value="not_inspected" {{ request('result') === 'not_inspected' ? 'selected' : '' }}>Butuh Inspeksi</option>
+                    <option value="in_progress"   {{ request('result') === 'in_progress'   ? 'selected' : '' }}>Sedang Proses</option>
+                    <option value="passed"        {{ request('result') === 'passed'        ? 'selected' : '' }}>Lolos</option>
+                    <option value="failed"        {{ request('result') === 'failed'        ? 'selected' : '' }}>Tidak Lolos</option>
                 </select>
-
-                <button type="submit" class="filter-select" style="cursor:pointer;">Terapkan</button>
             </div>
-        </form>
+        </form> -->
     </div>
 
     <div class="table-responsive">
         <table class="qa-table">
             <thead>
                 <tr>
-                    <th>Kode</th>
-                    <th>Nama Pengadaan</th>
-                    <th>Department</th>
-                    <th>Vendor</th>
-                    <th>Tgl Mulai</th>
-                    <th>Tgl Selesai</th>
-                    <th>Prioritas</th>
-                    <th>Status Inspeksi</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Nama Pengadaan</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tgl Mulai</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tgl Selesai</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status Inspeksi</th>
                 </tr>
             </thead>
 
@@ -216,41 +279,58 @@
             @forelse($procurements as $proc)
 
                 @php
-                    // Collect all items via requestProcurements
                     $items = $proc->requestProcurements->flatMap->items ?? collect();
-                    // Gather all inspection reports linked to those items
-                    $reports = $items->flatMap->inspectionReports;
+                    $totalItems = $items->count();
 
-                    // Determine status for row:
-                    if ($reports->count() === 0) {
+                    if ($totalItems === 0) {
                         $statusText = "BELUM DIINSPEKSI";
                         $statusClass = "status-wait";
-                    } elseif ($reports->contains('result', 'failed')) {
-                        $statusText = "TIDAK LOLOS";
-                        $statusClass = "status-fail";
-                    } elseif ($reports->contains('result', 'passed') && !$reports->contains('result', 'failed') && $items->count() > 0 && ($reports->count() >= $items->count())) {
-                        // crude check: if reports exist and none failed and number of reports >= items => treat as LOLOS
-                        $statusText = "LOLOS";
-                        $statusClass = "status-pass";
-                    } elseif ($reports->contains('result', 'passed')) {
-                        $statusText = "SEDANG PROSES";
-                        $statusClass = "status-inprogress";
                     } else {
-                        // fallback
-                        $statusText = "SEDANG PROSES";
-                        $statusClass = "status-inprogress";
+                        $latestResults = $items->map(function($it){
+                            $latest = $it->inspectionReports->sortByDesc('inspection_date')->first();
+                            return $latest?->result ?? null;
+                        });
+
+                        $inspectedCount = $latestResults->filter(fn($r)=>!is_null($r))->count();
+
+                        if ($inspectedCount === 0) {
+                            $statusText = "BELUM DIINSPEKSI";
+                            $statusClass = "status-wait";
+                        } elseif ($inspectedCount < $totalItems) {
+                            $statusText = "SEDANG PROSES";
+                            $statusClass = "status-inprogress";
+                        } else {
+                            if ($latestResults->every(fn($r)=>$r === 'passed')) {
+                                $statusText = "LOLOS";
+                                $statusClass = "status-pass";
+                            } elseif ($latestResults->every(fn($r)=>$r === 'failed')) {
+                                $statusText = "TIDAK LOLOS";
+                                $statusClass = "status-fail";
+                            } else {
+                                $statusText = "SEDANG PROSES";
+                                $statusClass = "status-inprogress";
+                            }
+                        }
                     }
                 @endphp
 
                 <tr>
-                    <td>{{ $proc->code_procurement }}</td>
-                    <td style="text-align:left;">{{ $proc->name_procurement }}</td>
-                    <td>{{ $proc->department->department_name ?? '-' }}</td>
-                    <td>{{ $proc->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</td>
-                    <td>{{ $proc->start_date?->format('d/m/Y') ?? '-' }}</td>
-                    <td>{{ $proc->end_date?->format('d/m/Y') ?? '-' }}</td>
+                    {{-- Project --}}
+                    <td style="padding: 12px 8px; text-align: center;">
+                        <strong>{{ optional($proc->project)->project_code ?? '-' }}</strong>
+                    </td>
 
-                    <td>
+                    {{-- Nama Pengadaan --}}
+                    <td style="padding: 12px 8px; text-align: center;">
+                        {{ $proc->name_procurement }}
+                    </td>
+
+                    <td style="padding: 12px 8px; text-align: center;">{{ $proc->department->department_name ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center;">{{ $proc->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center;">{{ $proc->start_date?->format('d/m/Y') ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center;">{{ $proc->end_date?->format('d/m/Y') ?? '-' }}</td>
+
+                    <td style="padding: 12px 8px; text-align: center;">
                         @php
                             $p = strtolower($proc->priority ?? '');
                             $class = match($p) {
@@ -263,7 +343,7 @@
                         <span class="{{ $class }}">{{ strtoupper($proc->priority ?? '-') }}</span>
                     </td>
 
-                    <td>
+                    <td style="padding: 12px 8px; text-align: center;">
                         <a href="{{ route('qa.detail-approval', ['procurement_id' => $proc->procurement_id]) }}"
                            class="status-link {{ $statusClass }}">
                             {{ $statusText }}
@@ -291,40 +371,34 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // If detail-approval set a localStorage flag after save, update cards on this page
-    const update = localStorage.getItem('inspectionUpdate');
-    if (update) {
-        try {
-            const data = JSON.parse(update);
+document.addEventListener('DOMContentLoaded', function () {
+    // ==== LIVE SEARCH (client-side) ====
+    const searchInput = document.getElementById('searchInput');
+    const rows = Array.from(document.querySelectorAll('.qa-table tbody tr'));
 
-            // update card hijau (LOLOS)
-            const cardLolos = document.querySelector('.qa-card.green h3');
-            if (cardLolos && typeof data.lolos !== 'undefined' && data.lolos !== null) cardLolos.textContent = data.lolos;
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            const term = this.value.toLowerCase();
 
-            // update card merah (TIDAK LOLOS)
-            const cardGagal = document.querySelector('.qa-card.red h3');
-            if (cardGagal && typeof data.gagal !== 'undefined' && data.gagal !== null) cardGagal.textContent = data.gagal;
+            rows.forEach(row => {
+                const projectCell = row.querySelector('[data-col="project"]');
+                const nameCell    = row.querySelector('[data-col="name"]');
 
-            // update card kuning (BUTUH INSPEKSI)
-            const cardButuh = document.querySelector('.qa-card.yellow h3');
-            if (cardButuh && typeof data.butuh !== 'undefined' && data.butuh !== null) {
-                cardButuh.textContent = data.butuh;
-            }
+                const projectText = projectCell ? projectCell.textContent.toLowerCase() : '';
+                const nameText    = nameCell ? nameCell.textContent.toLowerCase() : '';
 
-            // update card biru (SEDANG PROSES)
-            const cardProses = document.querySelector('.qa-card.blue h3');
-            if (cardProses && typeof data.sedang_proses !== 'undefined' && data.sedang_proses !== null) {
-                cardProses.textContent = data.sedang_proses;
-            }
-        } catch (e) {
-            console.warn('inspectionUpdate parse error', e);
-        } finally {
-            // hapus agar tidak update berkali-kali
-            localStorage.removeItem('inspectionUpdate');
-        }
+                if (projectText.includes(term) || nameText.includes(term)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
     }
-});
+
+    // === Hapus mekanisme localStorage lama (kalau masih ada data sisa) ===
+    localStorage.removeItem('inspectionUpdate');
+    });
 </script>
 @endpush
 

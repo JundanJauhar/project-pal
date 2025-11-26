@@ -315,52 +315,6 @@ $procurement4 = \App\Models\Procurement::create([
         // );
 
         /**
-         * PAYMENT SCHEDULES
-         */
-        PaymentSchedule::updateOrCreate(
-            [
-                'project_id' => $project1->project_id,
-                // 'contract_id' => $contract1->contract_id,
-                'payment_type' => 'dp'
-            ], // key untuk check
-            [
-                'amount' => 4350000000,
-                'percentage' => 30,
-                'due_date' => Carbon::now()->subDays(65),
-                'status' => 'paid',
-                'verified_by_treasury' => 3,
-                'verified_by_accounting' => 4,
-                'payment_date' => Carbon::now()->subDays(65),
-            ]
-        );
-
-        PaymentSchedule::create([
-            'project_id' => $project1->project_id,
-            'contract_id' => null,
-            'payment_type' => 'progress',
-            'amount' => 5075000000,
-            'percentage' => 35,
-            'due_date' => Carbon::now()->addDays(15),
-            'status' => 'pending',
-            'verified_by_treasury' => null,
-            'verified_by_accounting' => null,
-            'payment_date' => null,
-        ]);
-
-        PaymentSchedule::create([
-            'project_id' => $project1->project_id,
-            'contract_id' => null,
-            'payment_type' => 'final',
-            'amount' => 5075000000,
-            'percentage' => 35,
-            'due_date' => Carbon::now()->addDays(45),
-            'status' => 'pending',
-            'verified_by_treasury' => null,
-            'verified_by_accounting' => null,
-            'payment_date' => null,
-        ]);
-
-        /**
          * INSPECTION REPORT
          */
         InspectionReport::updateOrCreate(
@@ -417,7 +371,7 @@ $procurement4 = \App\Models\Procurement::create([
         }
 
         // Progress untuk procurement 3 - Baru sampai checkpoint 4 (Evatek)
-        foreach ($checkpoints->take(4) as $index => $checkpoint) {
+        foreach ($checkpoints->take(5) as $index => $checkpoint) {
             \App\Models\ProcurementProgress::create([
                 'procurement_id' => $procurement3->procurement_id,
                 'checkpoint_id' => $checkpoint->point_id,
@@ -498,54 +452,54 @@ $procurement4 = \App\Models\Procurement::create([
             ]
         );
 
-          $project1 = Project::create([
-            'project_code'       => 'W000A01',
-            'project_name'       => 'Pengadaan Barang Tes 1',
-            'description'        => 'Project untuk testing approval - 1',
-            'owner_division_id'  => 1,
-            'priority'           => 'sedang',
-            'start_date'         => Carbon::now()->subDays(2),
-            'end_date'           => Carbon::now()->addDays(20),
-            'status_project'     => 'persetujuan_sekretaris',
-        ]);
+        //   $project1 = Project::create([
+        //     'project_code'       => 'W000A01',
+        //     'project_name'       => 'Pengadaan Barang Tes 1',
+        //     'description'        => 'Project untuk testing approval - 1',
+        //     'owner_division_id'  => 1,
+        //     'priority'           => 'sedang',
+        //     'start_date'         => Carbon::now()->subDays(2),
+        //     'end_date'           => Carbon::now()->addDays(20),
+        //     'status_project'     => 'persetujuan_sekretaris',
+        // ]);
 
-        Procurement::create([
-            'project_id'            => $project1->project_id,
-            'code_procurement'      => $project1->project_code . '-P1',
-            'name_procurement'      => 'Procurement Tes Pertama',
-            'description'           => 'Procurement 1 untuk testing approval',
-            'department_procurement'=> 1,
-            'priority'              => 'sedang',
-            'start_date'            => Carbon::now(),
-            'end_date'              => Carbon::now()->addDays(7),
-            'status_procurement'    => 'submitted',
-        ]);
+        // Procurement::create([
+        //     'project_id'            => $project1->project_id,
+        //     'code_procurement'      => $project1->project_code . '-P1',
+        //     'name_procurement'      => 'Procurement Tes Pertama',
+        //     'description'           => 'Procurement 1 untuk testing approval',
+        //     'department_procurement'=> 1,
+        //     'priority'              => 'sedang',
+        //     'start_date'            => Carbon::now(),
+        //     'end_date'              => Carbon::now()->addDays(7),
+        //     'status_procurement'    => 'submitted',
+        // ]);
 
         // -------------------------
         // DATA 2
         // -------------------------
-        $project2 = Project::create([
-            'project_code'       => 'W000A02',
-            'project_name'       => 'Pengadaan Barang Tes 2',
-            'description'        => 'Project untuk testing approval - 2',
-            'owner_division_id'  => 1,
-            'priority'           => 'tinggi',
-            'start_date'         => Carbon::now()->subDays(1),
-            'end_date'           => Carbon::now()->addDays(25),
-            'status_project'     => 'persetujuan_sekretaris',
-        ]);
+        // $project2 = Project::create([
+        //     'project_code'       => 'W000A02',
+        //     'project_name'       => 'Pengadaan Barang Tes 2',
+        //     'description'        => 'Project untuk testing approval - 2',
+        //     'owner_division_id'  => 1,
+        //     'priority'           => 'tinggi',
+        //     'start_date'         => Carbon::now()->subDays(1),
+        //     'end_date'           => Carbon::now()->addDays(25),
+        //     'status_project'     => 'persetujuan_sekretaris',
+        // ]);
 
-        Procurement::create([
-            'project_id'            => $project2->project_id,
-            'code_procurement'      => $project2->project_code . '-P1',
-            'name_procurement'      => 'Procurement Tes Kedua',
-            'description'           => 'Procurement 2 untuk testing approval',
-            'department_procurement'=> 1,
-            'priority'              => 'tinggi',
-            'start_date'            => Carbon::now(),
-            'end_date'              => Carbon::now()->addDays(10),
-            'status_procurement'    => 'submitted',
-        ]);
+        // Procurement::create([
+        //     'project_id'            => $project2->project_id,
+        //     'code_procurement'      => $project2->project_code . '-P1',
+        //     'name_procurement'      => 'Procurement Tes Kedua',
+        //     'description'           => 'Procurement 2 untuk testing approval',
+        //     'department_procurement'=> 1,
+        //     'priority'              => 'tinggi',
+        //     'start_date'            => Carbon::now(),
+        //     'end_date'              => Carbon::now()->addDays(10),
+        //     'status_procurement'    => 'submitted',
+        // ]);
 
 
         Project::updateOrCreate(
