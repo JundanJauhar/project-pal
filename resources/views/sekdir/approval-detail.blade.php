@@ -171,7 +171,6 @@
    <div class="procurement-header">
     {{-- Header procurement --}}
     {{-- Detail Pengadaan --}}
-    <h5 class="section-title">Detail Pengadaan</h5>
     {{-- REVIEW DOCUMENT (FORM UTAMA) --}}
     <h5 class="section-title mt-4">Keputusan Approval Sekretaris Direksi</h5>
 

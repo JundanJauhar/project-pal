@@ -35,7 +35,7 @@ class SekdirController extends Controller
     }
 
     // ...
-public function approval()
+    public function approval()
 {
     // Cek Status Pengadaan yang Sedang di Checkpoint 5 (Pengesahan Kontrak)
     // Hanya tampilkan yang status progressnya 'in_progress' di checkpoint 5
@@ -46,7 +46,7 @@ public function approval()
     ])
     ->whereHas('procurementProgress', function ($q) {
         // Filter ketat: Hanya yang sedang aktif di Checkpoint 5
-        $q->where('status', 'in_progress')->where('checkpoint_id', 5);
+        $q->where('status', 'in_progress')->where('checkpoint_id', 4);
     })
     ->orderBy('created_at', 'desc')
     ->get();
@@ -62,36 +62,36 @@ public function approval()
         
         // Disetujui (Approved): Asumsi status 'approved' di tabel Procurement/Project
         // Lebih baik hitung yang sudah selesai di checkpoint 5
-        'approved' => ProcurementProgress::where('checkpoint_id', 5)->where('status', 'completed')->count(),
+        'approved' => ProcurementProgress::where('checkpoint_id', 4)->where('status', 'completed')->count(),
         
         // Ditolak (Rejected):
-        'rejected' => ProcurementProgress::where('checkpoint_id', 5)->where('status', 'rejected')->count(),
+        'rejected' => ProcurementProgress::where('checkpoint_id', 4)->where('status', 'rejected')->count(),
     ];
     
     // TotalProcurements harus sesuai dengan variabel yang digunakan di Blade (dashboard view)
-    $totalProcurements = ProcurementProgress::where('checkpoint_id', 5)->count(); 
+    $totalProcurements = ProcurementProgress::where('checkpoint_id', 4)->count(); 
 
     return view('sekdir.approval', compact('procurements', 'stats', 'totalProcurements'));
 }
 
 
 
-    public function approvals()
-    {
-        $approvals = Project::with(['ownerDivision', 'contracts.vendor'])
-            ->where('status_project', 'persetujuan_sekretaris')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+    // public function approvals()
+    // {
+    //     $approvals = Project::with(['ownerDivision', 'contracts.vendor'])
+    //         ->where('status_project', 'persetujuan_sekretaris')
+    //         ->orderBy('created_at', 'desc')
+    //         ->paginate(10);
 
-        $stats = [
-            'menunggu_total' => Project::where('status_project', 'persetujuan_sekretaris')->count(),
-            'menunggu_hari_ini' => Project::where('status_project', 'persetujuan_sekretaris')
-                ->whereDate('created_at', \Carbon\Carbon::today())
-                ->count(),
-        ];
+    //     $stats = [
+    //         'menunggu_total' => Project::where('status_project', 'persetujuan_sekretaris')->count(),
+    //         'menunggu_hari_ini' => Project::where('status_project', 'persetujuan_sekretaris')
+    //             ->whereDate('created_at', \Carbon\Carbon::today())
+    //             ->count(),
+    //     ];
 
-        return view('sekdir.approvals', compact('approvals', 'stats'));
-    }
+    //     return view('sekdir.approvals', compact('approvals', 'stats'));
+    // }
 
     public function approve(Request $request, $projectId)
     {
@@ -204,8 +204,8 @@ public function approval()
     // ... (Validasi dan pengambilan data) ...
 
     $action = $request->input('action');
-    $sekdirCheckpointId = 5; // Pengesahan Kontrak
-    $nextCheckpointId = 6;   // Pengiriman Material
+    $sekdirCheckpointId = 4; // Pengesahan Kontrak
+    $nextCheckpointId = 5;   // Pengiriman Material
 
     // ... (Update data utama dan firstOrNew progress Checkpoint 5) ...
 
@@ -225,7 +225,7 @@ public function approval()
         $progress->status = 'completed';
         
         // Update status di tabel utama procurements
-        $procurement->status_procurement = 'approved'; 
+        // $procurement->status_procurement = 'approved'; 
         
         // --- LOGIKA MAJU KE CHECKPOINT 6 ---
         // 1. Buat record baru untuk Checkpoint 6 (Pengiriman Material)
