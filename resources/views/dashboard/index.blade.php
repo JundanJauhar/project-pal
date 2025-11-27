@@ -166,6 +166,18 @@
         background: #002e5c;
         border-color: #002e5c;
     }
+
+    .btn-custom {
+        background: #003d82;
+        border-color: #003d82;
+        color: #fff;
+    }
+
+    .btn-custom:hover {
+        background: #002e5c;
+        border-color: #002e5c;
+        color: #fff;
+    }
 </style>
 @endpush
 
@@ -266,7 +278,7 @@
                                 <option value="Verifikasi Dokumen">Verifikasi Dokumen</option>
                                 <option value="Pembayaran">Pembayaran</option>
                                 <option value="completed">Selesai</option>
-                                <option value="rejected">Ditolak</option>
+                                <option value="cancelled">Dibatalkan</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -323,34 +335,37 @@
                         </td>
                         <td style="padding: 12px 8px; text-align: center;">
                             @php
-                                $status = $procurement->auto_status;
-                                $current = $procurement->current_checkpoint;
+                                $status = $procurement->status_procurement;
+                                $currentCheckpoint = $procurement->current_checkpoint;
 
-                                $badgeColor = match($status) {
-                                    'completed' => '#28AC00',
-                                    'in_progress' => '#ECAD02',
-                                    'not_started' => '#555',
-                                    default => '#BD0000'
-                                };
-
-                                $text = match($status) {
-                                    'completed' => 'Selesai',
-                                    'not_started' => 'Belum Dimulai',
-                                    'in_progress' => $current ?? 'Sedang Proses',
-                                    default => $status
-                                };
+                                // Determine badge color and text based on status
+                                if ($status === 'completed') {
+                                    $badgeColor = '#28AC00';
+                                    $text = 'Selesai';
+                                } elseif ($status === 'cancelled') {
+                                    $badgeColor = '#BD0000';
+                                    $text = 'Dibatalkan';
+                                } elseif ($status === 'in_progress') {
+                                    $badgeColor = '#ECAD02';
+                                    // Show current checkpoint name, fallback to 'Sedang Proses'
+                                    $text = $currentCheckpoint ?: 'Sedang Proses';
+                                } else {
+                                    $badgeColor = '#555';
+                                    $text = $status ?: 'N/A';
+                                }
                             @endphp
 
                             <span class="badge"
                                 style="background-color: {{ $badgeColor }};
                                     color:white;
                                     padding:6px 12px;
-                                    font-weight:600;">
+                                    font-weight:600;
+                                    border-radius:6px;">
                                 {{ $text }}
                             </span>
                         </td>
                         <td style="padding: 12px 8px; text-align: center;">
-                            <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary" wire:navigate>
+                            <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary btn-custom" wire:navigate>
                                  Detail
                             </a>
                         </td>
@@ -406,16 +421,24 @@ document.addEventListener('DOMContentLoaded', function () {
     let lastPagination = null;
 
     function getStatusBadge(status, checkpoint) {
-        const statusMap = {
-            'completed': { text: 'Selesai', color: '#28AC00' },
-            'not_started': { text: 'Belum Dimulai', color: '#555' },
-            'in_progress': { text: checkpoint || 'Sedang Proses', color: '#ECAD02' },
-            'rejected': { text: 'Ditolak', color: '#BD0000' }
-        };
+        let badgeColor, text;
+        
+        if (status === 'completed') {
+            badgeColor = '#28AC00';
+            text = 'Selesai';
+        } else if (status === 'cancelled') {
+            badgeColor = '#BD0000';
+            text = 'Dibatalkan';
+        } else if (status === 'in_progress') {
+            badgeColor = '#ECAD02';
+            text = checkpoint || 'Sedang Proses';
+        } else {
+            badgeColor = '#555';
+            text = status || 'N/A';
+        }
 
-        const badge = statusMap[status] || { text: status, color: '#ECAD02' };
-        return `<span class="badge" style="background-color: ${badge.color}; color:white; padding:6px 12px; font-weight:600; border-radius:6px;">
-            ${badge.text}
+        return `<span class="badge" style="background-color: ${badgeColor}; color:white; padding:6px 12px; font-weight:600; border-radius:6px;">
+            ${text}
         </span>`;
     }
 
@@ -451,10 +474,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     </span>
                 </td>
                 <td style="padding: 12px 8px; text-align: center;">
-                    ${getStatusBadge(p.auto_status, p.current_checkpoint)}
+                    ${getStatusBadge(p.status_procurement, p.current_checkpoint)}
                 </td>
                 <td style="padding: 12px 8px; text-align: center;">
-                    <a href="/procurements/${p.procurement_id}" class="btn btn-sm btn-primary">
+                    <a href="/procurements/${p.procurement_id}" class="btn btn-sm btn-primary btn-custom">
                         Detail
                     </a>
                 </td>
