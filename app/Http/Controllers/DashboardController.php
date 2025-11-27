@@ -6,7 +6,6 @@ use App\Models\Checkpoint;
 use App\Models\Project;
 use App\Models\Procurement;
 use App\Models\ProcurementProgress;
-use App\Models\Checkpoint;
 use App\Models\Notification;
 use App\Services\CheckpointTransitionService;
 use Illuminate\Http\Request;
@@ -53,7 +52,7 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        return view('dashboard.index', compact('stats', 'procurements', 'notifications'));
+        return view('dashboard.index', compact('stats', 'procurements', 'notifications', 'checkpoints', 'projects', 'priority'));
     }
 
     /**

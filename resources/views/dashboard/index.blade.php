@@ -257,7 +257,7 @@
                         <div class="col-md-2">
                             <select class="form-select" name="project">
                                 <option value="">Semua Project</option>
-                                 @foreach($projects as $project)
+                                @foreach($projects as $project)
                                 <option value="{{ $project->project_code }}">{{ $project->project_code }}</option>
                                 @endforeach
                                 <!-- <option value="W000301">W000301</option>

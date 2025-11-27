@@ -185,66 +185,66 @@
     </div>
 
     <!-- Table -->
-        <div class="dashboard-table-wrapper">
-            <div class="table-responsive">
-                <table class="dashboard-table">
-                    <thead>
-                        <tr>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode Pengadaan</th>
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Pengadaan</th>
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Department</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        @forelse($procurements as $procurement)
-                        @php
-                            $service = new \App\Services\CheckpointTransitionService($procurement);
-                            $currentCheckpoint = $service->getCurrentCheckpoint();
-                            $currentSequence = $currentCheckpoint?->point_sequence;
-                        @endphp
-                        <tr data-name="{{ strtolower($procurement->name_procurement) }} {{ strtolower($procurement->code_procurement) }}">
-                            <td style="padding: 12px 8px; text-align: center; color: #000;"><strong>{{ $procurement->project->project_code ?? '-' }}</strong></td>
-                            <td style="padding: 12px 8px; text-align: center;  color: #000;"><strong>{{ $procurement->code_procurement }}</strong></td>
-                            <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ Str::limit($procurement->name_procurement, 40) }}</td>
-                            <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ $procurement->department->department_name ?? '-' }}</td>
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                @php
-                                $requestProcurement = $procurement->requestProcurements->first();
-                                $vendor = $requestProcurement?->vendor;
-                                @endphp
+    <div class="dashboard-table-wrapper">
+        <div class="table-responsive">
+            <table class="dashboard-table">
+                <thead>
+                    <tr>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode Pengadaan</th>
+                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Pengadaan</th>
+                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Department</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    @forelse($procurements as $procurement)
+                    @php
+                    $service = new \App\Services\CheckpointTransitionService($procurement);
+                    $currentCheckpoint = $service->getCurrentCheckpoint();
+                    $currentSequence = $currentCheckpoint?->point_sequence;
+                    @endphp
+                    <tr data-name="{{ strtolower($procurement->name_procurement) }} {{ strtolower($procurement->code_procurement) }}">
+                        <td style="padding: 12px 8px; text-align: center; color: #000;"><strong>{{ $procurement->project->project_code ?? '-' }}</strong></td>
+                        <td style="padding: 12px 8px; text-align: center;  color: #000;"><strong>{{ $procurement->code_procurement }}</strong></td>
+                        <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ Str::limit($procurement->name_procurement, 40) }}</td>
+                        <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ $procurement->department->department_name ?? '-' }}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            @php
+                            $requestProcurement = $procurement->requestProcurements->first();
+                            $vendor = $requestProcurement?->vendor;
+                            @endphp
 
-                                {{-- Jika vendor belum dipilih --}}
-                                @if (!$vendor)
+                            {{-- Jika vendor belum dipilih --}}
+                            @if (!$vendor)
 
-                                    {{-- Tampilkan tombol hanya jika berada di checkpoint 4 --}}
-                                    @if ($currentSequence == 4)
-                                        <a href="{{ route('supply-chain.vendor.pilih', $procurement->procurement_id) }}"
-                                        class="btn btn-sm btn-primary" wire:navigate>
-                                            <i class="bi bi-plus-circle"></i> Kelola Vendor
-                                        </a>
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
+                            {{-- Tampilkan tombol hanya jika berada di checkpoint 4 --}}
+                            @if ($currentSequence == 4)
+                            <a href="{{ route('supply-chain.vendor.pilih', $procurement->procurement_id) }}"
+                                class="btn btn-sm btn-primary" wire:navigate>
+                                <i class="bi bi-plus-circle"></i> Kelola Vendor
+                            </a>
+                            @else
+                            <span class="text-muted">-</span>
+                            @endif
 
-                                {{-- Jika vendor sudah dipilih --}}
-                                @else
-                                    {{ $vendor->name_vendor }}
-                                @endif
+                            {{-- Jika vendor sudah dipilih --}}
+                            @else
+                            {{ $vendor->name_vendor }}
+                            @endif
 
-                            </td>
-                            <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->start_date->format('d/m/Y') }}</td>
-                            <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->end_date->format('d/m/Y') }}</td>
-                            <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
-                                <span class="priority-badge priority-{{ strtolower($procurement->priority) }}">
-                                    {{ strtoupper($procurement->priority) }}
-                                </span>
-                            </td>
-                            <!-- <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
+                        </td>
+                        <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->start_date->format('d/m/Y') }}</td>
+                        <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->end_date->format('d/m/Y') }}</td>
+                        <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
+                            <span class="priority-badge priority-{{ strtolower($procurement->priority) }}">
+                                {{ strtoupper($procurement->priority) }}
+                            </span>
+                        </td>
+                        <!-- <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
                                 <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary" wire:navigate>
                                     Detail
                                 </a>
@@ -277,7 +277,7 @@
         const checkpointSelect = document.querySelector('select[name="checkpoint"]');
         const prioritySelect = document.querySelector('select[name="priority"]');
         const projectSelect = document.querySelector('select[name="project"]');
-        const tbody = document.getElementById('procurements-tbody');
+        const tbody = document.getElementById('tableBody');
         const paginationWrap = document.getElementById('procurements-pagination');
 
         if (!searchInput || !checkpointSelect || !prioritySelect || !tbody || !paginationWrap) {
