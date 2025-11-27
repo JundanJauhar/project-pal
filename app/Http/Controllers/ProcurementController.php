@@ -10,6 +10,8 @@ use App\Models\Notification;
 use App\Models\ProcurementProgress;
 use App\Models\RequestProcurement;
 use App\Models\Item;
+use App\Models\Checkpoint;
+use App\Services\CheckpointTransitionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -36,7 +38,7 @@ class ProcurementController extends Controller
 
     /**
      * Store a newly created procurement with items
-     * SAFEST VERSION - Tidak ada hardcoded ENUM values
+     * Automatically complete checkpoint 1 and move to checkpoint 2 (Evatek)
      */
     public function store(Request $request)
     {
@@ -99,7 +101,7 @@ class ProcurementController extends Controller
             // Create procurement
             $procurement = Procurement::create($validated);
 
-            // Create RequestProcurement - TANPA STATUS (gunakan default DB)
+            // Create RequestProcurement
             $requestProcurement = RequestProcurement::create([
                 'procurement_id' => $procurement->procurement_id,
                 'project_id' => $project->project_id ?? null,
@@ -108,10 +110,9 @@ class ProcurementController extends Controller
                 'request_name' => $validated['name_procurement'],
                 'created_date' => Carbon::now(),
                 'deadline_date' => $validated['end_date'],
-                // request_status DIHAPUS - biarkan database set default
             ]);
 
-            // Save items - TANPA STATUS (gunakan default DB)
+            // Save items
             foreach ($request->items as $itemData) {
                 Item::create([
                     'request_procurement_id' => $requestProcurement->request_id,
@@ -122,17 +123,28 @@ class ProcurementController extends Controller
                     'unit' => $itemData['unit'],
                     'unit_price' => $itemData['estimated_price'],
                     'total_price' => $itemData['total_price'],
-                    // status DIHAPUS - biarkan database set default
                 ]);
+            }
+
+            // ========== AUTO CHECKPOINT TRANSITION ==========
+            // Complete Checkpoint 1 (Penawaran Permintaan) and move to Checkpoint 2 (Evatek)
+            $service = new CheckpointTransitionService($procurement);
+            $transitionResult = $service->transition(1, [
+                'notes' => 'Procurement dibuat dan siap untuk evaluasi teknis',
+            ]);
+
+            if (!$transitionResult['success']) {
+                throw new \Exception('Gagal melakukan transisi checkpoint: ' . $transitionResult['message']);
             }
 
             DB::commit();
 
             return redirect()->route('procurements.show', $procurement->procurement_id)
-                ->with('success', 'Procurement berhasil dibuat dengan kode ' . $finalCode);
+                ->with('success', 'Procurement berhasil dibuat dengan kode ' . $finalCode . '. Procurement telah masuk ke tahap Evatek.');
 
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Procurement creation failed: ' . $e->getMessage());
             return back()
                 ->withInput()
                 ->with('error', 'Gagal menyimpan procurement: ' . $e->getMessage());
@@ -149,16 +161,15 @@ class ProcurementController extends Controller
             'department'
         ])->findOrFail($id);
 
-        $checkpoints = \App\Models\Checkpoint::orderBy('point_sequence', 'asc')->get();
+        $checkpoints = Checkpoint::orderBy('point_sequence', 'asc')->get();
 
-        $currentStageIndex = 1;
+        // Get current checkpoint sequence
+        $currentStageIndex = 0;
+        $service = new CheckpointTransitionService($procurement);
+        $currentCheckpoint = $service->getCurrentCheckpoint();
 
-        $latestProgress = $procurement->procurementProgress
-            ->sortByDesc(fn($p) => $p->checkpoint?->point_sequence ?? 0)
-            ->first();
-
-        if ($latestProgress && $latestProgress->checkpoint) {
-            $currentStageIndex = $latestProgress->checkpoint->point_sequence;
+        if ($currentCheckpoint) {
+            $currentStageIndex = $currentCheckpoint->point_sequence;
         }
 
         return view('procurements.show', compact('procurement', 'checkpoints', 'currentStageIndex'));
@@ -216,7 +227,7 @@ class ProcurementController extends Controller
         $project = Project::findOrFail($projectId);
 
         $procurements = $project->procurements()
-            ->with(['department', 'requestProcurements.vendor', 'procurementProgress'])
+            ->with(['department', 'requestProcurements.vendor', 'procurementProgress.checkpoint'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -251,6 +262,10 @@ class ProcurementController extends Controller
             $firstRequest = $p->requestProcurements ? $p->requestProcurements->first() : null;
             $vendor = ($firstRequest && $firstRequest->vendor) ? $firstRequest->vendor->name_vendor : '-';
 
+            $service = new CheckpointTransitionService($p);
+            $currentCheckpoint = $service->getCurrentCheckpoint();
+            $checkpointName = $currentCheckpoint ? $currentCheckpoint->point_name : '-';
+
             return [
                 'procurement_id' => $p->procurement_id,
                 'project_code' => $p->project->project_code ?? '-',
@@ -262,7 +277,7 @@ class ProcurementController extends Controller
                 'vendor_name' => $vendor,
                 'priority' => $p->priority,
                 'status_procurement' => $p->status_procurement,
-                'current_checkpoint' => $p->current_checkpoint, // TAMBAHKAN INI
+                'current_checkpoint' => $checkpointName,
             ];
         });
 

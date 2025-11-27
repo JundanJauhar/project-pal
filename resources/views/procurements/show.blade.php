@@ -50,29 +50,39 @@
         align-items: center;
         text-align: center;
         line-height: 1.2;
+        font-size: 12px;
     }
 
     .timeline-icon {
         width: 45px;
         height: 45px;
         border-radius: 50%;
-        background: #c7e5c6;
-        color: green;
+        background: #e0e0e0;
+        color: #999;
         display: flex;
         justify-content: center;
         align-items: center;
         font-size: 20px;
         margin: auto;
+        font-weight: bold;
     }
 
+    /* Completed State - Hijau */
+    .timeline-step.completed .timeline-icon {
+        background: #28AC00;
+        color: white;
+    }
+
+    /* Active State - Kuning */
     .timeline-step.active .timeline-icon {
         background: #ECAD02;
         color: white;
     }
 
-    .timeline-step.completed .timeline-icon {
-        background: #28AC00;
-        color: white;
+    /* Not Started State - Abu-abu (default) */
+    .timeline-step.not-started .timeline-icon {
+        background: #e0e0e0;
+        color: #999;
     }
 
     .section-title {
@@ -170,7 +180,6 @@
     .dashboard-table-wrapper {
         padding: 25px;
         border-radius: 14px;
-        /* border: 1px solid #E0E0E0; */
         margin-top: 20px;
         margin-bottom: 30px;
         background: #fff;
@@ -294,17 +303,43 @@
         </div>
     </div>
 
-    {{-- Timeline --}}
+    {{-- Timeline dengan Logic Correct dan Dynamic Icons --}}
     <div class="timeline-container">
-        @forelse($checkpoints as $index => $checkpoint)
-        <div class="timeline-step {{ $currentStageIndex !== null && $index < $currentStageIndex ? 'completed' : ($currentStageIndex !== null && $index == $currentStageIndex ? 'active' : '') }}">
-            <div class="timeline-icon">
-                <i class="bi bi-check-circle"></i>
+        @forelse($checkpoints as $checkpoint)
+            @php
+                $status = 'not-started'; // Default
+                
+                // Check if this checkpoint is completed
+                $completedCheckpoint = $procurement->procurementProgress
+                    ->where('checkpoint_id', $checkpoint->point_id)
+                    ->where('status', 'completed')
+                    ->first();
+                
+                if ($completedCheckpoint) {
+                    $status = 'completed';
+                } else {
+                    // Check if this is the current (active) checkpoint
+                    $currentCheckpoint = $procurement->procurementProgress
+                        ->where('checkpoint_id', $checkpoint->point_id)
+                        ->where('status', 'in_progress')
+                        ->first();
+                    
+                    if ($currentCheckpoint) {
+                        $status = 'active';
+                    }
+                }
+                
+                // Get appropriate icon for this checkpoint
+                $iconClass = \App\Services\CheckpointIconService::getIconClass($checkpoint->point_sequence);
+            @endphp
+            <div class="timeline-step {{ $status }}" title="{{ $checkpoint->point_name }}">
+                <div class="timeline-icon">
+                    <i class="bi {{ $iconClass }}"></i>
+                </div>
+                <small>{{ $checkpoint->point_name }}</small>
             </div>
-            <small>{{ $checkpoint->point_name }}</small>
-        </div>
         @empty
-        <div class="text-center">Tidak ada checkpoint yang tersedia</div>
+            <div class="text-center">Tidak ada checkpoint yang tersedia</div>
         @endforelse
     </div>
 

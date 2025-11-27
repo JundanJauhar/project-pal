@@ -143,14 +143,18 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('inspections')->name('inspections.')->group(function () {
+        // ===== ROUTES QA INSPECTION =====
         Route::get('/', [InspectionController::class, 'index'])->name('index');
+        Route::get('/{id}', [InspectionController::class, 'show'])->name('show');
+        
+        // ===== ROUTES NCR REPORTS =====
         Route::get('/ncr', [InspectionController::class, 'ncrReports'])->name('ncr.index');
         Route::get('/ncr/{id}', [InspectionController::class, 'showNcr'])->name('ncr.show');
         Route::put('/ncr/{id}', [InspectionController::class, 'updateNcr'])->name('ncr.update');
         Route::post('/ncr/{id}/verify', [InspectionController::class, 'verifyNcr'])->name('ncr.verify');
     });
 
-    // QA detail approval
+    // ===== ROUTES QA DETAIL APPROVAL =====
     Route::get('/qa/detail-approval/{procurement_id}', [DetailApprovalController::class, 'show'])->name('qa.detail-approval');
     Route::post('/qa/detail-approval/{procurement_id}/save', [DetailApprovalController::class, 'saveAll'])->name('qa.detail-approval.save');
 
@@ -182,4 +186,190 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/approval-detail/{procurement_id}/save', [SekdirController::class, 'approvalDetailSave'])->name('approval-detail.save');
         Route::post('/approval/{projectId}', [SekdirController::class, 'approvalSubmit'])->name('approval.submit');
     });
+
+    // ============ DEBUG ROUTES ============
+    
+    /**
+     * Debug inspection status
+     * GET /debug/inspection/{procurement_id}
+     */
+    Route::get('/debug/inspection/{procurement_id}', function($procurement_id) {
+        $procurement = \App\Models\Procurement::with([
+            'requestProcurements.items.inspectionReports',
+            'procurementProgress.checkpoint'
+        ])->findOrFail($procurement_id);
+
+        echo "<h2>Debug: " . $procurement->code_procurement . "</h2>";
+        
+        // Items & Inspection
+        echo "<h3>1️⃣  Items & Inspection Status</h3>";
+        $items = $procurement->requestProcurements->flatMap->items;
+        $totalItems = $items->count();
+        
+        echo "<table border='1' cellpadding='8' style='border-collapse: collapse; margin: 10px 0;'>";
+        echo "<tr style='background: #e0e0e0;'><th>Item ID</th><th>Name</th><th>Result</th><th>Inspection Date</th></tr>";
+        
+        foreach ($items as $item) {
+            $latest = $item->inspectionReports->sortByDesc('inspection_date')->first();
+            $result = $latest?->result ?? '<span style="color: red;">NOT INSPECTED</span>';
+            $date = $latest?->inspection_date ?? '-';
+            echo "<tr>";
+            echo "<td>{$item->item_id}</td>";
+            echo "<td>{$item->item_name}</td>";
+            echo "<td><strong>$result</strong></td>";
+            echo "<td>$date</td>";
+            echo "</tr>";
+        }
+        echo "</table>";
+
+        // Statistics
+        echo "<h3>2️⃣  Statistics</h3>";
+        $latestResults = $items->map(function ($it) {
+            $latest = $it->inspectionReports->sortByDesc('inspection_date')->first();
+            return $latest?->result ?? null;
+        });
+        $inspectedItems = $latestResults->filter(fn ($r) => !is_null($r))->count();
+        $passedCount = $latestResults->filter(fn ($r) => $r === 'passed')->count();
+        $failedCount = $latestResults->filter(fn ($r) => $r === 'failed')->count();
+        
+        echo "<ul>";
+        echo "<li>Total Items: <strong>$totalItems</strong></li>";
+        echo "<li>Inspected Items: <strong>$inspectedItems</strong></li>";
+        echo "<li>Passed: <strong style='color: green;'>$passedCount</strong></li>";
+        echo "<li>Failed: <strong style='color: red;'>$failedCount</strong></li>";
+        echo "</ul>";
+
+        // Status
+        echo "<h3>3️⃣  Procurement Status</h3>";
+        $allPassed = $latestResults->every(fn ($r) => $r === 'passed');
+        $allFailed = $latestResults->every(fn ($r) => $r === 'failed');
+        
+        if ($inspectedItems === 0) {
+            $statusProc = 'BUTUH (belum inspeksi)';
+            $color = 'orange';
+        } elseif ($inspectedItems < $totalItems) {
+            $statusProc = 'SEDANG (partial inspeksi)';
+            $color = 'blue';
+        } elseif ($allPassed) {
+            $statusProc = 'LOLOS (all passed)';
+            $color = 'green';
+        } elseif ($allFailed) {
+            $statusProc = 'GAGAL (all failed)';
+            $color = 'red';
+        } else {
+            $statusProc = 'SEDANG (mixed results)';
+            $color = 'blue';
+        }
+        
+        echo "<p style='font-size: 18px; font-weight: bold; color: $color;'>Status: $statusProc</p>";
+
+        // Checkpoint Progress
+        echo "<h3>4️⃣  Checkpoint Progress</h3>";
+        echo "<table border='1' cellpadding='8' style='border-collapse: collapse; margin: 10px 0;'>";
+        echo "<tr style='background: #e0e0e0;'><th>Checkpoint</th><th>Sequence</th><th>Status</th><th>Start Date</th><th>End Date</th><th>Updated</th></tr>";
+        
+        foreach ($procurement->procurementProgress as $progress) {
+            $statusColor = match($progress->status) {
+                'completed' => '#c8e6c9',
+                'in_progress' => '#bbdefb',
+                'not_started' => '#f5f5f5',
+                default => '#fff9c4'
+            };
+            
+            echo "<tr style='background: $statusColor;'>";
+            echo "<td>" . $progress->checkpoint->point_name . "</td>";
+            echo "<td>" . $progress->checkpoint->point_sequence . "</td>";
+            echo "<td><strong>" . $progress->status . "</strong></td>";
+            echo "<td>" . ($progress->start_date ?? '-') . "</td>";
+            echo "<td>" . ($progress->end_date ?? '-') . "</td>";
+            echo "<td>" . $progress->updated_at . "</td>";
+            echo "</tr>";
+        }
+        echo "</table>";
+
+        // Diagnosis
+        echo "<h3>5️⃣  Diagnosis</h3>";
+        $cp11 = \App\Models\Checkpoint::where('point_name', 'Inspeksi Barang')->first();
+        $cp11Progress = $cp11 ? \App\Models\ProcurementProgress::where([
+            'procurement_id' => $procurement_id,
+            'checkpoint_id' => $cp11->point_id
+        ])->first() : null;
+        
+        if (!$cp11Progress) {
+            echo "<p style='color: red;'>❌ CP11 PROGRESS NOT FOUND</p>";
+        } elseif ($inspectedItems === $totalItems && $cp11Progress->status === 'in_progress') {
+            echo "<p style='color: red;'>❌ PROBLEM: All items inspected but CP11 still 'in_progress'</p>";
+            echo "<p>transitionInspection() was NOT called or FAILED silently.</p>";
+            echo "<p><a href='" . route('debug.logs') . "' target='_blank'>View Logs →</a></p>";
+        } elseif ($cp11Progress->status === 'completed') {
+            echo "<p style='color: green;'>✅ CORRECT: CP11 is completed</p>";
+        } else {
+            echo "<p style='color: blue;'>ℹ️  CP11 Status: " . $cp11Progress->status . "</p>";
+        }
+        
+    })->name('debug.inspection');
+
+    /**
+     * View recent logs
+     * GET /debug/logs
+     */
+    Route::get('/debug/logs', function() {
+        $logFile = storage_path('logs/laravel.log');
+        $logs = file_exists($logFile) ? file_get_contents($logFile) : 'No logs found';
+        
+        $lines = explode("\n", $logs);
+        $filtered = array_filter($lines, function($line) {
+            return stripos($line, 'checkpoint') !== false || 
+                   stripos($line, 'inspection') !== false ||
+                   stripos($line, 'transition') !== false;
+        });
+        
+        echo "<h2>Recent Checkpoint/Inspection Logs</h2>";
+        echo "<p><a href='" . route('debug.logs') . "'>↻ Refresh</a></p>";
+        echo "<pre style='background: #1e1e1e; color: #00ff00; padding: 15px; overflow-x: auto; font-family: monospace; font-size: 12px; border-radius: 5px;'>";
+        foreach (array_slice($filtered, -100) as $line) {
+            echo htmlspecialchars($line) . "\n";
+        }
+        echo "</pre>";
+    })->name('debug.logs');
+
+    /**
+     * Force trigger transition
+     * POST /debug/force-transition/{procurement_id}
+     */
+    Route::post('/debug/force-transition/{procurement_id}', function($procurement_id) {
+        $procurement = \App\Models\Procurement::with('requestProcurements.items.inspectionReports')->findOrFail($procurement_id);
+        
+        $items = $procurement->requestProcurements->flatMap->items;
+        $latestResults = $items->map(function ($it) {
+            $latest = $it->inspectionReports->sortByDesc('inspection_date')->first();
+            return $latest?->result ?? null;
+        });
+        
+        $allPassed = $latestResults->every(fn ($r) => $r === 'passed');
+        $allFailed = $latestResults->every(fn ($r) => $r === 'failed');
+        
+        if (!$allPassed && !$allFailed) {
+            return response()->json(['error' => 'Not all items have consistent inspection result'], 422);
+        }
+        
+        $statusProc = $allPassed ? 'lolos' : 'gagal';
+        
+        \Log::info("🔨 [DEBUG] FORCE TRANSITION - Procurement: {$procurement_id}, Status: {$statusProc}");
+        
+        $service = new \App\Services\CheckpointTransitionService($procurement);
+        $result = $service->transitionInspection($statusProc);
+        
+        \Log::info("🔨 [DEBUG] FORCE TRANSITION RESULT: " . json_encode($result));
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Transition triggered manually',
+            'result' => $result,
+            'redirect' => route('inspections.index')
+        ]);
+    })->name('debug.force-transition');
+
+    // ============ END DEBUG ROUTES ============
+
 });

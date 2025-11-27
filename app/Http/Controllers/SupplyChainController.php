@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\CheckpointTransitionService;
 
 class SupplyChainController extends Controller
 {
@@ -123,49 +124,55 @@ class SupplyChainController extends Controller
     }
 
     public function simpanVendor($procurementId, Request $request)
-    {
-        // Validasi input vendor_id
-        $validated = $request->validate([
-            'vendor_id' => 'required|exists:vendors,id_vendor'
+{
+    $validated = $request->validate([
+        'vendor_id' => 'required|exists:vendors,id_vendor'
+    ]);
+
+    $procurement = Procurement::findOrFail($procurementId);
+    $vendor = Vendor::findOrFail($validated['vendor_id']);
+
+    $existingRequest = RequestProcurement::where('procurement_id', $procurementId)->first();
+
+    if ($existingRequest) {
+        $existingRequest->update([
+            'vendor_id' => $validated['vendor_id'],
+            'request_status' => 'submitted'
         ]);
 
-        // Ambil data procurement
-        $procurement = Procurement::findOrFail($procurementId);
+        $message = "Vendor berhasil diubah menjadi {$vendor->name_vendor}";
+    } else {
+        RequestProcurement::create([
+            'procurement_id' => $procurementId,
+            'vendor_id' => $validated['vendor_id'],
+            'request_name' => "Request untuk {$procurement->name_procurement}",
+            'department_id' => auth()->user()->department_id,
+            'request_status' => 'submitted',
+            'created_date' => now(),
+            'deadline_date' => $procurement->end_date,
+        ]);
 
-        // Ambil data vendor yang dipilih
-        $vendor = Vendor::findOrFail($validated['vendor_id']);
+        $message = "Vendor {$vendor->name_vendor} berhasil dipilih";
+    }
 
-        // Cek apakah sudah ada request procurement untuk pengadaan ini
-        $existingRequest = RequestProcurement::where('procurement_id', $procurementId)->first();
+    // === AUTO COMPLETE CHECKPOINT 4 DAN AKTIFKAN CHECKPOINT 5 ===
+    $service = new \App\Services\CheckpointTransitionService($procurement);
+    $transition = $service->transition(4, [
+        'notes' => 'Vendor telah dipilih dan OC selesai.',
+        'oc_document' => 'OC-AUTO',
+    ]);
 
-        if ($existingRequest) {
-            // Jika sudah ada, update vendor_id nya
-            $existingRequest->update([
-                'vendor_id' => $validated['vendor_id'],
-                'request_status' => 'submitted' // Ubah status jadi submitted
-            ]);
-
-            $message = "Vendor berhasil diubah menjadi {$vendor->name_vendor}";
-        } else {
-            // Jika belum ada, buat request procurement baru
-            RequestProcurement::create([
-                'procurement_id' => $procurementId,
-                'vendor_id' => $validated['vendor_id'],
-                'request_name' => "Request untuk {$procurement->name_procurement}",
-                'department_id' => auth()->user()->department_id,
-                'request_status' => 'submitted',
-                'created_date' => now(),
-                'deadline_date' => $procurement->end_date,
-            ]);
-
-            $message = "Vendor {$vendor->name_vendor} berhasil dipilih";
-        }
-
-        // Redirect ke dashboard dengan pesan sukses
+    if (!$transition['success']) {
         return redirect()
             ->route('supply-chain.dashboard')
-            ->with('success', $message);
+            ->with('error', 'Vendor tersimpan, namun gagal transisi CP4 → CP5: ' . $transition['message']);
     }
+
+    return redirect()
+        ->route('supply-chain.dashboard')
+        ->with('success', $message . ' | Checkpoint 4 selesai & Checkpoint 5 aktif.');
+}
+
 
     public function formVendor(Request $request)
     {

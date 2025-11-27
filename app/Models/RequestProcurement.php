@@ -93,4 +93,4 @@ class RequestProcurement extends Model
             'total_amount' => $this->calculateTotalAmount()
         ]);
     }
-}
+}   
