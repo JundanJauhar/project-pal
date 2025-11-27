@@ -265,6 +265,7 @@
             <thead>
                 <tr>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode Pengadaan</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Nama Pengadaan</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
@@ -319,7 +320,9 @@
                     <td style="padding: 12px 8px; text-align: center;">
                         <strong>{{ optional($proc->project)->project_code ?? '-' }}</strong>
                     </td>
-
+                    <td style="padding: 12px 8px; text-align: center;">
+                        <strong>{{ $proc->code_procurement ?? '-' }}</strong>
+                    </td>
                     {{-- Nama Pengadaan --}}
                     <td style="padding: 12px 8px; text-align: center;">
                         {{ $proc->name_procurement }}

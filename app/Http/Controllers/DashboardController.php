@@ -6,7 +6,9 @@ use App\Models\Checkpoint;
 use App\Models\Project;
 use App\Models\Procurement;
 use App\Models\ProcurementProgress;
+use App\Models\Checkpoint;
 use App\Models\Notification;
+use App\Services\CheckpointTransitionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +24,7 @@ class DashboardController extends Controller
         $projects = Project::all();
         $priority = Project::select('priority')->distinct()->get();
 
-        // Get ALL procurements first (with eager loading)
+        // Get ALL procurements with checkpoint data
         $allProcurements = Procurement::with([
             'project',
             'department', 
@@ -51,8 +53,7 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        // Return ke view dashboard (bukan dashboard.index)
-        return view('dashboard.index', compact('stats', 'procurements', 'notifications', 'checkpoints', 'projects', 'priority'));
+        return view('dashboard.index', compact('stats', 'procurements', 'notifications'));
     }
 
     /**
@@ -67,12 +68,7 @@ class DashboardController extends Controller
             'procurementProgress.checkpoint'
         ]);
 
-        // Filter berdasarkan role jika diperlukan
-        // if ($user->roles === 'department_user') {
-        //     $query->where('department_procurement', $user->department_id);
-        // }
-
-        return $query->orderBy('created_at', 'desc')
+        return $query->orderBy('start_date', 'desc')
             ->paginate(20);
     }
 
@@ -112,23 +108,27 @@ class DashboardController extends Controller
         // Get all data first (with eager loading)
         $allProcurements = $query->orderBy('created_at', 'desc')->get();
         
-        // Filter by checkpoint AFTER data is loaded (karena current_checkpoint adalah accessor)
+        // Filter by checkpoint AFTER data is loaded
         if ($request->filled('checkpoint')) {
-            $checkpoint = $request->checkpoint;
+            $checkpointFilter = $request->checkpoint;
             
-            $allProcurements = $allProcurements->filter(function($p) use ($checkpoint) {
+            $allProcurements = $allProcurements->filter(function($p) use ($checkpointFilter) {
                 // Handle special statuses
-                if ($checkpoint === 'completed') {
+                if ($checkpointFilter === 'completed') {
                     return $p->status_procurement === 'completed';
                 }
                 
-                if ($checkpoint === 'cancelled') {
+                if ($checkpointFilter === 'cancelled') {
                     return $p->status_procurement === 'cancelled';
                 }
                 
                 // Filter by current checkpoint name for in_progress items
+                $service = new CheckpointTransitionService($p);
+                $currentCheckpoint = $service->getCurrentCheckpoint();
+                $currentCheckpointName = $currentCheckpoint ? $currentCheckpoint->point_name : '-';
+                
                 return $p->status_procurement === 'in_progress' 
-                    && $p->current_checkpoint === $checkpoint;
+                    && $currentCheckpointName === $checkpointFilter;
             });
         }
         
@@ -144,6 +144,10 @@ class DashboardController extends Controller
         
         // Transform data untuk JSON response
         $data = $procurements->map(function($p) {
+            $service = new CheckpointTransitionService($p);
+            $currentCheckpoint = $service->getCurrentCheckpoint();
+            $checkpointName = $currentCheckpoint ? $currentCheckpoint->point_name : '-';
+
             return [
                 'procurement_id' => $p->procurement_id,
                 'project_code' => $p->project->project_code ?? '-',
@@ -155,7 +159,7 @@ class DashboardController extends Controller
                 'vendor_name' => $p->requestProcurements->first()?->vendor->name_vendor ?? '-',
                 'priority' => $p->priority ?? 'rendah',
                 'status_procurement' => $p->status_procurement,
-                'current_checkpoint' => $p->current_checkpoint, // PENTING: ini akan menampilkan nama checkpoint
+                'current_checkpoint' => $checkpointName,
             ];
         });
         
@@ -177,12 +181,6 @@ class DashboardController extends Controller
     public function departmentDashboard($departmentId)
     {
         $user = Auth::user();
-
-        // Check if user has access to this department
-        // Uncomment jika ingin implementasi authorization
-        // if ($user->roles !== 'supply_chain' && $user->division_id != $departmentId) {
-        //     abort(403, 'Unauthorized access to department dashboard');
-        // }
 
         $procurements = Procurement::where('department_procurement', $departmentId)
             ->with([
@@ -241,22 +239,26 @@ class DashboardController extends Controller
             ->get()
             ->map(function($p) {
                 return [
-                    'checkpoint_name' => $p->checkpoint->checkpoint_name ?? '-',
+                    'checkpoint_name' => $p->checkpoint->point_name ?? '-',
                     'checkpoint_sequence' => $p->checkpoint->point_sequence ?? 0,
                     'status' => $p->status,
-                    'start_date' => $p->start_date ? $p->start_date->format('d/m/Y H:i') : null,
-                    'end_date' => $p->end_date ? $p->end_date->format('d/m/Y H:i') : null,
+                    'started_at' => $p->start_date ? $p->start_date->format('d/m/Y H:i') : null,
+                    'completed_at' => $p->end_date ? $p->end_date->format('d/m/Y H:i') : null,
                     'note' => $p->note,
                     'user_name' => $p->user->name ?? '-',
                 ];
             });
+
+        $service = new CheckpointTransitionService($procurement);
+        $currentCheckpoint = $service->getCurrentCheckpoint();
 
         return response()->json([
             'procurement' => [
                 'code' => $procurement->code_procurement,
                 'name' => $procurement->name_procurement,
                 'status' => $procurement->status_procurement,
-                'current_checkpoint' => $procurement->current_checkpoint,
+                'current_checkpoint' => $currentCheckpoint ? $currentCheckpoint->point_name : '-',
+                'current_checkpoint_sequence' => $currentCheckpoint ? $currentCheckpoint->point_sequence : 0,
             ],
             'timeline' => $progress
         ]);
@@ -303,12 +305,15 @@ class DashboardController extends Controller
         $distribution = [];
         
         foreach ($procurements as $proc) {
-            $checkpoint = $proc->current_checkpoint;
-            if ($checkpoint) {
-                if (!isset($distribution[$checkpoint])) {
-                    $distribution[$checkpoint] = 0;
+            $service = new CheckpointTransitionService($proc);
+            $currentCheckpoint = $service->getCurrentCheckpoint();
+            $checkpointName = $currentCheckpoint ? $currentCheckpoint->point_name : '-';
+            
+            if ($checkpointName !== '-') {
+                if (!isset($distribution[$checkpointName])) {
+                    $distribution[$checkpointName] = 0;
                 }
-                $distribution[$checkpoint]++;
+                $distribution[$checkpointName]++;
             }
         }
 
