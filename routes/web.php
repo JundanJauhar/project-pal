@@ -25,27 +25,32 @@ use App\Http\Controllers\SekdirController;
 // Redirect root → login
 Route::get('/', fn() => redirect()->route('login'));
 
-/*
-|--------------------------------------------------------------------------
-| AUTH ROUTES (Override Login & Logout)
-|--------------------------------------------------------------------------
-| FORM LOGIN:     GET  /login
-| PROSES LOGIN:   POST /login (ke Tracking_App_PAL)
-| LOGOUT:         POST /logout
-|--------------------------------------------------------------------------
-*/
+Route::get('/login', fn() => view('auth.login'))
+    ->name('login')
+    ->middleware('guest');
 
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [LoginController::class, 'showLoginForm'])
-        ->name('login');
+Route::post('/login', function (Request $request) {
+    $credentials = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
 
-    Route::post('/login', [LoginController::class, 'login'])
-        ->name('login.process');
-});
+    if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        $request->session()->regenerate();
+        return redirect()->route('dashboard');
+    }
 
-Route::post('/logout', [LoginController::class, 'logout'])
-    ->middleware('auth')
-    ->name('logout');
+    return back()->withErrors([
+        'email' => 'Email atau password salah.',
+    ]);
+})->middleware('guest');
+
+Route::post('/logout', function (Request $request) {
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect()->route('login');
+})->name('logout');
 
 /*
 |--------------------------------------------------------------------------

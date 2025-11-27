@@ -34,10 +34,4 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
-    'tracking_app' => [
-    'auth_verify' => env('TRACKING_APP_URL') . '/api/auth-verify',
-    ],
-
-
 ];
