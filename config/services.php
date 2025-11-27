@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'tracking_app' => [
+    'auth_verify' => env('TRACKING_APP_URL') . '/api/auth-verify',
+    ],
+
+
 ];

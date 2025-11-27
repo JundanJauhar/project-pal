@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
+// Controllers
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProcurementController;
@@ -20,58 +22,61 @@ use App\Http\Controllers\DetailApprovalController;
 use App\Http\Controllers\ListApprovalController;
 use App\Http\Controllers\SekdirController;
 
+// Redirect root → login
 Route::get('/', fn() => redirect()->route('login'));
 
-Route::get('/login', fn() => view('auth.login'))
-    ->name('login')
-    ->middleware('guest');
+/*
+|--------------------------------------------------------------------------
+| AUTH ROUTES (Override Login & Logout)
+|--------------------------------------------------------------------------
+| FORM LOGIN:     GET  /login
+| PROSES LOGIN:   POST /login (ke Tracking_App_PAL)
+| LOGOUT:         POST /logout
+|--------------------------------------------------------------------------
+*/
 
-Route::post('/login', function (Request $request) {
-    $credentials = $request->validate([
-        'email' => 'required|email',
-        'password' => 'required',
-    ]);
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'showLoginForm'])
+        ->name('login');
 
-    if (Auth::attempt($credentials, $request->boolean('remember'))) {
-        $request->session()->regenerate();
-        return redirect()->route('dashboard');
-    }
+    Route::post('/login', [LoginController::class, 'login'])
+        ->name('login.process');
+});
 
-    return back()->withErrors([
-        'email' => 'Email atau password salah.',
-    ]);
-})->middleware('guest');
+Route::post('/logout', [LoginController::class, 'logout'])
+    ->middleware('auth')
+    ->name('logout');
 
-Route::post('/logout', function (Request $request) {
-    Auth::logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-    return redirect()->route('login');
-})->name('logout');
+/*
+|--------------------------------------------------------------------------
+| PROTECTED ROUTES (User harus login)
+|--------------------------------------------------------------------------
+*/
 
 Route::middleware(['auth'])->group(function () {
 
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/division/{divisionId}', [DashboardController::class, 'divisionDashboard'])->name('dashboard.division');
     Route::get('/dashboard/statistics', [DashboardController::class, 'getStatistics'])->name('dashboard.statistics');
     Route::get('/dashboard/timeline/{projectId}', [DashboardController::class, 'getProcurementTimeline'])->name('dashboard.timeline');
     Route::get('/dashboard/search', [DashboardController::class, 'search'])->name('dashboard.search');
 
+    // Projects
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
     Route::post('/projects/upload-review', [ProjectController::class, 'uploadReview'])->name('projects.uploadReview');
     Route::post('/projects/save-review-notes', [ProjectController::class, 'saveReviewNotes'])->name('projects.saveReviewNotes');
     Route::resource('projects', ProjectController::class);
     Route::post('/projects/{id}/status', [ProjectController::class, 'updateStatus'])->name('projects.update-status');
 
+    // Procurements
     Route::get('/procurements/search', [ProcurementController::class, 'search'])->name('procurements.search');
     Route::get('/procurements/by-project/{projectId}', [ProcurementController::class, 'byProject'])->name('procurements.by-project');
     Route::get('/procurements/{id}/progress', [ProcurementController::class, 'getProgress'])->name('procurements.progress');
     Route::post('/procurements/{id}/progress', [ProcurementController::class, 'updateProgress'])->name('procurements.update-progress');
     Route::resource('procurements', ProcurementController::class, ['only' => ['index', 'show', 'create', 'store', 'update']]);
 
-    Route::post('/items/{itemId}/approve', [DesainListProjectController::class, 'approveItem'])->name('items.approve');
-    Route::post('/items/{itemId}/reject', [DesainListProjectController::class, 'rejectItem'])->name('items.reject');
-
+    // User list (user division)
     Route::get('/user/list', function () {
         $procurements = \App\Models\Procurement::with(['department', 'requestProcurements.vendor'])
             ->orderBy('created_at', 'desc')
@@ -80,11 +85,17 @@ Route::middleware(['auth'])->group(function () {
         return view('user.list', compact('procurements'));
     })->name('user.list');
 
+    // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 
+    /*
+    |--------------------------------------------------------------------------
+    | SUPPLY CHAIN ROUTES
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('supply-chain')->name('supply-chain.')->group(function () {
         Route::get('/dashboard', [SupplyChainController::class, 'dashboard'])->name('dashboard');
         Route::post('/dashboard/store', [SupplyChainController::class, 'storePengadaan'])->name('dashboard.store');
@@ -106,6 +117,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])->name('vendor.simpan');
     });
 
+    /*
+    |--------------------------------------------------------------------------
+    | PAYMENT ROUTES
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('payments')->name('payments.')->group(function () {
         Route::get('/', [PaymentController::class, 'index'])->name('index');
         Route::get('/create/{projectId}', [PaymentController::class, 'create'])->name('create');
@@ -116,6 +132,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/statistics', [PaymentController::class, 'statistics'])->name('statistics');
     });
 
+    /*
+    |--------------------------------------------------------------------------
+    | QA
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('inspections')->name('inspections.')->group(function () {
         Route::get('/', [InspectionController::class, 'index'])->name('index');
         Route::get('/ncr', [InspectionController::class, 'ncrReports'])->name('ncr.index');
@@ -124,9 +145,15 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/ncr/{id}/verify', [InspectionController::class, 'verifyNcr'])->name('ncr.verify');
     });
 
+    // QA detail approval
     Route::get('/qa/detail-approval/{procurement_id}', [DetailApprovalController::class, 'show'])->name('qa.detail-approval');
     Route::post('/qa/detail-approval/{procurement_id}/save', [DetailApprovalController::class, 'saveAll'])->name('qa.detail-approval.save');
 
+    /*
+    |--------------------------------------------------------------------------
+    | DESAIN
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('desain')->name('desain.')->group(function () {
         Route::get('/dashboard', [DesainController::class, 'dashboard'])->name('dashboard');
         Route::get('/list-project', [DesainListProjectController::class, 'list'])->name('list-project');
@@ -138,6 +165,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/input-item/store', [DesainController::class, 'storeItem'])->name('input-item.store');
     });
 
+    /*
+    |--------------------------------------------------------------------------
+    | SEKDIREKSI
+    |--------------------------------------------------------------------------
+    */
     Route::prefix('sekdir')->name('sekdir.')->group(function () {
         Route::get('/approval', [SekdirController::class, 'approval'])->name('approval');
         Route::get('/approvals', [SekdirController::class, 'approvals'])->name('approvals');
