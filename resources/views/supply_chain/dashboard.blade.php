@@ -200,34 +200,44 @@
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
                             <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
-                            <!-- <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th> -->
                         </tr>
                     </thead>
                     <tbody id="tableBody">
                         @forelse($procurements as $procurement)
+                        @php
+                            $service = new \App\Services\CheckpointTransitionService($procurement);
+                            $currentCheckpoint = $service->getCurrentCheckpoint();
+                            $currentSequence = $currentCheckpoint?->point_sequence;
+                        @endphp
                         <tr data-name="{{ strtolower($procurement->name_procurement) }} {{ strtolower($procurement->code_procurement) }}">
                             <td style="padding: 12px 8px; text-align: center; color: #000;"><strong>{{ $procurement->project->project_code ?? '-' }}</strong></td>
                             <td style="padding: 12px 8px; text-align: center;  color: #000;"><strong>{{ $procurement->code_procurement }}</strong></td>
                             <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ Str::limit($procurement->name_procurement, 40) }}</td>
                             <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ $procurement->department->department_name ?? '-' }}</td>
-                            <td style="padding: 12px 8px; text-align: center;  color: #000;">
+                            <td style="padding: 12px 8px; text-align: center; color: #000;">
                                 @php
                                     $requestProcurement = $procurement->requestProcurements->first();
                                     $vendor = $requestProcurement?->vendor;
                                 @endphp
 
-                                @if($vendor)
-                                    <div class="d-flex flex-column">
-                                        <div>
-                                            {{ $vendor->name_vendor }}
-                                        </div>
-                                    </div>
+                                {{-- Jika vendor belum dipilih --}}
+                                @if (!$vendor)
+
+                                    {{-- Tampilkan tombol hanya jika berada di checkpoint 4 --}}
+                                    @if ($currentSequence == 4)
+                                        <a href="{{ route('supply-chain.vendor.pilih', $procurement->procurement_id) }}"
+                                        class="btn btn-sm btn-primary" wire:navigate>
+                                            <i class="bi bi-plus-circle"></i> Kelola Vendor
+                                        </a>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+
+                                {{-- Jika vendor sudah dipilih --}}
                                 @else
-                                    <a href="{{ route('supply-chain.vendor.pilih', $procurement->procurement_id) }}"
-                                       class="btn btn-sm btn-primary" wire:navigate>
-                                        <i class="bi bi-plus-circle"></i> Kelola Vendor
-                                    </a>
+                                    {{ $vendor->name_vendor }}
                                 @endif
+
                             </td>
                             <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->start_date->format('d/m/Y') }}</td>
                             <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->end_date->format('d/m/Y') }}</td>

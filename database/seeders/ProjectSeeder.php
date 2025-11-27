@@ -150,6 +150,20 @@ class ProjectSeeder extends Seeder
             'status_procurement' => 'in_progress', // FIXED: in_progress
         ]);
 
+        // Seeder untuk procurement 5 - berada di checkpoint ke-11
+        $procurement5 = \App\Models\Procurement::create([
+            'project_id' => $project1->project_id,
+            'code_procurement' => $projectCode . '-05',
+            'name_procurement' => 'Pengadaan Mesin Pompa Hidrolik',
+            'description' => 'Pengadaan mesin pompa hidrolik untuk sistem kapal',
+            'department_procurement' => $dept2->department_id,
+            'priority' => 'sedang',
+            'start_date' => Carbon::now()->subDays(70),
+            'end_date' => Carbon::now()->addDays(20),
+            'status_procurement' => 'in_progress',
+        ]);
+
+
         /**
          * REQUEST PROCUREMENT (sesuai schema baru)
          */
@@ -190,7 +204,7 @@ class ProjectSeeder extends Seeder
             ], // key untuk check
             [
                 'project_id' => $project1->project_id,
-                'vendor_id' => 3,
+                'vendor_id' => null,
                 'created_date' => Carbon::now()->subDays(40),
                 'deadline_date' => Carbon::now()->addDays(10),
                 'request_status' => 'approved',
@@ -212,6 +226,22 @@ class ProjectSeeder extends Seeder
                 'department_id' => 4,
             ]
         );
+
+        $request5 = RequestProcurement::updateOrCreate(
+    [
+        'procurement_id' => $procurement5->procurement_id,
+        'request_name' => 'Pengadaan Mesin Pompa Hidrolik'
+    ],
+    [
+        'project_id' => $project1->project_id,
+        'vendor_id' => 1,
+        'created_date' => Carbon::now()->subDays(70),
+        'deadline_date' => Carbon::now()->addDays(20),
+        'request_status' => 'submitted',
+        'department_id' => $dept2->department_id,
+    ]
+);
+
 
         /**
          * ITEMS — DENGAN STATUS APPROVED/NOT_APPROVED
@@ -302,6 +332,20 @@ class ProjectSeeder extends Seeder
             'status' => 'not_approved',
         ]);
 
+        Item::create([
+            'request_procurement_id' => $request5->request_id,
+            'item_name' => 'Unit Pompa Hidrolik 500bar',
+            'item_description' => 'Pompa hidrolik tekanan tinggi untuk sistem kapal',
+            'amount' => 3,
+            'unit' => 'unit',
+            'unit_price' => 320000000,
+            'total_price' => 960000000,
+            'status' => 'approved',
+            'approved_by' => 5,
+            'approved_at' => Carbon::now()->subDays(65),
+        ]);
+
+
         /**
          * INSPECTION REPORT
          */
@@ -383,6 +427,21 @@ class ProjectSeeder extends Seeder
                 'note' => 'Checkpoint ' . ($index + 1) . ': ' . $checkpoint->point_name . ' - ' . ($index < 1 ? 'Selesai' : 'Sedang Berjalan'),
             ]);
         }
+
+        // Progress Procurement 5 - sampai checkpoint ke-11
+        foreach ($checkpoints->take(11) as $index => $checkpoint) {
+            \App\Models\ProcurementProgress::create([
+                'procurement_id' => $procurement5->procurement_id,
+                'checkpoint_id' => $checkpoint->point_id,
+                'user_id' => ($index % 2 === 0) ? 2 : 3,
+                'status' => $index < 10 ? 'completed' : 'in_progress',
+                'start_date' => Carbon::now()->subDays(70 - ($index * 6)),
+                'end_date' => $index < 10 ? Carbon::now()->subDays(67 - ($index * 6)) : null,
+                'note' => 'Checkpoint ' . ($index + 1) . ': ' . $checkpoint->point_name .
+                            ' - ' . ($index < 10 ? 'Selesai' : 'Sedang Berjalan'),
+            ]);
+        }
+
 
         /**
          * PROJECT 2–7 - Additional projects
