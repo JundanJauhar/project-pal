@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Checkpoint;
 use App\Models\Project;
 use App\Models\RequestProcurement;
 use App\Models\Procurement;
@@ -26,6 +27,7 @@ class SupplyChainController extends Controller
         $search = $request->input('search');
         $statusFilter = $request->input('status');
         $priorityFilter = $request->input('priority');
+        $checkpoints = Checkpoint::all();
 
         $procurements = Procurement::with([
             'project',
@@ -58,7 +60,7 @@ class SupplyChainController extends Controller
             ->orderBy('start_date', 'desc')
             ->get();
 
-        return view('supply_chain.dashboard', compact('procurements'));
+        return view('supply_chain.dashboard', compact('procurements', 'checkpoints'));
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Checkpoint;
 use App\Models\Project;
 use App\Models\Procurement;
 use App\Models\ProcurementProgress;
@@ -17,6 +18,9 @@ class DashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $checkpoints = Checkpoint::all();
+        $projects = Project::all();
+        $priority = Project::select('priority')->distinct()->get();
 
         // Get ALL procurements first (with eager loading)
         $allProcurements = Procurement::with([
@@ -48,7 +52,7 @@ class DashboardController extends Controller
         }
 
         // Return ke view dashboard (bukan dashboard.index)
-        return view('dashboard.index', compact('stats', 'procurements', 'notifications'));
+        return view('dashboard.index', compact('stats', 'procurements', 'notifications', 'checkpoints', 'projects', 'priority'));
     }
 
     /**

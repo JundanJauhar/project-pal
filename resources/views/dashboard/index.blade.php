@@ -13,7 +13,7 @@
         bottom: 0 !important;
         border-radius: 18px 0 0 18px !important;
     }
-    
+
     .stat-progress::before {
         width: 6px !important;
         background: #ECAD02 !important;
@@ -22,7 +22,7 @@
         bottom: 0 !important;
         border-radius: 18px 0 0 18px !important;
     }
-    
+
     .stat-success::before {
         width: 6px !important;
         background: #28AC00 !important;
@@ -31,7 +31,7 @@
         bottom: 0 !important;
         border-radius: 18px 0 0 18px !important;
     }
-    
+
     .stat-rejected::before {
         width: 6px !important;
         background: #F10303 !important;
@@ -40,6 +40,7 @@
         bottom: 0 !important;
         border-radius: 18px 0 0 18px !important;
     }
+
     .badge-priority {
         padding: 5px 12px;
         border-radius: 20px;
@@ -47,24 +48,27 @@
         font-weight: 600;
         display: inline-block;
     }
+
     .badge-priority.badge-tinggi {
         color: #BD0000;
         font-size: 16px;
     }
+
     .badge-priority.badge-sedang {
         color: #FFBB00;
         font-size: 16px;
     }
+
     .badge-priority.badge-rendah {
         color: #6f6f6f;
         font-size: 16px;
     }
-    
+
     .dashboard-table-wrapper {
         padding: 25px;
         border-radius: 14px;
         margin-top: 20px;
-        box-shadow: 0 8px 12px rgba(0,0,0,0.12);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.12);
         background: #FFFFFF;
     }
 
@@ -104,6 +108,7 @@
         border: 1px solid #ddd;
         font-size: 14px;
     }
+
     .dashboard-search-box input {
         border: none;
         background: transparent;
@@ -111,6 +116,7 @@
         outline: none;
         font-size: 14px;
     }
+
     .dashboard-search-box i {
         font-size: 14px;
         color: #777;
@@ -162,7 +168,7 @@
         margin-bottom: 20px;
     }
 
-    .tambah .btn:hover{
+    .tambah .btn:hover {
         background: #002e5c;
         border-color: #002e5c;
     }
@@ -251,19 +257,25 @@
                         <div class="col-md-2">
                             <select class="form-select" name="project">
                                 <option value="">Semua Project</option>
-                                <option value="W000301">W000301</option>
+                                 @foreach($projects as $project)
+                                <option value="{{ $project->project_code }}">{{ $project->project_code }}</option>
+                                @endforeach
+                                <!-- <option value="W000301">W000301</option>
                                 <option value="W000302">W000302</option>
                                 <option value="W000303">W000303</option>
                                 <option value="W000304">W000304</option>
                                 <option value="W000305">W000305</option>
                                 <option value="W000306">W000306</option>
-                                <option value="W000307">W000307</option>
+                                <option value="W000307">W000307</option> -->
                             </select>
                         </div>
                         <div class="col-md-2">
                             <select class="form-select" name="checkpoint">
                                 <option value="">Semua Checkpoint</option>
-                                <option value="Penawaran Permintaan">Penawaran Permintaan</option>
+                                @foreach($checkpoints as $checkpoint)
+                                <option value="{{ $checkpoint->point_name }}">{{ $checkpoint->point_name }}</option>
+                                @endforeach
+                                <!-- <option value="Penawaran Permintaan">Penawaran Permintaan</option>
                                 <option value="Evatek">Evatek</option>
                                 <option value="Negosiasi">Negosiasi</option>
                                 <option value="Usulan Pengadaan / OC">Usulan Pengadaan / OC</option>
@@ -278,15 +290,15 @@
                                 <option value="Verifikasi Dokumen">Verifikasi Dokumen</option>
                                 <option value="Pembayaran">Pembayaran</option>
                                 <option value="completed">Selesai</option>
-                                <option value="cancelled">Dibatalkan</option>
+                                <option value="cancelled">Dibatalkan</option> -->
                             </select>
                         </div>
                         <div class="col-md-2">
                             <select class="form-select" name="priority">
                                 <option value="">Semua Prioritas</option>
-                                <option value="rendah">Rendah</option>
-                                <option value="sedang">Sedang</option>
-                                <option value="tinggi">Tinggi</option>
+                                @foreach($priority as $priorityOption)
+                                <option value="{{ $priorityOption -> priority }}">{{$priorityOption -> priority }}</option>
+                                @endforeach
                             </select>
                         </div>
                     </form>
@@ -335,24 +347,24 @@
                         </td>
                         <td style="padding: 12px 8px; text-align: center;">
                             @php
-                                $status = $procurement->status_procurement;
-                                $currentCheckpoint = $procurement->current_checkpoint;
+                            $status = $procurement->status_procurement;
+                            $currentCheckpoint = $procurement->current_checkpoint;
 
-                                // Determine badge color and text based on status
-                                if ($status === 'completed') {
-                                    $badgeColor = '#28AC00';
-                                    $text = 'Selesai';
-                                } elseif ($status === 'cancelled') {
-                                    $badgeColor = '#BD0000';
-                                    $text = 'Dibatalkan';
-                                } elseif ($status === 'in_progress') {
-                                    $badgeColor = '#ECAD02';
-                                    // Show current checkpoint name, fallback to 'Sedang Proses'
-                                    $text = $currentCheckpoint ?: 'Sedang Proses';
-                                } else {
-                                    $badgeColor = '#555';
-                                    $text = $status ?: 'N/A';
-                                }
+                            // Determine badge color and text based on status
+                            if ($status === 'completed') {
+                            $badgeColor = '#28AC00';
+                            $text = 'Selesai';
+                            } elseif ($status === 'cancelled') {
+                            $badgeColor = '#BD0000';
+                            $text = 'Dibatalkan';
+                            } elseif ($status === 'in_progress') {
+                            $badgeColor = '#ECAD02';
+                            // Show current checkpoint name, fallback to 'Sedang Proses'
+                            $text = $currentCheckpoint ?: 'Sedang Proses';
+                            } else {
+                            $badgeColor = '#555';
+                            $text = $status ?: 'N/A';
+                            }
                             @endphp
 
                             <span class="badge"
@@ -366,7 +378,7 @@
                         </td>
                         <td style="padding: 12px 8px; text-align: center;">
                             <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary btn-custom" wire:navigate>
-                                 Detail
+                                Detail
                             </a>
                         </td>
                     </tr>
@@ -396,70 +408,70 @@
 
 @push('scripts')
 <script>
-function debounce(fn, delay) {
-    let t;
-    return function () {
-        clearTimeout(t);
-        t = setTimeout(() => fn.apply(this, arguments), delay);
-    };
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    const searchInput = document.querySelector('input[name="search"]');
-    const checkpointSelect = document.querySelector('select[name="checkpoint"]');
-    const prioritySelect = document.querySelector('select[name="priority"]');
-    const projectSelect = document.querySelector('select[name="project"]');
-    const tbody = document.getElementById('procurements-tbody');
-    const paginationWrap = document.getElementById('procurements-pagination');
-
-    if (!searchInput || !checkpointSelect || !prioritySelect || !tbody || !paginationWrap) {
-        console.error('Missing required elements');
-        return;
+    function debounce(fn, delay) {
+        let t;
+        return function() {
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(this, arguments), delay);
+        };
     }
 
-    let currentPage = 1;
-    let lastPagination = null;
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.querySelector('input[name="search"]');
+        const checkpointSelect = document.querySelector('select[name="checkpoint"]');
+        const prioritySelect = document.querySelector('select[name="priority"]');
+        const projectSelect = document.querySelector('select[name="project"]');
+        const tbody = document.getElementById('procurements-tbody');
+        const paginationWrap = document.getElementById('procurements-pagination');
 
-    function getStatusBadge(status, checkpoint) {
-        let badgeColor, text;
-        
-        if (status === 'completed') {
-            badgeColor = '#28AC00';
-            text = 'Selesai';
-        } else if (status === 'cancelled') {
-            badgeColor = '#BD0000';
-            text = 'Dibatalkan';
-        } else if (status === 'in_progress') {
-            badgeColor = '#ECAD02';
-            text = checkpoint || 'Sedang Proses';
-        } else {
-            badgeColor = '#555';
-            text = status || 'N/A';
+        if (!searchInput || !checkpointSelect || !prioritySelect || !tbody || !paginationWrap) {
+            console.error('Missing required elements');
+            return;
         }
 
-        return `<span class="badge" style="background-color: ${badgeColor}; color:white; padding:6px 12px; font-weight:600; border-radius:6px;">
+        let currentPage = 1;
+        let lastPagination = null;
+
+        function getStatusBadge(status, checkpoint) {
+            let badgeColor, text;
+
+            if (status === 'completed') {
+                badgeColor = '#28AC00';
+                text = 'Selesai';
+            } else if (status === 'cancelled') {
+                badgeColor = '#BD0000';
+                text = 'Dibatalkan';
+            } else if (status === 'in_progress') {
+                badgeColor = '#ECAD02';
+                text = checkpoint || 'Sedang Proses';
+            } else {
+                badgeColor = '#555';
+                text = status || 'N/A';
+            }
+
+            return `<span class="badge" style="background-color: ${badgeColor}; color:white; padding:6px 12px; font-weight:600; border-radius:6px;">
             ${text}
         </span>`;
-    }
+        }
 
-    function renderRows(items) {
-        if (!Array.isArray(items) || items.length === 0) {
-            tbody.innerHTML = `
+        function renderRows(items) {
+            if (!Array.isArray(items) || items.length === 0) {
+                tbody.innerHTML = `
                 <tr>
                     <td colspan="10" class="text-center py-5">
                         <i class="bi bi-inbox" style="font-size: 40px; color: #bbb;"></i>
                         <p class="text-muted mt-2">Tidak ada data pengadaan</p>
                     </td>
                 </tr>`;
-            paginationWrap.innerHTML = "";
-            return;
-        }
+                paginationWrap.innerHTML = "";
+                return;
+            }
 
-        tbody.innerHTML = items.map(p => {
-            const priorityClass = p.priority?.toLowerCase() || '';
-            const priorityText = p.priority?.toUpperCase() || '-';
-            
-            return `
+            tbody.innerHTML = items.map(p => {
+                const priorityClass = p.priority?.toLowerCase() || '';
+                const priorityText = p.priority?.toUpperCase() || '-';
+
+                return `
             <tr>
                 <td style="padding: 12px 8px; text-align:center;"><strong>${p.project_code}</strong></td>
                 <td style="padding: 12px 8px; text-align:center"><strong>${p.code_procurement}</strong></td>
@@ -482,77 +494,81 @@ document.addEventListener('DOMContentLoaded', function () {
                     </a>
                 </td>
             </tr>`;
-        }).join("");
+            }).join("");
 
-        renderPagination();
-    }
-
-    function renderPagination() {
-        if (!lastPagination) {
-            paginationWrap.innerHTML = '';
-            return;
+            renderPagination();
         }
 
-        const p = lastPagination;
-        let html = `<nav><ul class="pagination">`;
+        function renderPagination() {
+            if (!lastPagination) {
+                paginationWrap.innerHTML = '';
+                return;
+            }
 
-        html += p.current_page > 1
-            ? `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page - 1})">← Sebelumnya</a></li>`
-            : `<li class="page-item disabled"><span class="page-link">← Sebelumnya</span></li>`;
+            const p = lastPagination;
+            let html = `<nav><ul class="pagination">`;
 
-        for (let i = 1; i <= p.last_page; i++) {
-            html += i === p.current_page
-                ? `<li class="page-item active"><span class="page-link">${i}</span></li>`
-                : `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${i})">${i}</a></li>`;
+            html += p.current_page > 1 ?
+                `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page - 1})">← Sebelumnya</a></li>` :
+                `<li class="page-item disabled"><span class="page-link">← Sebelumnya</span></li>`;
+
+            for (let i = 1; i <= p.last_page; i++) {
+                html += i === p.current_page ?
+                    `<li class="page-item active"><span class="page-link">${i}</span></li>` :
+                    `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${i})">${i}</a></li>`;
+            }
+
+            html += p.has_more ?
+                `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page + 1})">Berikutnya →</a></li>` :
+                `<li class="page-item disabled"><span class="page-link">Berikutnya →</span></li>`;
+
+            html += `</ul></nav>`;
+            paginationWrap.innerHTML = html;
         }
 
-        html += p.has_more
-            ? `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page + 1})">Berikutnya →</a></li>`
-            : `<li class="page-item disabled"><span class="page-link">Berikutnya →</span></li>`;
+        window.goToPage = function(page) {
+            currentPage = page;
+            fetchProcurements();
+        };
 
-        html += `</ul></nav>`;
-        paginationWrap.innerHTML = html;
-    }
+        function fetchProcurements() {
+            const q = encodeURIComponent(searchInput.value.trim());
+            const checkpoint = encodeURIComponent(checkpointSelect.value);
+            const priority = encodeURIComponent(prioritySelect.value);
+            const project = encodeURIComponent(projectSelect.value);
 
-    window.goToPage = function (page) {
-        currentPage = page;
-        fetchProcurements();
-    };
-
-    function fetchProcurements() {
-        const q = encodeURIComponent(searchInput.value.trim());
-        const checkpoint = encodeURIComponent(checkpointSelect.value);
-        const priority = encodeURIComponent(prioritySelect.value);
-        const project = encodeURIComponent(projectSelect.value);    
-
-        const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&priority=${priority}&project=${project}&page=${currentPage}`;
-        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(res => res.json())
-            .then(res => {
-                lastPagination = res.pagination;
-                renderRows(res.data);
-            })
-            .catch(err => {
-                console.error("Search error:", err);
-                tbody.innerHTML = `
+            const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&priority=${priority}&project=${project}&page=${currentPage}`;
+            fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(res => {
+                    lastPagination = res.pagination;
+                    renderRows(res.data);
+                })
+                .catch(err => {
+                    console.error("Search error:", err);
+                    tbody.innerHTML = `
                     <tr>
                         <td colspan="10" class="text-center py-5">
                             <i class="bi bi-exclamation-circle" style="font-size: 48px; color: #f00;"></i>
                             <p class="text-danger mt-2">Terjadi kesalahan: ${err.message}</p>
                         </td>
                     </tr>`;
-            });
-    }
+                });
+        }
 
-    const debouncedFetch = debounce(() => {
-        currentPage = 1;
-        fetchProcurements();
-    }, 300);
+        const debouncedFetch = debounce(() => {
+            currentPage = 1;
+            fetchProcurements();
+        }, 300);
 
-    searchInput.addEventListener('input', debouncedFetch);
-    checkpointSelect.addEventListener('change', debouncedFetch);
-    prioritySelect.addEventListener('change', debouncedFetch);
-    projectSelect.addEventListener('change', debouncedFetch);
-});
+        searchInput.addEventListener('input', debouncedFetch);
+        checkpointSelect.addEventListener('change', debouncedFetch);
+        prioritySelect.addEventListener('change', debouncedFetch);
+        projectSelect.addEventListener('change', debouncedFetch);
+    });
 </script>
 @endpush
