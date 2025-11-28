@@ -1,4 +1,4 @@
-<!-- @extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Form Pengadaan - PT PAL Indonesia')
 
@@ -152,6 +152,7 @@
         .page-wrapper {
             padding: 20px;
         }
+
         .btn-kirim {
             width: 100%;
         }
@@ -162,96 +163,63 @@
 @section('content')
 
 <div class="page-wrapper">
-
-    <div class="section-title">Informasi Umum</div>
-
-    <div class="info-section">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-section">
-                    <label class="label-title">Nama Project *</label>
-                    <input type="text" class="form-box" value="{{ $project->code_project ?? 'N/A' }}" readonly>
-                </div>
-
-                <div class="form-section">
-                    <label class="label-title">Department *</label>
-                    <input type="text" class="form-box" value="{{ $project->ownerDivision->nama_divisi ?? 'N/A' }}" readonly>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="form-section">
-                    <label class="label-title">Prioritas *</label>
-                    <input type="text" class="form-box" value="{{ strtoupper($project->priority ?? 'N/A') }}" readonly>
-                </div>
-
-                <div class="form-section">
-                    <label class="label-title">Deskripsi *</label>
-                    <textarea class="form-box" readonly>{{ $project->description ?? 'N/A' }}</textarea>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <form action="{{ route('desain.kirim-pengadaan', $project->project_id) }}" method="POST" id="pengadaanForm">
+    <form action="{{ route('desain.kirim-pengadaan',$projects->first()->project_id) }}" method="POST" id="pengadaanForm">
         @csrf
-
+<!-- 
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="section-title mb-0">Daftar Barang</div>
-            
+            <div class="section-title mb-0">Tambah Pengadaan</div>
+
             @if(Auth::check() && Auth::user()->roles === 'supply_chain')
             <button type="button" class="btn-tambah-item" id="addItemBtn">
                 <i class="bi bi-plus-circle me-2"></i>Tambah Item
             </button>
             @endif
-        </div>
-
+        </div> -->
         <div id="itemContainer">
-            @if(isset($items) && count($items) > 0)
-                @foreach($items as $index => $item)
-                <div class="item-row" data-item-index="{{ $index }}">
-                    <span class="item-number">Item {{ $index + 1 }}</span>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-section">
-                                <label class="label-title">Nama Barang *</label>
-                                <input type="text" class="form-box" value="{{ $item->nama_barang }}" readonly>
-                            </div>
+            <div class="item-row" data-item-index="1">
+                <!-- <span class="item-number">Item 1</span> -->
 
-                            <div class="form-section">
-                                <label class="label-title">Spesifikasi *</label>
-                                <textarea class="form-box" readonly>{{ $item->spesifikasi }}</textarea>
-                            </div>
-
-                            <div class="form-section">
-                                <label class="label-title">Satuan *</label>
-                                <input type="text" class="form-box" value="{{ $item->satuan }}" readonly>
-                            </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-section">
+                            <label class="label-title">Nama Barang *</label>
+                            <input type="text" class="form-box" name="nama_barang[]" required placeholder="Masukkan nama barang...">
                         </div>
 
-                        <div class="col-md-6">
-                            <div class="form-section">
-                                <label class="label-title">Harga *</label>
-                                <input type="text" class="form-box" value="Rp {{ number_format($item->harga, 0, ',', '.') }}" readonly>
-                            </div>
+                        <div class="form-section">
+                            <label class="label-title">Spesifikasi *</label>
+                            <textarea class="form-box" name="spesifikasi[]" required placeholder="Masukkan spesifikasi barang..."></textarea>
+                        </div>
 
-                            <div class="form-section">
-                                <label class="label-title">Harga Estimasi *</label>
-                                <input type="text" class="form-box" value="Rp {{ number_format($item->harga_estimasi, 0, ',', '.') }}" readonly>
-                            </div>
+                        <div class="form-section">
+                            <label class="label-title">Satuan *</label>
+                            <input type="text" class="form-box" name="satuan[]" required placeholder="Contoh: Unit, Kg, Liter...">
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-section">
+                            <label class="label-title">Harga *</label>
+                            <input type="number" class="form-box" name="harga[]" required placeholder="Masukkan harga..." min="0">
+                        </div>
+
+                        <div class="form-section">
+                            <label class="label-title">Harga Estimasi *</label>
+                            <input type="number" class="form-box" name="harga_estimasi[]" required placeholder="Masukkan estimasi harga..." min="0">
+                        </div>
+
+                        <div class="form-section">
+                            <button type="button" class="btn-hapus-item" onclick="removeItem(this)">
+                                <i class="bi bi-trash me-1"></i>Hapus Item
+                            </button>
                         </div>
                     </div>
                 </div>
-                @endforeach
-            @else
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle me-2"></i>Belum ada item. Klik "Tambah Item" untuk menambahkan barang.
-                </div>
-            @endif
+            </div>
+
         </div>
+
 
         <div class="text-start">
             <button type="submit" class="btn-kirim">
@@ -266,15 +234,30 @@
 
 @push('scripts')
 <script>
-    let itemCounter = {{ isset($items) ? count($items) : 0 }};
+    let itemCounter = 1; // langsung mulai dari 1 karena sudah muncul
+
+    addItemBtn.addEventListener('click', function() {
+        itemCounter++;
+
+        const html = `
+    <div class="item-row" data-item-index="${itemCounter}">
+        <span class="item-number">Item ${itemCounter}</span>
+        ...
+        (form input sama seperti di atas)
+    </div>
+    `;
+
+        document.getElementById('itemContainer').insertAdjacentHTML('beforeend', html);
+        updateItemNumbers();
+    });
 
     const addItemBtn = document.getElementById('addItemBtn');
-    
+
     if (addItemBtn) {
-        addItemBtn.addEventListener('click', function () {
+        addItemBtn.addEventListener('click', function() {
             itemCounter++;
             const container = document.getElementById('itemContainer');
-            
+
             // Remove alert if exists
             const alert = container.querySelector('.alert');
             if (alert) {
@@ -333,7 +316,7 @@
         if (confirm('Apakah Anda yakin ingin menghapus item ini?')) {
             button.closest('.item-row').remove();
             updateItemNumbers();
-            
+
             // Show alert if no items
             const container = document.getElementById('itemContainer');
             const items = container.querySelectorAll('.item-row');
@@ -363,7 +346,7 @@
     if (form) {
         form.addEventListener('submit', function(e) {
             const items = document.querySelectorAll('.item-row');
-            
+
             if (items.length === 0) {
                 e.preventDefault();
                 alert('Mohon tambahkan minimal 1 item sebelum mengirim pengadaan!');
@@ -377,4 +360,4 @@
         });
     }
 </script>
-@endpush -->
+@endpush

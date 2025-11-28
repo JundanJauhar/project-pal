@@ -54,7 +54,7 @@ class DesainController extends Controller
         }
 
         // Ambil data yang diperlukan untuk form
-        $projects = Project::all(); // atau sesuaikan query
+        $projects = Project::all() ; 
         
         return view('desain.input-item', compact('projects'));
     }
