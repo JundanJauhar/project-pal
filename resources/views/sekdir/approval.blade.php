@@ -265,25 +265,26 @@
                         <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->created_at->format('d/m/Y') }}</td>
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             <a href="{{ route('sekdir.approval-detail', $procurement->procurement_id) }}">
+
                                 @php
-                                // 1. Ambil progress khusus checkpoint_id 5 (Pengesahan Kontrak)
-                                $contractProgress = $procurement->procurementProgress
-                                ->firstWhere('checkpoint_id', 5);
+                                $cp4 = $procurement->procurementProgress->firstWhere('checkpoint_id', 4);
 
-                                $statusText = 'Menunggu Proses Dokumen';
-                                $badgeColor = '#BD0000'; // Default: Merah (Menunggu)
-
-                                if ($contractProgress) {
-                                    if ($contractProgress->status === 'completed') {
-                                        $statusText = 'Dokumen Selesai (Disetujui)';
-                                        $badgeColor = '#28AC00'; // Hijau (Selesai)
-                                    } elseif ($contractProgress->status === 'rejected') {
-                                        $statusText = 'Ditolak Sekretaris';
-                                        $badgeColor = '#dc3545'; // Merah gelap (Ditolak)
-                                    } else {
-                                        // Status 'in_progress' atau status lain yang masih aktif
-                                        $statusText = $contractProgress->checkpoint->point_name ?? 'Dalam Proses';
-                                        $badgeColor = '#ECAD02'; // Kuning (Proses)
+                                if (!$cp4) {
+                                    $statusText = 'Belum Masuk Tahap';
+                                    $badgeColor = '#6c757d';
+                                } else {
+                                    switch ($cp4->status) {
+                                        case 'completed':
+                                            $statusText = 'Kontrak Disahkan (Approved)';
+                                            $badgeColor = '#28AC00';
+                                            break;
+                                        case 'rejected':
+                                            $statusText = 'Kontrak Ditolak';
+                                            $badgeColor = '#dc3545';
+                                            break;
+                                        default:
+                                            $statusText = 'Menunggu Pengesahan Kontrak';
+                                            $badgeColor = '#ECAD02';
                                     }
                                 }
                                 @endphp
@@ -291,8 +292,10 @@
                                 <span class="badge" style="background-color: {{ $badgeColor }};">
                                     {{ $statusText }}
                                 </span>
+
                             </a>
                         </td>
+
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             <a href="{{ route('sekdir.approval-detail', $procurement->procurement_id) }}"
                                 class="btn btn-sm btn-primary btn-custom"

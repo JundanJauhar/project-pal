@@ -114,11 +114,19 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/projects/{projectId}/negotiation', [SupplyChainController::class, 'createNegotiation'])->name('create-negotiation');
         Route::get('/material-shipping', [SupplyChainController::class, 'materialShipping'])->name('material-shipping');
         Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])->name('material-arrival');
+        
+        // ✅ FIXED VENDOR ROUTES - Proper route ordering
         Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])->name('vendor.kelola');
         Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])->name('vendor.form');
-        Route::post('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
         Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])->name('vendor.detail');
+        
+        // ✅ FIXED: This route MUST come AFTER /vendor/detail and /vendor/form
+        // Otherwise /vendor/{procurement_id} will match them first!
+        Route::get('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
+        
         Route::put('/vendor/update/{id_vendor}', [SupplyChainController::class, 'updateVendor'])->name('vendor.update');
+        
+        // ✅ FIXED: This route MUST use POST and come after GET routes
         Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])->name('vendor.simpan');
     });
 
@@ -321,7 +329,8 @@ Route::middleware(['auth'])->group(function () {
         $filtered = array_filter($lines, function($line) {
             return stripos($line, 'checkpoint') !== false || 
                    stripos($line, 'inspection') !== false ||
-                   stripos($line, 'transition') !== false;
+                   stripos($line, 'transition') !== false ||
+                   stripos($line, 'simpanVendor') !== false;
         });
         
         echo "<h2>Recent Checkpoint/Inspection Logs</h2>";

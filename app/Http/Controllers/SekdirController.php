@@ -35,44 +35,34 @@ class SekdirController extends Controller
     }
 
     // ...
-    public function approval()
+public function approval()
 {
-    // Cek Status Pengadaan yang Sedang di Checkpoint 5 (Pengesahan Kontrak)
-    // Hanya tampilkan yang status progressnya 'in_progress' di checkpoint 5
+    // Ambil semua procurement yang sedang berada di CP4 (Pengesahan Kontrak)
     $procurements = Procurement::with([
-        'project.ownerDivision', 
+        'project.ownerDivision',
         'requestProcurements.vendor',
-        'procurementProgress.checkpoint', 
+        'procurementProgress.checkpoint',
     ])
     ->whereHas('procurementProgress', function ($q) {
-        // Filter ketat: Hanya yang sedang aktif di Checkpoint 5
-        $q->where('status', 'in_progress')->where('checkpoint_id', 4);
+        $q->where('checkpoint_id', 4)
+          ->where('status', 'in_progress');
     })
     ->orderBy('created_at', 'desc')
     ->get();
 
-    // --- PERHITUNGAN STATISTIK ---
-    // Menggunakan model Project untuk statistik dashboard yang lebih luas
-    $totalProjects = Procurement::count();
-
+    // Hitung statistik
     $stats = [
-        'total' => $totalProjects, 
-        // Pending: Jumlah Pengadaan yang saat ini ditampilkan di list (menunggu approval Sekdir)
-        'pending' => $procurements->count(), 
-        
-        // Disetujui (Approved): Asumsi status 'approved' di tabel Procurement/Project
-        // Lebih baik hitung yang sudah selesai di checkpoint 5
+        'total'    => ProcurementProgress::where('checkpoint_id', 4)->distinct('procurement_id')->count('procurement_id'),
+        'pending'  => $procurements->count(),
         'approved' => ProcurementProgress::where('checkpoint_id', 4)->where('status', 'completed')->count(),
-        
-        // Ditolak (Rejected):
         'rejected' => ProcurementProgress::where('checkpoint_id', 4)->where('status', 'rejected')->count(),
     ];
-    
-    // TotalProcurements harus sesuai dengan variabel yang digunakan di Blade (dashboard view)
-    $totalProcurements = ProcurementProgress::where('checkpoint_id', 4)->count(); 
+
+    $totalProcurements = $stats['total'];
 
     return view('sekdir.approval', compact('procurements', 'stats', 'totalProcurements'));
 }
+
 
 
 
@@ -199,37 +189,30 @@ class SekdirController extends Controller
     ));
 }
 
-  public function approvalSubmit(Request $request, $procurement_id)
+public function approvalSubmit(Request $request, $procurement_id)
 {
-    // ... (Validasi dan pengambilan data) ...
+    $request->validate([
+        'procurement_link' => 'required|url',
+        'notes' => 'nullable|string',
+        'action' => 'required|in:approve,reject'
+    ]);
 
-    $action = $request->input('action');
+    $procurement = Procurement::findOrFail($procurement_id);
+
     $sekdirCheckpointId = 4; // Pengesahan Kontrak
     $nextCheckpointId = 5;   // Pengiriman Material
 
-    // ... (Update data utama dan firstOrNew progress Checkpoint 5) ...
-
-    // 1. Update data utama (link dan catatan)
-    $procurement = Procurement::findOrFail($procurement_id);
-    $procurement->procurement_link = $request->input('procurement_link');
-    $procurement->notes = $request->input('notes');
-    
-    // 2. Cari atau inisialisasi record progress Sekdir (ID 5)
+    // Update progress CP4
     $progress = ProcurementProgress::firstOrNew([
         'procurement_id' => $procurement->procurement_id,
-        'checkpoint_id' => $sekdirCheckpointId,
+        'checkpoint_id'  => $sekdirCheckpointId,
     ]);
 
-    if ($action === 'approve') {
-        // --- Aksi Approval (Checkpoint 5 Completed) ---
+    if ($request->action === 'approve') {
         $progress->status = 'completed';
-        
-        // Update status di tabel utama procurements
-        // $procurement->status_procurement = 'approved'; 
-        
-        // --- LOGIKA MAJU KE CHECKPOINT 6 ---
-        // 1. Buat record baru untuk Checkpoint 6 (Pengiriman Material)
-        $nextProgress = ProcurementProgress::firstOrCreate(
+
+        // Buat / update CP5
+        ProcurementProgress::updateOrCreate(
             [
                 'procurement_id' => $procurement->procurement_id,
                 'checkpoint_id' => $nextCheckpointId,
@@ -239,21 +222,23 @@ class SekdirController extends Controller
                 'start_date' => now(),
             ]
         );
-        // Pastikan statusnya di-update jika sudah ada record tetapi statusnya bukan 'in_progress' (misalnya 'pending' atau NULL)
-        if ($nextProgress->status !== 'in_progress') {
-             $nextProgress->status = 'in_progress';
-             $nextProgress->save();
-        }
-        // --- AKHIR LOGIKA MAJU KE CHECKPOINT 6 ---
 
-        $message = 'Pengadaan ' . $procurement->code_procurement . ' berhasil disetujui dan dilanjutkan ke tahap Pengiriman Material.';
-
+        $message = "Pengadaan {$procurement->code_procurement} disetujui dan masuk Pengiriman Material.";
+    } else {
+        $progress->status = 'rejected';
+        $message = "Pengadaan {$procurement->code_procurement} ditolak.";
     }
-    // 3. Simpan perubahan ke Database
+
     $progress->save();
-    $procurement->save();
+
+    // Tambahan: simpan notes/link di procurement
+    $procurement->update([
+        'procurement_link' => $request->procurement_link,
+        'notes' => $request->notes
+    ]);
 
     return redirect()->route('sekdir.approval')->with('success', $message);
 }
+
 
 }

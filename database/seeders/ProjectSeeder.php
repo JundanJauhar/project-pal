@@ -11,7 +11,8 @@ use App\Models\Vendor;
 use App\Models\PaymentSchedule;
 use App\Models\InspectionReport;
 use Carbon\Carbon;
-use App\Models\Procurement;   // <-- WAJIB
+use App\Models\Procurement;
+use App\Models\ProcurementProgress;
 
 
 class ProjectSeeder extends Seeder
@@ -162,7 +163,6 @@ class ProjectSeeder extends Seeder
             'end_date' => Carbon::now()->addDays(20),
             'status_procurement' => 'in_progress',
         ]);
-
 
         /**
          * REQUEST PROCUREMENT (sesuai schema baru)
@@ -402,18 +402,27 @@ class ProjectSeeder extends Seeder
             ]);
         }
 
-        // Progress untuk procurement 3 - IN PROGRESS (sampai checkpoint ke-4)
-        foreach ($checkpoints->take(4) as $index => $checkpoint) {
-            \App\Models\ProcurementProgress::create([
-                'procurement_id' => $procurement3->procurement_id,
-                'checkpoint_id' => $checkpoint->point_id,
-                'user_id' => ($index % 2 === 0) ? 3 : 7,
-                'status' => $index < 3 ? 'completed' : 'in_progress',
-                'start_date' => Carbon::now()->subDays(40 - ($index * 9)),
-                'end_date' => $index < 3 ? Carbon::now()->subDays(37 - ($index * 9)) : null,
-                'note' => 'Checkpoint ' . ($index + 1) . ': ' . $checkpoint->point_name . ' - ' . ($index < 3 ? 'Selesai' : 'Sedang Berjalan'),
-            ]);
-        }
+        foreach ($checkpoints->take(3) as $index => $checkpoint) {
+
+    // CP1 = completed
+    // CP2 = completed
+    // CP3 = in_progress
+    $status = ($index < 2) ? 'completed' : 'in_progress';
+
+    \App\Models\ProcurementProgress::create([
+        'procurement_id' => $procurement3->procurement_id,
+        'checkpoint_id'  => $checkpoint->point_id,   // gunakan point_id yang benar
+        'user_id'        => ($index % 2 === 0) ? 3 : 7,
+        'status'         => $status,
+        'start_date'     => Carbon::now()->subDays(40 - ($index * 3)),
+        'end_date'       => $status === 'completed'
+                            ? Carbon::now()->subDays(39 - ($index * 3))
+                            : null,
+        'note'           => "Checkpoint " . ($index + 1) . ": {$checkpoint->point_name} - " .
+                           ($status === 'completed' ? 'Selesai' : 'Sedang Berjalan'),
+    ]);
+}
+
 
         // Progress untuk procurement 4 - IN PROGRESS (baru checkpoint ke-2)
         foreach ($checkpoints->take(2) as $index => $checkpoint) {

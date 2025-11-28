@@ -74,105 +74,101 @@ class DashboardController extends Controller
     /**
      * Search procurements with filters
      */
-    public function search(Request $request)
-    {
-        $query = Procurement::with([
-            'project',
-            'department', 
-            'requestProcurements.vendor',
-            'procurementProgress.checkpoint'
-        ]);
-        
-        // Search filter (q parameter)
-        if ($request->filled('q')) {
-            $searchTerm = $request->q;
-            $query->where(function($q) use ($searchTerm) {
-                $q->where('name_procurement', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('code_procurement', 'like', '%' . $searchTerm . '%');
-            });
-        }
-        
-        // Priority filter
-        if ($request->filled('priority')) {
-            $query->where('priority', $request->priority);
-        } 
-        
-        // Project filter
-        if ($request->filled('project')) {
-            $query->whereHas('project', function ($q) use ($request) {
-                $q->where('project_code', $request->project);
-            });
-        }
-        
-        // Get all data first (with eager loading)
-        $allProcurements = $query->orderBy('created_at', 'desc')->get();
-        
-        // Filter by checkpoint AFTER data is loaded
-        if ($request->filled('checkpoint')) {
-            $checkpointFilter = $request->checkpoint;
-            
-            $allProcurements = $allProcurements->filter(function($p) use ($checkpointFilter) {
-                // Handle special statuses
-                if ($checkpointFilter === 'completed') {
-                    return $p->status_procurement === 'completed';
-                }
-                
-                if ($checkpointFilter === 'cancelled') {
-                    return $p->status_procurement === 'cancelled';
-                }
-                
-                // Filter by current checkpoint name for in_progress items
-                $service = new CheckpointTransitionService($p);
-                $currentCheckpoint = $service->getCurrentCheckpoint();
-                $currentCheckpointName = $currentCheckpoint ? $currentCheckpoint->point_name : '-';
-                
-                return $p->status_procurement === 'in_progress' 
-                    && $currentCheckpointName === $checkpointFilter;
-            });
-        }
-        
-        // Manual pagination
-        $page = $request->get('page', 1);
-        $perPage = 10;
-        $total = $allProcurements->count();
-        $lastPage = $total > 0 ? ceil($total / $perPage) : 1;
-        
-        $procurements = $allProcurements
-            ->slice(($page - 1) * $perPage, $perPage)
-            ->values();
-        
-        // Transform data untuk JSON response
-        $data = $procurements->map(function($p) {
-            $service = new CheckpointTransitionService($p);
-            $currentCheckpoint = $service->getCurrentCheckpoint();
-            $checkpointName = $currentCheckpoint ? $currentCheckpoint->point_name : '-';
+public function search(Request $request)
+{
+    $query = Procurement::with([
+        'project',
+        'department',
+        'requestProcurements.vendor',
+        'procurementProgress.checkpoint'
+    ]);
 
-            return [
-                'procurement_id' => $p->procurement_id,
-                'project_code' => $p->project->project_code ?? '-',
-                'code_procurement' => $p->code_procurement,
-                'name_procurement' => $p->name_procurement,
-                'department_name' => $p->department->department_name ?? '-',
-                'start_date' => $p->start_date ? $p->start_date->format('d/m/Y') : '-',
-                'end_date' => $p->end_date ? $p->end_date->format('d/m/Y') : '-',
-                'vendor_name' => $p->requestProcurements->first()?->vendor->name_vendor ?? '-',
-                'priority' => $p->priority ?? 'rendah',
-                'status_procurement' => $p->status_procurement,
-                'current_checkpoint' => $checkpointName,
-            ];
+    // Filter search
+    if ($request->filled('q')) {
+        $searchTerm = $request->q;
+        $query->where(function ($q) use ($searchTerm) {
+            $q->where('name_procurement', 'like', "%$searchTerm%")
+              ->orWhere('code_procurement', 'like', "%$searchTerm%");
         });
-        
-        return response()->json([
-            'data' => $data,
-            'pagination' => [
-                'current_page' => (int)$page,
-                'last_page' => $lastPage,
-                'per_page' => $perPage,
-                'total' => $total,
-                'has_more' => $page < $lastPage,
-            ]
-        ]);
     }
+
+    // Filter priority
+    if ($request->filled('priority')) {
+        $query->where('priority', $request->priority);
+    }
+
+    // Filter project
+    if ($request->filled('project')) {
+        $query->whereHas('project', function ($q) use ($request) {
+            $q->where('project_code', $request->project);
+        });
+    }
+
+    // Load data
+    $allProcurements = $query->orderBy('created_at', 'desc')->get();
+
+    // Filter checkpoint AFTER loading (karena pakai accessor)
+    if ($request->filled('checkpoint')) {
+        $checkpointFilter = $request->checkpoint;
+
+        $allProcurements = $allProcurements->filter(function ($p) use ($checkpointFilter) {
+
+            // status completed
+            if ($checkpointFilter === 'completed') {
+                return $p->status_procurement === 'completed';
+            }
+
+            // status cancelled
+            if ($checkpointFilter === 'cancelled') {
+                return $p->status_procurement === 'cancelled';
+            }
+
+            // filter berdasarkan accessor current_checkpoint
+            return $p->status_procurement === 'in_progress'
+                && ($p->current_checkpoint === $checkpointFilter);
+        });
+    }
+
+    // Manual pagination
+    $page = $request->get('page', 1);
+    $perPage = 10;
+    $total = $allProcurements->count();
+    $lastPage = $total > 0 ? ceil($total / $perPage) : 1;
+
+    $procurements = $allProcurements
+        ->slice(($page - 1) * $perPage, $perPage)
+        ->values();
+
+    // Format JSON response
+    $data = $procurements->map(function ($p) {
+
+        return [
+            'procurement_id'   => $p->procurement_id,
+            'project_code'     => $p->project->project_code ?? '-',
+            'code_procurement' => $p->code_procurement,
+            'name_procurement' => $p->name_procurement,
+            'department_name'  => $p->department->department_name ?? '-',
+            'start_date'       => optional($p->start_date)->format('d/m/Y'),
+            'end_date'         => optional($p->end_date)->format('d/m/Y'),
+            'vendor_name'      => $p->requestProcurements->first()?->vendor?->name_vendor ?? '-',
+            'priority'         => $p->priority,
+            'status_procurement' => $p->status_procurement,
+            'current_checkpoint' => $p->current_checkpoint, // ← FIX UTAMA
+        ];
+    });
+
+    return response()->json([
+        'data' => $data,
+        'pagination' => [
+            'current_page' => (int)$page,
+            'last_page'    => $lastPage,
+            'per_page'     => $perPage,
+            'total'        => $total,
+            'has_more'     => $page < $lastPage,
+        ]
+    ]);
+}
+
 
     /**
      * Get dashboard data for specific department

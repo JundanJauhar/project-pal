@@ -28,6 +28,9 @@ class Procurement extends Model
         'end_date' => 'date',
     ];
 
+    protected $with = ['procurementProgress.checkpoint', 'requestProcurements.vendor'];
+
+
     // Appends untuk akses mudah di blade
     protected $appends = ['current_checkpoint'];
 

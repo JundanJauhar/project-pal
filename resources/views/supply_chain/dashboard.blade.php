@@ -10,18 +10,9 @@
         font-size: 12px;
         font-weight: 600;
     }
-
-    .priority-tinggi {
-        color: #BD0000;
-    }
-
-    .priority-sedang {
-        color: #FFBB00;
-    }
-
-    .priority-rendah {
-        color: #6f6f6f;
-    }
+    .priority-tinggi { color: #BD0000; }
+    .priority-sedang { color: #FFBB00; }
+    .priority-rendah { color: #6f6f6f; }
 
     .tambah .btn {
         background: #003d82;
@@ -31,6 +22,39 @@
     .tambah .btn:hover {
         background: #002e5c;
         border-color: #002e5c;
+    }
+
+    /* FIX: Gunakan .btn-sm bukan .btn .sm */
+    .btn-sm {
+        background: #003d82 !important;
+        border-color: #003d82 !important;
+        color: white !important;
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s;
+    }
+
+    .btn-sm:hover {
+        background: #002e5c !important;
+        border-color: #002e5c !important;
+        color: white !important;
+    }
+
+    .btn-primary {
+        background: #003d82;
+        border-color: #003d82;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #002e5c;
+        border-color: #002e5c;
+        color: white;
     }
 
     .dashboard-table thead th {
@@ -56,20 +80,19 @@
     }
 
     .dashboard-table-wrapper {
-        /* background: #F6F6F6; */
+        background: #FFFFFF;
         padding: 25px;
         border-radius: 14px;
-        border: 1px solid #E0E0E0;
         margin-top: 20px;
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.12);
     }
 
     .dashboard-table {
         width: 100%;
         border-collapse: collapse;
-        /* table-layout: fixed; */
     }
 
-    /* Title (mirip Payment) */
+    /* Title */
     .dashboard-table-title {
         font-size: 26px;
         font-weight: 700;
@@ -99,7 +122,7 @@
         border: 1px solid #ddd;
         font-size: 14px;
     }
-
+    
     .dashboard-search-box input {
         border: none;
         background: transparent;
@@ -107,7 +130,7 @@
         outline: none;
         font-size: 14px;
     }
-
+    
     .dashboard-search-box i {
         font-size: 14px;
         color: #777;
@@ -160,9 +183,22 @@
                         <div class="col-md-3">
                             <select class="form-select" name="checkpoint">
                                 <option value="">Semua Checkpoint</option>
-                                @foreach($checkpoints as $checkpoint)
-                                <option value="{{ $checkpoint->point_name }}">{{ $checkpoint->point_name }}</option>
-                                @endforeach
+                                <option value="Penawaran Permintaan">Penawaran Permintaan</option>
+                                <option value="Evatek">Evatek</option>
+                                <option value="Negosiasi">Negosiasi</option>
+                                <option value="Usulan Pengadaan / OC">Usulan Pengadaan / OC</option>
+                                <option value="Pengesahan Kontrak">Pengesahan Kontrak</option>
+                                <option value="Pengiriman Material">Pengiriman Material</option>
+                                <option value="Pembayaran DP">Pembayaran DP</option>
+                                <option value="Proses Importasi / Produksi">Proses Importasi / Produksi</option>
+                                <option value="Kedatangan Material">Kedatangan Material</option>
+                                <option value="Serah Terima Dokumen">Serah Terima Dokumen</option>
+                                <option value="Inspeksi Barang">Inspeksi Barang</option>
+                                <option value="Berita Acara / NCR">Berita Acara / NCR</option>
+                                <option value="Verifikasi Dokumen">Verifikasi Dokumen</option>
+                                <option value="Pembayaran">Pembayaran</option>
+                                <option value="completed">Selesai</option>
+                                <option value="rejected">Ditolak</option>
                             </select>
                         </div>
                         <div class="col-md-3">
@@ -185,246 +221,115 @@
     </div>
 
     <!-- Table -->
-    <div class="dashboard-table-wrapper">
-        <div class="table-responsive">
-            <table class="dashboard-table">
-                <thead>
-                    <tr>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode Pengadaan</th>
-                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Pengadaan</th>
-                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Department</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    @forelse($procurements as $procurement)
-                    @php
-                    $service = new \App\Services\CheckpointTransitionService($procurement);
-                    $currentCheckpoint = $service->getCurrentCheckpoint();
-                    $currentSequence = $currentCheckpoint?->point_sequence;
-                    @endphp
-                    <tr data-name="{{ strtolower($procurement->name_procurement) }} {{ strtolower($procurement->code_procurement) }}">
-                        <td style="padding: 12px 8px; text-align: center; color: #000;"><strong>{{ $procurement->project->project_code ?? '-' }}</strong></td>
-                        <td style="padding: 12px 8px; text-align: center;  color: #000;"><strong>{{ $procurement->code_procurement }}</strong></td>
-                        <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ Str::limit($procurement->name_procurement, 40) }}</td>
-                        <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ $procurement->department->department_name ?? '-' }}</td>
-                        <td style="padding: 12px 8px; text-align: center; color: #000;">
-                            @php
-                            $requestProcurement = $procurement->requestProcurements->first();
-                            $vendor = $requestProcurement?->vendor;
-                            @endphp
+        <div class="dashboard-table-wrapper">
+            <div class="table-responsive">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode Pengadaan</th>
+                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Pengadaan</th>
+                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Department</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        @forelse($procurements as $procurement)
+                        @php
+                            $service = new \App\Services\CheckpointTransitionService($procurement);
+                            $currentCheckpoint = $service->getCurrentCheckpoint();
+                            $currentSequence = $currentCheckpoint?->point_sequence;
+                        @endphp
+                        <tr data-name="{{ strtolower($procurement->name_procurement) }} {{ strtolower($procurement->code_procurement) }}">
+                            <td style="padding: 12px 8px; text-align: center; color: #000;"><strong>{{ $procurement->project->project_code ?? '-' }}</strong></td>
+                            <td style="padding: 12px 8px; text-align: center;  color: #000;"><strong>{{ $procurement->code_procurement }}</strong></td>
+                            <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ Str::limit($procurement->name_procurement, 40) }}</td>
+                            <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ $procurement->department->department_name ?? '-' }}</td>
+                            <td style="padding: 12px 8px; text-align: center; color: #000;">
+                                @php
+                                    $requestProcurement = $procurement->requestProcurements->first();
+                                    $vendor = $requestProcurement?->vendor;
+                                @endphp
 
-                            {{-- Jika vendor belum dipilih --}}
-                            @if (!$vendor)
+                                {{-- Jika vendor belum dipilih --}}
+                                @if (!$vendor)
 
-                            {{-- Tampilkan tombol hanya jika berada di checkpoint 4 --}}
-                            @if ($currentSequence == 4)
-                            <a href="{{ route('supply-chain.vendor.pilih', $procurement->procurement_id) }}"
-                                class="btn btn-sm btn-primary" wire:navigate>
-                                <i class="bi bi-plus-circle"></i> Kelola Vendor
-                            </a>
-                            @else
-                            <span class="text-muted">-</span>
-                            @endif
+                                    {{-- Tampilkan tombol hanya jika berada di checkpoint 3 --}}
+                                    @if ($currentSequence == 3)
+                                        <a href="{{ route('supply-chain.vendor.pilih', $procurement->procurement_id) }}"
+                                        class="btn btn-sm btn-primary" wire:navigate>
+                                            <i class="bi bi-plus-circle"></i> Kelola Vendor
+                                        </a>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
 
-                            {{-- Jika vendor sudah dipilih --}}
-                            @else
-                            {{ $vendor->name_vendor }}
-                            @endif
+                                {{-- Jika vendor sudah dipilih --}}
+                                @else
+                                    {{ $vendor->name_vendor }}
+                                @endif
 
-                        </td>
-                        <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->start_date->format('d/m/Y') }}</td>
-                        <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->end_date->format('d/m/Y') }}</td>
-                        <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
-                            <span class="priority-badge priority-{{ strtolower($procurement->priority) }}">
-                                {{ strtoupper($procurement->priority) }}
-                            </span>
-                        </td>
-                        <!-- <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
+                            </td>
+                            <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->start_date->format('d/m/Y') }}</td>
+                            <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->end_date->format('d/m/Y') }}</td>
+                            <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
+                                <span class="priority-badge priority-{{ strtolower($procurement->priority) }}">
+                                    {{ strtoupper($procurement->priority) }}
+                                </span>
+                            </td>
+                            <!-- <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
                                 <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary" wire:navigate>
                                     Detail
                                 </a>
                             </td> -->
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8" class="text-center">Tidak ada data pengadaan</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="8" class="text-center">Tidak ada data pengadaan</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
-    function debounce(fn, delay) {
-        let t;
-        return function() {
-            clearTimeout(t);
-            t = setTimeout(() => fn.apply(this, arguments), delay);
-        };
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const priorityFilter = document.getElementById('priorityFilter');
+    const tableBody = document.getElementById('tableBody');
+
+    function filterTable() {
+        const searchValue = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value.toLowerCase();
+        const priorityValue = priorityFilter.value.toLowerCase();
+        const rows = tableBody.querySelectorAll('tr[data-name]');
+
+        rows.forEach(row => {
+            const name = row.getAttribute('data-name');
+            const status = row.querySelector('td:nth-child(8)')?.textContent.toLowerCase() || '';
+            const priority = row.querySelector('.priority-badge')?.textContent.toLowerCase() || '';
+
+            const matchSearch = name.includes(searchValue);
+            const matchStatus = !statusValue || status.includes(statusValue);
+            const matchPriority = !priorityValue || priority.includes(priorityValue);
+
+            row.style.display = (matchSearch && matchStatus && matchPriority) ? '' : 'none';
+        });
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.querySelector('input[name="search"]');
-        const checkpointSelect = document.querySelector('select[name="checkpoint"]');
-        const prioritySelect = document.querySelector('select[name="priority"]');
-        const projectSelect = document.querySelector('select[name="project"]');
-        const tbody = document.getElementById('tableBody');
-        const paginationWrap = document.getElementById('procurements-pagination');
-
-        if (!searchInput || !checkpointSelect || !prioritySelect || !tbody || !paginationWrap) {
-            console.error('Missing required elements');
-            return;
-        }
-
-        let currentPage = 1;
-        let lastPagination = null;
-
-        function getStatusBadge(status, checkpoint) {
-            let badgeColor, text;
-
-            if (status === 'completed') {
-                badgeColor = '#28AC00';
-                text = 'Selesai';
-            } else if (status === 'cancelled') {
-                badgeColor = '#BD0000';
-                text = 'Dibatalkan';
-            } else if (status === 'in_progress') {
-                badgeColor = '#ECAD02';
-                text = checkpoint || 'Sedang Proses';
-            } else {
-                badgeColor = '#555';
-                text = status || 'N/A';
-            }
-
-            return `<span class="badge" style="background-color: ${badgeColor}; color:white; padding:6px 12px; font-weight:600; border-radius:6px;">
-            ${text}
-        </span>`;
-        }
-
-        function renderRows(items) {
-            if (!Array.isArray(items) || items.length === 0) {
-                tbody.innerHTML = `
-                <tr>
-                    <td colspan="10" class="text-center py-5">
-                        <i class="bi bi-inbox" style="font-size: 40px; color: #bbb;"></i>
-                        <p class="text-muted mt-2">Tidak ada data pengadaan</p>
-                    </td>
-                </tr>`;
-                paginationWrap.innerHTML = "";
-                return;
-            }
-
-            tbody.innerHTML = items.map(p => {
-                const priorityClass = p.priority?.toLowerCase() || '';
-                const priorityText = p.priority?.toUpperCase() || '-';
-
-                return `
-            <tr>
-                <td style="padding: 12px 8px; text-align:center;"><strong>${p.project_code}</strong></td>
-                <td style="padding: 12px 8px; text-align:center"><strong>${p.code_procurement}</strong></td>
-                <td style="padding: 12px 8px;">${p.name_procurement?.substring(0, 40) || '-'}</td>
-                <td style="padding: 12px 8px; text-align: center;">${p.department_name || '-'}</td>
-                <td style="padding: 12px 8px; text-align: center;">${p.start_date || '-'}</td>
-                <td style="padding: 12px 8px; text-align: center;">${p.end_date || '-'}</td>
-                <td style="padding: 12px 8px; text-align: center;">${p.vendor_name || '-'}</td>
-                <td style="padding: 12px 8px; text-align: center;">
-                    <span class="badge-priority badge-${priorityClass}">
-                        ${priorityText}
-                    </span>
-                </td>
-                <td style="padding: 12px 8px; text-align: center;">
-                    ${getStatusBadge(p.status_procurement, p.current_checkpoint)}
-                </td>
-                <td style="padding: 12px 8px; text-align: center;">
-                    <a href="/procurements/${p.procurement_id}" class="btn btn-sm btn-primary btn-custom">
-                        Detail
-                    </a>
-                </td>
-            </tr>`;
-            }).join("");
-
-            renderPagination();
-        }
-
-        function renderPagination() {
-            if (!lastPagination) {
-                paginationWrap.innerHTML = '';
-                return;
-            }
-
-            const p = lastPagination;
-            let html = `<nav><ul class="pagination">`;
-
-            html += p.current_page > 1 ?
-                `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page - 1})">← Sebelumnya</a></li>` :
-                `<li class="page-item disabled"><span class="page-link">← Sebelumnya</span></li>`;
-
-            for (let i = 1; i <= p.last_page; i++) {
-                html += i === p.current_page ?
-                    `<li class="page-item active"><span class="page-link">${i}</span></li>` :
-                    `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${i})">${i}</a></li>`;
-            }
-
-            html += p.has_more ?
-                `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page + 1})">Berikutnya →</a></li>` :
-                `<li class="page-item disabled"><span class="page-link">Berikutnya →</span></li>`;
-
-            html += `</ul></nav>`;
-            paginationWrap.innerHTML = html;
-        }
-
-        window.goToPage = function(page) {
-            currentPage = page;
-            fetchProcurements();
-        };
-
-        function fetchProcurements() {
-            const q = encodeURIComponent(searchInput.value.trim());
-            const checkpoint = encodeURIComponent(checkpointSelect.value);
-            const priority = encodeURIComponent(prioritySelect.value);
-            const project = encodeURIComponent(projectSelect.value);
-
-            const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&priority=${priority}&project=${project}&page=${currentPage}`;
-            fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(res => res.json())
-                .then(res => {
-                    lastPagination = res.pagination;
-                    renderRows(res.data);
-                })
-                .catch(err => {
-                    console.error("Search error:", err);
-                    tbody.innerHTML = `
-                    <tr>
-                        <td colspan="10" class="text-center py-5">
-                            <i class="bi bi-exclamation-circle" style="font-size: 48px; color: #f00;"></i>
-                            <p class="text-danger mt-2">Terjadi kesalahan: ${err.message}</p>
-                        </td>
-                    </tr>`;
-                });
-        }
-
-        const debouncedFetch = debounce(() => {
-            currentPage = 1;
-            fetchProcurements();
-        }, 300);
-
-        searchInput.addEventListener('input', debouncedFetch);
-        checkpointSelect.addEventListener('change', debouncedFetch);
-        prioritySelect.addEventListener('change', debouncedFetch);
-        projectSelect.addEventListener('change', debouncedFetch);
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(filterTable, 300);
     });
+
+    statusFilter.addEventListener('change', filterTable);
+    priorityFilter.addEventListener('change', filterTable);
 </script>
 @endpush

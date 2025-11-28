@@ -11,6 +11,7 @@ use App\Models\Vendor;
 use App\Models\Hps;
 use App\Models\Contract;
 use App\Models\Notification;
+use App\Models\ProcurementProgress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -73,27 +74,27 @@ class SupplyChainController extends Controller
     }
 
     public function kelolaVendor(Request $request)
-    {
-        $search = $request->query('search');
+{
+    $search = $request->query('search');
 
-        $vendors = Vendor::query()
-            ->when($search, function ($query, $search) {
-                return $query->where(function ($q) use ($search) {
-                    $q->where('name_vendor', 'LIKE', "%{$search}%")
-                        ->orWhere('address', 'LIKE', "%{$search}%")
-                        ->orWhere('phone_number', 'LIKE', "%{$search}%")
-                        ->orWhere('email', 'LIKE', "%{$search}%");
-                });
-            })
-            ->orderBy('name_vendor')
-            ->get();
+    $vendors = Vendor::query()
+        ->when($search, function ($query, $search) {
+            return $query->where(function ($q) use ($search) {
+                $q->where('name_vendor', 'LIKE', "%{$search}%")
+                    ->orWhere('address', 'LIKE', "%{$search}%")
+                    ->orWhere('phone_number', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%");
+            });
+        })
+        ->orderByRaw('CAST(SUBSTRING(id_vendor, 3) AS UNSIGNED) ASC')
+        ->get();
 
-        $procurements = procurement::whereIn('status_procurement', ['pemilihan_vendor'])
-            ->with(['ownerDivision'])
-            ->get();
+    $procurements = procurement::whereIn('status_procurement', ['pemilihan_vendor'])
+        ->with(['ownerDivision'])
+        ->get();
 
-        return view('supply_chain.vendor.kelola', compact('vendors', 'procurements'));
-    }
+    return view('supply_chain.vendor.kelola', compact('vendors', 'procurements'));
+}
     public function pilihVendor($procurementId, Request $request)
     {
         // Ambil data procurement berdasarkan ID
@@ -110,7 +111,7 @@ class SupplyChainController extends Controller
                     ->orWhere('address', 'like', "%{$search}%");
             })
             ->where('legal_status', 'verified') // Hanya vendor yang sudah diapprove
-            ->orderBy('name_vendor', 'asc')
+            ->orderBy('id_vendor', 'asc')
             ->get();
 
         // Hitung statistik
@@ -123,7 +124,7 @@ class SupplyChainController extends Controller
 
         return view('supply_chain.vendor.pilih', compact('vendors', 'stats', 'procurement'))
             ->with('hideNavbar', true);
-    }
+         }
 
     public function simpanVendor($procurementId, Request $request)
 {
@@ -141,8 +142,6 @@ class SupplyChainController extends Controller
             'vendor_id' => $validated['vendor_id'],
             'request_status' => 'submitted'
         ]);
-
-        $message = "Vendor berhasil diubah menjadi {$vendor->name_vendor}";
     } else {
         RequestProcurement::create([
             'procurement_id' => $procurementId,
@@ -153,28 +152,15 @@ class SupplyChainController extends Controller
             'created_date' => now(),
             'deadline_date' => $procurement->end_date,
         ]);
-
-        $message = "Vendor {$vendor->name_vendor} berhasil dipilih";
     }
 
-    // === AUTO COMPLETE CHECKPOINT 4 DAN AKTIFKAN CHECKPOINT 5 ===
-    $service = new \App\Services\CheckpointTransitionService($procurement);
-    $transition = $service->transition(4, [
-        'notes' => 'Vendor telah dipilih dan OC selesai.',
-        'oc_document' => 'OC-AUTO',
-    ]);
-
-    if (!$transition['success']) {
-        return redirect()
-            ->route('supply-chain.dashboard')
-            ->with('error', 'Vendor tersimpan, namun gagal transisi CP4 → CP5: ' . $transition['message']);
-    }
+    // ====== Panggil service untuk pindah checkpoint otomatis ======
+    $transition = new CheckpointTransitionService($procurement);
+    $transition->completeCurrentAndMoveNext("Vendor {$vendor->name_vendor} dipilih");
 
     return redirect()
-        ->route('supply-chain.dashboard')
-        ->with('success', $message . ' | Checkpoint 4 selesai & Checkpoint 5 aktif.');
-}
-
+        ->route('supply-chain.dashboard');
+    }
 
     public function formVendor(Request $request)
     {
@@ -400,36 +386,6 @@ class SupplyChainController extends Controller
     {
         $vendors = Vendor::orderBy('name_vendor')->paginate(20);
         return view('supply_chain.vendors', compact('vendors'));
-    }
-
-    /**
-     * Select vendor forprocurement
-     */
-    public function selectVendor(Request $request, $procurement_id)
-    {
-        $request->validate([
-            'vendor_id' => 'required'
-        ]);
-
-        // Cek apakah vendor sudah dipilih sebelumnya
-        $existing = RequestProcurement::where('procurement_id', $procurement_id)->first();
-
-        if ($existing) {
-            $existing->update([
-                'vendor_id' => $request->vendor_id
-            ]);
-        } else {
-            RequestProcurement::create([
-                'procurement_id' => $procurement_id,
-                'vendor_id' => $request->vendor_id,
-                'request_name'   => 'Pemilihan Vendor', // bebas isi sesuai kebutuhan
-                'created_date'   => Carbon::now(), // WAJIB karena tidak ada defaultn
-
-            ]);
-        }
-
-        return redirect()
-            ->route('supply-chain.dashboard'); // arahkan ke halaman daftar pengadaan
     }
 
     /**

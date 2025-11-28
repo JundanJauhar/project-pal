@@ -21,18 +21,17 @@ class CheckpointIconService
         $icons = [
             1 => 'bi-file-earmark-text',           // Penawaran Permintaan
             2 => 'bi-clipboard-check',             // Evatek
-            3 => 'bi-chat-dots-fill',              // Negosiasi
-            4 => 'bi-file-earmark-pdf',            // Usulan Pengadaan / OC
-            5 => 'bi-pen-fill',                    // Pengesahan Kontrak
-            6 => 'bi-truck',                       // Pengiriman Material
-            7 => 'bi-credit-card-fill',            // Pembayaran DP
-            8 => 'bi-gear-fill',                   // Proses Importasi / Produksi
-            9 => 'bi-box-seam-fill',               // Kedatangan Material
-            10 => 'bi-hand-thumbs-up-fill',        // Serah Terima Dokumen
-            11 => 'bi-search',                     // Inspeksi Barang
-            12 => 'bi-file-earmark-check-fill',    // Berita Acara / NCR
-            13 => 'bi-file-earmark-check-2',       // Verifikasi Dokumen
-            14 => 'bi-check-circle-fill',          // Pembayaran
+            3 => 'bi-file-earmark-pdf',            // Usulan Pengadaan / OC
+            4 => 'bi-pen-fill',                    // Pengesahan Kontrak
+            5 => 'bi-truck',                       // Pengiriman Material
+            6 => 'bi-credit-card-fill',            // Pembayaran DP
+            7 => 'bi-gear-fill',                   // Proses Importasi / Produksi
+            8 => 'bi-box-seam-fill',               // Kedatangan Material
+            9 => 'bi-hand-thumbs-up-fill',        // Serah Terima Dokumen
+            10 => 'bi-search',                     // Inspeksi Barang
+            11 => 'bi-file-earmark-check-fill',    // Berita Acara / NCR
+            12 => 'bi-file-earmark-check-2',       // Verifikasi Dokumen
+            13 => 'bi-check-circle-fill',          // Pembayaran
         ];
 
         return $icons[$checkpointSequence] ?? 'bi-circle-fill';
@@ -57,61 +56,56 @@ class CheckpointIconService
                 'description' => 'Technical evaluation'
             ],
             3 => [
-                'name' => 'Negosiasi',
-                'icon' => 'bi-chat-dots-fill',
-                'description' => 'Negotiation with vendors'
-            ],
-            4 => [
                 'name' => 'Usulan Pengadaan / OC',
                 'icon' => 'bi-file-earmark-pdf',
                 'description' => 'Procurement proposal'
             ],
-            5 => [
+            4 => [
                 'name' => 'Pengesahan Kontrak',
                 'icon' => 'bi-pen-fill',
                 'description' => 'Contract approval'
             ],
-            6 => [
+            5 => [
                 'name' => 'Pengiriman Material',
                 'icon' => 'bi-truck',
                 'description' => 'Material delivery'
             ],
-            7 => [
+            6 => [
                 'name' => 'Pembayaran DP',
                 'icon' => 'bi-credit-card-fill',
                 'description' => 'Down payment'
             ],
-            8 => [
+            7 => [
                 'name' => 'Proses Importasi / Produksi',
                 'icon' => 'bi-gear-fill',
                 'description' => 'Import/Production process'
             ],
-            9 => [
+            8 => [
                 'name' => 'Kedatangan Material',
                 'icon' => 'bi-box-seam-fill',
                 'description' => 'Material arrival'
             ],
-            10 => [
+            9 => [
                 'name' => 'Serah Terima Dokumen',
                 'icon' => 'bi-hand-thumbs-up-fill',
                 'description' => 'Document handover'
             ],
-            11 => [
+            10 => [
                 'name' => 'Inspeksi Barang',
                 'icon' => 'bi-search',
                 'description' => 'Goods inspection'
             ],
-            12 => [
+            11 => [
                 'name' => 'Berita Acara / NCR',
                 'icon' => 'bi-file-earmark-check-fill',
                 'description' => 'Berita Acara / NCR Report'
             ],
-            13 => [
+            12 => [
                 'name' => 'Verifikasi Dokumen',
                 'icon' => 'bi bi-file-earmark-post',
                 'description' => 'Document verification'
             ],
-            14 => [
+            13 => [
                 'name' => 'Pembayaran',
                 'icon' => 'bi-check-circle-fill',
                 'description' => 'Final payment'
