@@ -21,6 +21,9 @@ use App\Http\Controllers\DesainListProjectController;
 use App\Http\Controllers\DetailApprovalController;
 use App\Http\Controllers\ListApprovalController;
 use App\Http\Controllers\SekdirController;
+use App\Http\Controllers\EvatekController;
+use App\Http\Controllers\VendorEvatekController;
+
 
 // Redirect root → login
 Route::get('/', fn() => redirect()->route('login'));
@@ -37,6 +40,12 @@ Route::post('/login', function (Request $request) {
 
     if (Auth::attempt($credentials, $request->boolean('remember'))) {
         $request->session()->regenerate();
+
+        // Jika vendor, arahkan ke halaman vendor
+        if (Auth::user()->roles === 'vendor') {
+            return redirect()->route('vendor.index');
+        }
+
         return redirect()->route('dashboard');
     }
 
@@ -61,7 +70,8 @@ Route::post('/logout', function (Request $request) {
 Route::middleware(['auth'])->group(function () {
 
     // Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
     Route::get('/dashboard/division/{divisionId}', [DashboardController::class, 'divisionDashboard'])->name('dashboard.division');
     Route::get('/dashboard/statistics', [DashboardController::class, 'getStatistics'])->name('dashboard.statistics');
     Route::get('/dashboard/timeline/{projectId}', [DashboardController::class, 'getProcurementTimeline'])->name('dashboard.timeline');
@@ -114,19 +124,16 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/projects/{projectId}/negotiation', [SupplyChainController::class, 'createNegotiation'])->name('create-negotiation');
         Route::get('/material-shipping', [SupplyChainController::class, 'materialShipping'])->name('material-shipping');
         Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])->name('material-arrival');
+        Route::get('/evatek', [EvatekController::class, 'index'])->name('evatek.index');
+        Route::get('/evatek/create', [EvatekController::class, 'create'])->name('evatek.create');
+        Route::post('/evatek/store', [EvatekController::class, 'store'])->name('evatek.store');
         
-        // ✅ FIXED VENDOR ROUTES - Proper route ordering
+        // VENDOR ROUTES - Proper route ordering
         Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])->name('vendor.kelola');
         Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])->name('vendor.form');
         Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])->name('vendor.detail');
-        
-        // ✅ FIXED: This route MUST come AFTER /vendor/detail and /vendor/form
-        // Otherwise /vendor/{procurement_id} will match them first!
         Route::get('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
-        
         Route::put('/vendor/update/{id_vendor}', [SupplyChainController::class, 'updateVendor'])->name('vendor.update');
-        
-        // ✅ FIXED: This route MUST use POST and come after GET routes
         Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])->name('vendor.simpan');
     });
 
@@ -194,6 +201,18 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/approval-detail/{procurement_id}/save', [SekdirController::class, 'approvalDetailSave'])->name('approval-detail.save');
         Route::post('/approval/{projectId}', [SekdirController::class, 'approvalSubmit'])->name('approval.submit');
     });
+
+Route::middleware(['auth'])->group(function () {
+
+    // halaman utama vendor
+    Route::get('/vendor', [VendorEvatekController::class, 'index'])
+        ->name('vendor.index');
+
+    // kompatibilitas
+    Route::redirect('/vendor/dashboard', '/vendor');
+    Route::redirect('/vendor/evatek', '/vendor');
+});
+
 
     // ============ DEBUG ROUTES ============
     

@@ -9,6 +9,9 @@ class Vendor extends Model
 {
     protected $table = 'vendors';
     protected $primaryKey = 'id_vendor';
+    protected $keyType = 'string';
+    public $incrementing = false;
+
 
     protected $fillable = [
         'id_vendor',
@@ -37,4 +40,10 @@ class Vendor extends Model
     {
         return $this->hasMany(RequestProcurement::class, 'vendor_id', 'id_vendor');
     }
+
+    public function evatekItems()
+    {
+        return $this->hasMany(EvatekItem::class, 'vendor_id', 'id_vendor');
+    }
+
 }
