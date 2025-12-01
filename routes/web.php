@@ -178,8 +178,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/project/{id}/pengadaan', [DesainListProjectController::class, 'formPengadaan'])->name('permintaan-pengadaan');
         Route::post('/project/{id}/pengadaan/kirim', [DesainListProjectController::class, 'kirimPengadaan'])->name('kirim-pengadaan');
         Route::get('/evatek/{request_id}', [DesainListProjectController::class, 'reviewEvatek'])->name('review-evatek');
-        Route::get('/input-item', [DesainController::class, 'inputItem'])->name('input-item');
-        Route::post('/input-item/store', [DesainController::class, 'storeItem'])->name('input-item.store');
+        Route::get('/project/{projectId}/input-item', [DesainController::class, 'inputItem'])->name('input-item');
+        Route::post('/project/{projectId}/input-item/store', [DesainController::class, 'storeItem'])->name('input-item.store');
     });
 
     /*

@@ -193,159 +193,89 @@
             <i class="bi bi-arrow-left-circle me-2"></i>Kembali
         </button>
 
+        <div class="alert alert-info mb-4">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Project:</strong> {{ $project->project_code }} - {{ $project->project_name }}
+        </div>
+
         <form method="POST"
-            action="{{ isset($procurement) ? route('procurements.update', $procurement->procurement_id) : route('procurements.store') }}"
+            action="{{ route('desain.input-item.store', $project->project_id) }}"
             id="mainForm">
             @csrf
-            @if(isset($procurement))
-            @method('PUT')
-            @endif
 
             <div class="card card-custom">
                 <div class="card-header-custom">
-                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi Procurement</h5>
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Tambah Item Baru</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="project_code" class="form-label">Project <span
-                                    class="text-danger">*</span></label>
-                            <select name="project_code" id="project_code" class="form-select" required>
-                                <option value="">Pilih Project</option>
+                    <div class="mb-3">
+                        <label for="item_name" class="form-label">Equipment <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('item_name') is-invalid @enderror"
+                            id="item_name" name="item_name"
+                            value="{{ old('item_name') }}"
+                            placeholder="Nama Equipment" required>
+                        @error('item_name')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                                @forelse($projects as $project)
+                    <div class="row">
+
+                        <div class="col-md-12 mb-3">
+                            <label for="procurement_id" class="form-label">Procurement <span class="text-danger">*</span></label>
+                            <select name="procurement_id" id="procurement_id" class="form-select" required>
+                                <option value="">Pilih Procurement</option>
                                 @foreach($project->procurements as $procurement)
-                                <option value="{{ $procurement->code_procurement }}"
-                                    {{ old('code_procurement', $procurement->project_code ?? '') == $procurement->project->project_code ? 'selected' : '' }}>
-                                    {{ $procurement->code_procurement }}
+                                <option value="{{ $procurement->procurement_id }}" {{ old('procurement_id') == $procurement->procurement_id ? 'selected' : '' }}>
+                                    {{ $procurement->code_procurement }} - {{ $procurement->name_procurement }}
                                 </option>
                                 @endforeach
-                                @empty
-                                <option disabled>Tidak ada project</option>
-                                @endforelse
-
                             </select>
-
-                            @error('project_code')
+                            @error('procurement_id')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label for="code_procurement" class="form-label">Vendor <span
-                                    class="text-danger">*</span></label>
+                            <label for="vendor_id" class="form-label">Vendor <span class="text-danger">*</span></label>
                             <select name="vendor_id" id="vendor_id" class="form-select" required>
                                 <option value="">Pilih Vendor</option>
-
-                                @forelse($projects as $project)
-                                @forelse($project->requests as $req)
-                                @if($req->vendor)
-                                <option value="{{ $req->vendor->vendor_name }}"
-                                    {{ $req->vendor->vendor_name }}
-                                    </option>
-                                    @endif
-                                    @empty
-                                    @endforelse
-                                    @empty
-                                <option disabled>Tidak ada project</option>
-                                @endforelse
-                            </select>
-
-
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="department_procurement" class="form-label">Department <span
-                                    class="text-danger">*</span></label>
-                            <select name="department_procurement" id="department_procurement" class="form-select"
-                                required>
-                                <option value="">Pilih Department</option>
-                                @foreach($departments as $department)
-                                <option value="{{ $department->department_id }}"
-                                    {{ old('department_procurement', $procurement->department_procurement ?? '') == $department->department_id ? 'selected' : '' }}>
-                                    {{ $department->department_name }}
+                                @foreach($vendors as $vendor)
+                                <option value="{{ $vendor->id_vendor }}" {{ old('vendor_id') == $vendor->id_vendor ? 'selected' : '' }}>
+                                    {{ $vendor->name_vendor }}
                                 </option>
                                 @endforeach
                             </select>
-                            @error('department_procurement')
+                            @error('vendor_id')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
-                    </div>
 
-                    <div class="mb-3">
-                        <label for="name_procurement" class="form-label">Nama Procurement <span
-                                class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('name_procurement') is-invalid @enderror"
-                            id="name_procurement" name="name_procurement"
-                            value="{{ old('name_procurement', $procurement->name_procurement ?? '') }}"
-                            placeholder="Pengadaan Material & Komponen" required>
-                        @error('name_procurement')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Deskripsi</label>
-                        <textarea class="form-control @error('description') is-invalid @enderror" id="description"
-                            name="description" rows="4"
-                            placeholder="Deskripsi detail procurement...">{{ old('description', $procurement->description ?? '') }}</textarea>
-                        @error('description')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label for="end_date" class="form-label">Tanggal Target <span
-                                    class="text-danger">*</span></label>
-                            <input type="date" class="form-control @error('end_date') is-invalid @enderror"
-                                id="end_date" name="end_date"
-                                value="{{ old('end_date', isset($procurement) ? $procurement->end_date->format('Y-m-d') : '') }}"
+                        <div class="col-md-12 mb-3">
+                            <label for="deadline_date" class="form-label">Tanggal Tenggat <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control @error('deadline_date') is-invalid @enderror"
+                                id="deadline_date" name="deadline_date"
+                                value="{{ old('deadline_date') }}"
                                 required>
-                            @error('end_date')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            @error('deadline_date')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <div class="col-md-4 mb-3">
-                            <label for="priority" class="form-label">Prioritas <span
-                                    class="text-danger">*</span></label>
-                            <select class="form-select @error('priority') is-invalid @enderror" id="priority"
-                                name="priority" required>
-                                <option value="">Pilih Prioritas</option>
-                                <option value="rendah"
-                                    {{ old('priority', $procurement->priority ?? '') === 'rendah' ? 'selected' : '' }}>
-                                    RENDAH
-                                </option>
-                                <option value="sedang"
-                                    {{ old('priority', $procurement->priority ?? '') === 'sedang' ? 'selected' : '' }}>
-                                    SEDANG
-                                </option>
-                                <option value="tinggi"
-                                    {{ old('priority', $procurement->priority ?? '') === 'tinggi' ? 'selected' : '' }}>
-                                    TINGGI
-                                </option>
-                            </select>
-                            @error('priority')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-md-4 mb-3 d-flex align-items-end gap-2">
-                            <a href="javascript:history.back()" class="btn btn-secondary btn-custom flex-grow-1">
+                        <div class="col-md-12 mb-3 d-flex gap-2 justify-content-end">
+                            <a href="javascript:history.back()" class="btn btn-secondary btn-custom">
                                 <i class="bi bi-x-circle"></i> Batal
                             </a>
-                            <button type="submit" class="btn btn-primary btn-custom flex-grow-1">
-                                <i class="bi bi-save"></i> {{ isset($procurement) ? 'Update' : 'Simpan' }}
+                            <button type="submit" class="btn btn-primary btn-custom">
+                                <i class="bi bi-save"></i> Simpan Item
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
     </div>
-</div>
-</form>
+    </form>
 
 </div>
 </div>
@@ -354,87 +284,6 @@
 
 @push('scripts')
 <script>
-    let itemCounter = 1; // langsung mulai dari 1 karena sudah muncul
-
-    addItemBtn.addEventListener('click', function() {
-        itemCounter++;
-
-        const html = `
-    <div class="item-row" data-item-index="${itemCounter}">
-        <span class="item-number">Item ${itemCounter}</span>
-        ...
-        (form input sama seperti di atas)
-    </div>
-    `;
-
-        document.getElementById('itemContainer').insertAdjacentHTML('beforeend', html);
-        updateItemNumbers();
-    });
-
-    const addItemBtn = document.getElementById('addItemBtn');
-
-    if (addItemBtn) {
-        addItemBtn.addEventListener('click', function() {
-            itemCounter++;
-            const container = document.getElementById('itemContainer');
-
-            // Remove alert if exists
-            const alert = container.querySelector('.alert');
-            if (alert) {
-                alert.remove();
-            }
-
-            container.insertAdjacentHTML('beforeend', html);
-            updateItemNumbers();
-        });
-    }
-
-    function removeItem(button) {
-        if (confirm('Apakah Anda yakin ingin menghapus item ini?')) {
-            button.closest('.item-row').remove();
-            updateItemNumbers();
-
-            // Show alert if no items
-            const container = document.getElementById('itemContainer');
-            const items = container.querySelectorAll('.item-row');
-            if (items.length === 0) {
-                container.innerHTML = `
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle me-2"></i>Belum ada item. Klik "Tambah Item" untuk menambahkan barang.
-                    </div>
-                `;
-            }
-        }
-    }
-
-    function updateItemNumbers() {
-        const items = document.querySelectorAll('.item-row');
-        items.forEach((item, index) => {
-            const numberSpan = item.querySelector('.item-number');
-            if (numberSpan) {
-                numberSpan.textContent = `Item ${index + 1}`;
-            }
-            item.setAttribute('data-item-index', index);
-        });
-        itemCounter = items.length;
-    }
-
-    const form = document.getElementById('pengadaanForm');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            const items = document.querySelectorAll('.item-row');
-
-            if (items.length === 0) {
-                e.preventDefault();
-                alert('Mohon tambahkan minimal 1 item sebelum mengirim pengadaan!');
-                return false;
-            }
-
-            if (!confirm('Apakah Anda yakin ingin mengirim pengadaan ini?')) {
-                e.preventDefault();
-                return false;
-            }
-        });
-    }
+    // No additional scripts needed
 </script>
 @endpush
