@@ -629,6 +629,28 @@
             min-width: 110px;
             text-align: center;
         }
+
+        .nav-center .nav-link {
+            color: #6c757d;
+            padding: 10px 25px;
+            font-weight: 600;
+            font-size: 15px;
+            border-bottom: 2px solid transparent;
+        }
+
+        .nav-center .nav-link.active {
+            color: #000;
+            border-bottom: 2px solid #000;
+        }
+
+        .nav-center {
+            display: flex;
+            gap: 40px; /* membuat sejajar & rapi seperti Figma */
+        }
+        .ums-container {
+            background: #ffffff;
+        }
+
     </style>
     @stack('styles')
 </head>
@@ -649,6 +671,29 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 {{-- nav items placed to the left of user menu --}}
                 <ul class="navbar-nav nav-center ms-auto me-3 padding align-items-center">
+                     @if(Auth::user()->roles === 'superadmin')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('ums.users.*') ? 'active' : '' }}"
+                            href="{{ route('ums.users.index') }}">
+                                User
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('audit.logs.*') ? 'active' : '' }}"
+                            href="{{ route('ums.audit_logs.index') }}">
+                                Audit Logs
+                            </a>
+                        </li>
+
+                        <!-- <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.scopes.*') ? 'active' : '' }}"
+                            href="{{ route('ums.admin_scopes.index') }}">
+                                Admin Scopes
+                            </a>
+                        </li> -->
+                    @endif
+
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}" href="{{ route('dashboard') }}" wire:navigate>
                             Dashboard

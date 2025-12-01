@@ -37,7 +37,13 @@ Route::post('/login', function (Request $request) {
 
     if (Auth::attempt($credentials, $request->boolean('remember'))) {
         $request->session()->regenerate();
-        return redirect()->route('dashboard');
+        // Redirect berdasarkan role
+            if (Auth::user()->roles === 'superadmin') {
+                return redirect()->route('ums.users.index'); // langsung ke UMS
+            }
+
+            return redirect()->route('dashboard');
+
     }
 
     return back()->withErrors([
@@ -381,4 +387,8 @@ Route::middleware(['auth'])->group(function () {
 
     // ============ END DEBUG ROUTES ============
 
+    // -------------------------------------------------------------
+    //  UMS ROUTES (DILETAKKAN DI LUAR, tetapi tetap pakai middleware auth)
+    // -------------------------------------------------------------
+    require __DIR__.'/ums.php';
 });
