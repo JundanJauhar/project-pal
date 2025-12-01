@@ -21,6 +21,7 @@ class User extends Authenticatable
         'email',
         'password',
         'division_id',
+        'vendor_id',
         'roles',
         'status',
     ];
@@ -66,5 +67,21 @@ class User extends Authenticatable
     public function sentNotifications(): HasMany
     {
         return $this->hasMany(Notification::class, 'sender_id', 'user_id');
+    }
+
+    /**
+     * Check if user is a vendor
+     */
+    public function isVendor(): bool
+    {
+        return !is_null($this->vendor_id);
+    }
+
+    /**
+     * Check if user has specific role
+     */
+    public function hasRole(string $role): bool
+    {
+        return $this->roles === $role;
     }
 }

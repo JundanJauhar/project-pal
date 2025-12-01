@@ -7,8 +7,12 @@ use App\Models\Project;
 use App\Models\Evatek;
 use App\Models\Item; // Sesuaikan dengan model Anda
 use App\Models\Procurement;
+use App\Models\Vendor;
+use App\Models\RequestProcurement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DesainController extends Controller
 {
@@ -48,47 +52,76 @@ class DesainController extends Controller
     }
 
     // ✅ TAMBAHKAN METHOD INI
-    public function inputItem()
+    public function inputItem($projectId)
     {
-
-        $procurements = Procurement::with('project')->get(); // Load relasi wajib
         // Cek authorization (opsional, jika belum pakai middleware)
         if (Auth::user()->roles !== 'supply_chain') {
             abort(403, 'Unauthorized action.');
         }
 
-        // Ambil data yang diperlukan untuk form
-        $projects = Project::with([
-            'procurements.project', // <--- WAJIB biar tidak lazy load
-            'requests',                         // relasi project → request_procurement
-            'requests.items',                   // relasi request → items
-            'requests.vendor',                  // relasi request → vendor
-            'procurements',                     // relasi project → procurement
-            'procurements.requestProcurements', // relasi procurement → request_procurement
-            'procurements.requestProcurements.items',
-            'procurements.requestProcurements.vendor',
-        ])->get();
-        $departments
-            = Department::all();
+        // Ambil project dengan procurements
+        $project = Project::with('procurements')->findOrFail($projectId);
+        
+        // Ambil semua vendor
+        $vendors = Vendor::all();
 
-        return view('desain.input-item', compact('projects', 'departments', 'procurements'))
-            ->with('hideNavbar', true);;
+        return view('desain.input-item', compact('project', 'vendors'));
     }
 
     // ✅ METHOD UNTUK MENYIMPAN DATA
-    public function storeItem(Request $request)
+    public function storeItem(Request $request, $projectId)
     {
         // Validasi
         $validated = $request->validate([
-            'project_id' => 'required|exists:projects,project_id',
+            'procurement_id' => 'required|exists:procurement,procurement_id',
+            'vendor_id' => 'required|exists:vendors,id_vendor',
             'item_name' => 'required|string|max:255',
-            // tambahkan validasi lainnya sesuai kebutuhan
+            'deadline_date' => 'required|date',
         ]);
+        
+        $validated['project_id'] = $projectId;
 
-        // Simpan data
-        Item::create($validated);
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('desain.list-project')
-            ->with('success', 'Item berhasil ditambahkan!');
+            // Cari atau buat RequestProcurement
+            $requestProcurement = RequestProcurement::firstOrCreate(
+                [
+                    'procurement_id' => $validated['procurement_id'],
+                    'vendor_id' => $validated['vendor_id'],
+                ],
+                [
+                    'project_id' => $validated['project_id'],
+                    'request_name' => 'Request untuk ' . $validated['item_name'],
+                    'created_date' => now(),
+                    'deadline_date' => $validated['deadline_date'],
+                    'request_status' => 'pending',
+                ]
+            );
+
+            // Simpan Item dengan nilai default
+            Item::create([
+                'request_procurement_id' => $requestProcurement->request_id,
+                'item_name' => $validated['item_name'],
+                'amount' => 1,
+                'unit' => 'unit',
+                'unit_price' => 0,
+                'total_price' => 0,
+                'status' => 'not_approved',
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('desain.daftar-pengadaan', $projectId)
+                ->with('success', 'Item berhasil ditambahkan!');
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error storing item: ' . $e->getMessage());
+            
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Terjadi kesalahan saat menyimpan item: ' . $e->getMessage()]);
+        }
     }
 }

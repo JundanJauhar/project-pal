@@ -88,14 +88,6 @@ class UserSeeder extends Seeder
                 'roles' => 'desain',
                 'status' => 'active',
             ],
-            [
-                'name' => 'PT Pindad',
-                'email' => 'vendor@pal.com',
-                'password' => Hash::make('password'),
-                'division_id' => null,
-                'roles' => 'vendor',
-                'status' => 'active',
-            ],
         ];
 
         foreach ($users as $userData) {

@@ -137,6 +137,7 @@ Route::middleware(['auth'])->group(function () {
         
         // VENDOR ROUTES - Proper route ordering
         Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])->name('vendor.kelola');
+        Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])->name('vendor.store');
         Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])->name('vendor.form');
         Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])->name('vendor.detail');
         Route::get('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
@@ -192,8 +193,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/project/{id}/pengadaan', [DesainListProjectController::class, 'formPengadaan'])->name('permintaan-pengadaan');
         Route::post('/project/{id}/pengadaan/kirim', [DesainListProjectController::class, 'kirimPengadaan'])->name('kirim-pengadaan');
         Route::get('/evatek/{request_id}', [DesainListProjectController::class, 'reviewEvatek'])->name('review-evatek');
-        Route::get('/input-item', [DesainController::class, 'inputItem'])->name('input-item');
-        Route::post('/input-item/store', [DesainController::class, 'storeItem'])->name('input-item.store');
+        Route::get('/project/{projectId}/input-item', [DesainController::class, 'inputItem'])->name('input-item');
+        Route::post('/project/{projectId}/input-item/store', [DesainController::class, 'storeItem'])->name('input-item.store');
     });
 
     /*

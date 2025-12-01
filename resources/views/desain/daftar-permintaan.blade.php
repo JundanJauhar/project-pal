@@ -128,7 +128,7 @@
                     </div>
                     @if(Auth::user()->roles === 'supply_chain')
                     <div class="tambah col-md-2 text-end">
-                        <a href="{{ route('desain.input-item') }}" class="btn btn-primary w-100 btn-custom" wire:navigate>
+                        <a href="{{ route('desain.input-item', $project->project_id) }}" class="btn btn-primary w-100 btn-custom" wire:navigate>
                             <i class="bi bi-plus-circle"></i> Tambah
                         </a>
                     </div>
