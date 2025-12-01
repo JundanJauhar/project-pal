@@ -47,6 +47,11 @@ class User extends Authenticatable
         return $this->hasMany(ProcurementProgress::class, 'user_id', 'user_id');
     }
 
+        public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class, 'vendor_id', 'id_vendor');
+    }
+
     /**
      * Get all notifications for the user
      */

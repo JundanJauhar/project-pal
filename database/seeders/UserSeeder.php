@@ -13,6 +13,24 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        // ---------------------------
+        //  SUPER ADMIN
+        // ---------------------------
+        User::updateOrCreate(
+            ['email' => 'superadmin@pal.com'],
+            [
+                'name'        => 'Super Admin',
+                'email'       => 'superadmin@pal.com',
+                'password'    => Hash::make('SuperAdmin123!'), // ganti sesuai preferensi Anda
+                'division_id' => null,
+                'roles'       => 'superadmin',
+                'status'      => 'active',
+            ]
+        );
+
+        // ---------------------------
+        //  USER BIASA / ROLE DIVISI
+        // ---------------------------
         $users = [
             [
                 'name' => 'User Division',
@@ -74,7 +92,7 @@ class UserSeeder extends Seeder
                 'name' => 'PT Pindad',
                 'email' => 'vendor@pal.com',
                 'password' => Hash::make('password'),
-                'division_id' => 7,
+                'division_id' => null,
                 'roles' => 'vendor',
                 'status' => 'active',
             ],
