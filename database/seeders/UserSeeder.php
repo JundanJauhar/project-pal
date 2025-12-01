@@ -92,7 +92,7 @@ class UserSeeder extends Seeder
                 'name' => 'PT Pindad',
                 'email' => 'vendor@pal.com',
                 'password' => Hash::make('password'),
-                'division_id' => 7,
+                'division_id' => null,
                 'roles' => 'vendor',
                 'status' => 'active',
             ],

@@ -81,6 +81,12 @@ class Item extends Model
         return $query->where('status', 'not_approved');
     }
 
+    public function evatekVendors()
+    {
+        return $this->hasMany(EvatekItem::class, 'item_id', 'item_id');
+    }
+
+
     public function inspectionReports()
 {
     return $this->hasMany(\App\Models\InspectionReport::class, 'item_id', 'item_id');

@@ -656,78 +656,56 @@
 </head>
 
 <body>
-    <!-- Navbar -->
-    @if(!isset($hideNavbar) || !$hideNavbar)
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
-        <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center ms-4" href="{{ route('dashboard') }}" wire:navigate>
-                <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo">
-            </a>
+<!-- Navbar -->
+@if(!isset($hideNavbar) || !$hideNavbar)
+    @if(Auth::check() && Auth::user()->roles !== 'vendor')
+        {{-- Navbar untuk Internal Users (Dashboard, Projects, dll) --}}
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+            <div class="container-fluid">
+                <a class="navbar-brand d-flex align-items-center ms-4" href="{{ route('dashboard') }}" wire:navigate>
+                    <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo">
+                </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                {{-- nav items placed to the left of user menu --}}
-                <ul class="navbar-nav nav-center ms-auto me-3 padding align-items-center">
-                     @if(Auth::user()->roles === 'superadmin')
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    {{-- nav items placed to the left of user menu --}}
+                    <ul class="navbar-nav nav-center ms-auto me-3 padding align-items-center">
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('ums.users.*') ? 'active' : '' }}"
-                            href="{{ route('ums.users.index') }}">
-                                User
+                            <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}" href="{{ route('dashboard') }}" wire:navigate>
+                                Dashboard
                             </a>
                         </li>
 
+                        @if(Auth::user()->roles === 'user')
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('audit.logs.*') ? 'active' : '' }}"
-                            href="{{ route('ums.audit_logs.index') }}">
-                                Audit Logs
+                            <a class="nav-link {{ request()->routeIs('user.*') ? 'active' : '' }}" href="{{ route('user.list') }}" wire:navigate>
+                                Pengadaan
                             </a>
                         </li>
+                        @endif
 
-                        <!-- <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('admin.scopes.*') ? 'active' : '' }}"
-                            href="{{ route('ums.admin_scopes.index') }}">
-                                Admin Scopes
+                        @if(Auth::user()->roles === 'sekretaris')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('sekdir.approval*') ? 'active' : '' }}"
+                                href="{{ route('sekdir.approval') }}"
+                                wire:navigate>
+                                Department
                             </a>
-                        </li> -->
-                    @endif
+                        </li>
+                        @endif
 
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}" href="{{ route('dashboard') }}" wire:navigate>
-                            Dashboard
-                        </a>
-                    </li>
+                        @if(in_array(Auth::user()->roles, ['sekretaris_direksi']))
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}" wire:navigate>
+                                Projects
+                            </a>
+                        </li>
+                        @endif
 
-                    @if(Auth::user()->roles === 'user')
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('user.*') ? 'active' : '' }}" href="{{ route('user.list') }}" wire:navigate>
-                            Pengadaan
-                        </a>
-                    </li>
-                    @endif
-
-                    @if(Auth::user()->roles === 'sekretaris')
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('sekdir.approval*') ? 'active' : '' }}"
-                            href="{{ route('sekdir.approval') }}"
-                            wire:navigate>
-                            Department
-                        </a>
-                    </li>
-                    @endif
-
-
-                    @if(in_array(Auth::user()->roles, ['sekretaris_direksi']))
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}" wire:navigate>
-                            Projects
-                        </a>
-                    </li>
-                    @endif
-
-                    @if(in_array(Auth::user()->roles, ['desain', 'supply_chain']))
+                        @if(in_array(Auth::user()->roles, ['desain', 'supply_chain']))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('desain.list-project*') ? 'active' : '' }}" 
                             href="{{ route('desain.list-project') }}" 
@@ -735,40 +713,39 @@
                                 Projects
                             </a>
                         </li>
-                    @endif
+                        @endif
 
-                    @if(Auth::user()->roles === 'sekretaris_direksi')
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('sekdir.approvals*') ? 'active' : '' }}" href="{{ route('sekdir.approvals') }}">
-                            Persetujuan Pengadaan
-                        </a>
-                    </li>
-                    @endif
+                        @if(Auth::user()->roles === 'sekretaris_direksi')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('sekdir.approvals*') ? 'active' : '' }}" href="{{ route('sekdir.approvals') }}">
+                                Persetujuan Pengadaan
+                            </a>
+                        </li>
+                        @endif
 
-                    @if(Auth::user()->roles === 'supply_chain')
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('supply-chain.dashboard*') ? 'active' : '' }}" href="{{ route('supply-chain.dashboard') }}" wire:navigate>
-                            Department
-                        </a>
-                    </li>
-                    @endif
+                        @if(Auth::user()->roles === 'supply_chain')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('supply-chain.dashboard*') ? 'active' : '' }}" href="{{ route('supply-chain.dashboard') }}" wire:navigate>
+                                Department
+                            </a>
+                        </li>
+                        @endif
 
-                    @if(Auth::user()->roles === 'supply_chain')
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('supply-chain.vendor.kelola*') ? 'active' : '' }}" href="{{ route('supply-chain.vendor.kelola') }}" wire:navigate>
-                            Kelola Vendor
-                        </a>
-                    </li>
-                    @endif
+                        @if(Auth::user()->roles === 'supply_chain')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('supply-chain.vendor.kelola*') ? 'active' : '' }}" href="{{ route('supply-chain.vendor.kelola') }}" wire:navigate>
+                                Kelola Vendor
+                            </a>
+                        </li>
+                        @endif
 
-                    @if(in_array(Auth::user()->roles, ['treasury', 'accounting']))
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('payments*') ? 'active' : '' }}" href="{{ route('payments.index') }}">
-                            Payments
-                        </a>
-                    </li>
-                    @endif
-
+                        @if(in_array(Auth::user()->roles, ['treasury', 'accounting']))
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('payments*') ? 'active' : '' }}" href="{{ route('payments.index') }}">
+                                Payments
+                            </a>
+                        </li>
+                        @endif
 
                         @if(Auth::user()->roles === 'qa')
                         <li class="nav-item">
@@ -779,39 +756,65 @@
                         @endif
                     </ul>
 
-                {{-- right side notifications + user --}}
-                <ul class="navbar-nav align-items-center me-5">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link d-flex align-items-center text-dark profile-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            <span class="ms-2">{{ Auth::user()->name }}</span>
-                            <i class="bi bi-person-circle ms-3" style="font-size:22px; color: #000000;"></i>
-                            <span class="notif-dot" id="notif-dot"></span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item d-flex align-items-center justify-content-between" href="{{ route('notifications.index') }}" wire:navigate>
-                                    <span><i class="bi bi-bell-fill me-2"></i> Notifikasi</span>
-                                    <span class="badge rounded-pill bg-danger" id="notif-count-dd" style="display:none;">0</span>
-                                </a>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <form method="POST" action="{{ route('logout') }}" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item">
-                                        <i class="bi bi-box-arrow-right"></i> Logout
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
+                    {{-- right side notifications + user --}}
+                    <ul class="navbar-nav align-items-center me-5">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link d-flex align-items-center text-dark profile-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <span class="ms-2">{{ Auth::user()->name }}</span>
+                                <i class="bi bi-person-circle ms-3" style="font-size:22px; color: #000000;"></i>
+                                <span class="notif-dot" id="notif-dot"></span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center justify-content-between" href="{{ route('notifications.index') }}" wire:navigate>
+                                        <span><i class="bi bi-bell-fill me-2"></i> Notifikasi</span>
+                                        <span class="badge rounded-pill bg-danger" id="notif-count-dd" style="display:none;">0</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="bi bi-box-arrow-right"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    @else
+        {{-- Navbar khusus Vendor: Logo + Nama Vendor + Logout --}}
+        <nav class="navbar navbar-expand-lg navbar-light navbar-custom">
+            <div class="container-fluid">
+                <a class="navbar-brand d-flex align-items-center ms-4" href="{{ route('vendor.index') }}" wire:navigate>
+                    <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo">
+                </a>
+                
+                <div class="ms-auto d-flex align-items-center me-4 gap-3">
+                    {{-- Nama Vendor --}}
+                    <span class="text-dark fw-semibold" style="font-size: 15px;">
+                        {{ Auth::user()->vendor->name_vendor ?? Auth::user()->name }}
+                    </span>
+                    
+                    {{-- Logout Button --}}
+                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-2">
+                            <i class="bi bi-box-arrow-right"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </nav>
     @endif
+@endif
 
     <div class="container-fluid">
         <div class="row justify-content-center">
