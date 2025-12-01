@@ -16,7 +16,7 @@ return new class extends Migration
     $table->string('name', 150);
     $table->string('email', 100)->unique();
     $table->string('password', 255);
-    $table->enum('roles', ['admin', 'user', 'supply_chain', 'treasury', 'accounting', 'qa', 'sekretaris', 'desain'])->default('user');
+    $table->enum('roles', ['admin', 'user', 'supply_chain', 'treasury', 'accounting', 'qa', 'sekretaris', 'desain', 'superadmin'])->default('user');
     $table->unsignedBigInteger('division_id')->nullable();
     $table->enum('status', ['active', 'inactive'])->default('active');
     $table->rememberToken();
