@@ -158,7 +158,7 @@
             @forelse($req->items as $item)
             <tr data-status="{{ $item->status }}" data-deadline="{{ $req->deadline_date }}">
                 <td style="padding: 12px 8px; text-align: left;">
-                    <a href="{{ route('desain.review-evatek', $req->request_id) }}"
+                    <a href="{{ route('desain.review-evatek', $item->item_id)}}"
                         style="text-decoration: none; color: #000; font-weight: 600;">
                         {{ $item->item_name }}
                     </a>

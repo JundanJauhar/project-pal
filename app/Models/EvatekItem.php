@@ -3,26 +3,50 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EvatekItem extends Model
 {
     protected $table = 'evatek_items';
-    protected $primaryKey = 'id_evatek_item';
+    protected $primaryKey = 'evatek_id';
 
     protected $fillable = [
         'item_id',
-        'vendor_id',
-        'status',
-        'evaluation_note',
+        'project_id',
+        'current_revision',
+        'current_status',
+        'current_date',
+        'log',
     ];
 
-    public function item()
+    protected $casts = [
+        'current_date' => 'date',
+    ];
+
+    /** Item relationship */
+    public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class, 'item_id', 'item_id');
     }
 
-    public function vendor()
+    /** Project relationship */
+    public function project(): BelongsTo
     {
-        return $this->belongsTo(Vendor::class, 'vendor_id', 'id_vendor');
+        return $this->belongsTo(Project::class, 'project_id', 'project_id');
+    }
+
+    /** All revisions for this Evatek */
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(EvatekRevision::class, 'evatek_id', 'evatek_id')
+            ->orderBy('revision_id', 'ASC');
+    }
+
+    /** Get latest revision */
+    public function latestRevision()
+    {
+        return $this->hasOne(EvatekRevision::class, 'evatek_id', 'evatek_id')
+            ->latest('revision_id');
     }
 }
