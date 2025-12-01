@@ -135,23 +135,19 @@
     width: 40px;
 }
 
-.file-box {
-    width: 140px;
-    height: 90px;
-    border-radius: 12px;
-    background: #e4e4e4;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin: 0 auto 10px auto;
-    color: #333;
-    font-size: 40px;
+/* ==== GOOGLE DRIVE LINK INPUT ==== */
+.link-input {
+    width: 90%;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-bottom: 10px;
 }
 
-.pdf-icon {
-    font-size: 55px;
-    color: #d11b1b;
+.link-input:focus {
+    outline: none;
+    border-color: #007bff;
 }
 
 .action-btn {
@@ -170,7 +166,6 @@
 }
 
 .btn-upload { background: #000; }
-.btn-download { background: #555; }
 .btn-approve { background: #28a745; }
 .btn-reject { background: #d62828; }
 .btn-repair { background: #ffcc00; color: #000; }
@@ -276,7 +271,6 @@
 
 <div class="content-wrapper">
 
-    {{-- ================= TRACKING ================= --}}
     <div>
         <div class="tracking-card">
             <div class="tracking-title">Tracking</div>
@@ -287,8 +281,8 @@
                     <tr>
                         <th class="check-col"></th>
                         <th>Revision</th>
-                        <th>Vendor File Upload</th>
-                        <th>Divisi Desain File Upload</th>
+                        <th>Vendor File Link</th>
+                        <th>Divisi Desain File Link</th>
                         <th>Decision</th>
                     </tr>
                 </thead>
@@ -301,21 +295,19 @@
                         <td><strong>R0</strong></td>
 
                         <td>
-                            <div class="file-box"><span class="pdf-icon">📄</span></div>
-                            <button class="action-btn btn-upload">Upload</button>
-                            <button class="action-btn btn-download">Download</button>
+                            <input type="text" class="link-input" placeholder="Paste Google Drive link">
+                            <button class="action-btn btn-upload">Save</button>
                         </td>
 
                         <td>
-                            <div class="file-box"><span class="pdf-icon">📄</span></div>
-                            <button class="action-btn btn-upload">Upload</button>
-                            <button class="action-btn btn-download">Download</button>
+                            <input type="text" class="link-input" placeholder="Paste Google Drive link">
+                            <button class="action-btn btn-upload">Save</button>
                         </td>
 
                         <td>
                             <button class="action-btn btn-approve">Approve</button>
                             <button class="action-btn btn-reject">Reject</button>
-                            <button class="action-btn btn-repair">Repair</button>
+                            <!-- <button class="action-btn btn-repair">Repair</button> -->
                         </td>
                     </tr>
 
@@ -325,21 +317,19 @@
                         <td><strong>R1</strong></td>
 
                         <td>
-                            <div class="file-box">⬆️</div>
-                            <button class="action-btn btn-upload">Upload</button>
-                            <button class="action-btn btn-download">Download</button>
+                            <input type="text" class="link-input" placeholder="Paste Google Drive link">
+                            <button class="action-btn btn-upload">Save</button>
                         </td>
 
                         <td>
-                            <div class="file-box">⬆️</div>
-                            <button class="action-btn btn-upload">Upload</button>
-                            <button class="action-btn btn-download">Download</button>
+                            <input type="text" class="link-input" placeholder="Paste Google Drive link">
+                            <button class="action-btn btn-upload">Save</button>
                         </td>
 
                         <td>
                             <button class="action-btn btn-approve">Approve</button>
                             <button class="action-btn btn-reject">Reject</button>
-                            <button class="action-btn btn-repair">Repair</button>
+                            <!-- <button class="action-btn btn-repair">Repair</button> -->
                         </td>
                     </tr>
 
@@ -352,12 +342,8 @@
     </div>
 
 
-
-
-    {{-- ================= LOG ACTIVITY ================= --}}
     <div class="log-card">
         <div class="log-title">Log Activity</div>
-
         <textarea id="logText" class="log-textarea" placeholder="Tulis catatan aktivitas..."></textarea>
     </div>
 
@@ -366,9 +352,6 @@
 
 
 
-{{-- ===================================== --}}
-{{-- ========== JAVASCRIPT =============== --}}
-{{-- ===================================== --}}
 <script>
 
 function toggleFinalStatus() {
@@ -381,21 +364,11 @@ function toggleFinalStatus() {
     icon.classList.toggle('rotate');
 }
 
-
-
-/* ======================================================
-   BACK BUTTON — SAVE DATA
-====================================================== */
 function goBack() {
     saveReviewData();
     history.back();
 }
 
-
-
-/* ======================================================
-   SAVE REVIEW PAGE INTO LOCAL STORAGE
-====================================================== */
 function saveReviewData() {
 
     let checks = Array.from(document.querySelectorAll(".rev-check"))
@@ -406,27 +379,19 @@ function saveReviewData() {
     let revisions = Array.from(document.querySelectorAll("#revisionBody tr"))
         .map(row => row.children[1].innerText.trim());
 
-    let data = {
-        checks: checks,
+    localStorage.setItem("reviewEvatekData", JSON.stringify({
+        checks,
         log: logText,
-        revisions: revisions
-    };
-
-    localStorage.setItem("reviewEvatekData", JSON.stringify(data));
+        revisions
+    }));
 }
 
-
-
-/* ======================================================
-   RESTORE DATA WHEN PAGE LOADS
-====================================================== */
 window.onload = function() {
     let saved = localStorage.getItem("reviewEvatekData");
     if (!saved) return;
     
     let data = JSON.parse(saved);
 
-    // restore checkboxes
     let checkboxes = document.querySelectorAll(".rev-check");
     checkboxes.forEach((box, i) => {
         if (data.checks[i] !== undefined) {
@@ -434,23 +399,16 @@ window.onload = function() {
         }
     });
 
-    // restore log activity
     document.getElementById("logText").value = data.log || "";
 
-    // restore dynamically added revisions
     let currentRows = document.querySelectorAll("#revisionBody tr").length;
 
     for (let i = currentRows; i < data.revisions.length; i++) {
-        addRevision(); // add new row
+        addRevision();
     }
 };
 
-
-
-/* ======================================================
-   ADD REVISION ROW
-====================================================== */
-let revisionCount = 2; // R0, R1 sudah ada
+let revisionCount = 2;
 
 function addRevision() {
 
@@ -463,15 +421,13 @@ function addRevision() {
             <td><strong>${newRev}</strong></td>
 
             <td>
-                <div class="file-box">⬆️</div>
-                <button class="action-btn btn-upload">Upload</button>
-                <button class="action-btn btn-download">Download</button>
+                <input type="text" class="link-input" placeholder="Paste Google Drive link">
+                <button class="action-btn btn-upload">Save</button>
             </td>
 
             <td>
-                <div class="file-box">⬆️</div>
-                <button class="action-btn btn-upload">Upload</button>
-                <button class="action-btn btn-download">Download</button>
+                <input type="text" class="link-input" placeholder="Paste Google Drive link">
+                <button class="action-btn btn-upload">Save</button>
             </td>
 
             <td>
