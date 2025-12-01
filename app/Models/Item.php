@@ -20,8 +20,6 @@ class Item extends Model
         'specification',
         'amount',
         'unit',
-        'unit_price',
-        'total_price',
         'status',
         'approved_by',
         'approved_at',
@@ -29,12 +27,10 @@ class Item extends Model
 
     protected $casts = [
         'amount' => 'integer',
-        'unit_price' => 'integer',
-        'total_price' => 'integer',
         'approved_at' => 'datetime',
     ];
 
-    protected $appends = ['quantity', 'estimated_price'];
+    protected $appends = ['quantity'];
 
     /**
      * Get the request procurement for this item
@@ -60,13 +56,6 @@ class Item extends Model
         return $this->amount;
     }
 
-    /**
-     * Accessor for estimated_price (alias for unit_price)
-     */
-    public function getEstimatedPriceAttribute()
-    {
-        return $this->unit_price;
-    }
 
     /**
      * Check if item is approved

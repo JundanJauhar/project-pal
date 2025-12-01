@@ -255,8 +255,6 @@ class ProjectSeeder extends Seeder
                 'item_description' => 'Material baja high grade untuk struktur kapal',
                 'amount' => 100,
                 'unit' => 'ton',
-                'unit_price' => 120000000,
-                'total_price' => 12000000000,
             ]
         );
 
@@ -266,8 +264,6 @@ class ProjectSeeder extends Seeder
             'item_description' => 'Plat baja tahan korosi untuk lambung kapal',
             'amount' => 50,
             'unit' => 'ton',
-            'unit_price' => 95000000,
-            'total_price' => 4750000000,
             'status' => 'approved',
             'approved_by' => 2,
             'approved_at' => Carbon::now()->subDays(85),
@@ -279,8 +275,6 @@ class ProjectSeeder extends Seeder
             'item_description' => 'Panel kontrol elektronik untuk sistem navigasi',
             'amount' => 5,
             'unit' => 'unit',
-            'unit_price' => 250000000,
-            'total_price' => 1250000000,
             'status' => 'approved',
             'approved_by' => 3,
             'approved_at' => Carbon::now()->subDays(55),
@@ -292,19 +286,15 @@ class ProjectSeeder extends Seeder
             'item_description' => 'Sensor radar untuk deteksi objek',
             'amount' => 10,
             'unit' => 'unit',
-            'unit_price' => 85000000,
-            'total_price' => 850000000,
             'status' => 'not_approved',
         ]);
 
         Item::create([
             'request_procurement_id' => $request3->request_id,
-            'item_name' => 'Jasa Cutting Laser',
-            'item_description' => 'Jasa pemotongan material dengan laser precision',
-            'amount' => 200,
-            'unit' => 'jam',
-            'unit_price' => 500000,
-            'total_price' => 100000000,
+            'item_name' => 'Cutting Laser',
+            'item_description' => 'Alat pemotongan material dengan laser precision',
+            'amount' => 20,
+            'unit' => 'pcs',
             'status' => 'approved',
             'approved_by' => 5,
             'approved_at' => Carbon::now()->subDays(35),
@@ -316,8 +306,6 @@ class ProjectSeeder extends Seeder
             'item_description' => 'Helm pengaman standar K3',
             'amount' => 100,
             'unit' => 'pcs',
-            'unit_price' => 150000,
-            'total_price' => 15000000,
             'status' => 'not_approved',
         ]);
 
@@ -327,8 +315,6 @@ class ProjectSeeder extends Seeder
             'item_description' => 'Sepatu safety boots',
             'amount' => 100,
             'unit' => 'pcs',
-            'unit_price' => 350000,
-            'total_price' => 35000000,
             'status' => 'not_approved',
         ]);
 
@@ -338,8 +324,6 @@ class ProjectSeeder extends Seeder
             'item_description' => 'Pompa hidrolik tekanan tinggi untuk sistem kapal',
             'amount' => 3,
             'unit' => 'unit',
-            'unit_price' => 320000000,
-            'total_price' => 960000000,
             'status' => 'approved',
             'approved_by' => 5,
             'approved_at' => Carbon::now()->subDays(65),

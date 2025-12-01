@@ -365,34 +365,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     <input type="text" name="items[${itemIndex}][unit]" class="form-control" placeholder="pcs, kg, dll" required>
                 </div>
             </div>
-
-            <div class="row">
-                <div class="col-6 mb-2">
-                    <label class="form-label">Harga Estimasi <span class="text-danger">*</span></label>
-                    <input type="number" name="items[${itemIndex}][estimated_price]" class="form-control item-price" data-index="${itemIndex}" min="0" required>
-                </div>
-                <div class="col-6 mb-2">
-                    <label class="form-label">Harga Total</label>
-                    <input type="number" name="items[${itemIndex}][total_price]" class="form-control item-total" data-index="${itemIndex}" readonly>
-                </div>
-            </div>
         `;
 
         container.appendChild(card);
-
-        // Add event listeners untuk kalkulasi otomatis
-        const quantityInput = card.querySelector('.item-quantity');
-        const priceInput = card.querySelector('.item-price');
-        const totalInput = card.querySelector('.item-total');
-
-        function calculateTotal() {
-            const quantity = parseFloat(quantityInput.value) || 0;
-            const price = parseFloat(priceInput.value) || 0;
-            totalInput.value = quantity * price;
-        }
-
-        quantityInput.addEventListener('input', calculateTotal);
-        priceInput.addEventListener('input', calculateTotal);
     }
 
     // Fungsi untuk menghapus item
