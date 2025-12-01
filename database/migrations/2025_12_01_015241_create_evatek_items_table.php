@@ -4,34 +4,32 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up()
+return new class extends Migration {
+    public function up(): void
     {
-    Schema::create('evatek_items', function (Blueprint $table) {
-        $table->id('id_evatek_item');
+        Schema::create('evatek_items', function (Blueprint $table) {
+            $table->id('evatek_id');
+            $table->unsignedBigInteger('item_id');
+            $table->unsignedBigInteger('project_id');
 
-        $table->unsignedBigInteger('item_id');
+            // Current status summary (always refers to last revision)
+            $table->string('current_revision')->default('R0');
+            $table->string('current_status')->default('On Progress'); // Revision Needed / Completed / On Progress
+            $table->date('current_date')->nullable();
 
-        // FIX: harus string karena vendor.id_vendor adalah string
-        $table->string('vendor_id', 20);
+            // Log activity
+            $table->longText('log')->nullable();
 
-        $table->enum('status', ['pending', 'approved', 'not_approved'])->default('pending');
-        $table->text('evaluation_note')->nullable();
-        $table->timestamps();
+            $table->timestamps();
 
-        $table->foreign('item_id')->references('item_id')->on('items')->onDelete('cascade');
-        $table->foreign('vendor_id')->references('id_vendor')->on('vendors')->onDelete('cascade');
-    });
-
+            // Foreign keys
+            $table->foreign('item_id')->references('item_id')->on('items')->cascadeOnDelete();
+            $table->foreign('project_id')->references('project_id')->on('projects')->cascadeOnDelete();
+        });
     }
 
-    public function down()
+    public function down(): void
     {
-        Schema::dropIfExists('evatek_items');   
+        Schema::dropIfExists('evatek_items');
     }
-
 };

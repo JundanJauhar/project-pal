@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Item;
+use App\Models\EvatekItem;
+use App\Models\EvatekRevision;
 
 class DesainListProjectController extends Controller
 {
@@ -32,14 +35,46 @@ class DesainListProjectController extends Controller
 
 
 
-    public function reviewEvatek($requestId)
-    {
-        $request = \App\Models\RequestProcurement::with(['vendor'])
-            ->where('request_id', $requestId)
-            ->firstOrFail();
+    public function reviewEvatek($itemId)
+{
+    // ambil item + relasi requestProcurement + vendor
+    $item = Item::with([
+        'requestProcurement',
+        'requestProcurement.vendor'
+    ])->findOrFail($itemId);
 
-        return view('desain.review-evatek', compact('request'));
+    // cari atau buat evatek_items untuk item ini
+    $evatek = EvatekItem::firstOrCreate(
+        ['item_id' => $item->item_id],
+        [
+            'project_id' => optional($item->requestProcurement)->project_id,
+            'current_revision' => 'R0',
+            'current_status' => 'On Progress',
+            'current_date' => now(),
+            'log' => null,
+        ]
+    );
+
+    // ambil revisi terkait evatek (urut naik)
+    $revisions = EvatekRevision::where('evatek_id', $evatek->evatek_id)
+        ->orderBy('revision_id', 'ASC')
+        ->get();
+
+    // jika tidak ada revisi (mis. baru dibuat) -> buat R0 default
+    if ($revisions->isEmpty()) {
+        $r = EvatekRevision::create([
+            'evatek_id'     => $evatek->evatek_id,
+            'revision_code' => 'R0',
+            'vendor_link'   => null,
+            'design_link'   => null,
+            'status'        => 'pending',
+            'date'          => now(),
+        ]);
+        $revisions = collect([$r]);
     }
+
+    return view('desain.review-evatek', compact('item', 'evatek', 'revisions'));
+}
 
    public function kirimPengadaan(Request $request, $id)
     {

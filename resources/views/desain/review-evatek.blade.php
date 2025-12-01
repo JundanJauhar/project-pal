@@ -4,7 +4,7 @@
 
 @push('styles')
 <style>
-
+/* --- layout --- */
 .back-btn {
     display: inline-block;
     background: #e0e0e0;
@@ -16,433 +16,312 @@
     margin-bottom: 15px;
     cursor: pointer;
 }
-.eq-name {
-    font-size: 16px;
-    font-weight: 400;
-    color: #444;
-    margin-bottom: 3px;
-}
+.eq-name { font-size: 16px; font-weight: 400; color: #444; margin-bottom: 3px; }
+.vendor-name { font-size: 32px; font-weight: 800; margin-top: -4px; margin-bottom: 35px; }
 
-.vendor-name {
-    font-size: 32px;
-    font-weight: 800;
-    margin-top: -4px;
-    margin-bottom: 35px;
-}
-
+/* status card */
 .status-card {
     background: #f8f8f8;
     border-radius: 14px;
     padding: 25px 28px;
     margin-bottom: 20px;
     border: 1px solid #dddddd;
-    transition: all 0.3s ease;
 }
+.status-card-header { font-size: 20px; font-weight: 700; }
 
-.status-card.collapsed {
-    padding: 15px 28px;
-}
+.status-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 45px; }
+.status-item-label { font-size: 13px; color: #666; }
+.status-item-value { font-size: 22px; font-weight: 800; }
+.status-small-value { font-size: 17px; font-weight: 700; }
 
-.status-header {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-}
+/* tracking */
+.tracking-card { background: #ffffff; border-radius: 14px; padding: 25px 30px; border: 1px solid #dcdcdc; min-height: 260px; }
+.tracking-table { width: 100%; border-collapse: separate; border-spacing: 0 12px; }
+.tracking-table th { font-size: 14px; font-weight: 700; border-bottom: 1px solid #ccc; text-align: center; }
+.tracking-table td { padding: 18px 0; border-bottom: 1px solid #e4e4e4; text-align: center; }
 
-.status-card-header {
-    font-size: 20px;
-    font-weight: 700;
-    flex-grow: 1;
-}
+/* link input */
+.link-input { width: 90%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 10px; }
+.link-status { font-size: 12px; color: #777; }
 
-.dropdown-icon {
-    font-size: 22px;
-    transition: 0.3s;
-}
-
-.dropdown-icon.rotate {
-    transform: rotate(-90deg);
-}
-
-.status-content {
-    margin-top: 20px;
-}
-
-.status-content.hidden {
-    display: none;
-}
-
-.status-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 45px;
-}
-
-.status-item-label {
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 4px;
-}
-
-.status-item-value {
-    font-size: 22px;
-    font-weight: 800;
-    color: #222;
-}
-
-.status-small-value {
-    font-size: 17px;
-    font-weight: 700;
-    color: #333;
-}
-
-.tracking-card {
-    background: #ffffff;
-    border-radius: 14px;
-    padding: 25px 30px;
-    border: 1px solid #dcdcdc;
-    margin-bottom: 20px;
-    height: 420px;
-    overflow-y: auto;
-}
-
-.tracking-title {
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 18px;
-}
-
-.tracking-table {
-    width: 100%;
-}
-
-.tracking-table th {
-    font-size: 14px;
-    font-weight: 700;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #ccc;
-    text-align: center;
-}
-
-.tracking-table td {
-    padding: 25px 0;
-    border-bottom: 1px solid #e4e4e4;
-    text-align: center;
-    vertical-align: middle;
-}
-
-.check-col {
-    width: 40px;
-}
-
-/* ==== GOOGLE DRIVE LINK INPUT ==== */
-.link-input {
-    width: 90%;
-    padding: 8px 10px;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    font-size: 14px;
-    margin-bottom: 10px;
-}
-
-.link-input:focus {
-    outline: none;
-    border-color: #007bff;
-}
-
-.action-btn {
-    border: none;
-    font-size: 12px;
-    font-weight: 700;
-    border-radius: 14px;
-    padding: 6px 14px;
-    cursor: pointer;
-    margin: 3px;
-    width: 85px;
-    color: white;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-}
-
+/* buttons */
+.action-btn { border: none; font-size: 12px; font-weight: 700; border-radius: 14px; padding: 6px 14px; cursor: pointer; width: 85px; margin: 3px auto; color: white; }
 .btn-upload { background: #000; }
 .btn-approve { background: #28a745; }
 .btn-reject { background: #d62828; }
-.btn-repair { background: #ffcc00; color: #000; }
+.btn-revisi { background: #ffcc00; color:#000; }
 
-.add-revision-btn {
-    margin-top: 15px;
-    background: #0066ff;
-    color: white;
-    padding: 8px 18px;
-    border-radius: 8px;
-    font-weight: 700;
-    border: none;
+/* checkbox */
+.rev-check {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #cfcfcf;
+    border-radius: 4px;
     cursor: pointer;
 }
+.rev-check.status-approve { background: #28a745; border-color:#28a745; }
+.rev-check.status-revisi { background:#ffcc00; border-color:#ffcc00; }
+.rev-check.status-reject { background:#d62828; border-color:#d62828; }
 
-.log-card {
-    background: #f8f8f8;
-    border-radius: 14px;
-    padding: 25px;
-    border: 1px solid #ddd;
-}
+/* log */
+.log-card { background:#f8f8f8; border-radius:14px; padding:25px; border:1px solid #ddd; }
+.log-textarea { width:100%; height:350px; border:none; background:transparent; }
 
-.log-title {
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 12px;
-}
-
-.log-textarea {
-    width: 100%;
-    height: 350px;
-    border: none;
-    background: transparent;
-    resize: none;
-    font-size: 15px;
-    line-height: 28px;
-    padding-left: 5px;
-    outline: none;
-    overflow-y: auto;
-
-    background-image: repeating-linear-gradient(
-        to bottom,
-        transparent 0 27px,
-        #dcdcdc 27px 28px
-    );
-}
-
-.content-wrapper {
-    display: grid;
-    grid-template-columns: 3fr 1fr;
-    gap: 35px;
-}
-
+.content-wrapper { display: grid; grid-template-columns: 3fr 1fr; gap: 35px; }
 </style>
 @endpush
 
 
-
 @section('content')
 
-<button class="back-btn" onclick="goBack()">← Back</button>
-
-<p class="eq-name">{{ $request->request_name }}</p>
-<h2 class="vendor-name">{{ $request->vendor->name_vendor ?? '-' }}</h2>
-
-
-
-<div id="statusCard" class="status-card">
-
-    <div class="status-header" onclick="toggleFinalStatus()">
-        <div class="status-card-header">Final Status</div>
-        <div id="dropdownIcon" class="dropdown-icon">⌄</div>
-    </div>
-
-    <div id="statusContent" class="status-content">
-
-        <div class="status-grid">
-
-            <div>
-                <p class="status-item-label">Revision</p>
-                <p class="status-item-value">{{ $request->revision ?? 'R1' }}</p>
-            </div>
-
-            <div>
-                <p class="status-item-label">Divisi Desain</p>
-                <p class="status-small-value">{{ $request->request_status }}</p>
-            </div>
-
-            <div>
-                <p class="status-item-label">Date</p>
-                <p class="status-small-value">
-                    {{ \Carbon\Carbon::parse($request->created_date)->format('d/m/Y') }}
-                </p>
-            </div>
-
-        </div>
-
-    </div>
+{{-- GLOBAL DATA for JavaScript --}}
+<div id="evatekData"
+     data-evatek-id="{{ $evatek->evatek_id }}"
+     data-item-id="{{ $item->item_id }}">
 </div>
 
+<button class="back-btn" onclick="history.back()">← Back</button>
 
+<p class="eq-name">{{ $item->item_name }}</p>
+
+<h2 class="vendor-name">
+    {{ $item->requestProcurement->vendor->name_vendor ?? '-' }}
+</h2>
+
+{{-- STATUS CARD --}}
+<div class="status-card">
+    <div class="status-card-header">Current Status</div>
+
+    <div class="status-grid">
+        <div>
+            <p class="status-item-label">Revision</p>
+            <p id="statusRevision" class="status-item-value">{{ $evatek->current_revision }}</p>
+        </div>
+
+        <div>
+            <p class="status-item-label">Divisi Desain</p>
+            <p id="statusDivision" class="status-small-value">{{ $evatek->current_status }}</p>
+        </div>
+
+        <div>
+            <p class="status-item-label">Date</p>
+            <p id="statusDate" class="status-small-value">
+                {{ $evatek->current_date ? $evatek->current_date->format('d/m/Y') : '-' }}
+            </p>
+        </div>
+    </div>
+</div>
 
 
 <div class="content-wrapper">
-
     <div>
+        {{-- TRACKING TABLE --}}
         <div class="tracking-card">
-            <div class="tracking-title">Tracking</div>
-
-            <table class="tracking-table" id="trackingTable">
-
+            <table class="tracking-table">
                 <thead>
-                    <tr>
-                        <th class="check-col"></th>
-                        <th>Revision</th>
-                        <th>Vendor File Link</th>
-                        <th>Divisi Desain File Link</th>
-                        <th>Decision</th>
-                    </tr>
+                <tr>
+                    <th></th>
+                    <th>Revision</th>
+                    <th>Vendor File Link</th>
+                    <th>Divisi Desain File Link</th>
+                    <th>Decision</th>
+                </tr>
                 </thead>
 
                 <tbody id="revisionBody">
+                @foreach($revisions as $rev)
+                    <tr data-revision-id="{{ $rev->revision_id }}" data-rev="{{ $rev->revision_code }}">
+                        <td>
+                            <input type="checkbox" class="rev-check
+                            @if($rev->status=='approved') status-approve
+                            @elseif($rev->status=='revisi') status-revisi
+                            @elseif($rev->status=='rejected') status-reject
+                            @endif">
+                        </td>
 
-                    {{-- R0 --}}
-                    <tr>
-                        <td><input type="checkbox" class="rev-check"></td>
-                        <td><strong>R0</strong></td>
+                        <td><strong>{{ $rev->revision_code }}</strong></td>
 
                         <td>
-                            <input type="text" class="link-input" placeholder="Paste Google Drive link">
-                            <button class="action-btn btn-upload">Save</button>
+                            <input type="text" class="link-input vendor-link" value="{{ $rev->vendor_link }}">
+                            <button class="action-btn btn-upload save-link">Save</button>
+                            <div class="link-status"></div>
                         </td>
 
                         <td>
-                            <input type="text" class="link-input" placeholder="Paste Google Drive link">
-                            <button class="action-btn btn-upload">Save</button>
+                            <input type="text" class="link-input design-link" value="{{ $rev->design_link }}">
+                            <button class="action-btn btn-upload save-link">Save</button>
+                            <div class="link-status"></div>
                         </td>
 
                         <td>
-                            <button class="action-btn btn-approve">Approve</button>
-                            <button class="action-btn btn-reject">Reject</button>
-                            <!-- <button class="action-btn btn-repair">Repair</button> -->
-                        </td>
-                    </tr>
-
-                    {{-- R1 --}}
-                    <tr>
-                        <td><input type="checkbox" class="rev-check"></td>
-                        <td><strong>R1</strong></td>
-
-                        <td>
-                            <input type="text" class="link-input" placeholder="Paste Google Drive link">
-                            <button class="action-btn btn-upload">Save</button>
-                        </td>
-
-                        <td>
-                            <input type="text" class="link-input" placeholder="Paste Google Drive link">
-                            <button class="action-btn btn-upload">Save</button>
-                        </td>
-
-                        <td>
-                            <button class="action-btn btn-approve">Approve</button>
-                            <button class="action-btn btn-reject">Reject</button>
-                            <!-- <button class="action-btn btn-repair">Repair</button> -->
+                            <button class="action-btn btn-approve approve-btn">Approve</button>
+                            <button class="action-btn btn-revisi revisi-btn">Revisi</button>
+                            <button class="action-btn btn-reject reject-btn">Reject</button>
                         </td>
                     </tr>
-
+                @endforeach
                 </tbody>
             </table>
-
-            <button class="add-revision-btn" onclick="addRevision()">+ Add Revision</button>
-
         </div>
     </div>
 
-
+    {{-- LOG ACTIVITY --}}
     <div class="log-card">
         <div class="log-title">Log Activity</div>
-        <textarea id="logText" class="log-textarea" placeholder="Tulis catatan aktivitas..."></textarea>
+        <textarea id="logText" class="log-textarea">{{ $evatek->log }}</textarea>
     </div>
-
 </div>
 
 
-
-
+{{-- ========================= JAVASCRIPT ========================= --}}
 <script>
+const CSRF = "{{ csrf_token() }}";
 
-function toggleFinalStatus() {
-    let card = document.getElementById('statusCard');
-    let content = document.getElementById('statusContent');
-    let icon = document.getElementById('dropdownIcon');
+/* ---------------- SAVE LINK ---------------- */
+document.addEventListener("click", function(e) {
+    if (e.target.classList.contains("save-link")) {
+        let row = e.target.closest("tr");
+        saveLink(row);
+    }
+});
 
-    content.classList.toggle('hidden');
-    card.classList.toggle('collapsed');
-    icon.classList.toggle('rotate');
-}
-
-function goBack() {
-    saveReviewData();
-    history.back();
-}
-
-function saveReviewData() {
-
-    let checks = Array.from(document.querySelectorAll(".rev-check"))
-        .map(c => c.checked);
-
-    let logText = document.getElementById("logText").value;
-
-    let revisions = Array.from(document.querySelectorAll("#revisionBody tr"))
-        .map(row => row.children[1].innerText.trim());
-
-    localStorage.setItem("reviewEvatekData", JSON.stringify({
-        checks,
-        log: logText,
-        revisions
-    }));
-}
-
-window.onload = function() {
-    let saved = localStorage.getItem("reviewEvatekData");
-    if (!saved) return;
-    
-    let data = JSON.parse(saved);
-
-    let checkboxes = document.querySelectorAll(".rev-check");
-    checkboxes.forEach((box, i) => {
-        if (data.checks[i] !== undefined) {
-            box.checked = data.checks[i];
+function saveLink(row) {
+    fetch("{{ route('desain.evatek.save-link') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": CSRF
+        },
+        body: JSON.stringify({
+            revision_id: row.dataset.revisionId,
+            vendor_link: row.querySelector(".vendor-link").value,
+            design_link: row.querySelector(".design-link").value
+        })
+    })
+    .then(r => r.json())
+    .then(r => {
+        if (r.success) {
+            row.querySelectorAll(".link-status").forEach(el => el.innerText = "Saved");
         }
     });
-
-    document.getElementById("logText").value = data.log || "";
-
-    let currentRows = document.querySelectorAll("#revisionBody tr").length;
-
-    for (let i = currentRows; i < data.revisions.length; i++) {
-        addRevision();
-    }
-};
-
-let revisionCount = 2;
-
-function addRevision() {
-
-    let tbody = document.getElementById("revisionBody");
-    let newRev = "R" + revisionCount;
-
-    let html = `
-        <tr>
-            <td><input type="checkbox" class="rev-check"></td>
-            <td><strong>${newRev}</strong></td>
-
-            <td>
-                <input type="text" class="link-input" placeholder="Paste Google Drive link">
-                <button class="action-btn btn-upload">Save</button>
-            </td>
-
-            <td>
-                <input type="text" class="link-input" placeholder="Paste Google Drive link">
-                <button class="action-btn btn-upload">Save</button>
-            </td>
-
-            <td>
-                <button class="action-btn btn-approve">Approve</button>
-                <button class="action-btn btn-reject">Reject</button>
-                <button class="action-btn btn-repair">Repair</button>
-            </td>
-        </tr>
-    `;
-
-    tbody.insertAdjacentHTML("beforeend", html);
-
-    revisionCount++;
 }
 
+
+/* ---------------- APPROVE ---------------- */
+document.addEventListener("click", function(e) {
+    if (e.target.classList.contains("approve-btn")) {
+        approve(e.target.closest("tr"));
+    }
+});
+
+function approve(row) {
+    fetch("{{ route('desain.evatek.approve') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": CSRF
+        },
+        body: JSON.stringify({ revision_id: row.dataset.revisionId })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.success) {
+            row.querySelector(".rev-check").classList.add("status-approve");
+            updateStatus(row.dataset.rev, "Completed");
+        }
+    });
+}
+
+
+/* ---------------- REJECT ---------------- */
+document.addEventListener("click", function(e) {
+    if (e.target.classList.contains("reject-btn")) {
+        rejectRev(e.target.closest("tr"));
+    }
+});
+
+function rejectRev(row) {
+    fetch("{{ route('desain.evatek.reject') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": CSRF
+        },
+        body: JSON.stringify({ revision_id: row.dataset.revisionId })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.success) {
+            row.querySelector(".rev-check").classList.add("status-reject");
+            updateStatus(row.dataset.rev, "Rejected");
+        }
+    });
+}
+
+
+/* ---------------- REVISI ---------------- */
+document.addEventListener("click", function(e) {
+    if (e.target.classList.contains("revisi-btn")) {
+        revisi(e.target.closest("tr"));
+    }
+});
+
+function revisi(row) {
+    fetch("{{ route('desain.evatek.revisi') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": CSRF
+        },
+        body: JSON.stringify({ revision_id: row.dataset.revisionId })
+    })
+    .then(r => r.json())
+    .then(r => {
+        if (!r.success) return;
+
+        let next = r.new_revision;
+
+        let html = `
+        <tr data-revision-id="${next.revision_id}" data-rev="${next.revision_code}">
+            <td><input type="checkbox" class="rev-check status-revisi"></td>
+            <td><strong>${next.revision_code}</strong></td>
+
+            <td>
+                <input type="text" class="link-input vendor-link">
+                <button class="action-btn btn-upload save-link">Save</button>
+                <div class="link-status"></div>
+            </td>
+
+            <td>
+                <input type="text" class="link-input design-link">
+                <button class="action-btn btn-upload save-link">Save</button>
+                <div class="link-status"></div>
+            </td>
+
+            <td>
+                <button class="action-btn btn-approve approve-btn">Approve</button>
+                <button class="action-btn btn-revisi revisi-btn">Revisi</button>
+                <button class="action-btn btn-reject reject-btn">Reject</button>
+            </td>
+        </tr>`;
+
+        document
+            .getElementById("revisionBody")
+            .insertAdjacentHTML("beforeend", html);
+
+        updateStatus(next.revision_code, "Revision Needed");
+    });
+}
+
+
+/* ---------------- UPDATE STATUS CARD ---------------- */
+function updateStatus(revCode, division) {
+    document.getElementById("statusRevision").innerText = revCode;
+    document.getElementById("statusDivision").innerText = division;
+    document.getElementById("statusDate").innerText = new Date().toLocaleDateString();
+}
 </script>
 
 @endsection

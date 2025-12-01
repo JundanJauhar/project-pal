@@ -192,9 +192,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPengadaan'])->name('daftar-pengadaan');
         Route::get('/project/{id}/pengadaan', [DesainListProjectController::class, 'formPengadaan'])->name('permintaan-pengadaan');
         Route::post('/project/{id}/pengadaan/kirim', [DesainListProjectController::class, 'kirimPengadaan'])->name('kirim-pengadaan');
-        Route::get('/evatek/{request_id}', [DesainListProjectController::class, 'reviewEvatek'])->name('review-evatek');
-        Route::get('/project/{projectId}/input-item', [DesainController::class, 'inputItem'])->name('input-item');
-        Route::post('/project/{projectId}/input-item/store', [DesainController::class, 'storeItem'])->name('input-item.store');
+        Route::get('/evatek/item/{item_id}', [EvatekController::class, 'review']) ->name('review-evatek');
+
+
+        // AJAX actions (pastikan EvatekController memiliki method saveLink, approve, reject, revisi)
+        Route::post('/evatek/save-link', [EvatekController::class, 'saveLink'])->name('evatek.save-link');
+        Route::post('/evatek/approve',   [EvatekController::class, 'approve'])->name('evatek.approve');
+        Route::post('/evatek/reject',    [EvatekController::class, 'reject'])->name('evatek.reject');
+        Route::post('/evatek/revisi',    [EvatekController::class, 'revise'])->name('evatek.revisi');
+        Route::get('/input-item', [DesainController::class, 'inputItem'])->name('input-item');
+        Route::post('/input-item/store', [DesainController::class, 'storeItem'])->name('input-item.store');
     });
 
     /*
