@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Division;
 use App\Helpers\AuditLogger;
@@ -14,11 +15,9 @@ class UsersController extends Controller
 {
     /**
      * LIST USER
-     * Sinkron dengan tampilan navbar + tabel
      */
     public function index()
     {
-        // Urut berdasarkan nama (lebih rapi seperti Figma)
         $users = User::orderBy('name', 'asc')->get();
 
         return view('ums.users.index', compact('users'));
@@ -31,7 +30,6 @@ class UsersController extends Controller
     {
         $divisions = Division::all();
 
-        // Role mentahan harus sinkron dengan badge warna + navbar
         $roles = [
             'superadmin',
             'admin',
@@ -147,7 +145,7 @@ class UsersController extends Controller
     }
 
     /**
-     * RESET PASSWORD — sesuai tombol di tabel
+     * RESET PASSWORD
      */
     public function resetPassword(Request $request, $user_id)
     {
@@ -175,6 +173,30 @@ class UsersController extends Controller
 
         return redirect()->route('ums.users.index')
             ->with('success', 'Password berhasil direset.');
+    }
+
+    /**
+     * ⭐ FORCE LOGOUT USER
+     * Menghapus session user di tabel `sessions`.
+     */
+    public function forceLogout($user_id)
+    {
+        $user = User::findOrFail($user_id);
+
+        // Menghapus session user → user otomatis logout
+        DB::table('sessions')->where('user_id', $user_id)->delete();
+
+        AuditLogger::log(
+            action: 'force_logout',
+            table: 'users',
+            targetId: $user->user_id,
+            details: [
+                'force_logout_by' => Auth::id(),
+                'user'            => $user->toArray(),
+            ]
+        );
+
+        return back()->with('success', 'User berhasil di-force logout.');
     }
 
     /**

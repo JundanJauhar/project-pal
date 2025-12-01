@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('ums.layouts.app')
 
 @section('title', 'Audit Logs')
 
@@ -7,44 +7,92 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-    body { background: #ffffff !important; font-family: 'Inter', sans-serif; }
+    body { background:#ffffff !important; font-family:'Inter',sans-serif; }
 
     .audit-wrapper {
-        background: #ffffffff;
-        padding: 40px;
-        border-radius: 18px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-        margin-top: 20px;
+        background:#fff;
+        padding:40px;
+        border-radius:16px;
+        box-shadow:0 4px 14px rgba(0,0,0,0.06);
+        margin-top:20px;
     }
 
     .audit-title {
-        font-size: 32px;
-        font-weight: 800;
-        color: #000;
-        margin-bottom: 25px;
+        font-size:32px;
+        font-weight:800;
+        color:#000;
+        margin-bottom:25px;
     }
 
-    .audit-table { width:100%; border-collapse:separate !important; border-spacing:0 !important; font-size:15px; }
-    .audit-table thead th { border-bottom:2px solid #000 !important; padding-bottom:14px; font-weight:700; color:#000; }
-    .audit-table tbody tr { height:80px; border-bottom:1px solid #d4d4d4; }
+    table.audit-table {
+        width:100%;
+        border-collapse:collapse;
+        table-layout:fixed;
+    }
 
-    .user-name { font-weight:700; font-size:15px; margin-bottom:3px; }
-    .email-muted { font-size:12px; color:#777; margin-top:-3px; }
+    thead th {
+        font-size:15px;
+        font-weight:700;
+        padding-bottom:14px;
+        color:#000;
+        border-bottom:2px solid #000;
+    }
 
-    .badge-login { background:#56d364; padding:6px 16px; border-radius:25px; display:inline-block; font-weight:600; font-size:12px; color:#fff; }
-    .badge-failed { background:#ff5c5c; padding:6px 16px; border-radius:25px; display:inline-block; font-weight:600; font-size:12px; color:#fff; }
+    tbody tr {
+        height:72px;
+        background:#f8f8f8;
+        border-bottom:8px solid #ffffff;
+    }
 
-    .target-table { font-weight:600; font-size:14px; }
-    .target-id { font-size:12px; color:#777; }
+    td {
+        padding:10px 8px;
+        font-size:14px;
+        vertical-align:middle;
+    }
 
-    .timestamp { font-weight:600; font-size:14px; }
+    /* COLUMN WIDTHS */
+    th:nth-child(1), td:nth-child(1) { width:23%; }
+    th:nth-child(2), td:nth-child(2) { width:14%; }
+    th:nth-child(3), td:nth-child(3) { width:20%; }
+    th:nth-child(4), td:nth-child(4) { width:12%; }
+    th:nth-child(5), td:nth-child(5) { width:23%; }
+    th:nth-child(6), td:nth-child(6) { width:8%; text-align:right; }
+
+    /* USER */
+    .user-name {
+        font-weight:700;
+        font-size:15px;
+    }
+    .email-muted {
+        font-size:12px;
+        color:#777;
+        margin-top:-3px;
+    }
+
+    /* ACTION BADGES */
+    .badge-login {
+        background:#42c96c;
+        padding:6px 14px;
+        border-radius:50px;
+        color:#fff;
+        font-size:12px;
+        font-weight:600;
+    }
+    .badge-failed {
+        background:#ff5c5c;
+        padding:6px 14px;
+        border-radius:50px;
+        color:#fff;
+        font-size:12px;
+        font-weight:600;
+    }
+
+    .timestamp { font-weight:600; }
     .timestamp-ago { font-size:12px; color:#777; }
 
-    .ip-text { font-size:14px; font-weight:600; color:#000; }
-    .device-text { font-size:12px; color:#777; }
+    .ip-text { font-weight:600; }
+    .ua-text { font-size:12px; color:#555; }
 
-    /* pagination styling */
-    .pagination { margin-top: 18px; justify-content: flex-end; }
 </style>
 
 <div class="audit-wrapper">
@@ -52,12 +100,11 @@
     <div class="audit-title">Audit Logs</div>
 
     <div class="table-responsive">
-        <table class="table audit-table align-middle">
+        <table class="audit-table">
             <thead>
                 <tr>
                     <th>Nama</th>
                     <th>Aksi</th>
-                    <th>Target</th>
                     <th>Timestamp</th>
                     <th>IP</th>
                     <th>Device</th>
@@ -66,66 +113,68 @@
             </thead>
 
             <tbody>
-                @forelse($logs as $l)
-                <tr>
-                    <!-- USER -->
-                    <td>
-                        <div class="user-name">{{ optional($l->actor)->name ?? 'User ID: '.$l->actor_user_id }}</div>
-                        <div class="email-muted">{{ optional($l->actor)->email ?? '' }}</div>
-                    </td>
+                @forelse ($logs as $l)
 
-                    <!-- ACTION BADGE -->
-                    <td>
-                        @php
-                            $action = strtolower($l->action ?? '');
-                        @endphp
+                    {{-- Ignore all non-login logs --}}
+                    @php
+                        $action = strtolower($l->action);
+                        $isLoginLog = in_array($action, ['login', 'login_failed']);
+                    @endphp
 
-                        @if($action === 'login')
-                            <span class="badge-login">Login</span>
-                        @elseif($action === 'login_failed' || str_contains($action, 'failed'))
-                            <span class="badge-failed">{{ str_replace('_', ' ', ucfirst($action)) }}</span>
-                        @else
-                            <span class="badge-failed">{{ $l->action }}</span>
-                        @endif
-                    </td>
+                    @if(!$isLoginLog)
+                        @continue
+                    @endif
 
-                    <!-- TARGET -->
-                    <td>
-                        <div class="target-table">{{ $l->target_table ?? '-' }}</div>
-                        @if($l->target_id)
-                            <div class="target-id">ID : {{ $l->target_id }}</div>
-                        @endif
-                    </td>
+                    <tr>
+                        <!-- Nama -->
+                        <td>
+                            <div class="user-name">{{ optional($l->actor)->name ?? 'User ID: '.$l->actor_user_id }}</div>
+                            <div class="email-muted">{{ optional($l->actor)->email }}</div>
+                        </td>
 
-                    <!-- TIMESTAMP -->
-                    <td>
-                        <div class="timestamp">{{ $l->created_at ? $l->created_at->format('Y-m-d H:i:s') : '-' }}</div>
-                        <div class="timestamp-ago">{{ $l->created_at ? $l->created_at->diffForHumans() : '' }}</div>
-                    </td>
+                        <!-- Aksi -->
+                        <td>
+                            @if($action === 'login')
+                                <span class="badge-login">Login Succeeded</span>
+                            @elseif($action === 'login_failed')
+                                <span class="badge-failed">Login Failed</span>
+                            @endif
+                        </td>
 
-                    <!-- IP -->
-                    <td>
-                        <div class="ip-text">{{ $l->ip ?? ($l->details['ip'] ?? ($l->details['ip_address'] ?? '-')) }}</div>
-                    </td>
+                        <!-- Timestamp -->
+                        <td>
+                            <div class="timestamp">{{ $l->created_at->format('Y-m-d H:i:s') }}</div>
+                            <div class="timestamp-ago">{{ $l->created_at->diffForHumans() }}</div>
+                        </td>
 
-                    <!-- DEVICE -->
-                    <td>
-                        <div class="device-text">{{ $l->user_agent ?? ($l->details['ua'] ?? ($l->details['user_agent'] ?? '-')) }}</div>
-                    </td>
+                        <!-- IP -->
+                        <td>
+                            <div class="ip-text">{{ $l->ip ?? '-' }}</div>
+                        </td>
 
-                    <!-- DETAIL -->
-                    <td class="text-end">
-                        <a href="{{ route('ums.audit_logs.show', $l->id) }}" class="btn btn-sm btn-primary">
-                           <i class="bi bi-eye"></i>
-                        </a>
-                    </td>
-                </tr>
+                        <!-- Device -->
+                        <td>
+                            <div class="ua-text">{{ $l->user_agent ?? '-' }}</div>
+                        </td>
+
+                        <!-- Detail button -->
+                        <td class="text-end">
+                            <a href="{{ route('ums.audit_logs.show', $l->id) }}"
+                               class="btn btn-primary btn-sm">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+
                 @empty
-                <tr>
-                    <td colspan="7" class="text-center text-muted py-5">No audit logs found.</td>
-                </tr>
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">
+                            No login logs found.
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
+
         </table>
     </div>
 

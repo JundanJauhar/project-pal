@@ -4,39 +4,23 @@ namespace App\Http\Controllers\UMS;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\UMS\AuditLog;
-use App\Helpers\AuditLogger;
 
 class AuditLogController extends Controller
 {
     public function index(Request $request)
     {
-        // 🔥 CATAT AKSI: user membuka halaman audit logs
-        AuditLogger::log(
-            action: 'view_audit_logs',
-            table: 'audit_logs',
-            targetId: null,
-            details: [
-                'viewer' => Auth::id(),
-                'filters' => $request->all(),
-            ]
-        );
+        // Ambil hanya log login dan login_failed
+        $query = AuditLog::with('actor')
+            ->whereIn('action', ['login', 'login_failed'])
+            ->orderBy('id', 'desc');
 
-        // Query dasar
-        $query = AuditLog::with('actor')->orderBy('id', 'desc');
-
-        // Filter tindakan
+        // Filter berdasarkan aksi (optional)
         if ($request->filled('action')) {
             $query->where('action', $request->action);
         }
 
-        // Filter target table
-        if ($request->filled('table')) {
-            $query->where('target_table', $request->table);
-        }
-
-        // Filter oleh user
+        // Filter berdasarkan user (optional)
         if ($request->filled('actor')) {
             $query->where('actor_user_id', $request->actor);
         }
@@ -48,18 +32,10 @@ class AuditLogController extends Controller
 
     public function show($id)
     {
+        // Ambil log dengan relasi user
         $log = AuditLog::with('actor')->findOrFail($id);
 
-        // 🔥 CATAT AKSI: user melihat detail log tertentu
-        AuditLogger::log(
-            action: 'view_audit_log_detail',
-            table: 'audit_logs',
-            targetId: $id,
-            details: [
-                'viewer' => Auth::id(),
-            ]
-        );
-
+        // Tidak mencatat view detail agar tidak memenuhi tabel
         return view('ums.audit_logs.show', compact('log'));
     }
 }
