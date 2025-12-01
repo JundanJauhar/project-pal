@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\Project;
 use App\Models\Evatek;
 use App\Models\Item; // Sesuaikan dengan model Anda
+use App\Models\Procurement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DesainController extends Controller
 {
-    
+
     public function dashboard()
     {
         $projects = Project::with(['ownerDivision', 'evatek', 'vendor'])
@@ -27,7 +29,7 @@ class DesainController extends Controller
         return view('desain.dashboard', compact('projects', 'stats'));
     }
 
-   
+
     public function statusEvatek($projectId)
     {
         $project = Project::with(['ownerDivision', 'evatek', 'vendor'])
@@ -48,15 +50,29 @@ class DesainController extends Controller
     // ✅ TAMBAHKAN METHOD INI
     public function inputItem()
     {
+
+        $procurements = Procurement::with('project')->get(); // Load relasi wajib
         // Cek authorization (opsional, jika belum pakai middleware)
         if (Auth::user()->roles !== 'supply_chain') {
             abort(403, 'Unauthorized action.');
         }
 
         // Ambil data yang diperlukan untuk form
-        $projects = Project::all() ; 
-        
-        return view('desain.input-item', compact('projects'));
+        $projects = Project::with([
+            'procurements.project', // <--- WAJIB biar tidak lazy load
+            'requests',                         // relasi project → request_procurement
+            'requests.items',                   // relasi request → items
+            'requests.vendor',                  // relasi request → vendor
+            'procurements',                     // relasi project → procurement
+            'procurements.requestProcurements', // relasi procurement → request_procurement
+            'procurements.requestProcurements.items',
+            'procurements.requestProcurements.vendor',
+        ])->get();
+        $departments
+            = Department::all();
+
+        return view('desain.input-item', compact('projects', 'departments', 'procurements'))
+            ->with('hideNavbar', true);;
     }
 
     // ✅ METHOD UNTUK MENYIMPAN DATA

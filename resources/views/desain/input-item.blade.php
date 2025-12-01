@@ -4,11 +4,30 @@
 
 @push('styles')
 <style>
-    .page-wrapper {
-        background: #ffffff;
-        min-height: 100vh;
-        padding: 40px 60px;
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
     }
+
+    .page-wrapper {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 20px;
+        overflow-x: hidden;
+    }
+
+    .form-container {
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+
 
     .section-title {
         font-size: 24px;
@@ -150,7 +169,12 @@
 
     @media (max-width: 768px) {
         .page-wrapper {
-            padding: 20px;
+            padding: 20px 15px;
+            align-items: flex-start;
+        }
+
+        .form-container {
+            max-width: 100%;
         }
 
         .btn-kirim {
@@ -163,71 +187,167 @@
 @section('content')
 
 <div class="page-wrapper">
-    <form action="{{ route('desain.kirim-pengadaan',$projects->first()->project_id) }}" method="POST" id="pengadaanForm">
-        @csrf
-<!-- 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="section-title mb-0">Tambah Pengadaan</div>
+    <div class="form-container">
 
-            @if(Auth::check() && Auth::user()->roles === 'supply_chain')
-            <button type="button" class="btn-tambah-item" id="addItemBtn">
-                <i class="bi bi-plus-circle me-2"></i>Tambah Item
-            </button>
+        <button onclick="history.back()" class="btn btn-secondary mb-4">
+            <i class="bi bi-arrow-left-circle me-2"></i>Kembali
+        </button>
+
+        <form method="POST"
+            action="{{ isset($procurement) ? route('procurements.update', $procurement->procurement_id) : route('procurements.store') }}"
+            id="mainForm">
+            @csrf
+            @if(isset($procurement))
+            @method('PUT')
             @endif
-        </div> -->
-        <div id="itemContainer">
 
-            <div class="item-row" data-item-index="1">
-                <!-- <span class="item-number">Item 1</span> -->
+            <div class="card card-custom">
+                <div class="card-header-custom">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi Procurement</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="project_code" class="form-label">Project <span
+                                    class="text-danger">*</span></label>
+                            <select name="project_code" id="project_code" class="form-select" required>
+                                <option value="">Pilih Project</option>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-section">
-                            <label class="label-title">Nama Barang *</label>
-                            <input type="text" class="form-box" name="nama_barang[]" required placeholder="Masukkan nama barang...">
+                                @forelse($projects as $project)
+                                @foreach($project->procurements as $procurement)
+                                <option value="{{ $procurement->code_procurement }}"
+                                    {{ old('code_procurement', $procurement->project_code ?? '') == $procurement->project->project_code ? 'selected' : '' }}>
+                                    {{ $procurement->code_procurement }}
+                                </option>
+                                @endforeach
+                                @empty
+                                <option disabled>Tidak ada project</option>
+                                @endforelse
+
+                            </select>
+
+                            @error('project_code')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
                         </div>
 
-                        <div class="form-section">
-                            <label class="label-title">Spesifikasi *</label>
-                            <textarea class="form-box" name="spesifikasi[]" required placeholder="Masukkan spesifikasi barang..."></textarea>
+                        <div class="col-md-6 mb-3">
+                            <label for="code_procurement" class="form-label">Vendor <span
+                                    class="text-danger">*</span></label>
+                            <select name="vendor_id" id="vendor_id" class="form-select" required>
+                                <option value="">Pilih Vendor</option>
+
+                                @forelse($projects as $project)
+                                @forelse($project->requests as $req)
+                                @if($req->vendor)
+                                <option value="{{ $req->vendor->vendor_name }}"
+                                    {{ $req->vendor->vendor_name }}
+                                    </option>
+                                    @endif
+                                    @empty
+                                    @endforelse
+                                    @empty
+                                <option disabled>Tidak ada project</option>
+                                @endforelse
+                            </select>
+
+
                         </div>
 
-                        <div class="form-section">
-                            <label class="label-title">Satuan *</label>
-                            <input type="text" class="form-box" name="satuan[]" required placeholder="Contoh: Unit, Kg, Liter...">
+                        <div class="col-md-6 mb-3">
+                            <label for="department_procurement" class="form-label">Department <span
+                                    class="text-danger">*</span></label>
+                            <select name="department_procurement" id="department_procurement" class="form-select"
+                                required>
+                                <option value="">Pilih Department</option>
+                                @foreach($departments as $department)
+                                <option value="{{ $department->department_id }}"
+                                    {{ old('department_procurement', $procurement->department_procurement ?? '') == $department->department_id ? 'selected' : '' }}>
+                                    {{ $department->department_name }}
+                                </option>
+                                @endforeach
+                            </select>
+                            @error('department_procurement')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
 
-                    <div class="col-md-6">
-                        <div class="form-section">
-                            <label class="label-title">Harga *</label>
-                            <input type="number" class="form-box" name="harga[]" required placeholder="Masukkan harga..." min="0">
+                    <div class="mb-3">
+                        <label for="name_procurement" class="form-label">Nama Procurement <span
+                                class="text-danger">*</span></label>
+                        <input type="text" class="form-control @error('name_procurement') is-invalid @enderror"
+                            id="name_procurement" name="name_procurement"
+                            value="{{ old('name_procurement', $procurement->name_procurement ?? '') }}"
+                            placeholder="Pengadaan Material & Komponen" required>
+                        @error('name_procurement')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Deskripsi</label>
+                        <textarea class="form-control @error('description') is-invalid @enderror" id="description"
+                            name="description" rows="4"
+                            placeholder="Deskripsi detail procurement...">{{ old('description', $procurement->description ?? '') }}</textarea>
+                        @error('description')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="end_date" class="form-label">Tanggal Target <span
+                                    class="text-danger">*</span></label>
+                            <input type="date" class="form-control @error('end_date') is-invalid @enderror"
+                                id="end_date" name="end_date"
+                                value="{{ old('end_date', isset($procurement) ? $procurement->end_date->format('Y-m-d') : '') }}"
+                                required>
+                            @error('end_date')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
-                        <div class="form-section">
-                            <label class="label-title">Harga Estimasi *</label>
-                            <input type="number" class="form-box" name="harga_estimasi[]" required placeholder="Masukkan estimasi harga..." min="0">
+                        <div class="col-md-4 mb-3">
+                            <label for="priority" class="form-label">Prioritas <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select @error('priority') is-invalid @enderror" id="priority"
+                                name="priority" required>
+                                <option value="">Pilih Prioritas</option>
+                                <option value="rendah"
+                                    {{ old('priority', $procurement->priority ?? '') === 'rendah' ? 'selected' : '' }}>
+                                    RENDAH
+                                </option>
+                                <option value="sedang"
+                                    {{ old('priority', $procurement->priority ?? '') === 'sedang' ? 'selected' : '' }}>
+                                    SEDANG
+                                </option>
+                                <option value="tinggi"
+                                    {{ old('priority', $procurement->priority ?? '') === 'tinggi' ? 'selected' : '' }}>
+                                    TINGGI
+                                </option>
+                            </select>
+                            @error('priority')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
-                        <div class="form-section">
-                            <button type="button" class="btn-hapus-item" onclick="removeItem(this)">
-                                <i class="bi bi-trash me-1"></i>Hapus Item
+                        <div class="col-md-4 mb-3 d-flex align-items-end gap-2">
+                            <a href="javascript:history.back()" class="btn btn-secondary btn-custom flex-grow-1">
+                                <i class="bi bi-x-circle"></i> Batal
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-custom flex-grow-1">
+                                <i class="bi bi-save"></i> {{ isset($procurement) ? 'Update' : 'Simpan' }}
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
+    </div>
+</div>
+</form>
 
-        </div>
-
-
-        <div class="text-start">
-            <button type="submit" class="btn-kirim">
-                <i class="bi bi-send me-2"></i>Kirim Pengadaan
-            </button>
-        </div>
-    </form>
-
+</div>
 </div>
 
 @endsection
@@ -263,49 +383,6 @@
             if (alert) {
                 alert.remove();
             }
-
-            const html = `
-            <div class="item-row" data-item-index="${itemCounter}">
-                <span class="item-number">Item ${itemCounter}</span>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-section">
-                            <label class="label-title">Nama Barang *</label>
-                            <input type="text" class="form-box" name="nama_barang[]" required placeholder="Masukkan nama barang...">
-                        </div>
-
-                        <div class="form-section">
-                            <label class="label-title">Spesifikasi *</label>
-                            <textarea class="form-box" name="spesifikasi[]" required placeholder="Masukkan spesifikasi barang..."></textarea>
-                        </div>
-
-                        <div class="form-section">
-                            <label class="label-title">Satuan *</label>
-                            <input type="text" class="form-box" name="satuan[]" required placeholder="Contoh: Unit, Kg, Liter...">
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-section">
-                            <label class="label-title">Harga *</label>
-                            <input type="number" class="form-box" name="harga[]" required placeholder="Masukkan harga..." min="0">
-                        </div>
-
-                        <div class="form-section">
-                            <label class="label-title">Harga Estimasi *</label>
-                            <input type="number" class="form-box" name="harga_estimasi[]" required placeholder="Masukkan estimasi harga..." min="0">
-                        </div>
-
-                        <div class="form-section">
-                            <button type="button" class="btn-hapus-item" onclick="removeItem(this)">
-                                <i class="bi bi-trash me-1"></i>Hapus Item
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            `;
 
             container.insertAdjacentHTML('beforeend', html);
             updateItemNumbers();
