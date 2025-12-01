@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Department;
 use App\Models\Project;
 use App\Models\Evatek;
+use App\Models\EvatekItem;
 use App\Models\Item; // Sesuaikan dengan model Anda
 use App\Models\Procurement;
 use App\Models\Vendor;
@@ -39,7 +40,7 @@ class DesainController extends Controller
         $project = Project::with(['ownerDivision', 'evatek', 'vendor'])
             ->findOrFail($projectId);
 
-        $evatek = Evatek::firstOrCreate(
+        $evatek = EvatekItem::firstOrCreate(
             ['project_id' => $projectId],
             [
                 'status' => 'pending',
