@@ -361,8 +361,6 @@
                             <th style="width: 25%; padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Item</th>
                             <th style="width: 25%; padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Spesifikasi</th>
                             <th style="width: 10%; padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Jumlah</th>
-                            <th style="width: 15%; padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Harga Satuan</th>
-                            <th style="width: 15%; padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Total Harga</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -376,14 +374,8 @@
                             <td style="padding: 12px 8px; text-align: left; color: #000;"><strong>{{ $item->item_name }}</strong></td>
                             <td style="padding: 12px 8px; text-align: left; color: #000;">{{ $item->item_description ?? $item->specification ?? '-' }}</td>
                             <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $item->amount }} {{ $item->unit }}</td>
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
-                            <td style="padding: 12px 8px; text-align: center; color: #000;"><strong>Rp {{ number_format($itemTotal, 0, ',', '.') }}</strong></td>
                         </tr>
                         @endforeach
-                        <tr>
-                            <td colspan="5" style="padding: 14px 8px; text-align: center; font-weight: 600; color: #000;"><strong>Grand Total:</strong></td>
-                            <td style="padding: 14px 8px; text-align: center; font-weight: 700; color: #000; font-size: 16px;"><strong>Rp {{ number_format($grandTotal, 0, ',', '.') }}</strong></td>
-                        </tr>
                     </tbody>
                 </table>
             </div>

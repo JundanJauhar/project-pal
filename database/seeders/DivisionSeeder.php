@@ -20,6 +20,7 @@ class DivisionSeeder extends Seeder
             ['division_name' => 'Quality Assurance', 'description' => 'Quality Assurance - Inspeksi dan NCR'],
             ['division_name' => 'Sekretaris Direksi', 'description' => 'Sekretaris Direksi - Approval Kontrak'],
             ['division_name' => 'Desain', 'description' => 'Desain Division - HPS dan Evatek'],
+            ['division_name' => 'Vendor', 'description' => 'Vendor - Proses Evatek'],
         ];
 
         foreach ($divisions as $division) {

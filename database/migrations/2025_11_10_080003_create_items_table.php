@@ -27,10 +27,6 @@ return new class extends Migration
             $table->integer('amount')->default(1);
             $table->string('unit', 50)->default('pcs');
 
-            // Harga besar → gunakan bigint
-            $table->bigInteger('unit_price')->default(0);
-            $table->bigInteger('total_price')->default(0);
-
             // Standard Laravel timestamps
             $table->timestamps();
 

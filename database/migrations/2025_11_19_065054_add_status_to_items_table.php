@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::table('items', function (Blueprint $table) {
             $table->enum('status', ['not_approved', 'approved'])
                   ->default('not_approved')
-                  ->after('total_price');
+                  ->after('unit');
             
             // Tambahkan kolom untuk tracking approval
             $table->unsignedBigInteger('approved_by')->nullable()->after('status');

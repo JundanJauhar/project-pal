@@ -55,8 +55,6 @@ class ProcurementController extends Controller
             'items.*.description' => 'nullable|string',
             'items.*.quantity' => 'required|numeric|min:1',
             'items.*.unit' => 'required|string|max:50',
-            'items.*.estimated_price' => 'required|numeric|min:0',
-            'items.*.total_price' => 'required|numeric|min:0',
         ], [
             'items.required' => 'Minimal harus ada 1 item untuk procurement',
             'items.min' => 'Minimal harus ada 1 item untuk procurement',
@@ -121,8 +119,6 @@ class ProcurementController extends Controller
                     'specification' => $itemData['description'] ?? null,
                     'amount' => $itemData['quantity'],
                     'unit' => $itemData['unit'],
-                    'unit_price' => $itemData['estimated_price'],
-                    'total_price' => $itemData['total_price'],
                 ]);
             }
 
