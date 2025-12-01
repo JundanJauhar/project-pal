@@ -10,7 +10,7 @@
                 <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informasi Vendor</h5>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ isset($vendor) ? route('supply-chain.vendor.update', $vendor->id_vendor) : route('supply-chain.vendor.kelola') }}">
+                <form method="POST" action="{{ isset($vendor) ? route('supply-chain.vendor.update', $vendor->id_vendor) : route('supply-chain.vendor.store') }}">
                     @csrf
                     @if(isset($vendor))
                     @method('PUT')
@@ -114,9 +114,10 @@
 
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{{ ($redirect ?? 'kelola') === 'pilih' ? route('supply-chain.vendor.pilih', $procurement->$procurement_id) : route('supply-chain.vendor.kelola') }}" class="btn btn-secondary btn-custom">
+                        <a href="{{ url()->previous() }}" class="btn btn-secondary btn-custom">
                             <i class="bi bi-x-circle"></i> Batal
                         </a>
+
                         <button type="submit" class="btn btn-primary btn-custom">
                             <i class="bi bi-save"></i> {{ isset($vendor) ? 'Update Vendor' : 'Tambah Vendor' }}
                         </button>

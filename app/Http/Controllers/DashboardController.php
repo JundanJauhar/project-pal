@@ -23,13 +23,22 @@ class DashboardController extends Controller
         $projects = Project::all();
         $priority = Project::select('priority')->distinct()->get();
 
-        // Get ALL procurements with checkpoint data
-        $allProcurements = Procurement::with([
+        // Get ALL procurements with checkpoint data, filtered by vendor if applicable
+        $allProcurementsQuery = Procurement::with([
             'project',
             'department', 
             'requestProcurements.vendor',
             'procurementProgress.checkpoint'
-        ])->get();
+        ]);
+
+        // Filter by vendor_id if user has vendor_id
+        if ($user->vendor_id) {
+            $allProcurementsQuery->whereHas('requestProcurements', function($query) use ($user) {
+                $query->where('vendor_id', $user->vendor_id);
+            });
+        }
+
+        $allProcurements = $allProcurementsQuery->get();
 
         // Calculate statistics based on status_procurement column
         $stats = [
@@ -67,6 +76,13 @@ class DashboardController extends Controller
             'procurementProgress.checkpoint'
         ]);
 
+        // Filter by vendor_id if user has vendor_id
+        if ($user->vendor_id) {
+            $query->whereHas('requestProcurements', function($q) use ($user) {
+                $q->where('vendor_id', $user->vendor_id);
+            });
+        }
+
         return $query->orderBy('start_date', 'desc')
             ->paginate(20);
     }
@@ -76,12 +92,21 @@ class DashboardController extends Controller
      */
 public function search(Request $request)
 {
+    $user = Auth::user();
+    
     $query = Procurement::with([
         'project',
         'department',
         'requestProcurements.vendor',
         'procurementProgress.checkpoint'
     ]);
+
+    // Filter by vendor_id if user has vendor_id
+    if ($user->vendor_id) {
+        $query->whereHas('requestProcurements', function($q) use ($user) {
+            $q->where('vendor_id', $user->vendor_id);
+        });
+    }
 
     // Filter search
     if ($request->filled('q')) {

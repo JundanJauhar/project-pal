@@ -137,6 +137,7 @@ Route::middleware(['auth'])->group(function () {
         
         // VENDOR ROUTES - Proper route ordering
         Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])->name('vendor.kelola');
+        Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])->name('vendor.store');
         Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])->name('vendor.form');
         Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])->name('vendor.detail');
         Route::get('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');

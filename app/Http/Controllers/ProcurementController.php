@@ -21,8 +21,18 @@ class ProcurementController extends Controller
 {
     public function index()
     {
-        $procurements = Procurement::with(['project', 'department', 'requestProcurements.vendor', 'procurementProgress.checkpoint'])
-            ->orderBy('created_at', 'desc')
+        $user = Auth::user();
+        
+        $query = Procurement::with(['project', 'department', 'requestProcurements.vendor', 'procurementProgress.checkpoint']);
+        
+        // Filter by vendor_id if user has vendor_id
+        if ($user->vendor_id) {
+            $query->whereHas('requestProcurements', function($q) use ($user) {
+                $q->where('id_vendor', $user->vendor_id);
+            });
+        }
+        
+        $procurements = $query->orderBy('created_at', 'desc')
             ->paginate(20);
 
         return view('procurements.index', compact('procurements'));
