@@ -14,7 +14,7 @@ return new class extends Migration
     Schema::table('users', function (Blueprint $table) {
 
         // Perbaiki tipe data → STRING (20)
-        $table->string('vendor_id', 20)
+        $table->unsignedBigInteger('vendor_id')
               ->nullable()
               ->after('division_id');
 

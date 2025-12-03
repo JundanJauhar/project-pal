@@ -13,15 +13,24 @@ class EvatekItem extends Model
 
     protected $fillable = [
         'item_id',
-        'project_id',
+        'procurement_id',
+        'vendor_id',
+        'start_date',
+        'target_date',
         'current_revision',
-        'current_status',
+        'status',
         'current_date',
+        'approved_at',
+        'not_approved_at',
         'log',
     ];
 
     protected $casts = [
         'current_date' => 'date',
+        'start_date' => 'date',
+        'target_date' => 'date',
+        'approved_at' => 'datetime',
+        'not_approved_at' => 'datetime',
     ];
 
     /** Item relationship */
@@ -34,6 +43,18 @@ class EvatekItem extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id', 'project_id');
+    }
+
+    /** Vendor relationship */
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class, 'vendor_id', 'id_vendor');
+    }
+
+    /** Procurement relationship */
+    public function procurement(): BelongsTo
+    {
+        return $this->belongsTo(Procurement::class, 'procurement_id', 'procurement_id');
     }
 
     /** All revisions for this Evatek */

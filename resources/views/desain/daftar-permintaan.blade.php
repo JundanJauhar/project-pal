@@ -109,13 +109,14 @@
             <div class="card-body">
                 <form id="filter-form" class="row g-3 align-items-end">
                     <div class="col-md-4">
-                        <input type="text" class="form-control" id="search-input" name="search" placeholder="Cari Equipment..." value="">
+                        <input type="text" class="form-control" id="search-input" name="search" placeholder="Cari Item..." value="">
                     </div>
                     <div class="col-md-3">
                         <select class="form-select" id="status-filter" name="status">
                             <option value="">Semua Status</option>
-                            <option value="not_approved">Not Approved</option>
-                            <option value="approved">Approved</option>
+                            <option value="on_progress">On Progress</option>
+                            <option value="approve">Approved</option>
+                            <option value="not_approve">Not Approved</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -126,13 +127,6 @@
                             <option value="satu_bulan">1 Bulan</option>
                         </select>
                     </div>
-                    @if(Auth::user()->roles === 'supply_chain')
-                    <div class="tambah col-md-2 text-end">
-                        <a href="{{ route('desain.input-item', $project->project_id) }}" class="btn btn-primary w-100 btn-custom" wire:navigate>
-                            <i class="bi bi-plus-circle"></i> Tambah
-                        </a>
-                    </div>
-                    @endif
                 </form>
             </div>
         </div>
@@ -143,71 +137,68 @@
     <table class="request-table">
         <thead>
             <tr>
-                <th style="padding: 12px 8px; text-align: left;">Equipment</th>
+                <th style="padding: 12px 8px; text-align: left;">Item</th>
                 <th style="padding: 12px 8px; text-align: left;">Vendor</th>
+                <th style="padding: 12px 8px; text-align: center;">Start Date</th>
+                <th style="padding: 12px 8px; text-align: center;">Target Date</th>
+                <th style="padding: 12px 8px; text-align: center;">Revision</th>
                 <th style="padding: 12px 8px; text-align: center;">Status</th>
-                <th style="padding: 12px 8px; text-align: center;">Information</th>
-                <th style="padding: 12px 8px; text-align: center;">Tanggal Pengadaan</th>
-                <th style="padding: 12px 8px; text-align: center;">Tanggal Tenggat</th>
+                <th style="padding: 12px 8px; text-align: center;">Last Update</th>
             </tr>
         </thead>
 
         <tbody id="items-tbody">
-            @forelse($project->procurements as $procurement)
-            @foreach($procurement->requestProcurements as $req)
-            @forelse($req->items as $item)
-            <tr data-status="{{ $item->status }}" data-deadline="{{ $req->deadline_date }}">
+            @forelse($evatekItems as $evatek)
+            <tr data-status="{{ $evatek->status }}" class="evatek-row">
                 <td style="padding: 12px 8px; text-align: left;">
-                    <a href="{{ route('desain.review-evatek', $item->item_id)}}"
+                    <a href="{{ route('desain.review-evatek', $evatek->evatek_id)}}"
                         style="text-decoration: none; color: #000; font-weight: 600;">
-                        {{ $item->item_name }}
+                        {{ $evatek->item->item_name ?? 'N/A' }}
                     </a>
-                    <div style="font-size: 12px; color: #666;">
-                        {{ $item->amount }} {{ $item->unit }}
-                    </div>
                 </td>
 
                 <td style="padding: 12px 8px; text-align: left;">
-                    {{ $req->vendor->name_vendor ?? '-' }}
+                    {{ $evatek->vendor->name_vendor ?? '-' }}
                 </td>
 
                 <td style="padding: 12px 8px; text-align: center;">
-                    @if($item->status === 'approved')
-                    <span class="status-badge status-approved">Approved</span>
-                    @else
-                    <span class="status-badge status-not-approved">Not Approved</span>
-                    @endif
+                    {{ $evatek->start_date ? \Carbon\Carbon::parse($evatek->start_date)->format('d/m/Y') : '-' }}
                 </td>
 
                 <td style="padding: 12px 8px; text-align: center;">
-                    <div style="font-size: 13px;">{{ $procurement->code_procurement }}</div>
-                    <div style="font-size: 11px; color: #666;">{{ $req->request_name }}</div>
+                    {{ $evatek->target_date ? \Carbon\Carbon::parse($evatek->target_date)->format('d/m/Y') : '-' }}
                 </td>
 
                 <td style="padding: 12px 8px; text-align: center;">
-                    {{ \Carbon\Carbon::parse($req->created_date)->format('d/m/Y') }}
+                    {{ $evatek->current_revision }}
                 </td>
 
                 <td style="padding: 12px 8px; text-align: center;">
-                    @php
-                    $deadline = \Carbon\Carbon::parse($req->deadline_date);
-                    $now = \Carbon\Carbon::now();
-                    $isLate = $deadline->isPast() && $item->status !== 'approved';
-                    @endphp
-                    <span style="color: {{ $isLate ? '#dc3545' : '#000' }}; font-weight: {{ $isLate ? '600' : '400' }};">
-                        {{ $deadline->format('d/m/Y') }}
-                        @if($isLate)
-                        <small style="display: block; font-size: 10px;">⚠️ Terlambat</small>
+                    <span class="status-badge 
+                        @if($evatek->status === 'approve') status-approved
+                        @elseif($evatek->status === 'not_approve') status-not-approved
+                        @else
                         @endif
+                    " style="
+                        @if($evatek->status === 'approve')
+                            color: #28AC00 !important;
+                        @elseif($evatek->status === 'not_approve')
+                            color: #BD0000 !important;
+                        @else
+                            color: #FF9500 !important;
+                        @endif
+                    ">
+                        {{ ucfirst($evatek->status) }}
                     </span>
+                </td>
+
+                <td style="padding: 12px 8px; text-align: center;">
+                    {{ $evatek->current_date ? \Carbon\Carbon::parse($evatek->current_date)->format('d/m/Y') : '-' }}
                 </td>
             </tr>
             @empty
-            @endforelse
-            @endforeach
-            @empty
             <tr>
-                <td colspan="6" class="text-center py-5">Belum ada permintaan atau item untuk project ini.</td>
+                <td colspan="7" class="text-center py-5">Belum ada item evatek untuk project ini.</td>
             </tr>
             @endforelse
         </tbody>
@@ -223,7 +214,7 @@
         const statusFilter = document.getElementById('status-filter');
         const deadlineFilter = document.getElementById('deadline-filter');
         const tbody = document.getElementById('items-tbody');
-        const allRows = tbody.querySelectorAll('tr[data-status]');
+        const allRows = tbody.querySelectorAll('tr.evatek-row');
 
         function filterTable() {
             const searchTerm = searchInput.value.toLowerCase();
@@ -232,9 +223,9 @@
             const now = new Date();
 
             allRows.forEach(row => {
-                const itemName = row.querySelector('a').textContent.toLowerCase();
+                const itemLink = row.querySelector('a');
+                const itemName = itemLink ? itemLink.textContent.toLowerCase() : '';
                 const status = row.getAttribute('data-status');
-                const deadline = new Date(row.getAttribute('data-deadline'));
 
                 // Filter by search
                 const matchesSearch = itemName.includes(searchTerm);
@@ -242,22 +233,8 @@
                 // Filter by status
                 const matchesStatus = !selectedStatus || status === selectedStatus;
 
-                // Filter by deadline
-                let matchesDeadline = true;
-                if (selectedDeadline === 'hari_ini') {
-                    matchesDeadline = deadline.toDateString() === now.toDateString();
-                } else if (selectedDeadline === 'satu_minggu') {
-                    const weekFromNow = new Date(now);
-                    weekFromNow.setDate(now.getDate() + 7);
-                    matchesDeadline = deadline >= now && deadline <= weekFromNow;
-                } else if (selectedDeadline === 'satu_bulan') {
-                    const monthFromNow = new Date(now);
-                    monthFromNow.setMonth(now.getMonth() + 1);
-                    matchesDeadline = deadline >= now && deadline <= monthFromNow;
-                }
-
                 // Show/hide row
-                if (matchesSearch && matchesStatus && matchesDeadline) {
+                if (matchesSearch && matchesStatus) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';

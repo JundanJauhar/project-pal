@@ -50,7 +50,6 @@ class ProjectController extends Controller
     {
         $project = Project::with([
             'ownerDivision',
-            'contracts',
             'evaluations'
         ])->findOrFail($id);
 

@@ -81,14 +81,6 @@ class Vendor extends Model
     }
 
     /**
-     * Get contracts for this vendor
-     */
-    public function contracts(): HasMany
-    {
-        return $this->hasMany(Contract::class, 'vendor_id', 'id_vendor');
-    }
-
-    /**
      * Get request procurements for this vendor
      */
     public function requestProcurements(): HasMany

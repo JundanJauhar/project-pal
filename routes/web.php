@@ -41,16 +41,8 @@ Route::post('/login', function (Request $request) {
     if (Auth::attempt($credentials, $request->boolean('remember'))) {
         $request->session()->regenerate();
         // Redirect berdasarkan role
-            if (Auth::user()->roles === 'superadmin') {
-                return redirect()->route('ums.users.index'); // langsung ke UMS
-            }
-
-            return redirect()->route('dashboard');
-
-
-        // Jika vendor, arahkan ke halaman vendor
-        if (Auth::user()->roles === 'vendor') {
-            return redirect()->route('vendor.index');
+        if (Auth::user()->roles === 'superadmin') {
+            return redirect()->route('ums.users.index'); // langsung ke UMS
         }
 
         return redirect()->route('dashboard');
@@ -113,37 +105,106 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 
-    /*
-    |--------------------------------------------------------------------------
-    | SUPPLY CHAIN ROUTES
-    |--------------------------------------------------------------------------
-    */
-    Route::prefix('supply-chain')->name('supply-chain.')->group(function () {
-        Route::get('/dashboard', [SupplyChainController::class, 'dashboard'])->name('dashboard');
-        Route::post('/dashboard/store', [SupplyChainController::class, 'storePengadaan'])->name('dashboard.store');
-        Route::get('/projects/{projectId}/review', [SupplyChainController::class, 'reviewProject'])->name('review-project');
-        Route::post('/projects/{projectId}/approve', [SupplyChainController::class, 'approveReview'])->name('approve-review');
-        Route::get('/material-requests', [SupplyChainController::class, 'materialRequests'])->name('material-requests');
-        Route::post('/material-requests/{requestId}', [SupplyChainController::class, 'updateMaterialRequest'])->name('update-material-request');
-        Route::get('/vendors', [SupplyChainController::class, 'vendors'])->name('vendors');
-        Route::post('/projects/select-vendor/{procurement_id}', [SupplyChainController::class, 'selectVendor'])->name('select-vendor');
-        Route::get('/negotiations', [SupplyChainController::class, 'negotiations'])->name('negotiations');
-        Route::post('/projects/{projectId}/negotiation', [SupplyChainController::class, 'createNegotiation'])->name('create-negotiation');
-        Route::get('/material-shipping', [SupplyChainController::class, 'materialShipping'])->name('material-shipping');
-        Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])->name('material-arrival');
-        Route::get('/evatek', [EvatekController::class, 'index'])->name('evatek.index');
-        Route::get('/evatek/create', [EvatekController::class, 'create'])->name('evatek.create');
-        Route::post('/evatek/store', [EvatekController::class, 'store'])->name('evatek.store');
-        
-        // VENDOR ROUTES - Proper route ordering
-        Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])->name('vendor.kelola');
-        Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])->name('vendor.store');
-        Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])->name('vendor.form');
-        Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])->name('vendor.detail');
-        Route::get('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])->name('vendor.pilih');
-        Route::put('/vendor/update/{id_vendor}', [SupplyChainController::class, 'updateVendor'])->name('vendor.update');
-        Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])->name('vendor.simpan');
-    });
+
+// File: routes/web.php
+// BAGIAN SUPPLY CHAIN - Update dengan Input Item Routes
+
+/*
+|--------------------------------------------------------------------------
+| SUPPLY CHAIN ROUTES
+|--------------------------------------------------------------------------
+*/
+Route::prefix('supply-chain')->name('supply-chain.')->middleware(['auth'])->group(function () {
+    
+    // Dashboard
+    Route::get('/dashboard', [SupplyChainController::class, 'dashboard'])
+        ->name('dashboard');
+    
+    Route::post('/dashboard/store', [SupplyChainController::class, 'storePengadaan'])
+        ->name('dashboard.store');
+    
+    Route::get('/projects/{projectId}/review', [SupplyChainController::class, 'reviewProject'])
+        ->name('review-project');
+    
+    Route::post('/projects/{projectId}/approve', [SupplyChainController::class, 'approveReview'])
+        ->name('approve-review');
+    
+    Route::get('/material-requests', [SupplyChainController::class, 'materialRequests'])
+        ->name('material-requests');
+    
+    Route::post('/material-requests/{requestId}', [SupplyChainController::class, 'updateMaterialRequest'])
+        ->name('update-material-request');
+    
+    Route::get('/vendors', [SupplyChainController::class, 'vendors'])
+        ->name('vendors');
+    
+    Route::post('/projects/select-vendor/{procurement_id}', [SupplyChainController::class, 'selectVendor'])
+        ->name('select-vendor');
+    
+    Route::get('/negotiations', [SupplyChainController::class, 'negotiations'])
+        ->name('negotiations');
+    
+    Route::post('/projects/{projectId}/negotiation', [SupplyChainController::class, 'createNegotiation'])
+        ->name('create-negotiation');
+    
+    Route::get('/material-shipping', [SupplyChainController::class, 'materialShipping'])
+        ->name('material-shipping');
+    
+    Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])
+        ->name('material-arrival');
+    
+    Route::get('/evatek', [EvatekController::class, 'index'])
+        ->name('evatek.index');
+    
+    Route::get('/evatek/create', [EvatekController::class, 'create'])
+        ->name('evatek.create');
+    
+    Route::post('/evatek/store', [EvatekController::class, 'store'])
+        ->name('evatek.store');
+    
+    // ========== INPUT ITEM ROUTES (NEW) ==========
+    // Form tambah item
+    Route::get('/project/{projectId}/input-item', [SupplyChainController::class, 'inputItem'])
+        ->name('input-item')
+        ->where('projectId', '[0-9]+');
+
+    // Store item dengan multiple vendors
+    Route::post('/project/{projectId}/input-item', [SupplyChainController::class, 'storeItem'])
+        ->name('input-item.store')
+        ->where('projectId', '[0-9]+');
+
+    // Store Evatek items directly (supply chain use)
+    Route::post('/project/{projectId}/evatek-item', [SupplyChainController::class, 'storeEvatekItem'])
+        ->name('evatek-item.store')
+        ->where('projectId', '[0-9]+');
+
+    // AJAX - Get items untuk procurement tertentu
+    Route::get('/get-procurement-items/{procurementId}', [SupplyChainController::class, 'getProcurementItems'])
+        ->name('get-procurement-items')
+        ->where('procurementId', '[0-9]+');
+    
+    // ========== VENDOR ROUTES ==========
+    Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])
+        ->name('vendor.kelola');
+    
+    Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])
+        ->name('vendor.store');
+    
+    Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])
+        ->name('vendor.form');
+    
+    Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])
+        ->name('vendor.detail');
+    
+    Route::get('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])
+        ->name('vendor.pilih');
+    
+    Route::put('/vendor/update/{id_vendor}', [SupplyChainController::class, 'updateVendor'])
+        ->name('vendor.update');
+    
+    Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])
+        ->name('vendor.simpan');
+});
 
     /*
     |--------------------------------------------------------------------------
@@ -166,18 +227,17 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('inspections')->name('inspections.')->group(function () {
-        // ===== ROUTES QA INSPECTION =====
         Route::get('/', [InspectionController::class, 'index'])->name('index');
         Route::get('/{id}', [InspectionController::class, 'show'])->name('show');
         
-        // ===== ROUTES NCR REPORTS =====
+        // NCR REPORTS
         Route::get('/ncr', [InspectionController::class, 'ncrReports'])->name('ncr.index');
         Route::get('/ncr/{id}', [InspectionController::class, 'showNcr'])->name('ncr.show');
         Route::put('/ncr/{id}', [InspectionController::class, 'updateNcr'])->name('ncr.update');
         Route::post('/ncr/{id}/verify', [InspectionController::class, 'verifyNcr'])->name('ncr.verify');
     });
 
-    // ===== ROUTES QA DETAIL APPROVAL =====
+    // QA DETAIL APPROVAL
     Route::get('/qa/detail-approval/{procurement_id}', [DetailApprovalController::class, 'show'])->name('qa.detail-approval');
     Route::post('/qa/detail-approval/{procurement_id}/save', [DetailApprovalController::class, 'saveAll'])->name('qa.detail-approval.save');
 
@@ -187,21 +247,43 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('desain')->name('desain.')->group(function () {
-        Route::get('/dashboard', [DesainController::class, 'dashboard'])->name('dashboard');
-        Route::get('/list-project', [DesainListProjectController::class, 'list'])->name('list-project');
-        Route::get('/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPengadaan'])->name('daftar-pengadaan');
-        Route::get('/project/{id}/pengadaan', [DesainListProjectController::class, 'formPengadaan'])->name('permintaan-pengadaan');
-        Route::post('/project/{id}/pengadaan/kirim', [DesainListProjectController::class, 'kirimPengadaan'])->name('kirim-pengadaan');
-        Route::get('/evatek/item/{item_id}', [EvatekController::class, 'review']) ->name('review-evatek');
+        
+        // Dashboard
+        Route::get('/dashboard', [DesainController::class, 'dashboard'])
+            ->name('dashboard');
+        
+        // List Project
+        Route::get('/list-project', [DesainListProjectController::class, 'list'])
+            ->name('list-project');
+        
+        // Daftar Pengadaan (Item Listing) — handled by EvatekController now
+        Route::get('/project/{id}/permintaan', [EvatekController::class, 'daftarPermintaan'])
+            ->name('daftar-pengadaan');
+        
+        // ========== PENGADAAN FORM ==========
+        Route::get('/project/{id}/pengadaan', [DesainListProjectController::class, 'formPengadaan'])
+            ->name('permintaan-pengadaan');
+        
+        Route::post('/project/{id}/pengadaan/kirim', [DesainListProjectController::class, 'kirimPengadaan'])
+            ->name('kirim-pengadaan');
+        
+        // ========== EVATEK ROUTES ==========
+        Route::get('/evatek/item/{item_id}', [EvatekController::class, 'review'])
+            ->name('review-evatek')
+            ->where('item_id', '[0-9]+');
 
-
-        // AJAX actions (pastikan EvatekController memiliki method saveLink, approve, reject, revisi)
-        Route::post('/evatek/save-link', [EvatekController::class, 'saveLink'])->name('evatek.save-link');
-        Route::post('/evatek/approve',   [EvatekController::class, 'approve'])->name('evatek.approve');
-        Route::post('/evatek/reject',    [EvatekController::class, 'reject'])->name('evatek.reject');
-        Route::post('/evatek/revisi',    [EvatekController::class, 'revise'])->name('evatek.revisi');
-        Route::get('/input-item', [DesainController::class, 'inputItem'])->name('input-item');
-        Route::post('/input-item/store', [DesainController::class, 'storeItem'])->name('input-item.store');
+        // AJAX actions untuk Evatek
+        Route::post('/evatek/save-link', [EvatekController::class, 'saveLink'])
+            ->name('evatek.save-link');
+        
+        Route::post('/evatek/approve', [EvatekController::class, 'approve'])
+            ->name('evatek.approve');
+        
+        Route::post('/evatek/reject', [EvatekController::class, 'reject'])
+            ->name('evatek.reject');
+        
+        Route::post('/evatek/revisi', [EvatekController::class, 'revise'])
+            ->name('evatek.revisi');
     });
 
     /*
@@ -217,24 +299,22 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/approval/{projectId}', [SekdirController::class, 'approvalSubmit'])->name('approval.submit');
     });
 
-Route::middleware(['auth'])->group(function () {
-
-    // halaman utama vendor
+    /*
+    |--------------------------------------------------------------------------
+    | VENDOR
+    |--------------------------------------------------------------------------
+    */
     Route::get('/vendor', [VendorEvatekController::class, 'index'])
         ->name('vendor.index');
 
-    // kompatibilitas
     Route::redirect('/vendor/dashboard', '/vendor');
     Route::redirect('/vendor/evatek', '/vendor');
-});
 
-
-    // ============ DEBUG ROUTES ============
-    
-    /**
-     * Debug inspection status
-     * GET /debug/inspection/{procurement_id}
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | DEBUG ROUTES
+    |--------------------------------------------------------------------------
+    */
     Route::get('/debug/inspection/{procurement_id}', function($procurement_id) {
         $procurement = \App\Models\Procurement::with([
             'requestProcurements.items.inspectionReports',
@@ -353,7 +433,6 @@ Route::middleware(['auth'])->group(function () {
 
     /**
      * View recent logs
-     * GET /debug/logs
      */
     Route::get('/debug/logs', function() {
         $logFile = storage_path('logs/laravel.log');
@@ -378,7 +457,6 @@ Route::middleware(['auth'])->group(function () {
 
     /**
      * Force trigger transition
-     * POST /debug/force-transition/{procurement_id}
      */
     Route::post('/debug/force-transition/{procurement_id}', function($procurement_id) {
         $procurement = \App\Models\Procurement::with('requestProcurements.items.inspectionReports')->findOrFail($procurement_id);
@@ -413,10 +491,7 @@ Route::middleware(['auth'])->group(function () {
         ]);
     })->name('debug.force-transition');
 
-    // ============ END DEBUG ROUTES ============
-
-    // -------------------------------------------------------------
-    //  UMS ROUTES (DILETAKKAN DI LUAR, tetapi tetap pakai middleware auth)
-    // -------------------------------------------------------------
+    // UMS ROUTES
     require __DIR__.'/ums.php';
-});
+
+}); // End of middleware(['auth']) group

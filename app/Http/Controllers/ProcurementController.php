@@ -12,6 +12,7 @@ use App\Models\RequestProcurement;
 use App\Models\Item;
 use App\Models\Checkpoint;
 use App\Services\CheckpointTransitionService;
+use App\Models\Vendor;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -178,7 +179,12 @@ class ProcurementController extends Controller
             $currentStageIndex = $currentCheckpoint->point_sequence;
         }
 
-        return view('procurements.show', compact('procurement', 'checkpoints', 'currentStageIndex'));
+        // Ambil daftar vendor terverifikasi untuk form input Evatek
+        $vendors = Vendor::where('legal_status', 'verified')
+            ->orderBy('name_vendor', 'asc')
+            ->get();
+
+        return view('procurements.show', compact('procurement', 'checkpoints', 'currentStageIndex', 'vendors'));
     }
 
     public function getProgress($id)

@@ -101,14 +101,14 @@
         </div>
 
         <div>
-            <p class="status-item-label">Divisi Desain</p>
-            <p id="statusDivision" class="status-small-value">{{ $evatek->current_status }}</p>
+            <p class="status-item-label">Status</p>
+            <p id="statusDivision" class="status-small-value">{{ ucfirst($evatek->status) }}</p>
         </div>
 
         <div>
-            <p class="status-item-label">Date</p>
+            <p class="status-item-label">Last Update</p>
             <p id="statusDate" class="status-small-value">
-                {{ $evatek->current_date ? $evatek->current_date->format('d/m/Y') : '-' }}
+                {{ $evatek->current_date ? \Carbon\Carbon::parse($evatek->current_date)->format('d/m/Y') : '-' }}
             </p>
         </div>
     </div>
@@ -135,9 +135,9 @@
                     <tr data-revision-id="{{ $rev->revision_id }}" data-rev="{{ $rev->revision_code }}">
                         <td>
                             <input type="checkbox" class="rev-check
-                            @if($rev->status=='approved') status-approve
+                            @if($rev->status=='approve') status-approve
                             @elseif($rev->status=='revisi') status-revisi
-                            @elseif($rev->status=='rejected') status-reject
+                            @elseif($rev->status=='not approve') status-reject
                             @endif">
                         </td>
 
@@ -162,6 +162,55 @@
                         </td>
                     </tr>
                 @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- REVISION HISTORY --}}
+    <div class="card-default">
+        <div class="card-title">Review History</div>
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Revision</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @forelse($evatek->revisions()->orderBy('created_at', 'desc')->get() as $revision)
+                    <tr>
+                        <td>{{ $revision->revision_code }}</td>
+                        <td>
+                            <span class="badge 
+                                @if($revision->status === 'approve') badge-success
+                                @elseif($revision->status === 'not approve') badge-danger
+                                @elseif($revision->status === 'revisi') badge-warning
+                                @else badge-secondary
+                                @endif
+                            ">
+                                {{ ucfirst($revision->status) }}
+                            </span>
+                        </td>
+                        <td>
+                            @if($revision->approved_at)
+                                {{ \Carbon\Carbon::parse($revision->approved_at)->format('d/m/Y H:i') }}
+                            @elseif($revision->not_approved_at)
+                                {{ \Carbon\Carbon::parse($revision->not_approved_at)->format('d/m/Y H:i') }}
+                            @else
+                                {{ \Carbon\Carbon::parse($revision->created_at)->format('d/m/Y H:i') }}
+                            @endif
+                        </td>
+                        <td>{{ $revision->notes ?? '-' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4" class="text-center">No revision history</td>
+                    </tr>
+                @endforelse
                 </tbody>
             </table>
         </div>

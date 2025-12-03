@@ -342,7 +342,7 @@
             <div class="text-center">Tidak ada checkpoint yang tersedia</div>
         @endforelse
     </div>
-
+                
     {{-- Detail Items Pengadaan --}}
     <h5 class="section-title mt-4">Detail Item Pengadaan</h5>
     
@@ -397,6 +397,65 @@
     <h5 class="section-title">Sign Document</h5>
     <div class="doc-card">
         {!! $procurement->sign_notes ?? '<em class="text-muted">Belum ada tanda tangan</em>' !!}
+    </div>
+
+    {{-- INPUT EVATEK FORM (Supply Chain) --}}
+    <h5 class="section-title">Input Evatek (Supply Chain)</h5>
+    <div class="dashboard-table-wrapper">
+        <div class="table-responsive">
+            <table class="dashboard-table">
+                <thead>
+                    <tr>
+                        <th style="width:5%;">No</th>
+                        <th style="width:30%; text-align:left;">Nama Item</th>
+                        <th style="width:30%; text-align:left;">Spesifikasi</th>
+                        <th style="width:10%;">Jumlah</th>
+                        <th style="width:15%;">Vendor (pilih minimal 1)</th>
+                        <th style="width:10%;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php $row = 0; @endphp
+                    @forelse($procurement->requestProcurements as $request)
+                        @foreach($request->items as $item)
+                            @php $row++; @endphp
+                            <tr>
+                                <td style="text-align:center;">{{ $row }}</td>
+                                <td style="text-align:left;">{{ $item->item_name }}</td>
+                                <td style="text-align:left;">{{ $item->item_description ?? $item->specification ?? '-' }}</td>
+                                <td>{{ $item->amount }} {{ $item->unit }}</td>
+                                <td style="text-align:left;">
+                                    <form method="POST" action="{{ route('supply-chain.evatek-item.store', $procurement->project_id) }}">
+                                        @csrf
+                                        <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
+                                        <input type="hidden" name="item_id" value="{{ $item->item_id }}">
+
+                                        <div class="mb-2">
+                                            <label class="form-label" style="font-size:12px;">Target Date:</label>
+                                            <input type="date" name="target_date" class="form-control" style="font-size:12px;">
+                                        </div>
+
+                                        <label class="form-label" style="font-size:12px;">Vendor (pilih minimal 1):</label>
+                                        <select name="vendor_ids[]" multiple size="3" class="form-select" style="font-size:12px;">
+                                            @foreach($vendors as $vendor)
+                                                <option value="{{ $vendor->id_vendor }}">{{ $vendor->name_vendor }}</option>
+                                            @endforeach
+                                        </select>
+                                </td>
+                                <td style="text-align:center;">
+                                        <button type="submit" class="btn btn-primary">Tambahkan</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center py-4">Tidak ada item untuk dimasukkan ke Evatek.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
 @endsection

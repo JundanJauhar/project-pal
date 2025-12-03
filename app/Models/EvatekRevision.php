@@ -17,10 +17,15 @@ class EvatekRevision extends Model
         'design_link',
         'status',
         'date',
+        'approved_at',
+        'not_approved_at',
+        'notes',
     ];
 
     protected $casts = [
         'date' => 'date',
+        'approved_at' => 'datetime',
+        'not_approved_at' => 'datetime',
     ];
 
     /** Relation to EvatekItem */

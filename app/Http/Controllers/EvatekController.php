@@ -6,6 +6,7 @@ use App\Models\Item;
 use App\Models\EvatekItem;
 use App\Models\EvatekRevision;
 use Illuminate\Http\Request;
+use App\Models\Project;
 
 class EvatekController extends Controller
 {
@@ -14,19 +15,27 @@ class EvatekController extends Controller
      */
     public function review($itemId)
     {
-        // Ambil item + relasi request + vendor
+        // Ambil item + relasi request + vendor + procurement
         $item = Item::with([
             'requestProcurement',
             'requestProcurement.vendor',
+            'requestProcurement.procurement',
         ])->findOrFail($itemId);
 
-        // Ambil atau buat evatek_items
+        // Get procurement_id from request_procurement
+        $procurementId = $item->requestProcurement->procurement_id;
+        $vendorId = $item->requestProcurement->vendor_id;
+
+        // Ambil atau buat evatek_items dengan composite key
         $evatek = EvatekItem::firstOrCreate(
-            ['item_id' => $itemId],
             [
-                'project_id' => $item->requestProcurement->project_id,
+                'item_id' => $itemId,
+                'procurement_id' => $procurementId,
+                'vendor_id' => $vendorId,
+            ],
+            [
                 'current_revision' => 'R0',
-                'current_status' => 'On Progress',
+                'status' => 'on_progress',
                 'current_date' => now(),
             ]
         );
@@ -51,6 +60,26 @@ class EvatekController extends Controller
         }
 
         return view('desain.review-evatek', compact('item', 'evatek', 'revisions'));
+    }
+
+
+    /**
+     * Show daftar permintaan (items) untuk project - Evatek listing
+     */
+    public function daftarPermintaan($projectId)
+    {
+        $project = Project::findOrFail($projectId);
+        
+        // Get evatek items for this project through procurement
+        $evatekItems = EvatekItem::whereIn('procurement_id', function ($query) use ($projectId) {
+            $query->select('procurement_id')
+                  ->from('procurement')
+                  ->where('project_id', $projectId);
+        })->with(['item', 'vendor', 'procurement', 'revisions' => function ($query) {
+            $query->latest('revision_id');
+        }])->get();
+
+        return view('desain.daftar-permintaan', compact('project', 'evatekItems'));
     }
 
 
@@ -79,17 +108,22 @@ class EvatekController extends Controller
     {
         $revision = EvatekRevision::findOrFail($request->revision_id);
 
+        // Ensure evatek_id is set
+        if (!$revision->evatek_id) {
+            return response()->json(['success' => false, 'message' => 'Revision not linked to evatek item'], 400);
+        }
+
         $revision->update([
-            'status' => 'approved',
-            'date' => now(),
+            'status' => 'approve',
+            'approved_at' => now(),
         ]);
 
         // Update summary on evatek_items
-        $evatek = $revision->evatek;
+        $evatek = EvatekItem::findOrFail($revision->evatek_id);
         $evatek->update([
             'current_revision' => $revision->revision_code,
-            'current_status' => 'Completed',
-            'current_date' => $revision->date,
+            'status' => 'approve',
+            'current_date' => now()->toDateString(),
         ]);
 
         return response()->json(['success' => true]);
@@ -104,16 +138,22 @@ class EvatekController extends Controller
     {
         $revision = EvatekRevision::findOrFail($request->revision_id);
 
+        // Ensure evatek_id is set
+        if (!$revision->evatek_id) {
+            return response()->json(['success' => false, 'message' => 'Revision not linked to evatek item'], 400);
+        }
+
         $revision->update([
-            'status' => 'rejected',
-            'date' => now(),
+            'status' => 'not approve',
+            'not_approved_at' => now(),
         ]);
 
         // Update summary
-        $revision->evatek->update([
+        $evatek = EvatekItem::findOrFail($revision->evatek_id);
+        $evatek->update([
             'current_revision' => $revision->revision_code,
-            'current_status' => 'Rejected',
-            'current_date' => $revision->date,
+            'status' => 'not_approve',
+            'current_date' => now()->toDateString(),
         ]);
 
         return response()->json(['success' => true]);
@@ -128,13 +168,17 @@ class EvatekController extends Controller
     {
         $revision = EvatekRevision::findOrFail($request->revision_id);
 
+        // Ensure evatek_id is set
+        if (!$revision->evatek_id) {
+            return response()->json(['success' => false, 'message' => 'Revision not linked to evatek item'], 400);
+        }
+
         // Current becomes "revisi"
         $revision->update([
             'status' => 'revisi',
-            'date' => now(),
         ]);
 
-        $evatek = $revision->evatek;
+        $evatek = EvatekItem::findOrFail($revision->evatek_id);
 
         // Generate next revision code
         $num = intval(substr($revision->revision_code, 1)) + 1;
@@ -145,14 +189,14 @@ class EvatekController extends Controller
             'evatek_id' => $evatek->evatek_id,
             'revision_code' => $nextCode,
             'status' => 'pending',
-            'date' => now(),
+            'date' => now()->toDateString(),
         ]);
 
         // Update summary
         $evatek->update([
             'current_revision' => $nextCode,
-            'current_status' => 'Revision Needed',
-            'current_date' => now(),
+            'status' => 'on_progress',
+            'current_date' => now()->toDateString(),
         ]);
 
         return response()->json([

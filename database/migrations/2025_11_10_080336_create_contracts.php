@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id('contract_id');
 
             $table->unsignedBigInteger('project_id');
-            $table->string('vendor_id', 20); // PERBAIKAN FK: match vendors.id_vendor
+            $table->unsignedBigInteger('vendor_id');
             $table->string('contract_number', 50);
             $table->bigInteger('contract_value');
             $table->dateTime('start_date');

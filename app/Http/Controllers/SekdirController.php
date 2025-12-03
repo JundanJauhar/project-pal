@@ -26,7 +26,7 @@ class SekdirController extends Controller
             'ditolak' => Project::where('status_project', 'rejected')->count(),
         ];
 
-        $recentProjects = Project::with(['ownerDivision', 'contracts.vendor'])
+        $recentProjects = Project::with(['ownerDivision'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
@@ -62,26 +62,6 @@ public function approval()
 
     return view('sekdir.approval', compact('procurements', 'stats', 'totalProcurements'));
 }
-
-
-
-
-    // public function approvals()
-    // {
-    //     $approvals = Project::with(['ownerDivision', 'contracts.vendor'])
-    //         ->where('status_project', 'persetujuan_sekretaris')
-    //         ->orderBy('created_at', 'desc')
-    //         ->paginate(10);
-
-    //     $stats = [
-    //         'menunggu_total' => Project::where('status_project', 'persetujuan_sekretaris')->count(),
-    //         'menunggu_hari_ini' => Project::where('status_project', 'persetujuan_sekretaris')
-    //             ->whereDate('created_at', \Carbon\Carbon::today())
-    //             ->count(),
-    //     ];
-
-    //     return view('sekdir.approvals', compact('approvals', 'stats'));
-    // }
 
     public function approve(Request $request, $projectId)
     {

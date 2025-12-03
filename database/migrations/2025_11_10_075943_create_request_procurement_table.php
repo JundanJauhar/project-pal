@@ -14,11 +14,9 @@ return new class extends Migration
             // FK ke procurement
             $table->unsignedBigInteger('procurement_id')->nullable();
 
-            // FK ke project (PERBAIKAN #1)
             $table->unsignedBigInteger('project_id')->nullable();
 
-            // Vendor optional - PERBAIKAN FK: ubah ke string untuk match vendors.id_vendor
-            $table->string('vendor_id', 20)->nullable();
+            $table->unsignedBigInteger('vendor_id')->nullable();
 
             $table->string('request_name', 200);
             $table->date('created_date');

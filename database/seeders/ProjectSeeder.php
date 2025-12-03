@@ -242,9 +242,8 @@ class ProjectSeeder extends Seeder
     ]
 );
 
-
         /**
-         * ITEMS — DENGAN STATUS APPROVED/NOT_APPROVED
+         * ITEMS
          */
         Item::updateOrCreate(
             [
@@ -264,9 +263,6 @@ class ProjectSeeder extends Seeder
             'item_description' => 'Plat baja tahan korosi untuk lambung kapal',
             'amount' => 50,
             'unit' => 'ton',
-            'status' => 'approved',
-            'approved_by' => 2,
-            'approved_at' => Carbon::now()->subDays(85),
         ]);
 
         Item::create([
@@ -275,9 +271,6 @@ class ProjectSeeder extends Seeder
             'item_description' => 'Panel kontrol elektronik untuk sistem navigasi',
             'amount' => 5,
             'unit' => 'unit',
-            'status' => 'approved',
-            'approved_by' => 3,
-            'approved_at' => Carbon::now()->subDays(55),
         ]);
 
         Item::create([
@@ -286,7 +279,6 @@ class ProjectSeeder extends Seeder
             'item_description' => 'Sensor radar untuk deteksi objek',
             'amount' => 10,
             'unit' => 'unit',
-            'status' => 'not_approved',
         ]);
 
         Item::create([
@@ -295,9 +287,6 @@ class ProjectSeeder extends Seeder
             'item_description' => 'Alat pemotongan material dengan laser precision',
             'amount' => 20,
             'unit' => 'pcs',
-            'status' => 'approved',
-            'approved_by' => 5,
-            'approved_at' => Carbon::now()->subDays(35),
         ]);
 
         Item::create([
@@ -306,7 +295,6 @@ class ProjectSeeder extends Seeder
             'item_description' => 'Helm pengaman standar K3',
             'amount' => 100,
             'unit' => 'pcs',
-            'status' => 'not_approved',
         ]);
 
         Item::create([
@@ -315,7 +303,6 @@ class ProjectSeeder extends Seeder
             'item_description' => 'Sepatu safety boots',
             'amount' => 100,
             'unit' => 'pcs',
-            'status' => 'not_approved',
         ]);
 
         Item::create([
@@ -324,9 +311,6 @@ class ProjectSeeder extends Seeder
             'item_description' => 'Pompa hidrolik tekanan tinggi untuk sistem kapal',
             'amount' => 3,
             'unit' => 'unit',
-            'status' => 'approved',
-            'approved_by' => 5,
-            'approved_at' => Carbon::now()->subDays(65),
         ]);
 
 
