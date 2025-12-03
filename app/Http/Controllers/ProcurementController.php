@@ -16,6 +16,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Helpers\ActivityLogger;
+
 
 class ProcurementController extends Controller
 {
@@ -35,6 +37,13 @@ class ProcurementController extends Controller
         $procurements = $query->orderBy('created_at', 'desc')
             ->paginate(20);
 
+            ActivityLogger::log(
+                module: 'Procurement',
+                action: 'view_procurement_list',
+                targetId: null,
+                details: ['user_id' => Auth::id()]
+            );
+
         return view('procurements.index', compact('procurements'));
     }
 
@@ -42,6 +51,13 @@ class ProcurementController extends Controller
     {
         $departments = Department::all();
         $projects = Project::withCount('procurements')->get();
+
+        ActivityLogger::log(
+            module: 'Procurement',
+            action: 'open_procurement_create_form',
+            targetId: null,
+            details: ['user_id' => Auth::id()]
+        );
 
         return view('procurements.create', compact('departments', 'projects'));
     }
@@ -145,6 +161,20 @@ class ProcurementController extends Controller
 
             DB::commit();
 
+            ActivityLogger::log(
+                module: 'Procurement',
+                action: 'create_procurement',
+                targetId: $procurement->procurement_id,
+                details: [
+                    'user_id' => Auth::id(),
+                    'code_procurement' => $procurement->code_procurement,
+                    'project_id' => $procurement->project_id,
+                    'department_id' => $validated['department_procurement'],
+                    'priority' => $validated['priority'],
+                    'total_items' => count($validated['items']),
+                ]
+            );
+
             return redirect()->route('procurements.show', $procurement->procurement_id)
                 ->with('success', 'Procurement berhasil dibuat dengan kode ' . $finalCode . '. Procurement telah masuk ke tahap Evatek.');
 
@@ -178,6 +208,13 @@ class ProcurementController extends Controller
             $currentStageIndex = $currentCheckpoint->point_sequence;
         }
 
+        ActivityLogger::log(
+            module: 'Procurement',
+            action: 'view_procurement_detail',
+            targetId: $procurement->procurement_id,
+            details: ['user_id' => Auth::id()]
+        );
+
         return view('procurements.show', compact('procurement', 'checkpoints', 'currentStageIndex'));
     }
 
@@ -189,6 +226,13 @@ class ProcurementController extends Controller
             ->with(['checkpoint', 'user'])
             ->orderBy('checkpoint_id')
             ->get();
+
+            ActivityLogger::log(
+                module: 'Procurement',
+                action: 'view_procurement_progress',
+                targetId: $procurement->procurement_id,
+                details: ['user_id' => Auth::id()]
+            );
 
         return response()->json($progress);
     }
@@ -225,6 +269,17 @@ class ProcurementController extends Controller
             ]);
         }
 
+        ActivityLogger::log(
+            module: 'Procurement',
+            action: 'update_procurement_progress',
+            targetId: $procurement->procurement_id,
+            details: [
+                'user_id' => Auth::id(),
+                'checkpoint_id' => $validated['checkpoint_id'],
+                'status' => $validated['status'],
+            ]
+        );
+
         return redirect()->back()->with('success', 'Progress procurement berhasil diperbarui');
     }
 
@@ -236,6 +291,13 @@ class ProcurementController extends Controller
             ->with(['department', 'requestProcurements.vendor', 'procurementProgress.checkpoint'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
+
+            ActivityLogger::log(
+                module: 'Procurement',
+                action: 'view_procurements_by_project',
+                targetId: $project->project_id,
+                details: ['user_id' => Auth::id()]
+            );
 
         return view('procurements.by-project', compact('project', 'procurements'));
     }
@@ -286,6 +348,19 @@ class ProcurementController extends Controller
                 'current_checkpoint' => $checkpointName,
             ];
         });
+
+        ActivityLogger::log(
+            module: 'Procurement',
+            action: 'search_procurements',
+            targetId: null,
+            details: [
+                'user_id' => Auth::id(),
+                'query' => $q,
+                'status' => $status,
+                'priority' => $priority,
+                'page' => $page,
+            ]
+        );
 
         return response()->json([
             'data' => $items,

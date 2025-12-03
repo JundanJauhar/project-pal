@@ -11,6 +11,8 @@ use App\Models\Notification;
 use App\Models\ProcurementProgress;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\ActivityLogger;
+
 
 class ProjectController extends Controller
 {
@@ -23,6 +25,13 @@ class ProjectController extends Controller
         $projects = Procurement::with(['department', 'requestProcurements.vendor'])
             ->orderBy('created_at', 'desc')
             ->paginate(20);
+
+            ActivityLogger::log(
+                module: 'Project',
+                action: 'view_project_list',
+                targetId: null,
+                details: ['user_id' => Auth::id()]
+            );
 
         return view('procurements.index', compact('projects'));
     }
@@ -72,6 +81,13 @@ class ProjectController extends Controller
             ->orderBy('titik_id')
             ->get();
 
+            ActivityLogger::log(
+                module: 'Project',
+                action: 'view_project_detail',
+                targetId: $project->project_id,
+                details: ['user_id' => Auth::id()]
+            );
+
         return view('projects.show', compact('project', 'progress', 'stages', 'currentStageIndex'));
     }
 
@@ -84,6 +100,13 @@ class ProjectController extends Controller
         $divisions = Division::all();
 
         $this->authorize('update', $project);
+
+        ActivityLogger::log(
+            module: 'Project',
+            action: 'open_project_edit_form',
+            targetId: $project->project_id,
+            details: ['user_id' => Auth::id()]
+        );
 
         return view('projects.edit', compact('project', 'divisions'));
     }
@@ -108,6 +131,17 @@ class ProjectController extends Controller
 
         $project->update($validated);
 
+        ActivityLogger::log(
+            module: 'Project',
+            action: 'update_project',
+            targetId: $project->project_id,
+            details: [
+                'user_id' => Auth::id(),
+                'new_name' => $validated['name_project'],
+                'priority' => $validated['priority']
+            ]
+        );
+
         return redirect()->route('projects.show', $project->project_id)
             ->with('success', 'Proyek berhasil diupdate');
     }
@@ -131,6 +165,17 @@ class ProjectController extends Controller
 
         $this->handleStatusChangeNotification($project, $oldStatus, $validated['status_project']);
 
+        ActivityLogger::log(
+            module: 'Project',
+            action: 'update_project_status',
+            targetId: $project->project_id,
+            details: [
+                'user_id' => Auth::id(),
+                'from' => $oldStatus,
+                'to' => $validated['status_project']
+            ]
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Status proyek berhasil diupdate',
@@ -148,6 +193,13 @@ class ProjectController extends Controller
         $this->authorize('delete', $project);
 
         $project->delete();
+
+        ActivityLogger::log(
+            module: 'Project',
+            action: 'delete_project',
+            targetId: $project->project_id,
+            details: ['user_id' => Auth::id()]
+        );
 
         return redirect()->route('projects.index')
             ->with('success', 'Proyek berhasil dihapus');
@@ -196,6 +248,19 @@ class ProjectController extends Controller
                 'status_procurement' => $p->status_procurement,
             ];
         });
+
+        ActivityLogger::log(
+            module: 'Project',
+            action: 'search_projects',
+            targetId: null,
+            details: [
+                'user_id' => Auth::id(),
+                'query' => $q,
+                'status' => $status,
+                'priority' => $priority,
+                'page' => $page,
+            ]
+        );
 
         return response()->json([
             'data' => $items,
@@ -291,6 +356,16 @@ class ProjectController extends Controller
                 'review_documents' => json_encode($uploadedFiles),
             ]);
 
+            ActivityLogger::log(
+                module: 'Project',
+                action: 'upload_review_documents',
+                targetId: $project->project_id,
+                details: [
+                    'user_id' => Auth::id(),
+                    'files_uploaded' => array_column($uploadedFiles, 'filename'),
+                ]
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Dokumen review berhasil diunggah',
@@ -319,6 +394,16 @@ class ProjectController extends Controller
             $project->update([
                 'review_notes' => $request->review_notes,
             ]);
+
+            ActivityLogger::log(
+                module: 'Project',
+                action: 'save_review_notes',
+                targetId: $project->project_id,
+                details: [
+                    'user_id' => Auth::id(),
+                    'review_notes' => $request->review_notes
+                ]
+            );
 
             return response()->json([
                 'success' => true,

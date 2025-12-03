@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\ActivityLogger;
 
 class DesainController extends Controller
 {
@@ -30,6 +31,13 @@ class DesainController extends Controller
             'selesai' => $projects->where('status_project', 'completed')->count(),
             'ditolak' => $projects->where('status_project', 'rejected')->count(),
         ];
+
+        ActivityLogger::log(
+            module: 'Desain',
+            action: 'open_dashboard',
+            targetId: null,
+            details: ['user_id' => Auth::id()]
+        );
 
         return view('desain.dashboard', compact('projects', 'stats'));
     }
@@ -48,6 +56,13 @@ class DesainController extends Controller
                 'evaluator_id' => Auth::id(),
             ]
         );
+        
+        ActivityLogger::log(
+            module: 'Desain',
+            action: 'view_status_evatek',
+            targetId: $projectId,
+            details: ['user_id' => Auth::id()]
+        );
 
         return view('desain.status-evatek-detail', compact('project', 'evatek'));
     }
@@ -65,6 +80,13 @@ class DesainController extends Controller
         
         // Ambil semua vendor
         $vendors = Vendor::all();
+
+        ActivityLogger::log(
+            module: 'Desain',
+            action: 'open_input_item_form',
+            targetId: $projectId,
+            details: ['user_id' => Auth::id()]
+        );
 
         return view('desain.input-item', compact('project', 'vendors'));
     }
@@ -110,6 +132,18 @@ class DesainController extends Controller
                 'total_price' => 0,
                 'status' => 'not_approved',
             ]);
+
+            ActivityLogger::log(
+                module: 'Desain',
+                action: 'create_item',
+                targetId: $projectId,
+                details: [
+                    'user_id' => Auth::id(),
+                    'item_name' => $validated['item_name'],
+                    'vendor_id' => $validated['vendor_id'],
+                    'deadline_date' => $validated['deadline_date']
+                ]
+            );
 
             DB::commit();
 

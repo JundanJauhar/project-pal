@@ -20,6 +20,7 @@
                     <tr>
                         <th>Key</th>
                         <th>Value</th>
+                        <th>Deskripsi</th>
                         <th>Dibuat</th>
                         <th class="text-end">Aksi</th>
                     </tr>
@@ -29,6 +30,7 @@
                     <tr>
                         <td>{{ $s->key }}</td>
                         <td>{{ $s->value }}</td>
+                        <td>{{ $s->description }}</td>
                         <td>{{ $s->created_at->format('d M Y') }}</td>
                         <td class="text-end">
                             <a href="{{ route('ums.settings.edit', $s->id) }}" class="btn btn-sm btn-warning">

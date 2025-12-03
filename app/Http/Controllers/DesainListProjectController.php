@@ -8,12 +8,20 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Item;
 use App\Models\EvatekItem;
 use App\Models\EvatekRevision;
+use App\Helpers\ActivityLogger;
 
 class DesainListProjectController extends Controller
 {
     public function list()
     {
         $projects = Project::all();
+
+        ActivityLogger::log(
+            module: 'Desain',
+            action: 'view_list_project',
+            targetId: null,
+            details: ['user_id' => Auth::id()]
+        );
 
         return view('desain.list-project', compact('projects'));
     }
@@ -29,6 +37,13 @@ class DesainListProjectController extends Controller
         'procurements.requestProcurements.items',
         'procurements.requestProcurements.vendor',
     ])->findOrFail($id);
+
+    ActivityLogger::log(
+        module: 'Desain',
+        action: 'view_procurement_requests',
+        targetId: $id,
+        details: ['user_id' => Auth::id()]
+    );
 
     return view('desain.daftar-permintaan', compact('project'));
 }
@@ -72,6 +87,13 @@ class DesainListProjectController extends Controller
         ]);
         $revisions = collect([$r]);
     }
+    
+    ActivityLogger::log(
+        module: 'Desain',
+        action: 'review_evatek_item',
+        targetId: $itemId,
+        details: ['user_id' => Auth::id()]
+    );
 
     return view('desain.review-evatek', compact('item', 'evatek', 'revisions'));
 }
@@ -105,7 +127,7 @@ class DesainListProjectController extends Controller
                 'request_name' => 'Permintaan ' . $project->project_name,
                 'created_date' => now(),
                 'request_status' => 'draft',
-                'department_id' => auth()->user()->department_id ?? 1,
+                'department_id' => Auth::user()->department_id ?? 1,
             ]);
         }
 
@@ -121,6 +143,17 @@ class DesainListProjectController extends Controller
             ]);
         }
 
+        ActivityLogger::log(
+            module: 'Desain',
+            action: 'submit_procurement',
+            targetId: $id,
+            details: [
+                'user_id' => Auth::id(),
+                'item_count' => count($data['nama_barang']),
+                'request_proc_id' => $requestProc->request_id ?? null,
+            ]
+        );
+
         return back()->with('success', 'Pengadaan berhasil dikirim!');
     }
     public function approveItem(Request $request, $itemId)
@@ -132,6 +165,16 @@ class DesainListProjectController extends Controller
         'approved_by' => Auth::id(),
         'approved_at' => now(),
     ]);
+
+    ActivityLogger::log(
+        module: 'Desain',
+        action: 'approve_item',
+        targetId: $itemId,
+        details: [
+            'approved_by' => Auth::id(),
+            'item_status' => 'approved',
+        ]
+    );
 
     return redirect()->back()->with('success', 'Item berhasil di-approve');
 }
@@ -145,6 +188,16 @@ public function rejectItem(Request $request, $itemId)
         'approved_by' => null,
         'approved_at' => null,
     ]);
+
+    ActivityLogger::log(
+        module: 'Desain',
+        action: 'reject_item',
+        targetId: $itemId,
+        details: [
+            'rejected_by' => Auth::id(),
+            'item_status' => 'not_approved',
+        ]
+    );
 
     return redirect()->back()->with('success', 'Item di-reject');
 }

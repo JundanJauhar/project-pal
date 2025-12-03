@@ -10,62 +10,45 @@ use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Division;
 use App\Helpers\AuditLogger;
+use App\Helpers\ActivityLogger;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class UsersController extends Controller
 {
-    /**
-     * LIST USER
-     */
     public function index()
     {
         $users = User::orderBy('name', 'asc')->get();
-
         return view('ums.users.index', compact('users'));
     }
 
-    /**
-     * FORM CREATE USER
-     */
     public function create()
     {
         $divisions = Division::all();
-
         $roles = [
-            'superadmin',
-            'admin',
-            'sekretaris',
-            'sekretaris_direksi',
-            'desain',
-            'supply_chain',
-            'treasury',
-            'accounting',
-            'qa',
-            'user'
+            'superadmin', 'admin', 'sekretaris', 'sekretaris_direksi',
+            'desain', 'supply_chain', 'treasury', 'accounting', 'qa', 'user'
         ];
-
         return view('ums.users.create', compact('divisions', 'roles'));
     }
 
-    /**
-     * SIMPAN USER BARU
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => 'required|email|unique:users,email',
-            'password'    => 'required|min:6',
-            'roles'       => 'required|string',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:6',
+            'roles' => 'required|string',
             'division_id' => 'nullable|integer',
         ]);
 
         $user = User::create([
-            'name'        => $validated['name'],
-            'email'       => $validated['email'],
-            'password'    => Hash::make($validated['password']),
-            'roles'       => $validated['roles'],
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'roles' => $validated['roles'],
             'division_id' => $validated['division_id'],
-            'status'      => 'active',
+            'status' => 'active',
         ]);
 
         AuditLogger::log(
@@ -74,58 +57,51 @@ class UsersController extends Controller
             targetId: $user->user_id,
             details: [
                 'created_by' => Auth::id(),
-                'data'       => $user->toArray(),
+                'data' => $user->toArray(),
             ]
         );
 
-        return redirect()->route('ums.users.index')
-            ->with('success', 'User berhasil dibuat.');
+        ActivityLogger::log(
+            module: 'User Management',
+            action: 'create',
+            targetId: $user->user_id,
+            details: [
+                'created_by' => Auth::id(),
+                'data' => $user->toArray(),
+            ]
+        );
+
+        return redirect()->route('ums.users.index')->with('success', 'User berhasil dibuat.');
     }
 
-    /**
-     * FORM EDIT USER
-     */
     public function edit($user_id)
     {
         $user = User::findOrFail($user_id);
         $divisions = Division::all();
-
         $roles = [
-            'superadmin',
-            'admin',
-            'sekretaris',
-            'sekretaris_direksi',
-            'desain',
-            'supply_chain',
-            'treasury',
-            'accounting',
-            'qa',
-            'user'
+            'superadmin', 'admin', 'sekretaris', 'sekretaris_direksi',
+            'desain', 'supply_chain', 'treasury', 'accounting', 'qa', 'user'
         ];
-
         return view('ums.users.edit', compact('user', 'divisions', 'roles'));
     }
 
-    /**
-     * UPDATE USER
-     */
     public function update(Request $request, $user_id)
     {
         $user = User::findOrFail($user_id);
 
         $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'email'       => "required|email|unique:users,email,{$user_id},user_id",
-            'roles'       => 'required|string',
+            'name' => 'required|string|max:255',
+            'email' => "required|email|unique:users,email,{$user_id},user_id",
+            'roles' => 'required|string',
             'division_id' => 'nullable|integer',
         ]);
 
         $before = $user->toArray();
 
         $user->update([
-            'name'        => $validated['name'],
-            'email'       => $validated['email'],
-            'roles'       => $validated['roles'],
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'roles' => $validated['roles'],
             'division_id' => $validated['division_id'],
         ]);
 
@@ -135,18 +111,25 @@ class UsersController extends Controller
             targetId: $user->user_id,
             details: [
                 'updated_by' => Auth::id(),
-                'before'     => $before,
-                'after'      => $user->toArray(),
+                'before' => $before,
+                'after' => $user->toArray(),
             ]
         );
 
-        return redirect()->route('ums.users.index')
-            ->with('success', 'User berhasil diperbarui.');
+        ActivityLogger::log(
+            module: 'User Management',
+            action: 'update',
+            targetId: $user->user_id,
+            details: [
+                'updated_by' => Auth::id(),
+                'before' => $before,
+                'after' => $user->toArray(),
+            ]
+        );
+
+        return redirect()->route('ums.users.index')->with('success', 'User berhasil diperbarui.');
     }
 
-    /**
-     * RESET PASSWORD
-     */
     public function resetPassword(Request $request, $user_id)
     {
         $user = User::findOrFail($user_id);
@@ -167,23 +150,27 @@ class UsersController extends Controller
             targetId: $user->user_id,
             details: [
                 'reset_by' => Auth::id(),
-                'before'   => $before,
+                'before' => $before,
             ]
         );
 
-        return redirect()->route('ums.users.index')
-            ->with('success', 'Password berhasil direset.');
+        ActivityLogger::log(
+            module: 'User Management',
+            action: 'reset_password',
+            targetId: $user->user_id,
+            details: [
+                'reset_by' => Auth::id(),
+                'before' => $before,
+            ]
+        );
+
+        return redirect()->route('ums.users.index')->with('success', 'Password berhasil direset.');
     }
 
-    /**
-     * ⭐ FORCE LOGOUT USER
-     * Menghapus session user di tabel `sessions`.
-     */
     public function forceLogout($user_id)
     {
         $user = User::findOrFail($user_id);
 
-        // Menghapus session user → user otomatis logout
         DB::table('sessions')->where('user_id', $user_id)->delete();
 
         AuditLogger::log(
@@ -192,16 +179,23 @@ class UsersController extends Controller
             targetId: $user->user_id,
             details: [
                 'force_logout_by' => Auth::id(),
-                'user'            => $user->toArray(),
+                'user' => $user->toArray(),
+            ]
+        );
+
+        ActivityLogger::log(
+            module: 'User Management',
+            action: 'force_logout',
+            targetId: $user->user_id,
+            details: [
+                'force_logout_by' => Auth::id(),
+                'user' => $user->toArray(),
             ]
         );
 
         return back()->with('success', 'User berhasil di-force logout.');
     }
 
-    /**
-     * DELETE USER
-     */
     public function destroy($user_id)
     {
         $user = User::findOrFail($user_id);
@@ -212,13 +206,24 @@ class UsersController extends Controller
             targetId: $user->user_id,
             details: [
                 'deleted_by' => Auth::id(),
-                'data'       => $user->toArray(),
+                'data' => $user->toArray(),
+            ]
+        );
+
+        ActivityLogger::log(
+            module: 'User Management',
+            action: 'delete',
+            targetId: $user->user_id,
+            details: [
+                'deleted_by' => Auth::id(),
+                'data' => $user->toArray(),
             ]
         );
 
         $user->delete();
 
-        return redirect()->route('ums.users.index')
-            ->with('success', 'User telah dihapus.');
+        return redirect()->route('ums.users.index')->with('success', 'User telah dihapus.');
     }
+
+    
 }

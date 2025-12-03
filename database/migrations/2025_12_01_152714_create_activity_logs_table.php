@@ -11,22 +11,22 @@ return new class extends Migration
         Schema::create('activity_logs', function (Blueprint $table) {
             $table->bigIncrements('id');
 
-            // user actor
+            // ID user yang melakukan aksi
             $table->unsignedBigInteger('actor_user_id')->nullable();
-            
-            // contoh: users, settings, admin_scopes
+
+            // Modul yang terpengaruh, contoh: users, procurements, projects
             $table->string('module', 120);
 
-            // contoh: create, update, delete, force_logout, reset_password
+            // Aksi yang dilakukan: create, update, delete, approve, reject, dsb
             $table->string('action', 120);
 
-            // ID target dalam module, contoh user_id, setting_id
+            // ID dari objek yang dipengaruhi
             $table->unsignedBigInteger('target_id')->nullable();
 
-            // JSON payload
+            // Detail tambahan sebagai JSON
             $table->json('details')->nullable();
 
-            // waktu aktivitas
+            // Timestamp log
             $table->timestamp('created_at')->useCurrent();
 
             $table->foreign('actor_user_id')

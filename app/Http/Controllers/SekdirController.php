@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Checkpoint;
 use App\Models\Approval;
 use App\Models\ProcurementProgress;
+use App\Helpers\ActivityLogger;
+
 
 class SekdirController extends Controller
 {
@@ -30,6 +32,13 @@ class SekdirController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
+
+            ActivityLogger::log(
+                module: 'Sekdir',
+                action: 'view_dashboard',
+                targetId: null,
+                details: ['user_id' => Auth::id()]
+            );
 
         return view('sekdir.dashboard', compact('stats', 'recentProjects'));
     }
@@ -59,6 +68,13 @@ public function approval()
     ];
 
     $totalProcurements = $stats['total'];
+
+    ActivityLogger::log(
+        module: 'Sekdir',
+        action: 'view_procurement_approval_list',
+        targetId: null,
+        details: ['user_id' => Auth::id()]
+    );
 
     return view('sekdir.approval', compact('procurements', 'stats', 'totalProcurements'));
 }
@@ -124,6 +140,18 @@ public function approval()
             $message = 'Project ditolak.';
         }
 
+        ActivityLogger::log(
+            module: 'Project',
+            action: $request->approval_decision === 'approved' ? 'approve_project' : 'reject_project',
+            targetId: $project->project_id,
+            details: [
+                'user_id' => Auth::id(),
+                'decision' => $request->approval_decision,
+                'document_link' => $request->document_link,
+                'notes' => $request->notes,
+            ]
+        );
+
         return redirect()->route('sekdir.approval')
             ->with('success', $message);
     }
@@ -181,6 +209,12 @@ public function approval()
         $currentStageIndex = null;
     }
 
+    ActivityLogger::log(
+        module: 'Procurement',
+        action: 'view_procurement_approval_detail',
+        targetId: $procurement->procurement_id,
+        details: ['user_id' => Auth::id()]
+    );
 
     return view('sekdir.approval-detail', compact(
         'procurement',
@@ -236,6 +270,19 @@ public function approvalSubmit(Request $request, $procurement_id)
         'procurement_link' => $request->procurement_link,
         'notes' => $request->notes
     ]);
+
+    ActivityLogger::log(
+        module: 'Procurement',
+        action: $request->action === 'approve' ? 'approve_procurement' : 'reject_procurement',
+        targetId: $procurement->procurement_id,
+        details: [
+            'user_id' => Auth::id(),
+            'decision' => $request->action,
+            'checkpoint' => 4,
+            'link' => $request->procurement_link,
+            'notes' => $request->notes,
+        ]
+    );
 
     return redirect()->route('sekdir.approval')->with('success', $message);
 }

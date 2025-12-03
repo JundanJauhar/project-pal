@@ -40,6 +40,7 @@ Route::prefix('ums')
     Route::post('/users/{id}/force-logout', [UsersController::class, 'forceLogout'])
         ->name('users.forceLogout');
 
+        
 
     /*
     |--------------------------------------------------------------------------

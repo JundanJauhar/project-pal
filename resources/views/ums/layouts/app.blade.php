@@ -136,12 +136,12 @@
                 </a>
             </li>
 
-            <li class="nav-item">
+            <!-- <li class="nav-item">
                 <a class="nav-link {{ request()->is('ums/scopes*') ? 'active' : '' }}"
                     href="{{ route('ums.admin_scopes.index') }}">
                     <i class="bi bi-shield-lock-fill me-2"></i> Admin Scopes
                 </a>
-            </li>
+            </li> -->
 
             <li class="nav-item">
                 <a class="nav-link {{ request()->is('ums/audit*') ? 'active' : '' }}"

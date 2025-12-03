@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Services\CheckpointTransitionService;
+use App\Helpers\ActivityLogger;
+
 
 class SupplyChainController extends Controller
 {
@@ -62,6 +64,13 @@ class SupplyChainController extends Controller
             ->orderBy('start_date', 'desc')
             ->get();
 
+            ActivityLogger::log(
+                module: 'Supply Chain',
+                action: 'view_dashboard',
+                targetId: null,
+                details: ['filters' => $request->all(), 'user_id' => Auth::id()]
+            );
+
         return view('supply_chain.dashboard', compact('procurements', 'checkpoints'));
     }
 
@@ -70,6 +79,13 @@ class SupplyChainController extends Controller
      */
     public function createPengadaan()
     {
+        ActivityLogger::log(
+            module: 'Procurement',
+            action: 'view_create_procurement_form',
+            targetId: null,
+            details: ['user_id' => Auth::id()]
+        );
+
         return view('supply_chain.create');
     }
 
@@ -92,6 +108,13 @@ class SupplyChainController extends Controller
     $procurements = procurement::whereIn('status_procurement', ['pemilihan_vendor'])
         ->with(['ownerDivision'])
         ->get();
+
+        ActivityLogger::log(
+            module: 'Vendor',
+            action: 'view_vendor_list',
+            targetId: null,
+            details: ['search' => $search, 'user_id' => Auth::id()]
+        );
 
     return view('supply_chain.vendor.kelola', compact('vendors', 'procurements'));
 }
@@ -121,6 +144,13 @@ class SupplyChainController extends Controller
             'pending' => Vendor::where('legal_status', 'pending')->count(),
             'importer' => Vendor::where('is_importer', true)->count(),
         ];
+
+        ActivityLogger::log(
+            module: 'Vendor',
+            action: 'view_select_vendor_form',
+            targetId: $procurement->procurement_id,
+            details: ['user_id' => Auth::id()]
+        );
 
         return view('supply_chain.vendor.pilih', compact('vendors', 'stats', 'procurement'))
             ->with('hideNavbar', true);
@@ -154,6 +184,16 @@ class SupplyChainController extends Controller
         ]);
     }
 
+    ActivityLogger::log(
+        module: 'Vendor',
+        action: 'select_vendor',
+        targetId: $procurement->procurement_id,
+        details: [
+            'user_id' => Auth::id(),
+            'vendor_id' => $validated['vendor_id'],
+        ]
+    );
+
     // ====== Panggil service untuk pindah checkpoint otomatis ======
     $transition = new CheckpointTransitionService($procurement);
     $transition->completeCurrentAndMoveNext("Vendor {$vendor->name_vendor} dipilih");
@@ -171,6 +211,13 @@ class SupplyChainController extends Controller
             return redirect()->route('supply-chain.vendor.kelola')
                 ->with('error', 'Vendor tidak ditemukan.');
         }
+
+        ActivityLogger::log(
+            module: 'Vendor',
+            action: $vendor ? 'edit_vendor_form' : 'create_vendor_form',
+            targetId: $vendor?->id_vendor,
+            details: ['user_id' => Auth::id()]
+        );
 
         return view('supply_chain.vendor.form', compact('vendor'))
             ->with('hideNavbar', true)
@@ -197,6 +244,13 @@ class SupplyChainController extends Controller
                 'address' => $validated['address'] ?? null,
                 'is_importer' => $request->has('is_importer') ? 1 : 0,
             ]);
+
+            ActivityLogger::log(
+                module: 'Vendor',
+                action: 'update_vendor',
+                targetId: $vendor->id_vendor,
+                details: ['user_id' => Auth::id()]
+            );
 
             $redirect = $request->input('redirect', 'kelola');
             $routeName = $redirect === 'pilih' ? 'supply-chain.vendor.pilih' : 'supply-chain.vendor.kelola';
@@ -229,6 +283,13 @@ class SupplyChainController extends Controller
             return redirect()->route('supply-chain.vendor.pilih')
                 ->with('error', 'Vendor tidak ditemukan');
         }
+
+        ActivityLogger::log(
+            module: 'Vendor',
+            action: 'view_vendor_detail',
+            targetId: $vendor->id_vendor,
+            details: ['user_id' => Auth::id()]
+        );
 
         return view('supply_chain.vendor.detail', compact('vendor'))
             ->with('hideNavbar', true);
@@ -276,6 +337,13 @@ class SupplyChainController extends Controller
                     'legal_status' => 'pending',
                 ]);
 
+                ActivityLogger::log(
+                    module: 'Vendor',
+                    action: 'store_vendor',
+                    targetId: $vendor->id_vendor,
+                    details: ['user_id' => Auth::id()]
+                );
+
                 DB::commit();
 
                 $redirect = $request->input('redirect', 'kelola');
@@ -308,6 +376,13 @@ class SupplyChainController extends Controller
     public function reviewProject($procurementId)
     {
 
+        ActivityLogger::log(
+            module: 'Procurement',
+            action: 'review_project',
+            targetId: $procurementId,
+            details: ['user_id' => Auth::id()]
+        );
+
         return view('supply_chain.review_project', compact('procurement'))
             ->with('hideNavbar', true);
     }
@@ -327,6 +402,13 @@ class SupplyChainController extends Controller
             $procurement->update([
                 'status_procurement' => 'persetujuan_sekretaris'
             ]);
+
+            ActivityLogger::log(
+                module: 'Procurement',
+                action: 'approve_review',
+                targetId: $procurement->procurement_id,
+                details: ['user_id' => Auth::id()]
+            );
 
             // Notify Sekretaris Direksi
             $sekretaris = \App\Models\User::where('roles', 'sekretaris_direksi')->get();
@@ -356,6 +438,13 @@ class SupplyChainController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
+        ActivityLogger::log(
+            module: 'Request Procurement',
+            action: 'view_material_requests',
+            targetId: null,
+            details: ['user_id' => Auth::id()]
+        );
+
         return view('supply_chain.material_requests', compact('requests'));
     }
 
@@ -373,6 +462,16 @@ class SupplyChainController extends Controller
 
         $materialRequest->update($validated);
 
+        ActivityLogger::log(
+            module: 'Request Procurement',
+            action: 'update_material_request',
+            targetId: $materialRequest->id,
+            details: [
+                'user_id' => Auth::id(),
+                'status' => $validated['request_status']
+            ]
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Material request updated successfully'
@@ -385,6 +484,14 @@ class SupplyChainController extends Controller
     public function vendors()
     {
         $vendors = Vendor::orderBy('name_vendor')->paginate(20);
+
+        ActivityLogger::log(
+            module: 'Vendor',
+            action: 'view_vendors_admin',
+            targetId: null,
+            details: ['user_id' => Auth::id()]
+        );
+
         return view('supply_chain.vendors', compact('vendors'));
     }
 
@@ -398,6 +505,13 @@ class SupplyChainController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
+            ActivityLogger::log(
+                module: 'Procurement',
+                action: 'view_negotiations',
+                targetId: null,
+                details: ['user_id' => Auth::id()]
+            );
+
         return view('supply_chain.negotiations', compact('negotiations'));
     }
 
@@ -410,6 +524,13 @@ class SupplyChainController extends Controller
             ->with(['contracts.vendor'])
             ->orderBy('created_at', 'desc')
             ->get();
+
+            ActivityLogger::log(
+                module: 'Procurement',
+                action: 'view_material_shipping',
+                targetId: null,
+                details: ['user_id' => Auth::id()]
+            );
 
         return view('supply_chain.material_shipping', compact('projects'));
     }
@@ -440,6 +561,16 @@ class SupplyChainController extends Controller
                 'reference_id' => $procurement->project_id,
             ]);
         }
+
+        ActivityLogger::log(
+            module: 'Procurement',
+            action: 'update_material_arrival',
+            targetId: $procurement->procurement_id,
+            details: [
+                'user_id' => Auth::id(),
+                'arrival_date' => $validated['arrival_date']
+            ]
+        );
 
         return response()->json([
             'success' => true,
@@ -488,6 +619,16 @@ class SupplyChainController extends Controller
                     'status_procurement' => 'draft',
                 ]);
             }
+
+            ActivityLogger::log(
+                module: 'Procurement',
+                action: 'store_multiple_procurements',
+                targetId: null,
+                details: [
+                    'user_id' => Auth::id(),
+                    'total_created' => count($validated['pengadaan']),
+                ]
+            );
 
             DB::commit();
             return redirect()->route('supply-chain.dashboard')

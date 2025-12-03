@@ -8,6 +8,7 @@ use App\Models\Checkpoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Helpers\ActivityLogger;
 
 class InspectionController extends Controller
 {
@@ -194,6 +195,21 @@ class InspectionController extends Controller
                 ]
             );
 
+            ActivityLogger::log(
+                module: 'Inspection',
+                action: 'view_inspection_dashboard_qa',
+                targetId: null,
+                details: [
+                    'user_id' => $user->user_id,
+                    'filters' => [
+                        'search' => $request->query('q', ''),
+                        'priority' => $request->query('priority', ''),
+                        'result' => $request->query('result', ''),
+                    ],
+                    'cards' => $cards,
+                ]
+            );
+
             return view('qa.inspections', array_merge($cards, [
                 'procurements' => $procurements,
             ]));
@@ -245,6 +261,16 @@ class InspectionController extends Controller
         $inspections = InspectionReport::with(['project', 'project.department', 'item'])
             ->orderBy('inspection_date', 'desc')
             ->paginate(20);
+
+            ActivityLogger::log(
+                module: 'Inspection',
+                action: 'view_inspection_dashboard_nonqa',
+                targetId: null,
+                details: [
+                    'user_id' => $user->user_id,
+                    'cards' => $cards,
+                ]
+            );
 
         return view('qa.inspections', array_merge($cards, [
             'inspections' => $inspections,
