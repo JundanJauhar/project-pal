@@ -4,299 +4,318 @@
 
 @push('styles')
 <style>
-/* page padding */
-.detail-approval { padding: 18px 0; }
+    /* ======= HEADER SECTION ======= */
+    .top-action-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        padding-right: 50px;
+        margin-top: 25px;
+    }
 
-/* header */
-.da-header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:28px; }
-.da-title { font-size:24px; font-weight:700; }
-.da-sub { color:#6c6c6c; font-size:14px; margin-top:6px; }
+    .btn-back {
+        font-size: 26px;
+        color: #DA3B3B;
+        cursor: pointer;
+    }
 
-/* info grid (top left / right) */
-.proc-info {
-  display:grid;
-  grid-template-columns: 1fr 320px;
-  gap:20px;
-  align-items:start;
-  margin-bottom:26px;
-}
-.proc-block { background:transparent; }
+    /* ======= INFO CARD ======= */
+    .procurement-header {
+        padding: 25px;
+        background: white;
+        border-radius: 14px;
+        box-shadow: 0px 2px 6px rgba(0,0,0,0.08);
+        margin-top: 20px;
+    }
 
-/* big table-card */
-.table-card {
-  background:#f2f2f2;
-  border-radius:10px;
-  padding:0;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-  overflow: hidden;
-  border:1px solid #e9e9e9;
-}
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+        margin-top: 20px;
+    }
 
-/* table header */
-.table-head {
-  display:flex;
-  gap:0;
-  background:transparent;
-  padding:14px 18px;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
-}
-.table-head .th {
-  font-weight:600;
-  color:#6b6b6b;
-  font-size:15px;
-  padding:10px;
-}
-.col-name { flex: 2 1 220px; }
-.col-spec { flex: 3 1 380px; }
-.col-qty { flex: 0 0 110px; text-align:center;}
-.col-date { flex: 0 0 140px; text-align:center;}
-.col-result { flex: 0 0 180px; text-align:center;}
-.col-notes { flex: 1 1 220px; text-align:left; }
+    .info-label {
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 5px;
+    }
 
-/* rows */
-.table-body { display:flex; flex-direction:column; }
-.row-item {
-  display:flex;
-  align-items:center;
-  gap:0;
-  padding:22px 18px;
-  background:transparent;
-  border-bottom:1px solid rgba(0,0,0,0.06);
-}
-.row-item:nth-child(odd) { background: rgba(255,255,255,0.04); }
+    .info-value {
+        color: #333;
+        font-size: 15px;
+    }
 
-/* columns same sizes */
-.row-item .col {
-  padding:0 12px;
-  font-size:15px;
-  color:#222;
-}
-.row-item .col .small-muted { color:#7a7a7a; font-size:13px; margin-top:6px; }
+    /* ======= TABLE SECTION ======= */
+    .dashboard-table-wrapper {
+        padding: 25px;
+        border-radius: 14px;
+        margin-top: 25px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
 
-/* spesification text wrap */
-.col-spec { white-space:normal; line-height:1.4; }
+    table.dashboard-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
 
-/* result toggles */
-.result-toggle { display:flex; gap:10px; justify-content:center; align-items:center; }
-.toggle-box {
-  width:40px; height:40px; border-radius:8px;
-  background:#f0f0f0; border:1px solid #e6e6e6;
-  display:flex; align-items:center; justify-content:center; cursor:pointer;
-  transition: all .12s ease;
-}
-.toggle-box.pass { background:#eaf9ec; border-color:#cfead0; color:#1f8b3b; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.02); }
-.toggle-box.fail { background:#fff0f0; border-color:#f1cfcf; color:#c82727; }
-.toggle-label { font-size:13px; color:#6b6b6b; margin-left:8px; }
+    .dashboard-table thead th {
+        padding: 14px;
+        background: #f5f5f5;
+        font-size: 14px;
+        font-weight: 600;
+        color: #444;
+        border-bottom: 2px solid #dcdcdc;
+        text-align: center;
+    }
 
-/* notes inline */
-.notes-inline textarea {
-  width:100%;
-  min-height:44px;
-  max-height:84px;
-  padding:8px;
-  border-radius:6px;
-  border:1px solid #e6e6e6;
-  resize:vertical;
-  font-size:14px;
-}
+    .dashboard-table tbody td {
+        padding: 14px;
+        border-bottom: 1px solid #e0e0e0;
+        text-align: center;
+        vertical-align: middle;
+        font-size: 15px;
+    }
 
-/* saved badge */
-.saved-badge { color:#138a33; font-weight:700; display:none; }
+    .dashboard-table tbody tr:hover {
+        background: #fafafa;
+    }
 
-/* detail actions */
-.detail-actions {
-  margin-top:18px;
-  display:flex; gap:12px; justify-content:flex-end; align-items:center;
-}
-.btn-save { background:#138a33; color:#fff; padding:8px 16px; border-radius:8px; border:0; cursor:pointer; }
-.btn-edit { background:#f0f0f0; padding:8px 12px; border-radius:8px; border:1px solid #ddd; cursor:pointer; }
+    /* ======= INPUT ATA ======= */
+    .ata-input {
+        width: 150px;
+        padding: 6px 8px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+    }
 
-/* responsive */
-@media (max-width:1000px) {
-  .proc-info { grid-template-columns: 1fr; }
-  .table-head { display:none; } 
-  .table-card { padding:8px; }
-  .row-item { flex-direction:column; align-items:flex-start; gap:8px; padding:12px; }
-  .col { padding:6px 0; width:100%; }
-  .col-qty, .col-date, .col-result { text-align:left; }
-}
+    /* ======= TOGGLE ======= */
+    .toggle-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 8px;
+        background: #f0f0f0;
+        border: 1px solid #dcdcdc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: .15s;
+    }
+
+    .toggle-box.pass {
+        background: #dff7dd;
+        color: #137d2c;
+        border-color: #bde7bb;
+    }
+
+    .toggle-box.fail {
+        background: #ffe5e5;
+        color: #c62828;
+        border-color: #f3b9b9;
+    }
+
+    textarea.notes-input {
+        width: 100%;
+        min-height: 55px;
+        border-radius: 8px;
+        padding: 8px;
+        resize: vertical;
+        border: 1px solid #cfcfcf;
+        font-size: 14px;
+    }
+
+    /* ======= ACTION BUTTONS ======= */
+    .detail-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 25px;
+        margin-bottom: 40px;
+    }
+
+    .btn-edit {
+        background: #e4e4e4;
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-weight: 600;
+    }
+
+    .btn-save {
+        background: #138a33;
+        padding: 10px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        border: none;
+    }
 </style>
 @endpush
 
+
 @section('content')
-<div class="container-fluid detail-approval">
 
-    <div class="da-header">
+{{-- BACK BUTTON --}}
+<div class="top-action-wrapper">
+    <a href="{{ route('inspections.index') }}" class="btn-back">
+        <i class="bi bi-arrow-left-circle"></i>
+    </a>
+</div>
+
+{{-- HEADER PROCUREMENT --}}
+<div class="procurement-header">
+    <h3 class="mb-3">Detail Pengadaan</h3>
+
+    <div class="info-grid">
         <div>
-            <div class="da-title">Detail Pengadaan</div>
-            <div class="text-muted da-sub">{{ $procurement->code_procurement }}</div>
-        </div>
+            <div class="info-label">Kode Procurement</div>
+            <div class="info-value"><strong>{{ $procurement->code_procurement }}</strong></div>
 
-        <div style="display:flex; align-items:center; gap:12px;">
-            <button class="da-close btn btn-light" title="Close" onclick="window.location='{{ route('inspections.index') }}'">
-                <i class="bi bi-x-lg"></i>
-            </button>
-        </div>
-    </div>
+            <div class="info-label mt-3">Nama Pengadaan</div>
+            <div class="info-value">{{ $procurement->name_procurement }}</div>
 
-    <div class="proc-info">
-        <div class="proc-block">
-            <div style="margin-bottom:18px;">
-                <div style="font-weight:600;">Nama Pengadaan</div>
-                <div class="text-muted" style="margin-top:6px;">{{ $procurement->name_procurement }}</div>
-            </div>
-
-            <div style="margin-bottom:8px;">
-                <div style="font-weight:600;">Vendor</div>
-                <div class="text-muted" style="margin-top:6px;">{{ $procurement->requestProcurements->first()?->vendor->name_vendor ?? '-' }}</div>
-            </div>
-
-            <div>
-                <div style="font-weight:600;">Department</div>
-                <div class="text-muted" style="margin-top:6px;">{{ $procurement->department->department_name ?? '-' }}</div>
+            <div class="info-label mt-3">Vendor</div>
+            <div class="info-value">
+                {{ $procurement->requestProcurements->first()?->vendor?->name_vendor ?? '-' }}
             </div>
         </div>
 
-        <div class="proc-block" style="text-align:right;">
-            <div style="font-weight:600;">Prioritas</div>
-            <div class="text-muted" style="margin-top:6px;">{{ strtoupper($procurement->priority ?? '-') }}</div>
+        <div>
+            <div class="info-label">Prioritas</div>
+            <span class="badge bg-danger px-3 py-1">
+                {{ strtoupper($procurement->priority) }}
+            </span>
 
-            <div style="margin-top:16px;">
-                <div style="font-weight:600;">Tanggal Dibuat</div>
-                <div class="text-muted" style="margin-top:6px;">{{ $procurement->start_date?->format('d/m/Y') ?? '-' }}</div>
-            </div>
+            <div class="info-label mt-3">Tanggal Dibuat</div>
+            <div class="info-value">{{ $procurement->start_date?->format('d/m/Y') }}</div>
 
-            <div style="margin-top:12px;">
-                <div style="font-weight:600;">Tanggal Tenggat</div>
-                <div class="text-muted" style="margin-top:6px;">{{ $procurement->end_date?->format('d/m/Y') ?? '-' }}</div>
-            </div>
+            <div class="info-label mt-3">Tanggal Tenggat</div>
+            <div class="info-value">{{ $procurement->end_date?->format('d/m/Y') }}</div>
         </div>
-    </div>
-
-    <h5 style="margin:18px 0 12px 0;">Detail Pengadaan</h5>
-
-    <div class="table-card">
-        <div class="table-head">
-            <div class="th col-name">Nama Barang</div>
-            <div class="th col-spec">Spesifikasi</div>
-            <div class="th col-qty">Jumlah</div>
-            <div class="th col-date">Tanggal Kedatangan</div>
-            <div class="th col-result">Hasil Inspeksi</div>
-            <div class="th col-notes">Keterangan</div>
-        </div>
-
-        <div class="table-body" id="tableBody">
-            @foreach($items as $item)
-                @php
-                    $latest = $item->inspectionReports->sortByDesc('inspection_date')->first();
-                    $current = $latest?->result;
-                    $notes = $latest?->notes ?? '';
-                @endphp
-
-                <div class="row-item" data-item-id="{{ $item->item_id }}">
-                    <div class="col col-name">
-                        <div style="font-weight:600;">{{ $item->item_name }}</div>
-                    </div>
-
-                    <div class="col col-spec">
-                        <div class="small-muted">{{ $item->specification ?? '-' }}</div>
-                    </div>
-
-                    <div class="col col-qty">{{ $item->amount }} {{ $item->unit }}</div>
-
-                    <div class="col col-date">{{ $item->arrival_date ? \Carbon\Carbon::parse($item->arrival_date)->format('d/m/Y') : '-' }}</div>
-
-                    <div class="col col-result">
-                        <div class="result-toggle" data-current="{{ $current ?? '' }}">
-                            <div class="toggle-box toggle-pass {{ $current === 'passed' ? 'pass' : '' }}" data-value="passed" title="Lolos">
-                                <i class="bi bi-check-lg"></i>
-                            </div>
-
-                            <div class="toggle-box toggle-fail {{ $current === 'failed' ? 'fail' : '' }}" data-value="failed" title="Tidak Lolos">
-                                <i class="bi bi-x-lg"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col col-notes notes-inline">
-                        <textarea class="notes-input" placeholder="Keterangan (wajib jika Tidak Lolos)">{{ $notes }}</textarea>
-                        <div class="saved-badge" style="margin-top:6px;">Tersimpan ✓</div>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    </div>
-
-    <div class="detail-actions">
-        <button class="btn-edit" id="btnEdit" type="button">Edit</button>
-        <button class="btn-save" id="btnSave" type="button">Simpan</button>
     </div>
 </div>
+
+{{-- TABLE INSPEKSI --}}
+<h5 class="mt-5 mb-2">Detail Item Inspeksi</h5>
+
+<div class="dashboard-table-wrapper">
+    <div class="table-responsive">
+        <table class="dashboard-table">
+            <thead>
+                <tr>
+                    <th>Nama Barang</th>
+                    <th>Spesifikasi</th>
+                    <th>Jumlah</th>
+                    <th>ATA</th>
+                    <th>Hasil</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+
+            <tbody id="tableBody">
+                @foreach($items as $item)
+                    @php
+                        $latest = $item->inspectionReports->sortByDesc('inspection_date')->first();
+                        $current = $latest?->result;
+                        $notes = $latest?->notes ?? '';
+                    @endphp
+
+                    <tr class="row-item" data-item-id="{{ $item->item_id }}">
+                        <td><strong>{{ $item->item_name }}</strong></td>
+                        <td>{{ $item->specification ?? '-' }}</td>
+                        <td>{{ $item->amount }} {{ $item->unit }}</td>
+
+                        {{-- NEW: ATA manual input --}}
+                        <td>
+                            <input type="date"
+                                   class="ata-input"
+                                   value="{{ $item->arrival_date }}"
+                                   data-field="arrival_date">
+                        </td>
+
+                        {{-- TOGGLE --}}
+                        <td>
+                            <div style="display:flex; gap:10px; justify-content:center;">
+                                <div class="toggle-box toggle-pass {{ $current === 'passed' ? 'pass' : '' }}" data-value="passed">
+                                    <i class="bi bi-check-lg"></i>
+                                </div>
+                                <div class="toggle-box toggle-fail {{ $current === 'failed' ? 'fail' : '' }}" data-value="failed">
+                                    <i class="bi bi-x-lg"></i>
+                                </div>
+                            </div>
+                        </td>
+
+                        {{-- NOTES --}}
+                        <td>
+                            <textarea class="notes-input" placeholder="Keterangan (wajib jika Tidak Lolos)">{{ $notes }}</textarea>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{{-- ACTION BUTTON --}}
+<div class="detail-actions">
+    <button class="btn-edit" id="btnEdit">Edit</button>
+    <button class="btn-save" id="btnSave">Simpan</button>
+</div>
+
 @endsection
 
+
+{{-- ========== SCRIPT (LOGIC ASLI DIPERTAHANKAN) ========== --}}
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const csrf = document.querySelector('meta[name="csrf-token"]').content;
-    const procurementId = "{{ $procurement->procurement_id }}";
 
-    // Initialize rows
+    const csrf = document.querySelector('meta[name="csrf-token"]').content;
+
+    /* ======== INITIALIZE TOGGLES ======== */
     document.querySelectorAll('.row-item').forEach(row => {
+
         const pass = row.querySelector('.toggle-pass');
         const fail = row.querySelector('.toggle-fail');
         const notes = row.querySelector('.notes-input');
 
-        // show/hide notes depending on initial state
-        if (pass.classList.contains('pass')) {
-            if (notes) notes.style.display = 'none';
-        } else if (fail.classList.contains('fail')) {
-            if (notes) notes.style.display = 'block';
-        } else {
-            if (notes) notes.style.display = 'none';
-        }
+        if (pass.classList.contains('pass')) notes.style.display = 'none';
+        else if (fail.classList.contains('fail')) notes.style.display = 'block';
+        else notes.style.display = 'none';
 
-        // click handlers with toggle/clear-on-second-click
         pass.addEventListener('click', () => {
-            if (pass.classList.contains('pass')) {
-                // clear
-                pass.classList.remove('pass');
-                if (notes) notes.style.display = 'none';
-            } else {
-                pass.classList.add('pass');
-                fail.classList.remove('fail');
-                if (notes) notes.style.display = 'none';
-            }
+            pass.classList.toggle('pass');
+            fail.classList.remove('fail');
+            notes.style.display = pass.classList.contains('pass') ? 'none' : 'block';
         });
 
         fail.addEventListener('click', () => {
-            if (fail.classList.contains('fail')) {
-                // clear
-                fail.classList.remove('fail');
-                if (notes) notes.style.display = 'none';
-            } else {
-                fail.classList.add('fail');
-                pass.classList.remove('pass');
-                if (notes) notes.style.display = 'block';
-            }
+            fail.classList.toggle('fail');
+            pass.classList.remove('pass');
+            notes.style.display = fail.classList.contains('fail') ? 'block' : 'none';
         });
+
     });
 
-    // edit mode toggling
-    let editMode = true; // default editable
+
+    /* ======== EDIT MODE ======== */
+    let editMode = true;
     const btnEdit = document.getElementById('btnEdit');
-    const btnSave = document.getElementById('btnSave');
 
     function setEditMode(flag) {
         editMode = flag;
-        btnEdit.textContent = editMode ? 'Batal' : 'Edit';
-        document.querySelectorAll('.row-item').forEach(row => {
-            row.querySelectorAll('.toggle-box').forEach(tb => tb.style.pointerEvents = editMode ? 'auto' : 'none');
-            const ni = row.querySelector('.notes-input');
-            if (ni) {
-                if (editMode) ni.removeAttribute('readonly');
-                else ni.setAttribute('readonly', true);
-                ni.style.pointerEvents = editMode ? 'auto' : 'none';
-            }
+        btnEdit.textContent = editMode ? "Batal" : "Edit";
+
+        document.querySelectorAll('.toggle-box').forEach(el => {
+            el.style.pointerEvents = editMode ? "auto" : "none";
+        });
+
+        document.querySelectorAll(".notes-input, .ata-input").forEach(el => {
+            el.readOnly = !editMode;
+            el.style.pointerEvents = editMode ? "auto" : "none";
         });
     }
 
@@ -306,84 +325,78 @@ document.addEventListener('DOMContentLoaded', function () {
         setEditMode(!editMode);
     });
 
-    // save
+
+    /* ======== SAVE DATA ======== */
+    const btnSave = document.getElementById('btnSave');
+
     btnSave.addEventListener('click', async () => {
+
         const payloadItems = [];
         let valid = true;
 
         document.querySelectorAll('.row-item').forEach(row => {
-            const itemId = parseInt(row.dataset.itemId);
+
+            const itemId = row.dataset.itemId;
+
             const passActive = row.querySelector('.toggle-pass').classList.contains('pass');
             const failActive = row.querySelector('.toggle-fail').classList.contains('fail');
             const notesInput = row.querySelector('.notes-input');
+            const ataInput = row.querySelector('.ata-input');
 
             let result = null;
-            if (passActive) result = 'passed';
-            if (failActive) result = 'failed';
+            if (passActive) result = "passed";
+            if (failActive) result = "failed";
 
-            if (!result) {
-                // skip unselected
-                return;
-            }
+            if (!result) return;
 
-            const notes = notesInput ? notesInput.value.trim() : null;
-            if (result === 'failed' && (!notes || notes.length === 0)) {
-                alert('Keterangan wajib diisi untuk item yang tidak lolos.');
+            const notes = notesInput.value.trim();
+            if (result === "failed" && notes === "") {
+                alert("Keterangan wajib diisi untuk item yang tidak lolos.");
                 valid = false;
             }
 
-            payloadItems.push({ item_id: itemId, result, notes });
+            payloadItems.push({
+                item_id: itemId,
+                result,
+                notes,
+                arrival_date: ataInput.value
+            });
+
         });
 
         if (!valid) return;
-        if (payloadItems.length === 0) {
-            return alert('Pilih hasil inspeksi untuk minimal 1 item sebelum menyimpan.');
-        }
+        if (payloadItems.length === 0)
+            return alert("Pilih hasil inspeksi untuk minimal 1 item.");
 
         btnSave.disabled = true;
-        btnSave.textContent = 'Menyimpan...';
+        btnSave.textContent = "Menyimpan...";
 
         try {
-            const res = await fetch("{{ route('qa.detail-approval.save', ['procurement_id' => $procurement->procurement_id]) }}", {
-                method: 'POST',
+            const response = await fetch("{{ route('qa.detail-approval.save', ['procurement_id' => $procurement->procurement_id]) }}", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrf
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": csrf
                 },
                 body: JSON.stringify({ items: payloadItems })
             });
 
-            const json = await res.json();
+            const json = await response.json();
+
             if (!json.success) {
-                alert(json.message || 'Gagal menyimpan.');
-                btnSave.disabled = false;
-                btnSave.textContent = 'Simpan';
-                return;
+                alert(json.message || "Gagal menyimpan.");
+            } else {
+                alert("Hasil inspeksi berhasil disimpan.");
+                setEditMode(false);
             }
 
-            // show saved per item + lock notes for passed
-            payloadItems.forEach(it => {
-                const row = document.querySelector(`.row-item[data-item-id="${it.item_id}"]`);
-                if (!row) return;
-                const badge = row.querySelector('.saved-badge');
-                if (badge) badge.style.display = 'inline-block';
-                const notes = row.querySelector('.notes-input');
-                if (it.result === 'passed') {
-                    if (notes) notes.style.display = 'none';
-                } else {
-                    if (notes) notes.style.display = 'block';
-                }
-            });
-
-            alert('Hasil inspeksi berhasil disimpan.');
-            setEditMode(false);
-        } catch (err) {
-            console.error(err);
-            alert('Terjadi kesalahan saat menyimpan.');
-        } finally {
-            btnSave.disabled = false;
-            btnSave.textContent = 'Simpan';
+        } catch (error) {
+            console.error(error);
+            alert("Terjadi kesalahan saat menyimpan.");
         }
+
+        btnSave.disabled = false;
+        btnSave.textContent = "Simpan";
     });
 });
 </script>
