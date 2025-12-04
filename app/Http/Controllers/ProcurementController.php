@@ -197,80 +197,84 @@ class ProcurementController extends Controller
      * ✅ PERBAIKAN: Hapus duplikasi, gunakan query langsung
      */
     public function show($id)
-    {
-        $procurement = Procurement::with([
-            'requestProcurements.items',
-            'requestProcurements.vendor',
-            'procurementProgress.checkpoint',
-            'project',
-            'department'
-        ])->findOrFail($id);
+{
+    $procurement = Procurement::with([
+        'requestProcurements.items',
+        'requestProcurements.vendor',
+        'procurementProgress.checkpoint',
+        'project',
+        'department'
+    ])->findOrFail($id);
 
-        $checkpoints = Checkpoint::orderBy('point_sequence', 'asc')->get();
+    $checkpoints = Checkpoint::orderBy('point_sequence', 'asc')->get();
 
-        $currentStageIndex = 0;
-        $service = new CheckpointTransitionService($procurement);
-        $currentCheckpoint = $service->getCurrentCheckpoint();
+    // Current Stage
+    $service = new CheckpointTransitionService($procurement);
+    $currentCheckpoint = $service->getCurrentCheckpoint();
+    $currentStageIndex = $currentCheckpoint ? $currentCheckpoint->point_sequence : 0;
 
-        if ($currentCheckpoint) {
-            $currentStageIndex = $currentCheckpoint->point_sequence;
-        }
+    ActivityLogger::log(
+        module: 'Procurement',
+        action: 'view_procurement_detail',
+        targetId: $procurement->procurement_id,
+        details: ['user_id' => Auth::id()]
+    );
 
-        ActivityLogger::log(
-            module: 'Procurement',
-            action: 'view_procurement_detail',
-            targetId: $procurement->procurement_id,
-            details: ['user_id' => Auth::id()]
-        );
+    // -----------------------------
+    // 🔥 TAMBAHKAN INI (SEBELUM return)
+    // -----------------------------
 
-        return view('procurements.show', compact('procurement', 'checkpoints', 'currentStageIndex'));
-        $vendors = Vendor::where('legal_status', 'verified')
-            ->orderBy('name_vendor', 'asc')
-            ->get();
+    // Semua vendor yang verified
+    $vendors = Vendor::where('legal_status', 'verified')
+        ->orderBy('name_vendor', 'asc')
+        ->get();
 
-        // ✅ Query evatek items yang sudah ada untuk procurement ini
-        $evatekItems = EvatekItem::where('procurement_id', $procurement->procurement_id)
-            ->with([
-                'item',
-                'vendor',
-                'revisions' => function ($query) {
-                    $query->orderBy('revision_id', 'desc');
-                }
-            ])
-            ->get();
+    // EVATEK Items
+    $evatekItems = EvatekItem::where('procurement_id', $procurement->procurement_id)
+        ->with([
+            'item',
+            'vendor',
+            'revisions' => fn($q) => $q->orderBy('revision_id', 'desc')
+        ])
+        ->get();
 
+    // Inquiry & Quotation
+    $inquiryQuotations = InquiryQuotation::where('procurement_id', $procurement->procurement_id)
+        ->with('vendor')
+        ->orderBy('tanggal_inquiry', 'desc')
+        ->get();
 
-        $inquiryQuotations = InquiryQuotation::where('procurement_id', $procurement->procurement_id)
-            ->with('vendor')
-            ->orderBy('tanggal_inquiry', 'desc')
-            ->get();
-        
-        $iqVendors = InquiryQuotation::where('procurement_id', $procurement->procurement_id)
-            ->with('vendor')
-            ->get();
+    $iqVendors = InquiryQuotation::where('procurement_id', $procurement->procurement_id)
+        ->with('vendor')
+        ->get();
 
+    // Negotiations
+    $negotiations = Negotiation::where('procurement_id', $procurement->procurement_id)
+        ->orderBy('created_at', 'desc')
+        ->get();
 
-        $negotiations = Negotiation::where('procurement_id', $procurement->procurement_id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+    // Material deliveries
+    $materialDeliveries = MaterialDelivery::where('procurement_id', $procurement->procurement_id)
+        ->orderBy('created_at', 'desc')
+        ->get();
 
+    // -----------------------------
+    // 🔥 HANYA ADA SATU return view
+    // -----------------------------
 
-        $materialDeliveries = MaterialDelivery::where('procurement_id', $procurement->procurement_id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+    return view('procurements.show', compact(
+        'procurement',
+        'checkpoints',
+        'currentStageIndex',
+        'vendors',
+        'evatekItems',
+        'inquiryQuotations',
+        'iqVendors',
+        'negotiations',
+        'materialDeliveries'
+    ));
+}
 
-        return view('procurements.show', compact(
-            'procurement', 
-            'checkpoints', 
-            'currentStageIndex', 
-            'vendors',
-            'evatekItems',
-            'inquiryQuotations',
-            'iqVendors',
-            'negotiations',
-            'materialDeliveries'
-        ));
-    }
 
     public function getProgress($id)
     {
