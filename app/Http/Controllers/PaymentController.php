@@ -9,6 +9,8 @@ use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Helpers\ActivityLogger;
+
 
 class PaymentController extends Controller
 {
@@ -54,6 +56,20 @@ class PaymentController extends Controller
         // Card 4: Sudah Terbayar (paid) - semua role
         $paidCount = PaymentSchedule::where('status', 'paid')->count();
         
+        ActivityLogger::log(
+            module: 'Payment',
+            action: 'view_payment_list',
+            targetId: null,
+            details: [
+                'user_id' => Auth::id(),
+                'filters' => [
+                    'search' => $request->q ?? '',
+                    'status' => $request->status ?? '',
+                    'type' => $request->type ?? '',
+                ],
+            ]
+        );
+
         return view('payments.index', compact(
             'payments',
             'pendingAccountingCount',
@@ -69,6 +85,14 @@ class PaymentController extends Controller
     public function create($projectId)
     {
         $project = Project::with(['contracts'])->findOrFail($projectId);
+
+        ActivityLogger::log(
+            module: 'Payment',
+            action: 'open_payment_create_form',
+            targetId: $projectId,
+            details: ['user_id' => Auth::id()]
+        );
+
         return view('payments.create', compact('project'));
     }
 
@@ -89,6 +113,13 @@ class PaymentController extends Controller
 
         $payment = PaymentSchedule::create($validated);
 
+        ActivityLogger::log(
+            module: 'Payment',
+            action: 'open_payment_create_form',
+            targetId: $validated['project_id'],
+            details: ['user_id' => Auth::id()]
+        );
+
         return redirect()->route('payments.show', $payment->payment_schedule_id)
             ->with('success', 'Jadwal pembayaran berhasil dibuat');
     }
@@ -104,6 +135,16 @@ class PaymentController extends Controller
             'accountingVerifier',
             'treasuryVerifier'
         ])->findOrFail($id);
+
+        ActivityLogger::log(
+            module: 'Payment',
+            action: 'view_payment_detail',
+            targetId: $payment->payment_schedule_id,
+            details: [
+                'user_id' => Auth::id(),
+                'project_id' => $payment->project_id,
+            ]
+        );
 
         return view('payments.show', compact('payment'));
     }
@@ -154,6 +195,17 @@ class PaymentController extends Controller
 
             DB::commit();
 
+            ActivityLogger::log(
+                module: 'Payment',
+                action: 'accounting_approved_payment',
+                targetId: $payment->payment_schedule_id,
+                details: [
+                    'user_id' => Auth::id(),
+                    'notes' => $validated['notes'] ?? '',
+                    'project_id' => $payment->project_id,
+                ]
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Verifikasi accounting berhasil'
@@ -164,6 +216,17 @@ class PaymentController extends Controller
             
             \Log::error('Accounting verification failed: ' . $e->getMessage());
             
+            ActivityLogger::log(
+                module: 'Payment',
+                action: 'accounting_rejected_payment',
+                targetId: $payment->payment_schedule_id,
+                details: [
+                    'user_id' => Auth::id(),
+                    'notes' => $validated['notes'] ?? '',
+                    'project_id' => $payment->project_id,
+                ]
+            );
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal memverifikasi: ' . $e->getMessage()
@@ -219,6 +282,17 @@ class PaymentController extends Controller
 
             DB::commit();
 
+            ActivityLogger::log(
+                module: 'Payment',
+                action: 'treasury_approved_payment',
+                targetId: $payment->payment_schedule_id,
+                details: [
+                    'user_id' => Auth::id(),
+                    'payment_date' => $validated['payment_date'],
+                    'project_id' => $payment->project_id,
+                ]
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Verifikasi treasury berhasil'
@@ -229,6 +303,16 @@ class PaymentController extends Controller
             
             \Log::error('Treasury verification failed: ' . $e->getMessage());
             
+            ActivityLogger::log(
+                module: 'Payment',
+                action: 'treasury_rejected_payment',
+                targetId: $payment->payment_schedule_id,
+                details: [
+                    'user_id' => Auth::id(),
+                    'project_id' => $payment->project_id,
+                ]
+            );
+
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal memverifikasi: ' . $e->getMessage()
@@ -258,6 +342,18 @@ class PaymentController extends Controller
             'due_date' => now(),
         ]);
 
+        ActivityLogger::log(
+            module: 'Payment',
+            action: 'open_lc_tt',
+            targetId: $payment->payment_schedule_id,
+            details: [
+                'user_id' => Auth::id(),
+                'type' => $validated['type'],
+                'amount' => $validated['amount'],
+                'project_id' => $projectId,
+            ]
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'LC/TT berhasil dibuka',
@@ -285,6 +381,17 @@ class PaymentController extends Controller
             'notes' => $validated['notes'],
             'due_date' => now(),
         ]);
+
+        ActivityLogger::log(
+            module: 'Payment',
+            action: 'open_sekbun',
+            targetId: $payment->payment_schedule_id,
+            details: [
+                'user_id' => Auth::id(),
+                'amount' => $validated['amount'],
+                'project_id' => $projectId,
+            ]
+        );
 
         return response()->json([
             'success' => true,

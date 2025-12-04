@@ -6,7 +6,9 @@ use App\Models\Item;
 use App\Models\EvatekItem;
 use App\Models\EvatekRevision;
 use Illuminate\Http\Request;
-use App\Models\Project;
+use Illuminate\Support\Facades\Auth;
+use App\Helpers\ActivityLogger;
+
 
 class EvatekController extends Controller
 {
@@ -59,6 +61,16 @@ class EvatekController extends Controller
             $revisions = collect([$revision]);
         }
 
+        ActivityLogger::log(
+            module: 'Evatek',
+            action: 'view_evatek_review',
+            targetId: $itemId,
+            details: [
+                'user_id' => Auth::id(),
+                'revisions_count' => $revisions->count(),
+            ]
+        );
+
         return view('desain.review-evatek', compact('item', 'evatek', 'revisions'));
     }
 
@@ -96,6 +108,17 @@ class EvatekController extends Controller
             'design_link' => $request->design_link,
         ]);
 
+        ActivityLogger::log(
+            module: 'Evatek',
+            action: 'save_revision_links',
+            targetId: $revision->revision_id,
+            details: [
+                'user_id' => Auth::id(),
+                'vendor_link' => $request->vendor_link,
+                'design_link' => $request->design_link,
+            ]
+        );
+
         return response()->json(['success' => true]);
     }
 
@@ -126,6 +149,16 @@ class EvatekController extends Controller
             'current_date' => now()->toDateString(),
         ]);
 
+        ActivityLogger::log(
+            module: 'Evatek',
+            action: 'approve_revision',
+            targetId: $revision->revision_id,
+            details: [
+                'user_id' => Auth::id(),
+                'revision_code' => $revision->revision_code,
+            ]
+        );
+
         return response()->json(['success' => true]);
     }
 
@@ -155,6 +188,16 @@ class EvatekController extends Controller
             'status' => 'not_approve',
             'current_date' => now()->toDateString(),
         ]);
+
+        ActivityLogger::log(
+            module: 'Evatek',
+            action: 'reject_revision',
+            targetId: $revision->revision_id,
+            details: [
+                'user_id' => Auth::id(),
+                'revision_code' => $revision->revision_code,
+            ]
+        );
 
         return response()->json(['success' => true]);
     }
@@ -198,6 +241,17 @@ class EvatekController extends Controller
             'status' => 'on_progress',
             'current_date' => now()->toDateString(),
         ]);
+
+        ActivityLogger::log(
+            module: 'Evatek',
+            action: 'request_revision',
+            targetId: $revision->revision_id,
+            details: [
+                'user_id' => Auth::id(),
+                'from_revision' => $revision->revision_code,
+                'to_revision' => $nextRev->revision_code,
+            ]
+        );
 
         return response()->json([
             'success' => true,

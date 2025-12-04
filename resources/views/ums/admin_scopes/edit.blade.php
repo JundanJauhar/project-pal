@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('ums.layouts.app')
 
 @section('title', 'Edit Scope')
 

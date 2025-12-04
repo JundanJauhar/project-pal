@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('ums.layouts.app')
 
 @section('title', 'Edit Setting')
 
@@ -19,7 +19,18 @@
 
             <div class="mb-3">
                 <label class="form-label fw-semibold">Value</label>
-                <textarea name="value" class="form-control" rows="4">{{ $setting->value }}</textarea>
+                <textarea name="value" class="form-control" rows="3">{{ old('value', $setting->value) }}</textarea>
+                @error('value')
+                    <div class="text-danger small">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Deskripsi</label>
+                <textarea name="description" class="form-control" rows="2">{{ old('description', $setting->description) }}</textarea>
+                @error('description')
+                    <div class="text-danger small">{{ $message }}</div>
+                @enderror
             </div>
 
             <button class="btn btn-dark">Update</button>

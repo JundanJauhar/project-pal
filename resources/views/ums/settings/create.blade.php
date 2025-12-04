@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('ums.layouts.app')
 
 @section('title', 'Tambah Setting')
 
@@ -13,12 +13,26 @@
 
             <div class="mb-3">
                 <label class="form-label fw-semibold">Key</label>
-                <input type="text" name="key" class="form-control" required>
+                <input type="text" name="key" class="form-control" required value="{{ old('key') }}" autofocus placeholder="contoh: max_login_attempts">
+                @error('key')
+                    <div class="text-danger small">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="mb-3">
                 <label class="form-label fw-semibold">Value</label>
-                <textarea name="value" class="form-control" rows="4"></textarea>
+                <textarea name="value" class="form-control" rows="3">{{ old('value') }}</textarea>
+                @error('value')
+                    <div class="text-danger small">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Deskripsi</label>
+                <textarea name="description" class="form-control" rows="2">{{ old('description') }}</textarea>
+                @error('description')
+                    <div class="text-danger small">{{ $message }}</div>
+                @enderror
             </div>
 
             <button class="btn btn-dark">Simpan</button>

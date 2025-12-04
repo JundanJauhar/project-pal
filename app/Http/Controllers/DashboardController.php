@@ -10,6 +10,7 @@ use App\Models\Notification;
 use App\Services\CheckpointTransitionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\ActivityLogger;
 
 class DashboardController extends Controller
 {
@@ -164,6 +165,20 @@ public function search(Request $request)
         ->slice(($page - 1) * $perPage, $perPage)
         ->values();
 
+    // Log activity
+    ActivityLogger::log(
+        module: 'Dashboard',
+        action: 'search_procurement',
+        targetId: null,
+        details: [
+            'search' => $request->q ?? null,
+            'priority' => $request->priority ?? null,
+            'project' => $request->project ?? null,
+            'checkpoint' => $request->checkpoint ?? null,
+            'page' => $request->get('page', 1)
+        ]
+    );
+
     // Format JSON response
     $data = $procurements->map(function ($p) {
 
@@ -257,7 +272,17 @@ public function search(Request $request)
             ->with(['checkpoint', 'user'])
             ->orderBy('checkpoint_id')
             ->get()
-            ->map(function($p) {
+            ->map(function($p) use ($procurementId) {
+
+                ActivityLogger::log(
+                    module: 'Dashboard',
+                    action: 'view_procurement_timeline',
+                    targetId: $procurementId,
+                    details: [
+                        'user_id' => Auth::id()
+                    ]
+                );
+
                 return [
                     'checkpoint_name' => $p->checkpoint->point_name ?? '-',
                     'checkpoint_sequence' => $p->checkpoint->point_sequence ?? 0,
@@ -309,6 +334,16 @@ public function search(Request $request)
             'cancelled' => Procurement::where('project_id', $project->project_id)
                 ->where('status_procurement', 'cancelled')->count(),
         ];
+
+        ActivityLogger::log(
+            module: 'Dashboard',
+            action: 'view_procurements_by_project',
+            targetId: $project->project_id,
+            details: [
+                'project_code' => $projectCode,
+                'user_id' => Auth::id()
+            ]
+        );
 
         return view('procurements.by-project', compact('project', 'procurements', 'stats'));
     }

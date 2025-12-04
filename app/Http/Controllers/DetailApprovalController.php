@@ -10,6 +10,8 @@ use App\Models\Item;
 use App\Models\InspectionReport;
 use App\Models\Checkpoint;
 use App\Models\ProcurementProgress;
+use App\Helpers\ActivityLogger;
+
 
 class DetailApprovalController extends Controller
 {
@@ -35,6 +37,17 @@ class DetailApprovalController extends Controller
                     return $item;
                 });
             });
+
+            ActivityLogger::log(
+                module: 'QA',
+                action: 'view_procurement_inspection_detail',
+                targetId: $procurement_id,
+                details: [
+                    'user_id' => Auth::id(),
+                    'item_count' => $items->count()
+                ]
+            );
+
 
         return view('qa.detail-approval', [
             'procurement' => $procurement,
@@ -270,6 +283,18 @@ class DetailApprovalController extends Controller
                 $sedang_proses++;
             }
         }
+
+        ActivityLogger::log(
+            module: 'QA',
+            action: 'submit_inspection_results',
+            targetId: $procurement_id,
+            details: [
+                'user_id'        => Auth::id(),
+                'saved_items'    => $itemIds,
+                'saved_count'    => count($saved),
+                'inspection_status' => $statusProc,
+            ]
+        );
 
         return response()->json([
             'success'         => true,
