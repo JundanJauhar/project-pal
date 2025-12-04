@@ -13,7 +13,6 @@
                 <form method="POST" action="{{ isset($vendor) ? route('supply-chain.vendor.update', $vendor->id_vendor) : route('supply-chain.vendor.store') }}">
                     @csrf
                     @if(isset($vendor))
-                    @method('PUT')
                     @endif
                     <input type="hidden" name="redirect" value="{{ $redirect ?? 'kelola' }}">
                     <div class="mb-3">

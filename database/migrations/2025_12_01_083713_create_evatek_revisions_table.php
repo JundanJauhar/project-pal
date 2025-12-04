@@ -27,7 +27,7 @@ return new class extends Migration {
             $table->longText('hasil_evatek')->nullable();
             $table->longText('catatan_approval')->nullable();
             $table->longText('alasan_reject')->nullable();
-            $table->longText('notes')->nullable();
+            $table->longText('log')->nullable();
 
             $table->timestamps();
 

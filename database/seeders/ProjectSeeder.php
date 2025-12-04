@@ -2,18 +2,16 @@
 
 namespace Database\Seeders;
 
-use App\Models\Contract;
-use Illuminate\Database\Seeder;
 use App\Models\Project;
+use App\Models\Vendor;
+use App\Models\Procurement;
 use App\Models\RequestProcurement;
 use App\Models\Item;
-use App\Models\Vendor;
-use App\Models\PaymentSchedule;
-use App\Models\InspectionReport;
-use Carbon\Carbon;
-use App\Models\Procurement;
+use App\Models\Checkpoint;
 use App\Models\ProcurementProgress;
-
+use App\Services\CheckpointTransitionService;
+use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class ProjectSeeder extends Seeder
 {
@@ -52,25 +50,25 @@ class ProjectSeeder extends Seeder
                 'address' => 'Jl. Pajajaran No. 154, Bandung',
                 'phone_number' => '022-98765432',
                 'email' => 'sales@indonesian-aerospace.com',
-                'legal_status' => 'pending',
+                'legal_status' => 'verified',
                 'is_importer' => true,
             ],
         ];
 
         foreach ($vendors as $vendor) {
             Vendor::updateOrCreate(
-                ['id_vendor' => $vendor['id_vendor']], // key untuk check
-                $vendor // data untuk update/create
+                ['id_vendor' => $vendor['id_vendor']],
+                $vendor
             );
         }
 
         /**
          * ============================
-         * PROJECT 1 - Completed
+         * PROJECT 1
          * ============================
          */
-        $project1 = Project::updateOrCreate(
-            ['project_code' => 'W000301'], // key untuk check
+        Project::updateOrCreate(
+            ['project_code' => 'W000301'],
             [
                 'project_name' => 'Pengadaan Material Kapal Fregat',
                 'description' => 'Pengadaan material utama untuk kapal fregat kelas sigma',
@@ -82,350 +80,12 @@ class ProjectSeeder extends Seeder
             ]
         );
 
-        // Ambil department yang ada untuk memastikan foreign key valid
-        $departments = \App\Models\Department::all();
-        $dept1 = $departments->first();
-        $dept2 = $departments->skip(1)->first() ?? $dept1;
-        $dept3 = $departments->skip(2)->first() ?? $dept1;
-        $dept4 = $departments->skip(3)->first() ?? $dept1;
-
-        // Ambil kode project
-        $projectCode = $project1->project_code; // contoh: "W000301"
-
         /**
+         * PROJECT 2
          * ============================
-         * PROCUREMENT DENGAN STATUS YANG BENAR
-         * ============================
-         * Status yang valid: 'in_progress', 'completed', 'cancelled'
          */
-
-        // Seeder untuk procurement 1 - Completed (sudah selesai semua checkpoint)
-        $procurement1 = \App\Models\Procurement::create([
-            'project_id' => $project1->project_id,
-            'code_procurement' => $projectCode . '-01',
-            'name_procurement' => 'Pengadaan Material Baja Berkualitas Tinggi',
-            'description' => 'Pengadaan material baja untuk proyek 1',
-            'department_procurement' => $dept1->department_id,
-            'priority' => 'tinggi',
-            'start_date' => Carbon::now()->subDays(100),
-            'end_date' => Carbon::now()->subDays(5),
-            'status_procurement' => 'completed', // FIXED: completed karena sudah selesai
-        ]);
-
-        // Seeder untuk procurement 2 - In Progress (masih dalam proses)
-        $procurement2 = \App\Models\Procurement::create([
-            'project_id' => $project1->project_id,
-            'code_procurement' => $projectCode . '-02',
-            'name_procurement' => 'Pengadaan Komponen Elektronik',
-            'description' => 'Pengadaan komponen elektronik untuk sistem kontrol',
-            'department_procurement' => $dept2->department_id,
-            'priority' => 'sedang',
-            'start_date' => Carbon::now()->subDays(60),
-            'end_date' => Carbon::now()->addDays(15),
-            'status_procurement' => 'in_progress', // FIXED: in_progress karena masih berjalan
-        ]);
-
-        // Seeder untuk procurement 3 - In Progress
-        $procurement3 = \App\Models\Procurement::create([
-            'project_id' => $project1->project_id,
-            'code_procurement' => $projectCode . '-03',
-            'name_procurement' => 'Jasa Cutting dan Fabrication',
-            'description' => 'Jasa potong dan fabrikasi material logam',
-            'department_procurement' => $dept3->department_id,
-            'priority' => 'tinggi',
-            'start_date' => Carbon::now()->subDays(40),
-            'end_date' => Carbon::now()->addDays(10),
-            'status_procurement' => 'in_progress', // FIXED: in_progress
-        ]);
-
-        // Seeder untuk procurement 4 - In Progress (baru mulai)
-        $procurement4 = \App\Models\Procurement::create([
-            'project_id' => $project1->project_id,
-            'code_procurement' => $projectCode . '-04',
-            'name_procurement' => 'Permintaan Alat Pelindung Diri (APD)',
-            'description' => 'Pengadaan APD untuk keselamatan kerja',
-            'department_procurement' => $dept4->department_id,
-            'priority' => 'rendah',
-            'start_date' => Carbon::now()->subDays(20),
-            'end_date' => Carbon::now()->addDays(5),
-            'status_procurement' => 'in_progress', // FIXED: in_progress
-        ]);
-
-        // Seeder untuk procurement 5 - berada di checkpoint ke-11
-        $procurement5 = \App\Models\Procurement::create([
-            'project_id' => $project1->project_id,
-            'code_procurement' => $projectCode . '-05',
-            'name_procurement' => 'Pengadaan Mesin Pompa Hidrolik',
-            'description' => 'Pengadaan mesin pompa hidrolik untuk sistem kapal',
-            'department_procurement' => $dept2->department_id,
-            'priority' => 'sedang',
-            'start_date' => Carbon::now()->subDays(70),
-            'end_date' => Carbon::now()->addDays(20),
-            'status_procurement' => 'in_progress',
-        ]);
-
-        /**
-         * REQUEST PROCUREMENT (sesuai schema baru)
-         */
-        $request1 = RequestProcurement::updateOrCreate(
-            [
-                'procurement_id' => $procurement1->procurement_id,
-                'request_name' => 'Material Baja Berkualitas Tinggi'
-            ], // key untuk check
-            [
-                'project_id' => $project1->project_id,
-                'vendor_id' => 1,
-                'created_date' => Carbon::now()->subDays(90),
-                'deadline_date' => Carbon::now()->addDays(30),
-                'request_status' => 'completed',
-                'department_id' => 1,
-            ]
-        );
-
-        $request2 = RequestProcurement::updateOrCreate(
-            [
-                'procurement_id' => $procurement2->procurement_id,
-                'request_name' => 'Pengadaan Komponen Elektronik'
-            ], // key untuk check
-            [
-                'project_id' => $project1->project_id,
-                'vendor_id' => 2,
-                'created_date' => Carbon::now()->subDays(60),
-                'deadline_date' => Carbon::now()->addDays(15),
-                'request_status' => 'submitted',
-                'department_id' => 2,
-            ]
-        );
-
-        $request3 = RequestProcurement::updateOrCreate(
-            [
-                'procurement_id' => $procurement3->procurement_id,
-                'request_name' => 'Jasa Cutting dan Fabrication'
-            ], // key untuk check
-            [
-                'project_id' => $project1->project_id,
-                'vendor_id' => null,
-                'created_date' => Carbon::now()->subDays(40),
-                'deadline_date' => Carbon::now()->addDays(10),
-                'request_status' => 'approved',
-                'department_id' => 3,
-            ]
-        );
-
-        $request4 = RequestProcurement::updateOrCreate(
-            [
-                'procurement_id' => $procurement4->procurement_id,
-                'request_name' => 'Permintaan Alat Pelindung Diri (APD)'
-            ], // key untuk check
-            [
-                'project_id' => $project1->project_id,
-                'vendor_id' => null,
-                'created_date' => Carbon::now()->subDays(20),
-                'deadline_date' => Carbon::now()->addDays(5),
-                'request_status' => 'draft',
-                'department_id' => 4,
-            ]
-        );
-
-        $request5 = RequestProcurement::updateOrCreate(
-    [
-        'procurement_id' => $procurement5->procurement_id,
-        'request_name' => 'Pengadaan Mesin Pompa Hidrolik'
-    ],
-    [
-        'project_id' => $project1->project_id,
-        'vendor_id' => 1,
-        'created_date' => Carbon::now()->subDays(70),
-        'deadline_date' => Carbon::now()->addDays(20),
-        'request_status' => 'submitted',
-        'department_id' => $dept2->department_id,
-    ]
-);
-
-        /**
-         * ITEMS
-         */
-        Item::updateOrCreate(
-            [
-                'request_procurement_id' => $request1->request_id,
-                'item_name' => 'Baja High Grade'
-            ], // key untuk check
-            [
-                'item_description' => 'Material baja high grade untuk struktur kapal',
-                'amount' => 100,
-                'unit' => 'ton',
-            ]
-        );
-
-        $item2 = Item::create([
-            'request_procurement_id' => $request1->request_id,
-            'item_name' => 'Plat Baja Marine Grade',
-            'item_description' => 'Plat baja tahan korosi untuk lambung kapal',
-            'amount' => 50,
-            'unit' => 'ton',
-        ]);
-
-        Item::create([
-            'request_procurement_id' => $request2->request_id,
-            'item_name' => 'Panel Kontrol Navigasi',
-            'item_description' => 'Panel kontrol elektronik untuk sistem navigasi',
-            'amount' => 5,
-            'unit' => 'unit',
-        ]);
-
-        Item::create([
-            'request_procurement_id' => $request2->request_id,
-            'item_name' => 'Sensor Radar',
-            'item_description' => 'Sensor radar untuk deteksi objek',
-            'amount' => 10,
-            'unit' => 'unit',
-        ]);
-
-        Item::create([
-            'request_procurement_id' => $request3->request_id,
-            'item_name' => 'Cutting Laser',
-            'item_description' => 'Alat pemotongan material dengan laser precision',
-            'amount' => 20,
-            'unit' => 'pcs',
-        ]);
-
-        Item::create([
-            'request_procurement_id' => $request4->request_id,
-            'item_name' => 'Helm Safety',
-            'item_description' => 'Helm pengaman standar K3',
-            'amount' => 100,
-            'unit' => 'pcs',
-        ]);
-
-        Item::create([
-            'request_procurement_id' => $request4->request_id,
-            'item_name' => 'Safety Shoes',
-            'item_description' => 'Sepatu safety boots',
-            'amount' => 100,
-            'unit' => 'pcs',
-        ]);
-
-        Item::create([
-            'request_procurement_id' => $request5->request_id,
-            'item_name' => 'Unit Pompa Hidrolik 500bar',
-            'item_description' => 'Pompa hidrolik tekanan tinggi untuk sistem kapal',
-            'amount' => 3,
-            'unit' => 'unit',
-        ]);
-
-
-        /**
-         * INSPECTION REPORT
-         */
-        InspectionReport::updateOrCreate(
-            [
-                'project_id' => $project1->project_id,
-                'item_id' => 1,
-                'inspection_date' => Carbon::now()->subDays(10)
-            ], // key untuk check
-            [
-                'inspector_id' => 5,
-                'result' => 'passed',
-                'notes' => 'Material sesuai spesifikasi teknis.',
-            ]
-        );
-
-        InspectionReport::create([
-            'project_id' => $project1->project_id,
-            'item_id' => $item2->item_id,
-            'inspection_date' => Carbon::now()->subDays(10),
-            'inspector_id' => 5,
-            'result' => 'passed',
-            'notes' => 'Plat baja dalam kondisi baik, tidak ada cacat.',
-        ]);
-
-        /**
-         * PROCUREMENT PROGRESS - Monitoring step procurement
-         */
-        $checkpoints = \App\Models\Checkpoint::orderBy('point_sequence')->get();
-
-        // Progress untuk procurement 1 - COMPLETED (semua checkpoint selesai)
-        foreach ($checkpoints as $index => $checkpoint) {
-            \App\Models\ProcurementProgress::create([
-                'procurement_id' => $procurement1->procurement_id,
-                'checkpoint_id' => $checkpoint->point_id,
-                'user_id' => ($index % 3 === 0) ? 2 : (($index % 3 === 1) ? 3 : 5),
-                'status' => 'completed', // Semua selesai
-                'start_date' => Carbon::now()->subDays(100 - ($index * 6)),
-                'end_date' => Carbon::now()->subDays(98 - ($index * 6)),
-                'note' => 'Checkpoint ' . ($index + 1) . ': ' . $checkpoint->point_name . ' - Selesai',
-            ]);
-        }
-
-        // Progress untuk procurement 2 - IN PROGRESS (sampai checkpoint ke-7)
-        foreach ($checkpoints->take(7) as $index => $checkpoint) {
-            \App\Models\ProcurementProgress::create([
-                'procurement_id' => $procurement2->procurement_id,
-                'checkpoint_id' => $checkpoint->point_id,
-                'user_id' => ($index % 2 === 0) ? 2 : 3,
-                'status' => $index < 6 ? 'completed' : 'in_progress',
-                'start_date' => Carbon::now()->subDays(60 - ($index * 8)),
-                'end_date' => $index < 6 ? Carbon::now()->subDays(57 - ($index * 8)) : null,
-                'note' => 'Checkpoint ' . ($index + 1) . ': ' . $checkpoint->point_name . ' - ' . ($index < 6 ? 'Selesai' : 'Sedang Berjalan'),
-            ]);
-        }
-
-        foreach ($checkpoints->take(3) as $index => $checkpoint) {
-
-    // CP1 = completed
-    // CP2 = completed
-    // CP3 = in_progress
-    $status = ($index < 2) ? 'completed' : 'in_progress';
-
-    \App\Models\ProcurementProgress::create([
-        'procurement_id' => $procurement3->procurement_id,
-        'checkpoint_id'  => $checkpoint->point_id,   // gunakan point_id yang benar
-        'user_id'        => ($index % 2 === 0) ? 3 : 7,
-        'status'         => $status,
-        'start_date'     => Carbon::now()->subDays(40 - ($index * 3)),
-        'end_date'       => $status === 'completed'
-                            ? Carbon::now()->subDays(39 - ($index * 3))
-                            : null,
-        'note'           => "Checkpoint " . ($index + 1) . ": {$checkpoint->point_name} - " .
-                           ($status === 'completed' ? 'Selesai' : 'Sedang Berjalan'),
-    ]);
-}
-
-
-        // Progress untuk procurement 4 - IN PROGRESS (baru checkpoint ke-2)
-        foreach ($checkpoints->take(2) as $index => $checkpoint) {
-            \App\Models\ProcurementProgress::create([
-                'procurement_id' => $procurement4->procurement_id,
-                'checkpoint_id' => $checkpoint->point_id,
-                'user_id' => 2,
-                'status' => $index < 1 ? 'completed' : 'in_progress',
-                'start_date' => Carbon::now()->subDays(20 - ($index * 5)),
-                'end_date' => $index < 1 ? Carbon::now()->subDays(18 - ($index * 5)) : null,
-                'note' => 'Checkpoint ' . ($index + 1) . ': ' . $checkpoint->point_name . ' - ' . ($index < 1 ? 'Selesai' : 'Sedang Berjalan'),
-            ]);
-        }
-
-        // Progress Procurement 5 - sampai checkpoint ke-11
-        foreach ($checkpoints->take(11) as $index => $checkpoint) {
-            \App\Models\ProcurementProgress::create([
-                'procurement_id' => $procurement5->procurement_id,
-                'checkpoint_id' => $checkpoint->point_id,
-                'user_id' => ($index % 2 === 0) ? 2 : 3,
-                'status' => $index < 10 ? 'completed' : 'in_progress',
-                'start_date' => Carbon::now()->subDays(70 - ($index * 6)),
-                'end_date' => $index < 10 ? Carbon::now()->subDays(67 - ($index * 6)) : null,
-                'note' => 'Checkpoint ' . ($index + 1) . ': ' . $checkpoint->point_name .
-                            ' - ' . ($index < 10 ? 'Selesai' : 'Sedang Berjalan'),
-            ]);
-        }
-
-
-        /**
-         * PROJECT 2–7 - Additional projects
-         */
-
         Project::updateOrCreate(
-            ['project_code' => 'W000302'], // key untuk check
+            ['project_code' => 'W000302'],
             [
                 'project_name' => 'Pengadaan Sistem Radar Navigasi',
                 'description' => 'Pengadaan radar navigasi untuk kapal perang',
@@ -437,8 +97,12 @@ class ProjectSeeder extends Seeder
             ]
         );
 
+        /**
+         * PROJECT 3
+         * ============================
+         */
         Project::updateOrCreate(
-            ['project_code' => 'W000303'], // key untuk check
+            ['project_code' => 'W000303'],
             [
                 'project_name' => 'Pengadaan Mesin Diesel Utama',
                 'description' => 'Mesin diesel untuk kapal tanker',
@@ -450,8 +114,12 @@ class ProjectSeeder extends Seeder
             ]
         );
 
+        /**
+         * PROJECT 4
+         * ============================
+         */
         Project::updateOrCreate(
-            ['project_code' => 'W000304'], // key untuk check
+            ['project_code' => 'W000304'],
             [
                 'project_name' => 'Pengadaan Peralatan Keselamatan Kapal',
                 'description' => 'Life jacket, fire extinguisher, dll.',
@@ -463,8 +131,12 @@ class ProjectSeeder extends Seeder
             ]
         );
 
+        /**
+         * PROJECT 5
+         * ============================
+         */
         Project::updateOrCreate(
-            ['project_code' => 'W000305'], // key untuk check
+            ['project_code' => 'W000305'],
             [
                 'project_name' => 'Pengadaan Cat Anti Karat & Coating',
                 'description' => 'Cat marine grade untuk kapal',
@@ -476,8 +148,12 @@ class ProjectSeeder extends Seeder
             ]
         );
 
+        /**
+         * PROJECT 6
+         * ============================
+         */
         Project::updateOrCreate(
-            ['project_code' => 'W000306'], // key untuk check
+            ['project_code' => 'W000306'],
             [
                 'project_name' => 'Pengadaan Sistem Komunikasi Satelit',
                 'description' => 'Sistem satelit untuk kapal jelajah jauh',
@@ -489,8 +165,12 @@ class ProjectSeeder extends Seeder
             ]
         );
 
+        /**
+         * PROJECT 7
+         * ============================
+         */
         Project::updateOrCreate(
-            ['project_code' => 'W000307'], // key untuk check
+            ['project_code' => 'W000307'],
             [
                 'project_name' => 'Pengadaan Generator Listrik',
                 'description' => 'Generator cadangan 500 KVA',
@@ -502,6 +182,73 @@ class ProjectSeeder extends Seeder
             ]
         );
 
-        echo "✅ Seeder berhasil dengan status procurement yang benar: 'in_progress', 'completed', 'cancelled'.\n";
+        /**
+         * ============================
+         * CREATE SAMPLE PROCUREMENT WITH 1 ITEM
+         * ============================
+         */
+        $project1 = Project::where('project_code', 'W000301')->first();
+        $dept1 = \App\Models\Department::first();
+
+        // ✅ Create Procurement
+        $procurement = Procurement::create([
+            'project_id' => $project1->project_id,
+            'code_procurement' => 'W000301-01',
+            'name_procurement' => 'Pengadaan Plat Baja untuk Hull Kapal',
+            'description' => 'Plat baja marine grade berkualitas tinggi',
+            'department_procurement' => $dept1->department_id,
+            'priority' => 'tinggi',
+            'start_date' => Carbon::now(),
+            'end_date' => Carbon::now()->addDays(30),
+            'status_procurement' => 'in_progress',
+        ]);
+
+        // ✅ Create RequestProcurement
+        $requestProcurement = RequestProcurement::create([
+            'procurement_id' => $procurement->procurement_id,
+            'project_id' => $project1->project_id,
+            'request_name' => 'Request Plat Baja Hull',
+            'created_date' => Carbon::now(),
+            'deadline_date' => Carbon::now()->addDays(30),
+            'request_status' => 'submitted',
+            'department_id' => $dept1->department_id,
+        ]);
+
+        // ✅ Create Item 1
+        Item::create([
+            'request_procurement_id' => $requestProcurement->request_id,
+            'item_name' => 'Plat Baja Marine Grade A131',
+            'item_description' => 'Plat baja dengan ketebalan 15mm untuk struktur hull kapal',
+            'specification' => 'Grade A131, Thickness 15mm, Width 2000mm',
+            'amount' => 100,
+            'unit' => 'ton',
+        ]);
+
+        // ✅ Create Item 2
+        Item::create([
+            'request_procurement_id' => $requestProcurement->request_id,
+            'item_name' => 'Profil Baja IPN 400',
+            'item_description' => 'Profil baja I-beam untuk penguatan struktur kapal',
+            'specification' => 'IPN 400, Grade A36, Length 6000mm',
+            'amount' => 50,
+            'unit' => 'batang',
+        ]);
+
+        // ✅ Create Checkpoint Progress
+        $checkpoints = Checkpoint::orderBy('point_sequence', 'asc')->take(2)->get();
+        
+        foreach ($checkpoints as $index => $checkpoint) {
+            ProcurementProgress::create([
+                'procurement_id' => $procurement->procurement_id,
+                'checkpoint_id' => $checkpoint->point_id,
+                'user_id' => 1,
+                'status' => $index === 0 ? 'completed' : 'in_progress',
+                'start_date' => Carbon::now()->subDays(2 - $index),
+                'end_date' => $index === 0 ? Carbon::now()->subDays(1) : null,
+                'note' => 'Checkpoint ' . ($index + 1) . ': ' . $checkpoint->point_name,
+            ]);
+        }
+
+        echo "✅ Seeder berhasil! Project, Vendor, dan Procurement dengan 1 Item sudah dibuat.\n";
     }
 }

@@ -45,11 +45,17 @@
 .link-status { font-size: 12px; color: #777; }
 
 /* buttons */
-.action-btn { border: none; font-size: 12px; font-weight: 700; border-radius: 14px; padding: 6px 14px; cursor: pointer; width: 85px; margin: 3px auto; color: white; }
+.action-btn { border: none; font-size: 12px; font-weight: 700; border-radius: 14px; padding: 6px 14px; cursor: pointer; width: 100px; margin: 3px auto; color: white; }
 .btn-upload { background: #000; }
 .btn-approve { background: #28a745; }
 .btn-reject { background: #d62828; }
-.btn-revisi { background: #ffcc00; color:#000; }
+.btn-revisi { background: #ffcc00; }
+
+/* ✅ Disabled state */
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 
 /* checkbox */
 .rev-check {
@@ -67,44 +73,36 @@
 
 /* log */
 .log-card { background:#f8f8f8; border-radius:14px; padding:25px; border:1px solid #ddd; }
-.log-textarea { width:100%; height:350px; border:none; background:transparent; }
+.log-textarea { width:100%; height:450px; border:none; background:transparent; font-family: monospace; font-size: 12px; line-height: 1.6; resize: none; }
 
 .content-wrapper { display: grid; grid-template-columns: 3fr 1fr; gap: 35px; }
 </style>
 @endpush
 
-
 @section('content')
 
-{{-- GLOBAL DATA for JavaScript --}}
-<div id="evatekData"
-     data-evatek-id="{{ $evatek->evatek_id }}"
-     data-item-id="{{ $item->item_id }}">
-</div>
+<div id="evatekData" data-evatek-id="{{ $evatek->evatek_id }}" data-item-id="{{ $item->item_id }}"></div>
 
-<button class="back-btn" onclick="history.back()">← Back</button>
+<button class="back-btn" onclick="goBackWithRefresh()">← Back</button>
 
 <p class="eq-name">{{ $item->item_name }}</p>
 
 <h2 class="vendor-name">
-    {{ $item->requestProcurement->vendor->name_vendor ?? '-' }}
+    {{ $evatek->vendor->name_vendor ?? '-' }}
 </h2>
 
 {{-- STATUS CARD --}}
 <div class="status-card">
     <div class="status-card-header">Current Status</div>
-
     <div class="status-grid">
         <div>
             <p class="status-item-label">Revision</p>
             <p id="statusRevision" class="status-item-value">{{ $evatek->current_revision }}</p>
         </div>
-
         <div>
             <p class="status-item-label">Status</p>
             <p id="statusDivision" class="status-small-value">{{ ucfirst($evatek->status) }}</p>
         </div>
-
         <div>
             <p class="status-item-label">Last Update</p>
             <p id="statusDate" class="status-small-value">
@@ -114,103 +112,48 @@
     </div>
 </div>
 
-
 <div class="content-wrapper">
     <div>
         {{-- TRACKING TABLE --}}
         <div class="tracking-card">
             <table class="tracking-table">
                 <thead>
-                <tr>
-                    <th></th>
-                    <th>Revision</th>
-                    <th>Vendor File Link</th>
-                    <th>Divisi Desain File Link</th>
-                    <th>Decision</th>
-                </tr>
-                </thead>
-
-                <tbody id="revisionBody">
-                @foreach($revisions as $rev)
-                    <tr data-revision-id="{{ $rev->revision_id }}" data-rev="{{ $rev->revision_code }}">
-                        <td>
-                            <input type="checkbox" class="rev-check
-                            @if($rev->status=='approve') status-approve
-                            @elseif($rev->status=='revisi') status-revisi
-                            @elseif($rev->status=='not approve') status-reject
-                            @endif">
-                        </td>
-
-                        <td><strong>{{ $rev->revision_code }}</strong></td>
-
-                        <td>
-                            <input type="text" class="link-input vendor-link" value="{{ $rev->vendor_link }}">
-                            <button class="action-btn btn-upload save-link">Save</button>
-                            <div class="link-status"></div>
-                        </td>
-
-                        <td>
-                            <input type="text" class="link-input design-link" value="{{ $rev->design_link }}">
-                            <button class="action-btn btn-upload save-link">Save</button>
-                            <div class="link-status"></div>
-                        </td>
-
-                        <td>
-                            <button class="action-btn btn-approve approve-btn">Approve</button>
-                            <button class="action-btn btn-revisi revisi-btn">Revisi</button>
-                            <button class="action-btn btn-reject reject-btn">Reject</button>
-                        </td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    {{-- REVISION HISTORY --}}
-    <div class="card-default">
-        <div class="card-title">Review History</div>
-        <div class="table-wrapper">
-            <table class="table">
-                <thead>
                     <tr>
+                        <th></th>
                         <th>Revision</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                        <th>Notes</th>
+                        <th>Vendor File Link</th>
+                        <th>Divisi Desain File Link</th>
+                        <th>Decision</th>
                     </tr>
                 </thead>
-                <tbody>
-                @forelse($evatek->revisions()->orderBy('created_at', 'desc')->get() as $revision)
-                    <tr>
-                        <td>{{ $revision->revision_code }}</td>
-                        <td>
-                            <span class="badge 
-                                @if($revision->status === 'approve') badge-success
-                                @elseif($revision->status === 'not approve') badge-danger
-                                @elseif($revision->status === 'revisi') badge-warning
-                                @else badge-secondary
-                                @endif
-                            ">
-                                {{ ucfirst($revision->status) }}
-                            </span>
-                        </td>
-                        <td>
-                            @if($revision->approved_at)
-                                {{ \Carbon\Carbon::parse($revision->approved_at)->format('d/m/Y H:i') }}
-                            @elseif($revision->not_approved_at)
-                                {{ \Carbon\Carbon::parse($revision->not_approved_at)->format('d/m/Y H:i') }}
-                            @else
-                                {{ \Carbon\Carbon::parse($revision->created_at)->format('d/m/Y H:i') }}
-                            @endif
-                        </td>
-                        <td>{{ $revision->notes ?? '-' }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="4" class="text-center">No revision history</td>
-                    </tr>
-                @endforelse
+                <tbody id="revisionBody">
+                    @foreach($revisions as $rev)
+                        <tr data-revision-id="{{ $rev->revision_id }}" data-rev="{{ $rev->revision_code }}">
+                            <td>
+                                <input type="checkbox" class="rev-check
+                                @if($rev->status=='approve') status-approve
+                                @elseif($rev->status=='revisi') status-revisi
+                                @elseif($rev->status=='not approve') status-reject
+                                @endif">
+                            </td>
+                            <td><strong>{{ $rev->revision_code }}</strong></td>
+                            <td>
+                                <input type="text" class="link-input vendor-link" value="{{ $rev->vendor_link }}">
+                                <button class="action-btn btn-upload save-link">Save</button>
+                                <div class="link-status"></div>
+                            </td>
+                            <td>
+                                <input type="text" class="link-input design-link" value="{{ $rev->design_link }}">
+                                <button class="action-btn btn-upload save-link">Save</button>
+                                <div class="link-status"></div>
+                            </td>
+                            <td>
+                                <button class="action-btn btn-approve approve-btn">Approve</button>
+                                <button class="action-btn btn-revisi revisi-btn">Revisi</button>
+                                <button class="action-btn btn-reject reject-btn">Not Approve</button>
+                            </td>
+                        </tr>
+                    @endforeach
                 </tbody>
             </table>
         </div>
@@ -218,17 +161,57 @@
 
     {{-- LOG ACTIVITY --}}
     <div class="log-card">
-        <div class="log-title">Log Activity</div>
-        <textarea id="logText" class="log-textarea">{{ $evatek->log }}</textarea>
+        <div style="font-weight: bold; margin-bottom: 15px;">Activity Log</div>
+        <textarea id="logText" class="log-textarea" readonly></textarea>
     </div>
 </div>
-
 
 {{-- ========================= JAVASCRIPT ========================= --}}
 <script>
 const CSRF = "{{ csrf_token() }}";
+const EVATEK_ID = "{{ $evatek->evatek_id }}";
 
-/* ---------------- SAVE LINK ---------------- */
+// ✅ Simpan disabled revisions di Set
+const disabledRevisions = new Set();
+
+// ✅ Function untuk update log activity
+function addLog(message) {
+    const logText = document.getElementById('logText');
+    const timestamp = new Date().toLocaleString('id-ID');
+    const entry = `[${timestamp}] ${message}\n`;
+    logText.value = entry + logText.value;
+}
+
+// ✅ Function untuk disable buttons secara permanent
+function disableRevisionPermanent(revisionCode) {
+    disabledRevisions.add(revisionCode);
+    // Tombol sudah dihapus, tidak perlu disable lagi
+}
+
+// ✅ Check disabled revisions saat page load
+function checkDisabledRevisions() {
+    const rows = document.querySelectorAll('#revisionBody tr');
+    rows.forEach(row => {
+        const rev = row.dataset.rev;
+        const checkbox = row.querySelector('.rev-check');
+        
+        // Cek apakah revisi ini sudah punya status (approve, reject, atau revisi)
+        const hasStatusApprove = checkbox.classList.contains('status-approve');
+        const hasStatusReject = checkbox.classList.contains('status-reject');
+        const hasStatusRevisi = checkbox.classList.contains('status-revisi');
+        
+        // Jika sudah ada status, hapus tombol decision
+        if (hasStatusApprove || hasStatusReject || hasStatusRevisi) {
+            const decisionCell = row.querySelector("td:last-child");
+            if (decisionCell) {
+                decisionCell.innerHTML = "";
+            }
+            disableRevisionPermanent(rev);
+        }
+    });
+}
+
+/* SAVE LINK */
 document.addEventListener("click", function(e) {
     if (e.target.classList.contains("save-link")) {
         let row = e.target.closest("tr");
@@ -253,12 +236,38 @@ function saveLink(row) {
     .then(r => {
         if (r.success) {
             row.querySelectorAll(".link-status").forEach(el => el.innerText = "Saved");
+            
+            const logMessage = `✓ Link saved for ${row.dataset.rev}`;
+            addLog(logMessage);
+            saveLogToDatabase(logMessage);
         }
     });
 }
 
+// ✅ Function untuk simpan log ke database
+function saveLogToDatabase(message) {
+    const logText = document.getElementById('logText').value;
+    
+    fetch("{{ route('desain.evatek.save-log') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": CSRF
+        },
+        body: JSON.stringify({
+            evatek_id: EVATEK_ID,
+            log: logText
+        })
+    })
+    .then(r => r.json())
+    .then(r => {
+        if (!r.success) {
+            console.error('Failed to save log');
+        }
+    });
+}
 
-/* ---------------- APPROVE ---------------- */
+/* APPROVE */
 document.addEventListener("click", function(e) {
     if (e.target.classList.contains("approve-btn")) {
         approve(e.target.closest("tr"));
@@ -278,13 +287,18 @@ function approve(row) {
     .then(res => {
         if (res.success) {
             row.querySelector(".rev-check").classList.add("status-approve");
-            updateStatus(row.dataset.rev, "Completed");
+            updateStatus(row.dataset.rev, "Approve");
+            
+            const logMessage = `✓ ${row.dataset.rev} APPROVED`;
+            addLog(logMessage);
+            saveLogToDatabase(logMessage);
+            
+            disableRevisionPermanent(row.dataset.rev);
         }
     });
 }
 
-
-/* ---------------- REJECT ---------------- */
+/* REJECT */
 document.addEventListener("click", function(e) {
     if (e.target.classList.contains("reject-btn")) {
         rejectRev(e.target.closest("tr"));
@@ -305,12 +319,17 @@ function rejectRev(row) {
         if (res.success) {
             row.querySelector(".rev-check").classList.add("status-reject");
             updateStatus(row.dataset.rev, "Rejected");
+            
+            const logMessage = `✗ ${row.dataset.rev} REJECTED`;
+            addLog(logMessage);
+            saveLogToDatabase(logMessage);
+            
+            disableRevisionPermanent(row.dataset.rev);
         }
     });
 }
 
-
-/* ---------------- REVISI ---------------- */
+/* REVISI */
 document.addEventListener("click", function(e) {
     if (e.target.classList.contains("revisi-btn")) {
         revisi(e.target.closest("tr"));
@@ -332,44 +351,73 @@ function revisi(row) {
 
         let next = r.new_revision;
 
+        // ✅ Ubah checkbox menjadi kuning untuk revisi
+        const checkbox = row.querySelector(".rev-check");
+        checkbox.classList.remove("status-approve", "status-reject");
+        checkbox.classList.add("status-revisi");
+
+        // ✅ Hapus semua tombol decision dari baris ini
+        const decisionCell = row.querySelector("td:last-child");
+        decisionCell.innerHTML = "";
+
+        // ✅ Simpan revisi ini ke disabled set
+        disableRevisionPermanent(row.dataset.rev);
+
         let html = `
         <tr data-revision-id="${next.revision_id}" data-rev="${next.revision_code}">
-            <td><input type="checkbox" class="rev-check status-revisi"></td>
+            <td><input type="checkbox" class="rev-check"></td>
             <td><strong>${next.revision_code}</strong></td>
-
             <td>
                 <input type="text" class="link-input vendor-link">
                 <button class="action-btn btn-upload save-link">Save</button>
                 <div class="link-status"></div>
             </td>
-
             <td>
                 <input type="text" class="link-input design-link">
                 <button class="action-btn btn-upload save-link">Save</button>
                 <div class="link-status"></div>
             </td>
-
             <td>
                 <button class="action-btn btn-approve approve-btn">Approve</button>
                 <button class="action-btn btn-revisi revisi-btn">Revisi</button>
-                <button class="action-btn btn-reject reject-btn">Reject</button>
+                <button class="action-btn btn-reject reject-btn">Not Approve</button>
             </td>
         </tr>`;
 
-        document
-            .getElementById("revisionBody")
-            .insertAdjacentHTML("beforeend", html);
+        document.getElementById("revisionBody").insertAdjacentHTML("beforeend", html);
 
-        updateStatus(next.revision_code, "Revision Needed");
+        updateStatus(next.revision_code, "On Progress");
+        
+        const logMessage = `⟳ ${row.dataset.rev} REVISI → ${next.revision_code} created`;
+        addLog(logMessage);
+        saveLogToDatabase(logMessage);
     });
 }
 
-
-/* ---------------- UPDATE STATUS CARD ---------------- */
-function updateStatus(revCode, division) {
+/* UPDATE STATUS CARD */
+function updateStatus(revCode, status) {
     document.getElementById("statusRevision").innerText = revCode;
-    document.getElementById("statusDivision").innerText = division;
-    document.getElementById("statusDate").innerText = new Date().toLocaleDateString();
+    document.getElementById("statusDivision").innerText = status;
+    document.getElementById("statusDate").innerText = new Date().toLocaleDateString('id-ID');
+}
+
+// ✅ Load existing log dan check disabled revisions saat page load
+document.addEventListener('DOMContentLoaded', function() {
+    const existingLog = {!! json_encode($evatek->log ?? '') !!};
+    if (existingLog) {
+        document.getElementById('logText').value = existingLog;
+    }
+    checkDisabledRevisions();
+});
+
+// ✅ Function untuk back dengan refresh halaman sebelumnya
+function goBackWithRefresh() {
+    // Simpan referrer untuk reload
+    if (document.referrer) {
+        window.location.href = document.referrer;
+    } else {
+        history.back();
+    }
 }
 </script>
 

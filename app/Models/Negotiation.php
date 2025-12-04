@@ -3,26 +3,45 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Negotiation extends Model
 {
+    use HasFactory;
+
     protected $table = 'negotiations';
     protected $primaryKey = 'negotiation_id';
-
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
-        'request_id',
-        'status',
+        'procurement_id',
+        'vendor_id',
+        'hps',
+        'budget',
+        'harga_final',
+        'tanggal_kirim',
+        'tanggal_terima',
         'notes',
     ];
 
-    /**
-     * Get the request procurement for this negotiation
-     */
-    public function requestProcurement(): BelongsTo
+    protected $casts = [
+        'hps' => 'decimal:2',
+        'budget' => 'decimal:2',
+        'harga_final' => 'decimal:2',
+        'tanggal_kirim' => 'date',
+        'tanggal_terima' => 'date',
+    ];
+
+    // Relationships
+    public function procurement()
     {
-        return $this->belongsTo(RequestProcurement::class, 'request_id', 'request_id');
+        return $this->belongsTo(Procurement::class, 'procurement_id', 'procurement_id');
     }
+
+    public function vendor()
+    {
+        return $this->belongsTo(Vendor::class, 'vendor_id', 'id_vendor');
+    }
+
+
 }

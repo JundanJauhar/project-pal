@@ -19,7 +19,7 @@ class EvatekRevision extends Model
         'date',
         'approved_at',
         'not_approved_at',
-        'notes',
+        'log',
     ];
 
     protected $casts = [

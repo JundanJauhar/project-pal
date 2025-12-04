@@ -83,56 +83,48 @@ class CheckpointTransitionService
 
         switch ($sequence) {
 
-            case 1: // Penawaran → Evatek
+            case 1: // Penawaran → Inquiry & Quotation
                 $this->validateCheckpoint1To2();
                 break;
 
-            case 2: // Evatek → Usulan OC
+            case 2: // Inquiry & Quotation → Evatek
                 $this->validateCheckpoint2To3();
                 break;
 
-            case 3: // Usulan OC → Pengesahan Kontrak
+            case 3: // Evatek → Negotiation
                 $this->validateCheckpoint3To4();
                 break;
 
-            case 4: // Pengesahan Kontrak → Pengiriman
+            case 4: // Negotiation → Usulan Pengadaan
                 $this->validateCheckpoint4To5();
                 break;
 
-            case 5: // Pengiriman → Pembayaran DP
+            case 5: // Usulan Pengadaan → Pengesahan Kontrak
                 $this->validateCheckpoint5To6();
                 break;
 
-            case 6: // Pembayaran DP → Importasi / Produksi
+            case 6: // Pengesahan Kontrak → Pembayaran DP
                 $this->validateCheckpoint6To7();
                 break;
 
-            case 7: // Importasi → Kedatangan Material
+            case 7: // Pembayaran DP → Pengiriman Material
                 $this->validateCheckpoint7To8();
                 break;
 
-            case 8: // Kedatangan → Serah Terima
+            case 8: // Pengiriman Material → Kedatangan Material
                 $this->validateCheckpoint8To9();
                 break;
 
-            case 9: // Serah Terima → Inspeksi
+            case 9: // Kedatangan Material → Verifikasi Dokumen
                 $this->validateCheckpoint9To10();
                 break;
 
-            case 10: // Inspeksi → Berita Acara/NCR
+            case 10: // Verifikasi Dokumen → Pembayaran
                 $this->validateCheckpoint10To11();
                 break;
-
-            case 11: // Berita Acara → Verifikasi Dokumen
-                $this->validateCheckpoint11To12();
-                break;
-
-            case 12: // Verifikasi Dokumen → Pembayaran
-                $this->validateCheckpoint12To13();
-                break;
-
-            case 13: // Pembayaran → Completion
-                $this->validateCheckpoint13ToCompletion();
+            
+            case 11: // Pemabayaran → COMPLETION
+                $this->validateCheckpoint10ToCompletion();
                 break;
         }
     }
@@ -154,11 +146,9 @@ class CheckpointTransitionService
     }
 
     protected function validateCheckpoint3To4(): void
-{
-    if (!$this->procurement->requestProcurements()->whereNotNull('vendor_id')->exists()) {
-        $this->errors[] = 'Vendor wajib dipilih sebelum melanjutkan ke Pengesahan Kontrak';
+    {
+        
     }
-}
 
 
     protected function validateCheckpoint4To5(): void
@@ -177,8 +167,8 @@ class CheckpointTransitionService
 
     protected function validateCheckpoint6To7(): void
     {
-        if (empty($this->data['payment_reference'])) {
-            $this->errors[] = 'Referensi pembayaran DP wajib diisi';
+        if (!$this->procurement->requestProcurements()->whereNotNull('vendor_id')->exists()) {
+            $this->errors[] = 'Vendor wajib dipilih sebelum melanjutkan ke Pengesahan Kontrak';
         }
 
         $payment = $this->procurement->paymentSchedules()

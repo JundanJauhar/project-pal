@@ -23,7 +23,9 @@ use App\Http\Controllers\ListApprovalController;
 use App\Http\Controllers\SekdirController;
 use App\Http\Controllers\EvatekController;
 use App\Http\Controllers\VendorEvatekController;
-
+use App\Http\Controllers\InquiryQuotationController;
+use App\Http\Controllers\NegotiationController;
+use App\Http\Controllers\MaterialDeliveryController;
 
 // Redirect root → login
 Route::get('/', fn() => redirect()->route('login'));
@@ -105,106 +107,137 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 
+    /*
+    |--------------------------------------------------------------------------
+    | SUPPLY CHAIN ROUTES
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('supply-chain')->name('supply-chain.')->group(function () {
+        
+        // Dashboard
+        Route::get('/dashboard', [SupplyChainController::class, 'dashboard'])
+            ->name('dashboard');
+        
+        Route::post('/dashboard/store', [SupplyChainController::class, 'storePengadaan'])
+            ->name('dashboard.store');
+        
+        Route::get('/projects/{projectId}/review', [SupplyChainController::class, 'reviewProject'])
+            ->name('review-project');
+        
+        Route::post('/projects/{projectId}/approve', [SupplyChainController::class, 'approveReview'])
+            ->name('approve-review');
+        
+        Route::get('/material-requests', [SupplyChainController::class, 'materialRequests'])
+            ->name('material-requests');
+        
+        Route::post('/material-requests/{requestId}', [SupplyChainController::class, 'updateMaterialRequest'])
+            ->name('update-material-request');
+        
+        Route::get('/vendors', [SupplyChainController::class, 'vendors'])
+            ->name('vendors');
+        
+        Route::post('/projects/select-vendor/{procurement_id}', [SupplyChainController::class, 'selectVendor'])
+            ->name('select-vendor');
+        
+        Route::get('/material-shipping', [SupplyChainController::class, 'materialShipping'])
+            ->name('material-shipping');
+        
+        Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])
+            ->name('material-arrival');
+        
+        Route::get('/evatek', [EvatekController::class, 'index'])
+            ->name('evatek.index');
+        
+        Route::get('/evatek/create', [EvatekController::class, 'create'])
+            ->name('evatek.create');
+        
+        Route::post('/evatek/store', [EvatekController::class, 'store'])
+            ->name('evatek.store');
+        
+        // ========== INPUT ITEM ROUTES ==========
+        Route::get('/project/{projectId}/input-item', [SupplyChainController::class, 'inputItem'])
+            ->name('input-item')
+            ->where('projectId', '[0-9]+');
 
-// File: routes/web.php
-// BAGIAN SUPPLY CHAIN - Update dengan Input Item Routes
+        Route::post('/project/{projectId}/input-item', [SupplyChainController::class, 'storeItem'])
+            ->name('input-item.store')
+            ->where('projectId', '[0-9]+');
 
-/*
-|--------------------------------------------------------------------------
-| SUPPLY CHAIN ROUTES
-|--------------------------------------------------------------------------
-*/
-Route::prefix('supply-chain')->name('supply-chain.')->middleware(['auth'])->group(function () {
-    
-    // Dashboard
-    Route::get('/dashboard', [SupplyChainController::class, 'dashboard'])
-        ->name('dashboard');
-    
-    Route::post('/dashboard/store', [SupplyChainController::class, 'storePengadaan'])
-        ->name('dashboard.store');
-    
-    Route::get('/projects/{projectId}/review', [SupplyChainController::class, 'reviewProject'])
-        ->name('review-project');
-    
-    Route::post('/projects/{projectId}/approve', [SupplyChainController::class, 'approveReview'])
-        ->name('approve-review');
-    
-    Route::get('/material-requests', [SupplyChainController::class, 'materialRequests'])
-        ->name('material-requests');
-    
-    Route::post('/material-requests/{requestId}', [SupplyChainController::class, 'updateMaterialRequest'])
-        ->name('update-material-request');
-    
-    Route::get('/vendors', [SupplyChainController::class, 'vendors'])
-        ->name('vendors');
-    
-    Route::post('/projects/select-vendor/{procurement_id}', [SupplyChainController::class, 'selectVendor'])
-        ->name('select-vendor');
-    
-    Route::get('/negotiations', [SupplyChainController::class, 'negotiations'])
-        ->name('negotiations');
-    
-    Route::post('/projects/{projectId}/negotiation', [SupplyChainController::class, 'createNegotiation'])
-        ->name('create-negotiation');
-    
-    Route::get('/material-shipping', [SupplyChainController::class, 'materialShipping'])
-        ->name('material-shipping');
-    
-    Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])
-        ->name('material-arrival');
-    
-    Route::get('/evatek', [EvatekController::class, 'index'])
-        ->name('evatek.index');
-    
-    Route::get('/evatek/create', [EvatekController::class, 'create'])
-        ->name('evatek.create');
-    
-    Route::post('/evatek/store', [EvatekController::class, 'store'])
-        ->name('evatek.store');
-    
-    // ========== INPUT ITEM ROUTES (NEW) ==========
-    // Form tambah item
-    Route::get('/project/{projectId}/input-item', [SupplyChainController::class, 'inputItem'])
-        ->name('input-item')
-        ->where('projectId', '[0-9]+');
+        Route::post('/project/{projectId}/evatek-item', [SupplyChainController::class, 'storeEvatekItem'])
+            ->name('evatek-item.store')
+            ->where('projectId', '[0-9]+');
 
-    // Store item dengan multiple vendors
-    Route::post('/project/{projectId}/input-item', [SupplyChainController::class, 'storeItem'])
-        ->name('input-item.store')
-        ->where('projectId', '[0-9]+');
+        Route::get('/get-procurement-items/{procurementId}', [SupplyChainController::class, 'getProcurementItems'])
+            ->name('get-procurement-items')
+            ->where('procurementId', '[0-9]+');
+        
+        // ========== VENDOR ROUTES ==========
+        Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])
+            ->name('vendor.kelola');
+        
+        Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])
+            ->name('vendor.store');
+        
+        Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])
+            ->name('vendor.form');
+        
+        Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])
+            ->name('vendor.detail');
+        
+        Route::get('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])
+            ->name('vendor.pilih');
+        
+        Route::put('/vendor/update/{id_vendor}', [SupplyChainController::class, 'updateVendor'])
+            ->name('vendor.update');
+        
+        Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])
+            ->name('vendor.simpan');
+    });
 
-    // Store Evatek items directly (supply chain use)
-    Route::post('/project/{projectId}/evatek-item', [SupplyChainController::class, 'storeEvatekItem'])
-        ->name('evatek-item.store')
-        ->where('projectId', '[0-9]+');
-
-    // AJAX - Get items untuk procurement tertentu
-    Route::get('/get-procurement-items/{procurementId}', [SupplyChainController::class, 'getProcurementItems'])
-        ->name('get-procurement-items')
-        ->where('procurementId', '[0-9]+');
+    /*
+    |--------------------------------------------------------------------------
+    | ✅ INQUIRY, NEGOTIATION, MATERIAL DELIVERY (OUTSIDE PREFIX)
+    |--------------------------------------------------------------------------
+    */
     
-    // ========== VENDOR ROUTES ==========
-    Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])
-        ->name('vendor.kelola');
+    // ===== INQUIRY & QUOTATION ROUTES =====
+    Route::post('/supply-chain/project/{projectId}/inquiry-quotation', [InquiryQuotationController::class, 'store'])
+        ->name('inquiry-quotation.store');
     
-    Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])
-        ->name('vendor.store');
+    Route::post('/supply-chain/inquiry-quotation/{inquiryQuotationId}', [InquiryQuotationController::class, 'update'])
+        ->name('inquiry-quotation.update');
     
-    Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])
-        ->name('vendor.form');
+    Route::delete('/supply-chain/inquiry-quotation/{inquiryQuotationId}', [InquiryQuotationController::class, 'delete'])
+        ->name('inquiry-quotation.delete');
     
-    Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])
-        ->name('vendor.detail');
+    Route::get('/supply-chain/inquiry-quotation/procurement/{procurementId}', [InquiryQuotationController::class, 'getByProcurement'])
+        ->name('inquiry-quotation.getByProcurement');
     
-    Route::get('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])
-        ->name('vendor.pilih');
+    // ===== NEGOTIATION ROUTES =====
+    Route::post('/supply-chain/project/{projectId}/negotiation', [NegotiationController::class, 'store'])
+        ->name('negotiation.store');
     
-    Route::put('/vendor/update/{id_vendor}', [SupplyChainController::class, 'updateVendor'])
-        ->name('vendor.update');
+    Route::post('/supply-chain/negotiation/{negotiationId}', [NegotiationController::class, 'update'])
+        ->name('negotiation.update');
     
-    Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])
-        ->name('vendor.simpan');
-});
+    Route::delete('/supply-chain/negotiation/{negotiationId}', [NegotiationController::class, 'delete'])
+        ->name('negotiation.delete');
+    
+    Route::get('/supply-chain/negotiation/procurement/{procurementId}', [NegotiationController::class, 'getByProcurement'])
+        ->name('negotiation.getByProcurement');
+    
+    // ===== MATERIAL DELIVERY ROUTES =====
+    Route::post('/supply-chain/project/{projectId}/material-delivery', [MaterialDeliveryController::class, 'store'])
+        ->name('material-delivery.store');
+    
+    Route::post('/supply-chain/material-delivery/{deliveryId}', [MaterialDeliveryController::class, 'update'])
+        ->name('material-delivery.update');
+    
+    Route::delete('/supply-chain/material-delivery/{deliveryId}', [MaterialDeliveryController::class, 'delete'])
+        ->name('material-delivery.delete');
+    
+    Route::get('/supply-chain/material-delivery/procurement/{procurementId}', [MaterialDeliveryController::class, 'getByProcurement'])
+        ->name('material-delivery.getByProcurement');
 
     /*
     |--------------------------------------------------------------------------
@@ -256,7 +289,7 @@ Route::prefix('supply-chain')->name('supply-chain.')->middleware(['auth'])->grou
         Route::get('/list-project', [DesainListProjectController::class, 'list'])
             ->name('list-project');
         
-        // Daftar Pengadaan (Item Listing) — handled by EvatekController now
+        // Daftar Pengadaan (Item Listing)
         Route::get('/project/{id}/permintaan', [EvatekController::class, 'daftarPermintaan'])
             ->name('daftar-pengadaan');
         
@@ -268,9 +301,9 @@ Route::prefix('supply-chain')->name('supply-chain.')->middleware(['auth'])->grou
             ->name('kirim-pengadaan');
         
         // ========== EVATEK ROUTES ==========
-        Route::get('/evatek/item/{item_id}', [EvatekController::class, 'review'])
+        Route::get('/evatek/item/{evatekId}', [EvatekController::class, 'review'])
             ->name('review-evatek')
-            ->where('item_id', '[0-9]+');
+            ->where('evatekId', '[0-9]+');
 
         // AJAX actions untuk Evatek
         Route::post('/evatek/save-link', [EvatekController::class, 'saveLink'])
@@ -284,6 +317,9 @@ Route::prefix('supply-chain')->name('supply-chain.')->middleware(['auth'])->grou
         
         Route::post('/evatek/revisi', [EvatekController::class, 'revise'])
             ->name('evatek.revisi');
+
+        Route::post('/evatek/save-log', [EvatekController::class, 'saveLog'])
+            ->name('evatek.save-log');
     });
 
     /*
