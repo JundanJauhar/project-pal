@@ -13,19 +13,17 @@ class CheckpointSeeder extends Seeder
     public function run(): void
     {
         $checkpoints = [
-            ['point_name' => 'Penawaran Permintaan', 'point_sequence' => 1, 'responsible_division' => 2, 'is_final' => false],
-            ['point_name' => 'Evatek', 'point_sequence' => 2, 'responsible_division' => 7, 'is_final' => false],
-            ['point_name' => 'Usulan Pengadaan / OC', 'point_sequence' => 3, 'responsible_division' => 2, 'is_final' => false],
-            ['point_name' => 'Pengesahan Kontrak', 'point_sequence' => 4, 'responsible_division' => 6, 'is_final' => false],
-            ['point_name' => 'Pengiriman Material', 'point_sequence' => 5, 'responsible_division' => 2, 'is_final' => false],
-            ['point_name' => 'Pembayaran DP', 'point_sequence' => 6, 'responsible_division' => 3, 'is_final' => false],
-            ['point_name' => 'Proses Importasi / Produksi', 'point_sequence' => 7, 'responsible_division' => 2, 'is_final' => false],
-            ['point_name' => 'Kedatangan Material', 'point_sequence' => 8, 'responsible_division' => 2, 'is_final' => false],
-            ['point_name' => 'Serah Terima Dokumen', 'point_sequence' => 9, 'responsible_division' => 2, 'is_final' => false],
-            ['point_name' => 'Inspeksi Barang', 'point_sequence' => 10, 'responsible_division' => 5, 'is_final' => false],
-            ['point_name' => 'Berita Acara / NCR', 'point_sequence' => 11, 'responsible_division' => 5, 'is_final' => false],
-            ['point_name' => 'Verifikasi Dokumen', 'point_sequence' => 12, 'responsible_division' => 4, 'is_final' => false],
-            ['point_name' => 'Pembayaran', 'point_sequence' => 13, 'responsible_division' => 3, 'is_final' => true],
+            ['point_name' => 'Permintaan Pengadaan', 'point_sequence' => 1, 'responsible_division' => 2, 'is_final' => false],
+            ['point_name' => 'Inquiry & Quotation', 'point_sequence' => 2, 'responsible_division' => 2, 'is_final' => false],
+            ['point_name' => 'Evatek', 'point_sequence' => 3, 'responsible_division' => 7, 'is_final' => false],
+            ['point_name' => 'Negotiation', 'point_sequence' => 4, 'responsible_division' => 7, 'is_final' => false],
+            ['point_name' => 'Usulan Pengadaan / OC', 'point_sequence' => 5, 'responsible_division' => 2, 'is_final' => false],
+            ['point_name' => 'Pengesahan Kontrak', 'point_sequence' => 6, 'responsible_division' => 6, 'is_final' => false],
+            ['point_name' => 'Pembayaran DP', 'point_sequence' => 7, 'responsible_division' => 2, 'is_final' => false],
+            ['point_name' => 'Pengiriman Material', 'point_sequence' => 8, 'responsible_division' => 3, 'is_final' => false],
+            ['point_name' => 'Kedatangan Material', 'point_sequence' => 9, 'responsible_division' => 2, 'is_final' => false],
+            ['point_name' => 'Verifikasi Dokumen', 'point_sequence' => 10, 'responsible_division' => 4, 'is_final' => false],
+            ['point_name' => 'Pembayaran', 'point_sequence' => 11, 'responsible_division' => 3, 'is_final' => true],
         ];
 
         foreach ($checkpoints as $checkpoint) {

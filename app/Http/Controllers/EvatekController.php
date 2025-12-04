@@ -13,34 +13,20 @@ use App\Helpers\ActivityLogger;
 class EvatekController extends Controller
 {
     /**
-     * Show Evatek review page for a selected item
+     * Show Evatek review page for a selected evatek item
+     * ✅ PERBAIKAN: Gunakan $evatekId bukan $itemId
      */
-    public function review($itemId)
+    public function review($evatekId)
     {
-        // Ambil item + relasi request + vendor + procurement
-        $item = Item::with([
-            'requestProcurement',
-            'requestProcurement.vendor',
-            'requestProcurement.procurement',
-        ])->findOrFail($itemId);
+        // ✅ Ambil EvatekItem (bukan Item)
+        $evatek = EvatekItem::with([
+            'item',
+            'vendor',
+            'procurement',
+        ])->findOrFail($evatekId);
 
-        // Get procurement_id from request_procurement
-        $procurementId = $item->requestProcurement->procurement_id;
-        $vendorId = $item->requestProcurement->vendor_id;
-
-        // Ambil atau buat evatek_items dengan composite key
-        $evatek = EvatekItem::firstOrCreate(
-            [
-                'item_id' => $itemId,
-                'procurement_id' => $procurementId,
-                'vendor_id' => $vendorId,
-            ],
-            [
-                'current_revision' => 'R0',
-                'status' => 'on_progress',
-                'current_date' => now(),
-            ]
-        );
+        // ✅ Ambil item dari relasi evatek
+        $item = $evatek->item;
 
         // Ambil revisi yang sudah ada
         $revisions = EvatekRevision::where('evatek_id', $evatek->evatek_id)
@@ -70,6 +56,10 @@ class EvatekController extends Controller
                 'revisions_count' => $revisions->count(),
             ]
         );
+        // ✅ Pastikan log tidak null
+        if ($evatek->log === null) {
+            $evatek->log = '';
+        }
 
         return view('desain.review-evatek', compact('item', 'evatek', 'revisions'));
     }
@@ -87,13 +77,17 @@ class EvatekController extends Controller
             $query->select('procurement_id')
                   ->from('procurement')
                   ->where('project_id', $projectId);
-        })->with(['item', 'vendor', 'procurement', 'revisions' => function ($query) {
-            $query->latest('revision_id');
-        }])->get();
+        })->with([
+            'item', 
+            'vendor', 
+            'procurement', 
+            'revisions' => function ($query) {
+                $query->latest('revision_id');
+            }
+        ])->get();
 
         return view('desain.daftar-permintaan', compact('project', 'evatekItems'));
     }
-
 
 
     /**
@@ -122,6 +116,20 @@ class EvatekController extends Controller
         return response()->json(['success' => true]);
     }
 
+
+    /**
+     * ✅ NEW: Save activity log to database
+     */
+    public function saveLog(Request $request)
+    {
+        $evatek = EvatekItem::findOrFail($request->evatek_id);
+
+        $evatek->update([
+            'log' => $request->log,
+        ]);
+
+        return response()->json(['success' => true]);
+    }
 
 
     /**
@@ -163,7 +171,6 @@ class EvatekController extends Controller
     }
 
 
-
     /**
      * Reject revision
      */
@@ -201,7 +208,6 @@ class EvatekController extends Controller
 
         return response()->json(['success' => true]);
     }
-
 
 
     /**

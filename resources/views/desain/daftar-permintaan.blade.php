@@ -5,7 +5,6 @@
 @push('styles')
 <style>
     .big-card {
-        /* background: #ebebeb; */
         border-radius: 18px;
         padding: 40px 50px;
         min-height: 550px;
@@ -77,7 +76,6 @@
         border-color: #002e5c;
     }
 
-    /* Status badge styling */
     .status-badge {
         padding: 6px 16px;
         border-radius: 6px;
@@ -97,11 +95,29 @@
         font-weight: 600 !important;
         font-size: 13px !important;
     }
+
+    {{-- ✅ Auto-refresh indicator --}}
+    .refresh-indicator {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 1000;
+        display: none;
+    }
+
+    .refresh-indicator.show {
+        display: block;
+    }
 </style>
 @endpush
+
 @section('content')
 <h2 class="fw-bold mb-4">Daftar Item</h2>
-
 
 <div class="row mb-4">
     <div class="col-12">
@@ -151,7 +167,7 @@
             @forelse($evatekItems as $evatek)
             <tr data-status="{{ $evatek->status }}" class="evatek-row">
                 <td style="padding: 12px 8px; text-align: left;">
-                    <a href="{{ route('desain.review-evatek', $evatek->evatek_id)}}"
+                    <a href="{{ route('desain.review-evatek', $evatek->evatek_id) }}"
                         style="text-decoration: none; color: #000; font-weight: 600;">
                         {{ $evatek->item->item_name ?? 'N/A' }}
                     </a>
