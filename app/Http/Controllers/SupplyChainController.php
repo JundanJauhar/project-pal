@@ -551,28 +551,6 @@ public function simpanVendor($procurementId, Request $request)
         }
     }
 
-
-
-    public function detailVendor(Request $request)
-    {
-        $vendorId = $request->query('id');
-
-        if (!$vendorId) {
-            return redirect()->route('supply-chain.vendor.pilih')
-                ->with('error', 'Vendor ID tidak ditemukan');
-        }
-
-        $vendor = Vendor::find($vendorId);
-
-        if (!$vendor) {
-            return redirect()->route('supply-chain.vendor.pilih')
-                ->with('error', 'Vendor tidak ditemukan');
-        }
-
-        return view('supply_chain.vendor.detail', compact('vendor'))
-            ->with('hideNavbar', true);
-    }
-
     /**
      * Store vendor baru
      */
@@ -679,44 +657,6 @@ public function simpanVendor($procurementId, Request $request)
         return $name;
     }
 
-
-            $validated = $request->validate([
-                'name_vendor'  => 'required|string|max:255',
-                'phone_number' => 'required|string|max:20',
-                'email'        => 'required|email|max:255',
-                'address'      => 'nullable|string|max:500',
-                'is_importer'  => 'nullable|boolean',
-            ]);
-
-            $vendor->update([
-                'name_vendor'  => $validated['name_vendor'],
-                'phone_number' => $validated['phone_number'],
-                'email'        => $validated['email'],
-                'address'      => $validated['address'] ?? null,
-                'is_importer'  => $request->has('is_importer') ? 1 : 0,
-            ]);
-
-            ActivityLogger::log(
-                module: 'Vendor',
-                action: 'update_vendor',
-                targetId: $vendor->id_vendor,
-                details: ['user_id' => Auth::id()]
-            );
-
-            $redirect  = $request->input('redirect', 'kelola');
-            $routeName = $redirect === 'pilih' ? 'supply-chain.vendor.pilih' : 'supply-chain.vendor.kelola';
-
-            return redirect()->route($routeName)
-                ->with('success', 'Vendor "' . $vendor->name_vendor . '" berhasil diperbarui');
-        } catch (\Exception $e) {
-            Log::error('Error updating vendor: ' . $e->getMessage());
-
-            return back()
-                ->with('error', 'Gagal memperbarui vendor: ' . $e->getMessage())
-                ->withInput();
-        }
-    }
-
     /**
      * Detail vendor
      */
@@ -746,6 +686,7 @@ public function simpanVendor($procurementId, Request $request)
         return view('supply_chain.vendor.detail', compact('vendor'))
             ->with('hideNavbar', true);
     }
+
 
     /**
      * Review project (procurement)
