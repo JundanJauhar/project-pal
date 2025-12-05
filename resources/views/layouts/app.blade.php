@@ -674,9 +674,15 @@
                     {{-- nav items placed to the left of user menu --}}
                     <ul class="navbar-nav nav-center ms-auto me-3 padding align-items-center">
                         <li class="nav-item">
+                            @if(in_array(Auth::user()->roles, ['sekretaris_direktur', 'sekretaris']))
+                            <a class="nav-link {{ request()->routeIs('sekdir.dashboard*') ? 'active' : '' }}" href="{{ route('sekdir.dashboard') }}" wire:navigate>
+                                Dashboard
+                            </a>
+                            @else
                             <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}" href="{{ route('dashboard') }}" wire:navigate>
                                 Dashboard
                             </a>
+                            @endif
                         </li>
 
                         @if(Auth::user()->roles === 'user')
@@ -697,6 +703,7 @@
                         </li>
                         @endif
 
+
                         @if(in_array(Auth::user()->roles, ['sekretaris_direksi']))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}" wire:navigate>
@@ -711,14 +718,6 @@
                             href="{{ route('desain.list-project') }}" 
                             wire:navigate>
                                 Projects
-                            </a>
-                        </li>
-                        @endif
-
-                        @if(Auth::user()->roles === 'sekretaris_direksi')
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('sekdir.approvals*') ? 'active' : '' }}" href="{{ route('sekdir.approvals') }}">
-                                Persetujuan Pengadaan
                             </a>
                         </li>
                         @endif

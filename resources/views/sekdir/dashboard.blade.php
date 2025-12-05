@@ -245,6 +245,9 @@
         </div>
     </div>
 
+
+
+    <!-- Form Section -->
     <div class="search row mb-4">
         <div class="col-12">
             <div class="card card-custom">
@@ -305,6 +308,16 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div style="position: relative; height: 600px; margin-top: 15px; overflow: hidden; border-radius: 8px;">
+        <iframe
+            src="http://localhost:3000/d/adq2brz/dashboard-tracking-pt-pal?orgId=1&from=now-6h&to=now&timezone=browser&theme=dark&panelId=2&kiosk=tv"
+            width="100%"
+            height="100%"
+            frameborder="0"
+            style="border: none; border-radius: 8px;">
+        </iframe>
     </div>
 
     {{-- ===== TABLE (dengan gaya mirip Payment) ===== --}}
@@ -405,20 +418,41 @@
         </div>
 
     </div>
+    <!-- Chart Section Project Statistics -->
+    <!-- Chart Section Project Statistics -->
 </div>
 
 @endsection
 
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    function debounce(fn, delay) {
-        let t;
-        return function() {
-            clearTimeout(t);
-            t = setTimeout(() => fn.apply(this, arguments), delay);
-        };
+    // Function to update Grafana time range
+    function updateGrafanaTime(from, to) {
+        const iframe = document.getElementById('grafanaFrame');
+        const baseUrl = 'https://jundan87.grafana.net/d-solo/jubx2zx/project-pal';
+        iframe.src = `${baseUrl}?orgId=1&from=${from}&to=${to}&panelId=2&theme=light&refresh=5s`;
     }
+
+    // Event listeners for date inputs
+    document.addEventListener('DOMContentLoaded', function() {
+        const presetRange = document.getElementById('presetRange');
+        const startDate = document.getElementById('startDate');
+        const endDate = document.getElementById('endDate');
+        const filterBtn = document.getElementById('filterBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function() {
+                presetRange.value = 'last-6-months';
+                startDate.value = '';
+                endDate.value = '';
+                updateGrafanaTime('now-6M', 'now');
+            });
+        }
+    });
+
 
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.querySelector('input[name="search"]');

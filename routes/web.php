@@ -23,6 +23,7 @@ use App\Http\Controllers\ListApprovalController;
 use App\Http\Controllers\SekdirController;
 use App\Http\Controllers\EvatekController;
 use App\Http\Controllers\VendorEvatekController;
+use Illuminate\Support\Facades\DB;
 
 
 // Redirect root → login
@@ -40,16 +41,19 @@ Route::post('/login', function (Request $request) {
 
     if (Auth::attempt($credentials, $request->boolean('remember'))) {
         $request->session()->regenerate();
+        
         // Redirect berdasarkan role
-            if (Auth::user()->roles === 'superadmin') {
-                return redirect()->route('ums.users.index'); // langsung ke UMS
-            }
-
-            return redirect()->route('dashboard');
-
-
-        // Jika vendor, arahkan ke halaman vendor
-        if (Auth::user()->roles === 'vendor') {
+        $user = Auth::user();
+        
+        if ($user->roles === 'superadmin') {
+            return redirect()->route('ums.users.index');
+        }
+        
+        if ($user->roles === 'sekretaris_direktur' || $user->roles === 'sekdir') {
+            return redirect()->route('sekdir.dashboard');
+        }
+        
+        if ($user->roles === 'vendor') {
             return redirect()->route('vendor.index');
         }
 
@@ -67,6 +71,32 @@ Route::post('/logout', function (Request $request) {
     $request->session()->regenerateToken();
     return redirect()->route('login');
 })->name('logout');
+
+Route::get('/project-stats', function () {
+    try {
+        $stats = DB::table('projects')
+            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
+            ->whereRaw('created_at >= DATE_SUB(NOW(), INTERVAL 2 MONTH)')
+            ->groupBy('month')
+            ->orderBy('month', 'ASC')
+            ->get();
+
+        return response()->json([
+            'months' => $stats->pluck('month')->toArray(),
+            'counts' => $stats->pluck('count')->toArray(),
+            'success' => true
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'success' => false
+        ], 500);
+    }
+});
+
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -134,7 +164,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/evatek', [EvatekController::class, 'index'])->name('evatek.index');
         Route::get('/evatek/create', [EvatekController::class, 'create'])->name('evatek.create');
         Route::post('/evatek/store', [EvatekController::class, 'store'])->name('evatek.store');
-        
+
         // VENDOR ROUTES - Proper route ordering
         Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])->name('vendor.kelola');
         Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])->name('vendor.store');
@@ -169,7 +199,7 @@ Route::middleware(['auth'])->group(function () {
         // ===== ROUTES QA INSPECTION =====
         Route::get('/', [InspectionController::class, 'index'])->name('index');
         Route::get('/{id}', [InspectionController::class, 'show'])->name('show');
-        
+
         // ===== ROUTES NCR REPORTS =====
         Route::get('/ncr', [InspectionController::class, 'ncrReports'])->name('ncr.index');
         Route::get('/ncr/{id}', [InspectionController::class, 'showNcr'])->name('ncr.show');
@@ -192,7 +222,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/project/{id}/permintaan', [DesainListProjectController::class, 'daftarPengadaan'])->name('daftar-pengadaan');
         Route::get('/project/{id}/pengadaan', [DesainListProjectController::class, 'formPengadaan'])->name('permintaan-pengadaan');
         Route::post('/project/{id}/pengadaan/kirim', [DesainListProjectController::class, 'kirimPengadaan'])->name('kirim-pengadaan');
-        Route::get('/evatek/item/{item_id}', [EvatekController::class, 'review']) ->name('review-evatek');
+        Route::get('/evatek/item/{item_id}', [EvatekController::class, 'review'])->name('review-evatek');
 
 
         // AJAX actions (pastikan EvatekController memiliki method saveLink, approve, reject, revisi)
@@ -211,46 +241,45 @@ Route::middleware(['auth'])->group(function () {
     */
     Route::prefix('sekdir')->name('sekdir.')->group(function () {
         Route::get('/approval', [SekdirController::class, 'approval'])->name('approval');
-        Route::get('/approvals', [SekdirController::class, 'approvals'])->name('approvals');
+        Route::get('/approval/search', [SekdirController::class, 'search'])->name('approval.search');
         Route::get('/approval-detail/{procurement_id}', [SekdirController::class, 'approvalDetail'])->name('approval-detail');
         Route::post('/approval-detail/{procurement_id}/save', [SekdirController::class, 'approvalDetailSave'])->name('approval-detail.save');
         Route::post('/approval/{projectId}', [SekdirController::class, 'approvalSubmit'])->name('approval.submit');
+        Route::get('/dashboard', [SekdirController::class, 'dashboard'])->name('dashboard');
+    });    Route::middleware(['auth'])->group(function () {
+
+        // halaman utama vendor
+        Route::get('/vendor', [VendorEvatekController::class, 'index'])
+            ->name('vendor.index');
+
+        // kompatibilitas
+        Route::redirect('/vendor/dashboard', '/vendor');
+        Route::redirect('/vendor/evatek', '/vendor');
     });
-
-Route::middleware(['auth'])->group(function () {
-
-    // halaman utama vendor
-    Route::get('/vendor', [VendorEvatekController::class, 'index'])
-        ->name('vendor.index');
-
-    // kompatibilitas
-    Route::redirect('/vendor/dashboard', '/vendor');
-    Route::redirect('/vendor/evatek', '/vendor');
-});
 
 
     // ============ DEBUG ROUTES ============
-    
+
     /**
      * Debug inspection status
      * GET /debug/inspection/{procurement_id}
      */
-    Route::get('/debug/inspection/{procurement_id}', function($procurement_id) {
+    Route::get('/debug/inspection/{procurement_id}', function ($procurement_id) {
         $procurement = \App\Models\Procurement::with([
             'requestProcurements.items.inspectionReports',
             'procurementProgress.checkpoint'
         ])->findOrFail($procurement_id);
 
         echo "<h2>Debug: " . $procurement->code_procurement . "</h2>";
-        
+
         // Items & Inspection
         echo "<h3>1️⃣  Items & Inspection Status</h3>";
         $items = $procurement->requestProcurements->flatMap->items;
         $totalItems = $items->count();
-        
+
         echo "<table border='1' cellpadding='8' style='border-collapse: collapse; margin: 10px 0;'>";
         echo "<tr style='background: #e0e0e0;'><th>Item ID</th><th>Name</th><th>Result</th><th>Inspection Date</th></tr>";
-        
+
         foreach ($items as $item) {
             $latest = $item->inspectionReports->sortByDesc('inspection_date')->first();
             $result = $latest?->result ?? '<span style="color: red;">NOT INSPECTED</span>';
@@ -270,10 +299,10 @@ Route::middleware(['auth'])->group(function () {
             $latest = $it->inspectionReports->sortByDesc('inspection_date')->first();
             return $latest?->result ?? null;
         });
-        $inspectedItems = $latestResults->filter(fn ($r) => !is_null($r))->count();
-        $passedCount = $latestResults->filter(fn ($r) => $r === 'passed')->count();
-        $failedCount = $latestResults->filter(fn ($r) => $r === 'failed')->count();
-        
+        $inspectedItems = $latestResults->filter(fn($r) => !is_null($r))->count();
+        $passedCount = $latestResults->filter(fn($r) => $r === 'passed')->count();
+        $failedCount = $latestResults->filter(fn($r) => $r === 'failed')->count();
+
         echo "<ul>";
         echo "<li>Total Items: <strong>$totalItems</strong></li>";
         echo "<li>Inspected Items: <strong>$inspectedItems</strong></li>";
@@ -283,9 +312,9 @@ Route::middleware(['auth'])->group(function () {
 
         // Status
         echo "<h3>3️⃣  Procurement Status</h3>";
-        $allPassed = $latestResults->every(fn ($r) => $r === 'passed');
-        $allFailed = $latestResults->every(fn ($r) => $r === 'failed');
-        
+        $allPassed = $latestResults->every(fn($r) => $r === 'passed');
+        $allFailed = $latestResults->every(fn($r) => $r === 'failed');
+
         if ($inspectedItems === 0) {
             $statusProc = 'BUTUH (belum inspeksi)';
             $color = 'orange';
@@ -302,22 +331,22 @@ Route::middleware(['auth'])->group(function () {
             $statusProc = 'SEDANG (mixed results)';
             $color = 'blue';
         }
-        
+
         echo "<p style='font-size: 18px; font-weight: bold; color: $color;'>Status: $statusProc</p>";
 
         // Checkpoint Progress
         echo "<h3>4️⃣  Checkpoint Progress</h3>";
         echo "<table border='1' cellpadding='8' style='border-collapse: collapse; margin: 10px 0;'>";
         echo "<tr style='background: #e0e0e0;'><th>Checkpoint</th><th>Sequence</th><th>Status</th><th>Start Date</th><th>End Date</th><th>Updated</th></tr>";
-        
+
         foreach ($procurement->procurementProgress as $progress) {
-            $statusColor = match($progress->status) {
+            $statusColor = match ($progress->status) {
                 'completed' => '#c8e6c9',
                 'in_progress' => '#bbdefb',
                 'not_started' => '#f5f5f5',
                 default => '#fff9c4'
             };
-            
+
             echo "<tr style='background: $statusColor;'>";
             echo "<td>" . $progress->checkpoint->point_name . "</td>";
             echo "<td>" . $progress->checkpoint->point_sequence . "</td>";
@@ -336,7 +365,7 @@ Route::middleware(['auth'])->group(function () {
             'procurement_id' => $procurement_id,
             'checkpoint_id' => $cp11->point_id
         ])->first() : null;
-        
+
         if (!$cp11Progress) {
             echo "<p style='color: red;'>❌ CP11 PROGRESS NOT FOUND</p>";
         } elseif ($inspectedItems === $totalItems && $cp11Progress->status === 'in_progress') {
@@ -348,25 +377,24 @@ Route::middleware(['auth'])->group(function () {
         } else {
             echo "<p style='color: blue;'>ℹ️  CP11 Status: " . $cp11Progress->status . "</p>";
         }
-        
     })->name('debug.inspection');
 
     /**
      * View recent logs
      * GET /debug/logs
      */
-    Route::get('/debug/logs', function() {
+    Route::get('/debug/logs', function () {
         $logFile = storage_path('logs/laravel.log');
         $logs = file_exists($logFile) ? file_get_contents($logFile) : 'No logs found';
-        
+
         $lines = explode("\n", $logs);
-        $filtered = array_filter($lines, function($line) {
-            return stripos($line, 'checkpoint') !== false || 
-                   stripos($line, 'inspection') !== false ||
-                   stripos($line, 'transition') !== false ||
-                   stripos($line, 'simpanVendor') !== false;
+        $filtered = array_filter($lines, function ($line) {
+            return stripos($line, 'checkpoint') !== false ||
+                stripos($line, 'inspection') !== false ||
+                stripos($line, 'transition') !== false ||
+                stripos($line, 'simpanVendor') !== false;
         });
-        
+
         echo "<h2>Recent Checkpoint/Inspection Logs</h2>";
         echo "<p><a href='" . route('debug.logs') . "'>↻ Refresh</a></p>";
         echo "<pre style='background: #1e1e1e; color: #00ff00; padding: 15px; overflow-x: auto; font-family: monospace; font-size: 12px; border-radius: 5px;'>";
@@ -380,31 +408,31 @@ Route::middleware(['auth'])->group(function () {
      * Force trigger transition
      * POST /debug/force-transition/{procurement_id}
      */
-    Route::post('/debug/force-transition/{procurement_id}', function($procurement_id) {
+    Route::post('/debug/force-transition/{procurement_id}', function ($procurement_id) {
         $procurement = \App\Models\Procurement::with('requestProcurements.items.inspectionReports')->findOrFail($procurement_id);
-        
+
         $items = $procurement->requestProcurements->flatMap->items;
         $latestResults = $items->map(function ($it) {
             $latest = $it->inspectionReports->sortByDesc('inspection_date')->first();
             return $latest?->result ?? null;
         });
-        
-        $allPassed = $latestResults->every(fn ($r) => $r === 'passed');
-        $allFailed = $latestResults->every(fn ($r) => $r === 'failed');
-        
+
+        $allPassed = $latestResults->every(fn($r) => $r === 'passed');
+        $allFailed = $latestResults->every(fn($r) => $r === 'failed');
+
         if (!$allPassed && !$allFailed) {
             return response()->json(['error' => 'Not all items have consistent inspection result'], 422);
         }
-        
+
         $statusProc = $allPassed ? 'lolos' : 'gagal';
-        
+
         \Log::info("🔨 [DEBUG] FORCE TRANSITION - Procurement: {$procurement_id}, Status: {$statusProc}");
-        
+
         $service = new \App\Services\CheckpointTransitionService($procurement);
         $result = $service->transitionInspection($statusProc);
-        
+
         \Log::info("🔨 [DEBUG] FORCE TRANSITION RESULT: " . json_encode($result));
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Transition triggered manually',
@@ -418,5 +446,5 @@ Route::middleware(['auth'])->group(function () {
     // -------------------------------------------------------------
     //  UMS ROUTES (DILETAKKAN DI LUAR, tetapi tetap pakai middleware auth)
     // -------------------------------------------------------------
-    require __DIR__.'/ums.php';
+    require __DIR__ . '/ums.php';
 });

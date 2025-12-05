@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 use App\Services\CheckpointTransitionService;
 
 class SupplyChainController extends Controller
@@ -190,19 +191,40 @@ class SupplyChainController extends Controller
                 'is_importer' => 'nullable|boolean',
             ]);
 
-            $vendor->update([
-                'name_vendor' => $validated['name_vendor'],
-                'phone_number' => $validated['phone_number'],
-                'email' => $validated['email'],
-                'address' => $validated['address'] ?? null,
-                'is_importer' => $request->has('is_importer') ? 1 : 0,
-            ]);
+            DB::beginTransaction();
 
-            $redirect = $request->input('redirect', 'kelola');
-            $routeName = $redirect === 'pilih' ? 'supply-chain.vendor.pilih' : 'supply-chain.vendor.kelola';
+            try {
+                $vendor->update([
+                    'name_vendor' => $validated['name_vendor'],
+                    'phone_number' => $validated['phone_number'],
+                    'email' => $validated['email'],
+                    'address' => $validated['address'] ?? null,
+                    'is_importer' => $request->has('is_importer') ? 1 : 0,
+                ]);
 
-            return redirect()->route($routeName)
-                ->with('success', 'Vendor "' . $vendor->name_vendor . '" berhasil diperbarui');
+                // Update user email jika nama vendor berubah
+                $user = \App\Models\User::where('vendor_id', $vendor->id_vendor)->first();
+                if ($user) {
+                    $emailPrefix = $this->generateEmailPrefix($validated['name_vendor']);
+                    $newEmail = $emailPrefix . '@pal.com';
+                    
+                    $user->update([
+                        'email' => $newEmail,
+                        'name' => $validated['name_vendor'],
+                    ]);
+                }
+
+                DB::commit();
+
+                $redirect = $request->input('redirect', 'kelola');
+                $routeName = $redirect === 'pilih' ? 'supply-chain.vendor.pilih' : 'supply-chain.vendor.kelola';
+
+                return redirect()->route($routeName)
+                    ->with('success', 'Vendor "' . $vendor->name_vendor . '" berhasil diperbarui' . ($user ? '. Email akun diupdate menjadi: ' . $newEmail : ''));
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
         } catch (\Exception $e) {
             Log::error('Error updating vendor: ' . $e->getMessage());
 
@@ -276,13 +298,27 @@ class SupplyChainController extends Controller
                     'legal_status' => 'pending',
                 ]);
 
+                // Generate email untuk user vendor (tanpa spasi, tanpa PT/CV/dll)
+                $emailPrefix = $this->generateEmailPrefix($validated['name_vendor']);
+                $userEmail = $emailPrefix . '@pal.com';
+
+                // Buat user account untuk vendor
+                \App\Models\User::create([
+                    'vendor_id' => $idVendor,
+                    'email' => $userEmail,
+                    'name' => $validated['name_vendor'],
+                    'password' => Hash::make('password'), // Default password
+                    'roles' => 'vendor',
+                    'status' => 'active',
+                ]);
+
                 DB::commit();
 
                 $redirect = $request->input('redirect', 'kelola');
                 $routeName = $redirect === 'pilih' ? 'supply-chain.vendor.pilih' : 'supply-chain.vendor.kelola';
 
                 return redirect()->route($routeName)
-                    ->with('success', 'Vendor "' . $vendor->name_vendor . '" berhasil ditambahkan dengan ID: ' . $idVendor);
+                    ->with('success', 'Vendor "' . $vendor->name_vendor . '" berhasil ditambahkan dengan ID: ' . $idVendor . '. Akun login dibuat dengan email: ' . $userEmail . ' (password: password)');
             } catch (\Exception $e) {
                 DB::rollBack();
                 throw $e;
@@ -298,6 +334,27 @@ class SupplyChainController extends Controller
                 ->with('error', 'Gagal menambahkan vendor: ' . $e->getMessage())
                 ->withInput();
         }
+    }
+
+    /**
+     * Generate email prefix from vendor name
+     * Removes spaces, PT/CV/UD prefixes, and special characters
+     */
+    private function generateEmailPrefix($vendorName)
+    {
+        // Ubah nama ke lowercase
+        $name = strtolower($vendorName);
+
+        // Hapus prefix PT, CV, UD, dll (dengan atau tanpa titik)
+        $name = preg_replace('/^(pt\.?|cv\.?|ud\.?|pd\.?|fa\.?|toko\.?)\s*/i', '', $name);
+
+        // Hapus semua spasi
+        $name = str_replace(' ', '', $name);
+
+        // Hapus semua karakter selain huruf dan angka
+        $name = preg_replace('/[^a-z0-9]/', '', $name);
+
+        return $name;
     }
 
 
