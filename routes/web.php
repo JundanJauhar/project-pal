@@ -118,6 +118,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/procurements/{id}/progress', [ProcurementController::class, 'getProgress'])->name('procurements.progress');
     Route::post('/procurements/{id}/progress', [ProcurementController::class, 'updateProgress'])->name('procurements.update-progress');
     Route::resource('procurements', ProcurementController::class, ['only' => ['index', 'show', 'create', 'store', 'update']]);
+    // Menyelesaikan stage aktif dan lanjut ke checkpoint berikutnya
+    Route::post('/procurement/{id}/complete-stage', [ProcurementController::class, 'completeStage'])->name('procurement.completeStage');
+
+
 
     // User list (user division)
     Route::get('/user/list', function () {
