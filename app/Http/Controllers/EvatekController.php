@@ -72,18 +72,13 @@ class EvatekController extends Controller
         $project = Project::findOrFail($projectId);
 
         // Get evatek items for this project through procurement
-        $evatekItems = EvatekItem::whereIn('procurement_id', function ($query) use ($projectId) {
-                $query->select('procurement_id')
-                      ->from('procurement')
-                      ->where('project_id', $projectId);
-            })->with([
-                'item',
-                'vendor',
-                'procurement',
-                'revisions' => function ($query) {
-                    $query->latest('revision_id');
-                }
-            ])->get();
+        $evatekItems = EvatekItem::with(['item', 'vendor', 'latestRevision'])
+        ->whereHas('item.requestProcurement', function ($q) use ($projectId) {
+            $q->where('project_id', $projectId);
+        })
+        ->orderBy('item_id')
+        ->get();
+
 
         return view('desain.daftar-permintaan', compact('project', 'evatekItems'));
     }
@@ -123,70 +118,78 @@ class EvatekController extends Controller
     }
 
     public function approve(Request $request)
-    {
-        $revision = EvatekRevision::findOrFail($request->revision_id);
+{
+    $revision = EvatekRevision::findOrFail($request->revision_id);
 
-        if (!$revision->evatek_id) {
-            return response()->json(['success' => false, 'message' => 'Revision not linked to evatek item'], 400);
-        }
-
-        $revision->update([
-            'status'      => 'approve',
-            'approved_at' => now(),
-        ]);
-
-        $evatek = EvatekItem::findOrFail($revision->evatek_id);
-        $evatek->update([
-            'current_revision' => $revision->revision_code,
-            'status'           => 'approve',
-            'current_date'     => now()->toDateString(),
-        ]);
-
-        ActivityLogger::log(
-            module: 'Evatek',
-            action: 'approve_revision',
-            targetId: $revision->revision_id,
-            details: [
-                'user_id'       => Auth::id(),
-                'revision_code' => $revision->revision_code,
-            ]
-        );
-
-        return response()->json(['success' => true]);
+    if (!$revision->evatek_id) {
+        return response()->json(['success' => false, 'message' => 'Revision not linked to evatek item'], 400);
     }
+
+    $revision->update([
+        'status'      => 'approve',
+        'approved_at' => now(),
+    ]);
+
+    $evatek = EvatekItem::findOrFail($revision->evatek_id);
+    $evatek->update([
+        'current_revision' => $revision->revision_code,
+        'status'           => 'approve',
+        'current_date'     => now()->toDateString(),
+    ]);
+
+    // 🔥 Auto check stage completion
+    $this->autoCompleteEvatekStage($evatek->procurement_id);
+
+    ActivityLogger::log(
+        module: 'Evatek',
+        action: 'approve_revision',
+        targetId: $revision->revision_id,
+        details: [
+            'user_id'       => Auth::id(),
+            'revision_code' => $revision->revision_code,
+        ]
+    );
+
+    return response()->json(['success' => true]);
+}
+
 
     public function reject(Request $request)
-    {
-        $revision = EvatekRevision::findOrFail($request->revision_id);
+{
+    $revision = EvatekRevision::findOrFail($request->revision_id);
 
-        if (!$revision->evatek_id) {
-            return response()->json(['success' => false, 'message' => 'Revision not linked to evatek item'], 400);
-        }
-
-        $revision->update([
-            'status'          => 'not approve',
-            'not_approved_at' => now(),
-        ]);
-
-        $evatek = EvatekItem::findOrFail($revision->evatek_id);
-        $evatek->update([
-            'current_revision' => $revision->revision_code,
-            'status'           => 'not_approve',
-            'current_date'     => now()->toDateString(),
-        ]);
-
-        ActivityLogger::log(
-            module: 'Evatek',
-            action: 'reject_revision',
-            targetId: $revision->revision_id,
-            details: [
-                'user_id'       => Auth::id(),
-                'revision_code' => $revision->revision_code,
-            ]
-        );
-
-        return response()->json(['success' => true]);
+    if (!$revision->evatek_id) {
+        return response()->json(['success' => false, 'message' => 'Revision not linked to evatek item'], 400);
     }
+
+    $revision->update([
+        'status'          => 'not approve',
+        'not_approved_at' => now(),
+    ]);
+
+    $evatek = EvatekItem::findOrFail($revision->evatek_id);
+    $evatek->update([
+        'current_revision' => $revision->revision_code,
+        'status'           => 'not_approve',
+        'current_date'     => now()->toDateString(),
+    ]);
+
+    // 🔥 Auto check stage completion
+    $this->autoCompleteEvatekStage($evatek->procurement_id);
+
+    ActivityLogger::log(
+        module: 'Evatek',
+        action: 'reject_revision',
+        targetId: $revision->revision_id,
+        details: [
+            'user_id'       => Auth::id(),
+            'revision_code' => $revision->revision_code,
+        ]
+    );
+
+    return response()->json(['success' => true]);
+}
+
 
     public function revise(Request $request)
     {
@@ -234,4 +237,39 @@ class EvatekController extends Controller
             'new_revision' => $nextRev,
         ]);
     }
+
+    /**
+ * Cek apakah semua EvatekItem dalam 1 procurement sudah selesai.
+ * Jika sudah, otomatis menyelesaikan stage EVATEK dan pindah ke stage berikutnya.
+ */
+private function autoCompleteEvatekStage($procurementId)
+{
+    $evatekItems = EvatekItem::where('procurement_id', $procurementId)->get();
+
+    // Jika masih ada item yang status-nya on_progress → belum selesai
+    $unfinished = $evatekItems->where('status', 'on_progress')->count();
+
+    if ($unfinished > 0) {
+        return; // belum bisa lanjut
+    }
+
+    // Semua sudah selesai → auto complete stage EVATEK
+    $procurement = $evatekItems->first()->procurement;
+
+    $service = new \App\Services\CheckpointTransitionService($procurement);
+    $result  = $service->transition(2, [
+        'notes' => 'Stage EVATEK otomatis selesai setelah seluruh item approve/reject.'
+    ]);
+
+    ActivityLogger::log(
+        module: 'Evatek',
+        action: 'auto_complete_evatek_stage',
+        targetId: $procurementId,
+        details: [
+            'user_id' => Auth::id(),
+            'success' => $result['success'] ?? false,
+        ]
+    );
+}
+
 }

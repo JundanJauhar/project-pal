@@ -21,116 +21,142 @@ class CheckpointTransitionService
         $this->procurement = $procurement;
     }
 
+    /**
+     * Pindah dari satu checkpoint (berdasarkan sequence) ke checkpoint berikutnya.
+     */
     public function transition(int $fromCheckpointSequence, array $data = []): array
     {
-        $this->data = $data;
+        $this->data   = $data;
         $this->errors = [];
 
         try {
             DB::beginTransaction();
 
+            // Checkpoint asal (wajib ada)
             $fromCheckpoint = Checkpoint::where('point_sequence', $fromCheckpointSequence)
                 ->firstOrFail();
 
+            // Checkpoint tujuan = sequence + 1 (jika ada)
             $toCheckpointSequence = $fromCheckpointSequence + 1;
             $toCheckpoint = Checkpoint::where('point_sequence', $toCheckpointSequence)->first();
 
+            // Validasi sebelum pindah
             $this->validateTransitionPreconditions($fromCheckpoint, $toCheckpoint);
 
             if (!empty($this->errors)) {
+                DB::rollBack();
+
                 return [
                     'success' => false,
-                    'errors' => $this->errors,
+                    'errors'  => $this->errors,
                     'message' => implode('; ', $this->errors),
                 ];
             }
 
+            // Tandai checkpoint sekarang sebagai completed
             $this->completeCheckpoint($fromCheckpoint);
 
+            // Jika masih ada checkpoint berikutnya → buat / update progress-nya
             if ($toCheckpoint) {
                 $this->initializeCheckpoint($toCheckpoint);
             } else {
+                // Kalau tidak ada lagi → procurement selesai
                 $this->markProcurementCompleted();
             }
 
+            // Aksi tambahan + notifikasi
             $this->executePostTransitionActions($fromCheckpoint, $toCheckpoint);
             $this->notifyStakeholders($fromCheckpoint, $toCheckpoint);
 
             DB::commit();
 
             return [
-                'success' => true,
-                'message' => $this->getTransitionMessage($fromCheckpoint, $toCheckpoint),
+                'success'         => true,
+                'message'         => $this->getTransitionMessage($fromCheckpoint, $toCheckpoint),
                 'from_checkpoint' => $fromCheckpoint->point_name,
-                'to_checkpoint' => $toCheckpoint?->point_name ?? 'COMPLETION',
+                'to_checkpoint'   => $toCheckpoint?->point_name ?? 'COMPLETION',
             ];
-
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Checkpoint transition failed: ' . $e->getMessage());
 
             return [
                 'success' => false,
-                'errors' => [$e->getMessage()],
+                'errors'  => [$e->getMessage()],
                 'message' => 'Gagal melakukan perpindahan checkpoint: ' . $e->getMessage(),
             ];
         }
     }
 
+    /**
+     * Mapping validasi 11 checkpoint:
+     *
+     * 1  Permintaan Pengadaan
+     * 2  Inquiry & Quotation
+     * 3  Evatek
+     * 4  Negotiation
+     * 5  Usulan Pengadaan / OC      → Supply Chain kelola vendor
+     * 6  Pengesahan Kontrak         → Sekretaris: kontrak disahkan (contract_signed)
+     * 7  Pembayaran DP              → Accounting: bayar DP
+     * 8  Pengiriman Material        → Supply Chain: tabel pengiriman material
+     * 9  Kedatangan Material        → QA: inspeksi barang
+     * 10 Verifikasi Dokumen         → Accounting
+     * 11 Pembayaran                 → Treasury: pembayaran final
+     */
     protected function validateTransitionPreconditions(Checkpoint $fromCheckpoint, ?Checkpoint $toCheckpoint): void
     {
         $sequence = $fromCheckpoint->point_sequence;
 
         switch ($sequence) {
-
-            case 1: // Penawaran → Inquiry & Quotation
+            case 1: // 1 → 2
                 $this->validateCheckpoint1To2();
                 break;
 
-            case 2: // Inquiry & Quotation → Evatek
+            case 2: // 2 → 3
                 $this->validateCheckpoint2To3();
                 break;
 
-            case 3: // Evatek → Negotiation
+            case 3: // 3 → 4
                 $this->validateCheckpoint3To4();
                 break;
 
-            case 4: // Negotiation → Usulan Pengadaan
+            case 4: // 4 → 5
                 $this->validateCheckpoint4To5();
                 break;
 
-            case 5: // Usulan Pengadaan → Pengesahan Kontrak
+            case 5: // 5 → 6 (Usulan Pengadaan / OC → Pengesahan Kontrak)
                 $this->validateCheckpoint5To6();
                 break;
 
-            case 6: // Pengesahan Kontrak → Pembayaran DP
+            case 6: // 6 → 7 (Pengesahan Kontrak → Pembayaran DP)
                 $this->validateCheckpoint6To7();
                 break;
 
-            case 7: // Pembayaran DP → Pengiriman Material
+            case 7: // 7 → 8 (Pembayaran DP → Pengiriman Material)
                 $this->validateCheckpoint7To8();
                 break;
 
-            case 8: // Pengiriman Material → Kedatangan Material
+            case 8: // 8 → 9 (Pengiriman Material → Kedatangan Material)
                 $this->validateCheckpoint8To9();
                 break;
 
-            case 9: // Kedatangan Material → Verifikasi Dokumen
+            case 9: // 9 → 10 (Kedatangan Material → Verifikasi Dokumen)
                 $this->validateCheckpoint9To10();
                 break;
 
-            case 10: // Verifikasi Dokumen → Pembayaran
+            case 10: // 10 → 11 (Verifikasi Dokumen → Pembayaran)
                 $this->validateCheckpoint10To11();
                 break;
-            
-            case 11: // Pemabayaran → COMPLETION
-                $this->validateCheckpoint10ToCompletion();
+
+            case 11: // 11 → COMPLETION (Pembayaran → selesai)
+                $this->validateCheckpoint11ToCompletion();
                 break;
         }
     }
 
     // ===================== VALIDATION RULES =====================
 
+    /** 1 → 2: minimal ada 1 request procurement */
     protected function validateCheckpoint1To2(): void
     {
         if (!$this->procurement->requestProcurements()->exists()) {
@@ -138,115 +164,92 @@ class CheckpointTransitionService
         }
     }
 
+    /** 2 → 3: bisa diisi validasi Inquiry & Quotation kalau dibutuhkan */
     protected function validateCheckpoint2To3(): void
     {
-        // if (empty($this->data['evaluation_notes'])) {
-        //     $this->errors[] = 'Catatan evaluasi teknis wajib diisi';
+        // Contoh (kalau nanti mau di-aktifkan):
+        // if (!$this->procurement->inquiryQuotations()->exists()) {
+        //     $this->errors[] = 'Minimal harus ada 1 Inquiry & Quotation.';
         // }
     }
 
+    /** 3 → 4: Evatek → Negotiation */
     protected function validateCheckpoint3To4(): void
     {
-        
+        // Bisa diisi validasi bahwa semua Evatek yang wajib sudah approved, dsb.
     }
 
-
+    /** 4 → 5: Negotiation → Usulan Pengadaan / OC */
     protected function validateCheckpoint4To5(): void
     {
-        if (empty($this->data['contract_signed'])) {
-            $this->errors[] = 'Kontrak harus ditandatangani';
-        }
+        // Untuk saat ini tidak ada syarat khusus.
+        // Kalau mau, bisa dicek minimal ada 1 negotiation record.
     }
 
+    /** ✅ 5 → 6: Usulan Pengadaan / OC → Pengesahan Kontrak (WAJIB vendor) */
     protected function validateCheckpoint5To6(): void
-    {
-        if (empty($this->data['delivery_note'])) {
-            $this->errors[] = 'Nota pengiriman wajib dilampirkan';
-        }
-    }
-
-    protected function validateCheckpoint6To7(): void
     {
         if (!$this->procurement->requestProcurements()->whereNotNull('vendor_id')->exists()) {
             $this->errors[] = 'Vendor wajib dipilih sebelum melanjutkan ke Pengesahan Kontrak';
         }
+    }
 
-        $payment = $this->procurement->paymentSchedules()
-            ->where('payment_type', 'dp')
-            ->where('status', 'paid')
-            ->first();
-
-        if (!$payment) {
-            $this->errors[] = 'Pembayaran DP belum dikonfirmasi';
+    /** ✅ 6 → 7: Pengesahan Kontrak → Pembayaran DP (WAJIB kontrak disahkan) */
+    protected function validateCheckpoint6To7(): void
+    {
+        if (empty($this->data['contract_signed'])) {
+            $this->errors[] = 'Kontrak harus ditandatangani sebelum melanjutkan ke Pembayaran DP';
         }
     }
 
+    /** 7 → 8: Pembayaran DP → Pengiriman Material (opsional: cek DP sudah paid) */
     protected function validateCheckpoint7To8(): void
     {
-        if (empty($this->data['target_arrival_date'])) {
-            $this->errors[] = 'Tanggal target kedatangan wajib diisi';
-        }
+        // Kalau modul PaymentSchedule sudah jalan, validasi bisa diaktifkan:
+        // $payment = $this->procurement->paymentSchedules()
+        //     ->where('payment_type', 'dp')
+        //     ->where('status', 'paid')
+        //     ->first();
+        //
+        // if (!$payment) {
+        //     $this->errors[] = 'Pembayaran DP belum dikonfirmasi';
+        // }
     }
 
+    /** 8 → 9: Pengiriman Material → Kedatangan Material */
     protected function validateCheckpoint8To9(): void
     {
-        if (empty($this->data['goods_receipt_number'])) {
-            $this->errors[] = 'Nomor bukti penerimaan barang wajib diisi';
+        if (empty($this->data['delivery_note'])) {
+            // Bisa diganti sesuai field yang kamu pakai di tabel pengiriman material
+            $this->errors[] = 'Data pengiriman material belum lengkap (delivery note kosong)';
         }
     }
 
+    /** 9 → 10: Kedatangan Material → Verifikasi Dokumen (QA inspeksi) */
     protected function validateCheckpoint9To10(): void
     {
-        if (empty($this->data['documents_received'])) {
-            $this->errors[] = 'Konfirmasi penerimaan dokumen wajib diisi';
+        if (empty($this->data['inspection_status'])) {
+            $this->errors[] = 'Status inspeksi material wajib diisi sebelum verifikasi dokumen';
         }
     }
 
+    /** 10 → 11: Verifikasi Dokumen → Pembayaran */
     protected function validateCheckpoint10To11(): void
     {
-        if (empty($this->data['inspection_status'])) {
-            $this->errors[] = 'Status inspeksi wajib diisi';
-        }
-
-        if ($this->data['inspection_status'] === 'ncr' && empty($this->data['ncr_notes'])) {
-            $this->errors[] = 'Jika ada NCR, catatan wajib diisi';
-        }
-    }
-
-    protected function validateCheckpoint11To12(): void
-    {
-        if (empty($this->data['berita_acara_number'])) {
-            $this->errors[] = 'Nomor Berita Acara wajib diisi';
-        }
-    }
-
-    protected function validateCheckpoint12To13(): void
-    {
-        if (!Auth::user() || Auth::user()->roles !== 'accounting') {
-            $this->errors[] = 'Hanya Accounting yang dapat verifikasi dokumen';
-        }
-
         if (empty($this->data['verification_notes'])) {
-            $this->errors[] = 'Catatan verifikasi wajib diisi';
-        }
-
-        $payment = $this->procurement->paymentSchedules()
-            ->where('payment_type', 'final')
-            ->first();
-
-        if (!$payment) {
-            $this->errors[] = 'Payment schedule final belum dibuat';
+            $this->errors[] = 'Catatan verifikasi dokumen wajib diisi';
         }
     }
 
-    protected function validateCheckpoint13ToCompletion(): void
+    /** 11 → COMPLETION: Pembayaran final oleh Treasury */
+    protected function validateCheckpoint11ToCompletion(): void
     {
         if (!Auth::user() || Auth::user()->roles !== 'treasury') {
-            $this->errors[] = 'Hanya Treasury yang dapat memproses pembayaran';
+            $this->errors[] = 'Hanya Treasury yang dapat memproses pembayaran final';
         }
 
         if (empty($this->data['payment_date'])) {
-            $this->errors[] = 'Tanggal pembayaran wajib diisi';
+            $this->errors[] = 'Tanggal pembayaran final wajib diisi';
         }
 
         $payment = $this->procurement->paymentSchedules()
@@ -255,7 +258,7 @@ class CheckpointTransitionService
             ->first();
 
         if (!$payment) {
-            $this->errors[] = 'Pembayaran final belum dikonfirmasi';
+            $this->errors[] = 'Pembayaran final belum dikonfirmasi di sistem';
         }
     }
 
@@ -274,11 +277,11 @@ class CheckpointTransitionService
                 'checkpoint_id'  => $checkpoint->point_id,
             ],
             [
-                'status'      => 'completed',
-                'note'        => $this->data['notes'] ?? $checkpoint->point_name . ' selesai',
-                'user_id'     => Auth::id(),
-                'start_date'  => $progress?->start_date ?? now(),
-                'end_date'    => now(),
+                'status'     => 'completed',
+                'note'       => $this->data['notes'] ?? $checkpoint->point_name . ' selesai',
+                'user_id'    => Auth::id(),
+                'start_date' => $progress?->start_date ?? now(),
+                'end_date'   => now(),
             ]
         );
     }
@@ -314,24 +317,31 @@ class CheckpointTransitionService
 
         switch ($fromCheckpoint->point_sequence) {
             case 1:
+                // setelah Permintaan Pengadaan selesai
                 break;
 
             case 6:
+                // setelah Pengesahan Kontrak selesai
                 break;
 
             case 7:
+                // setelah Pembayaran DP selesai
+                break;
+
+            case 10:
+                // setelah Verifikasi Dokumen selesai
                 break;
 
             case 11:
-                break;
-
-            case 12:
-                $this->actionAfterCheckpoint12();
+                // setelah Pembayaran final selesai
                 break;
         }
     }
 
-    protected function actionAfterCheckpoint12(): void
+    /**
+     * Contoh aksi tambahan otomatis setelah verifikasi dokumen (jika mau gunakan).
+     */
+    protected function actionAfterCheckpoint10(): void
     {
         $existingPayment = $this->procurement->paymentSchedules()
             ->where('payment_type', 'final')
@@ -339,7 +349,7 @@ class CheckpointTransitionService
 
         if (!$existingPayment) {
             $amount = $this->procurement->requestProcurements
-                ->flatMap(fn($rp) => $rp->items)
+                ->flatMap(fn ($rp) => $rp->items)
                 ->sum('total_price');
 
             \App\Models\PaymentSchedule::create([
@@ -362,29 +372,30 @@ class CheckpointTransitionService
         if (!$fromCheckpoint) return;
 
         switch ($fromCheckpoint->point_sequence) {
-
-            case 1:
+            case 1: // baru selesai Permintaan Pengadaan
                 $this->notifyDivision(7, 'Evatek dimulai', 'Procurement siap evaluasi teknis');
                 break;
 
-            case 6:
+            case 6: // selesai Pengesahan Kontrak → info ke Accounting soal DP
                 $this->notifyDivision(3, 'DP Payment Ready', 'Pembayaran DP siap diproses');
                 break;
 
-            case 12:
-                $this->notifyDivision(4, 'Verifikasi Dokumen', 'Procurement siap diverifikasi Accounting');
+            case 10: // selesai Verifikasi Dokumen → info ke Treasury
+                $this->notifyDivision(4, 'Verifikasi Dokumen Selesai', 'Procurement siap diproses pembayaran final');
                 break;
 
-            case 13:
-                $this->notifyCheckpoint13Complete();
+            case 11: // selesai Pembayaran final
+                $this->notifyCheckpoint11Complete();
                 break;
         }
     }
 
-    protected function notifyCheckpoint13Complete(): void
+    protected function notifyCheckpoint11Complete(): void
     {
-        $this->notifyDivision(3, 'Pembayaran Final', 'Procurement siap pembayaran final');
+        // Info ke Accounting bahwa pembayaran final sudah dilakukan
+        $this->notifyDivision(3, 'Pembayaran Final', 'Pembayaran final untuk procurement telah diproses');
 
+        // Broadcast ke beberapa divisi terkait bahwa procurement selesai
         $divisions = [2, 3, 4, 5, 6, 7];
         foreach ($divisions as $divisionId) {
             $this->notifyDivision($divisionId, 'Procurement Selesai', 'Procurement telah selesai diproses');
@@ -393,7 +404,7 @@ class CheckpointTransitionService
 
     protected function notifyDivision(int $divisionId, string $title, string $message): void
     {
-        $users = \App\Models\User::whereHas('division', fn($q) => 
+        $users = \App\Models\User::whereHas('division', fn ($q) =>
             $q->where('division_id', $divisionId)
         )->get();
 
@@ -415,42 +426,52 @@ class CheckpointTransitionService
     protected function getTransitionMessage(?Checkpoint $from, ?Checkpoint $to): string
     {
         if (!$from) return 'Checkpoint transition failed';
-        if (!$to) return 'Procurement selesai diproses';
+        if (!$to)   return 'Procurement selesai diproses';
 
         return "Berhasil berpindah dari '{$from->point_name}' ke '{$to->point_name}'";
     }
 
+    /**
+     * Ambil checkpoint yang sedang aktif (in_progress) atau terakhir yang completed.
+     */
     public function getCurrentCheckpoint(): ?Checkpoint
-{
-    // 1. Cari checkpoint yang status = in_progress
-    $inProgress = $this->procurement->procurementProgress()
-        ->where('status', 'in_progress')
-        ->with('checkpoint')
-        ->first();
+    {
+        // 1. Cari yang in_progress
+        $inProgress = $this->procurement->procurementProgress()
+            ->where('status', 'in_progress')
+            ->with('checkpoint')
+            ->first();
 
-    if ($inProgress) {
-        return $inProgress->checkpoint;
+        if ($inProgress) {
+            return $inProgress->checkpoint;
+        }
+
+        // 2. Kalau tidak ada, ambil yang terakhir completed
+        $completed = $this->procurement->procurementProgress()
+            ->where('status', 'completed')
+            ->with('checkpoint')
+            ->orderBy('checkpoint_id', 'desc')
+            ->first();
+
+        return $completed?->checkpoint;
     }
 
-    // 2. Kalau tidak ada yang in_progress, ambil yang terakhir completed
-    $completed = $this->procurement->procurementProgress()
-        ->where('status', 'completed')
-        ->with('checkpoint')
-        ->orderBy('checkpoint_id', 'desc')
-        ->first();
-
-    return $completed?->checkpoint;
-}
-
-
+    /**
+     * Checkpoint berikutnya dari posisi sekarang.
+     */
     public function getNextCheckpoint(): ?Checkpoint
     {
         $current = $this->getCurrentCheckpoint();
-        if (!$current) return Checkpoint::where('point_sequence', 1)->first();
+        if (!$current) {
+            return Checkpoint::where('point_sequence', 1)->first();
+        }
 
         return Checkpoint::where('point_sequence', $current->point_sequence + 1)->first();
     }
 
+    /**
+     * Persentase progress berdasarkan jumlah checkpoint completed.
+     */
     public function getProgressPercentage(): int
     {
         $total = Checkpoint::count();
@@ -463,23 +484,22 @@ class CheckpointTransitionService
         return round(($completed / $total) * 100);
     }
 
+    /**
+     * Selesaikan checkpoint aktif sekarang dan lanjut ke checkpoint berikutnya.
+     */
     public function completeCurrentAndMoveNext(?string $note = null, array $extraData = []): array
-{
-    // 1. Cari checkpoint yang sedang aktif (in_progress)
-    $current = $this->getCurrentCheckpoint();
+    {
+        $current = $this->getCurrentCheckpoint();
 
-    if (!$current) {
-        return [
-            'success' => false,
-            'message' => 'Tidak ada checkpoint aktif untuk dipindahkan.',
-        ];
+        if (!$current) {
+            return [
+                'success' => false,
+                'message' => 'Tidak ada checkpoint aktif untuk dipindahkan.',
+            ];
+        }
+
+        $data = array_merge(['notes' => $note], $extraData);
+
+        return $this->transition($current->point_sequence, $data);
     }
-
-    // 2. Gabungkan note + data tambahan untuk dikirim ke transition()
-    $data = array_merge(['notes' => $note], $extraData);
-
-    // 3. Panggil transition() berdasarkan sequence checkpoint sekarang
-    return $this->transition($current->point_sequence, $data);
-}
-
 }

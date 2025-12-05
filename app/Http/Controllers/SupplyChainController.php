@@ -408,52 +408,66 @@ class SupplyChainController extends Controller
     }
 
     /**
-     * Simpan vendor terpilih untuk procurement
-     */
-    public function simpanVendor($procurementId, Request $request)
-    {
-        $validated = $request->validate([
-            'vendor_id' => 'required|exists:vendors,id_vendor',
+ * Simpan vendor terpilih untuk procurement
+ */
+public function simpanVendor($procurementId, Request $request)
+{
+    $validated = $request->validate([
+        'vendor_id' => 'required|exists:vendors,id_vendor',
+    ]);
+
+    $procurement = Procurement::findOrFail($procurementId);
+    $vendor      = Vendor::findOrFail($validated['vendor_id']);
+
+    // Ambil satu RequestProcurement (kalau sudah ada)
+    $existingRequest = RequestProcurement::where('procurement_id', $procurementId)->first();
+
+    if ($existingRequest) {
+        $existingRequest->update([
+            'vendor_id'      => $validated['vendor_id'],
+            'request_status' => 'submitted',
         ]);
-
-        $procurement = Procurement::findOrFail($procurementId);
-        $vendor      = Vendor::findOrFail($validated['vendor_id']);
-
-        $existingRequest = RequestProcurement::where('procurement_id', $procurementId)->first();
-
-        if ($existingRequest) {
-            $existingRequest->update([
-                'vendor_id'      => $validated['vendor_id'],
-                'request_status' => 'submitted',
-            ]);
-        } else {
-            RequestProcurement::create([
-                'procurement_id' => $procurementId,
-                'vendor_id'      => $validated['vendor_id'],
-                'request_name'   => "Request untuk {$procurement->name_procurement}",
-                'department_id'  => auth()->user()->department_id,
-                'request_status' => 'submitted',
-                'created_date'   => now(),
-                'deadline_date'  => $procurement->end_date,
-            ]);
-        }
-
-        ActivityLogger::log(
-            module: 'Vendor',
-            action: 'select_vendor',
-            targetId: $procurement->procurement_id,
-            details: [
-                'user_id'   => Auth::id(),
-                'vendor_id' => $validated['vendor_id'],
-            ]
-        );
-
-        // Panggil service untuk pindah checkpoint otomatis
-        $transition = new CheckpointTransitionService($procurement);
-        $transition->completeCurrentAndMoveNext("Vendor {$vendor->name_vendor} dipilih");
-
-        return redirect()->route('supply-chain.dashboard');
+    } else {
+        RequestProcurement::create([
+            'procurement_id' => $procurementId,
+            'vendor_id'      => $validated['vendor_id'],
+            'request_name'   => "Request untuk {$procurement->name_procurement}",
+            'department_id'  => auth()->user()->department_id,
+            'request_status' => 'submitted',
+            'created_date'   => now(),
+            'deadline_date'  => $procurement->end_date,
+        ]);
     }
+
+    ActivityLogger::log(
+        module: 'Vendor',
+        action: 'select_vendor',
+        targetId: $procurement->procurement_id,
+        details: [
+            'user_id'   => Auth::id(),
+            'vendor_id' => $validated['vendor_id'],
+        ]
+    );
+
+    // =====================================================
+    // AUTO TRANSITION: Usulan Pengadaan / OC (5) → Pengesahan Kontrak (6)
+    // =====================================================
+    $transitionService = new CheckpointTransitionService($procurement);
+    $currentCheckpoint = $transitionService->getCurrentCheckpoint();
+
+    if ($currentCheckpoint && $currentCheckpoint->point_sequence == 5) {
+        // Hanya jika memang sedang di stage "Usulan Pengadaan / OC"
+        $transitionService->transition(5, [
+            'notes' => "Vendor {$vendor->name_vendor} dipilih oleh Supply Chain, otomatis lanjut ke Pengesahan Kontrak",
+        ]);
+    }
+    // Jika checkpoint aktif belum 5 (misal masih Negotiation), tidak dipaksa pindah dulu
+
+    return redirect()
+        ->route('supply-chain.dashboard')
+        ->with('success', "Vendor {$vendor->name_vendor} berhasil dipilih. Timeline akan lanjut ke Pengesahan Kontrak ketika berada di stage Usulan Pengadaan / OC.");
+}
+
 
     /**
      * Form create / edit vendor
@@ -830,5 +844,5 @@ class SupplyChainController extends Controller
             'success' => true,
             'message' => 'Status kedatangan material berhasil diupdate',
         ]);
-    }
+    }    
 }

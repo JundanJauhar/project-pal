@@ -258,7 +258,7 @@
                                 @if (!$vendor)
 
                                     {{-- Tampilkan tombol hanya jika berada di checkpoint 3 --}}
-                                    @if ($currentSequence == 3)
+                                    @if ($currentSequence == 5)
                                         <a href="{{ route('supply-chain.vendor.pilih', $procurement->procurement_id) }}"
                                         class="btn btn-sm btn-primary" wire:navigate>
                                             <i class="bi bi-plus-circle"></i> Kelola Vendor
