@@ -27,22 +27,25 @@ class UpdateUsersWithVendorIdSeeder extends Seeder
         $this->command->info('Membuat akun untuk ' . $vendors->count() . ' vendor...');
 
         foreach ($vendors as $vendor) {
-            // Buat email dari nama vendor
-            // Contoh: "PT Krakatau Steel" -> "krakatau@pal.com"
+
+            // Ambil nama vendor, ubah jadi lowercase, hapus semua spasi & simbol
             $emailPrefix = $this->generateEmailPrefix($vendor->name_vendor);
             $email = $emailPrefix . '@pal.com';
 
+
+
             // Buat atau update user untuk vendor
             User::updateOrCreate(
-                ['email' => $email],
+                ['vendor_id' => $vendor->id_vendor], // cari berdasarkan vendor, bukan email
                 [
+                    'email' => $email,
                     'name' => $vendor->name_vendor,
                     'password' => Hash::make('password'),
-                    'vendor_id' => $vendor->id_vendor,
                     'roles' => 'vendor',
                     'status' => 'active',
                 ]
             );
+
 
             $this->command->info("✓ {$vendor->name_vendor} | Email: {$email} | Password: password");
         }
@@ -55,16 +58,18 @@ class UpdateUsersWithVendorIdSeeder extends Seeder
      */
     private function generateEmailPrefix($vendorName): string
     {
-        // Hapus "PT", "CV", "UD" dll dari nama
-        $name = preg_replace('/^(PT|CV|UD|Tbk)\s*/i', '', $vendorName);
-        
-        // Ambil kata pertama atau jika ada brand terkenal ambil itu
-        $words = explode(' ', trim($name));
-        $prefix = strtolower($words[0]);
-        
-        // Hapus karakter special dan spasi
-        $prefix = preg_replace('/[^a-z0-9]/', '', $prefix);
-        
-        return $prefix;
+        // Ubah nama ke lowercase
+        $name = strtolower($vendorName  );
+
+        // Hapus prefix PT, CV, UD, dll (dengan atau tanpa titik)
+        $name = preg_replace('/^(pt\.?|cv\.?|ud\.?|pd\.?|fa\.?|toko\.?)\s*/i', '', $name);
+
+        // Menghapus semua spasi
+        $name = str_replace(' ', '', $name);
+
+        // Hapus semua karakter selain huruf dan angka
+        $name = preg_replace('/[^a-z0-9]/', '', $name);
+
+        return $name;
     }
 }

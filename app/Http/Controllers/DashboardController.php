@@ -85,7 +85,7 @@ class DashboardController extends Controller
         }
 
         return $query->orderBy('start_date', 'desc')
-            ->paginate(20);
+            ->paginate(10);
     }
 
     /**
