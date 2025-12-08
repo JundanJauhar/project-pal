@@ -26,8 +26,7 @@ use App\Http\Controllers\VendorEvatekController;
 use App\Http\Controllers\InquiryQuotationController;
 use App\Http\Controllers\NegotiationController;
 use App\Http\Controllers\MaterialDeliveryController;
-use App\Http\Controllers\CheckpointTransitionController;
-
+use Illuminate\Container\Attributes\DB;
 
 // Redirect root → login
 Route::get('/', fn() => redirect()->route('login'));
@@ -49,6 +48,10 @@ Route::post('/login', function (Request $request) {
             return redirect()->route('ums.users.index'); // langsung ke UMS
         }
 
+        if(in_array(Auth::user()->roles, ['sekretaris'])){
+            return redirect()->route('sekdir.dashboard');
+        }
+
         return redirect()->route('dashboard');
     }
 
@@ -63,6 +66,10 @@ Route::post('/logout', function (Request $request) {
     $request->session()->regenerateToken();
     return redirect()->route('login');
 })->name('logout');
+
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
 
 /*
 |--------------------------------------------------------------------------

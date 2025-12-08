@@ -78,7 +78,6 @@
         table-layout: fixed;
     }
 
-    /* Title (mirip Payment) */
     .dashboard-table-title {
         font-size: 26px;
         font-weight: 700;
@@ -88,7 +87,6 @@
         align-items: center;
     }
 
-    /* Filter wrapper */
     .filters-wrap {
         display: flex;
         gap: 12px;
@@ -96,7 +94,6 @@
         flex-wrap: wrap;
     }
 
-    /* Search box styling */
     .dashboard-search-box {
         display: flex;
         align-items: center;
@@ -122,7 +119,6 @@
         color: #777;
     }
 
-    /* Filter selects */
     .filter-select {
         background: #fff;
         border: 1px solid #ddd;
@@ -183,6 +179,28 @@
         background: #002e5c;
         border-color: #002e5c;
         color: #fff;
+    }
+
+    .grafana-container {
+        position: relative;
+        height: 600px;
+        margin-top: 15px;
+        overflow: hidden;
+        border-radius: 8px;
+        background: #f5f5f5;
+    }
+
+    .grafana-fallback {
+        display: none;
+        text-align: center;
+        padding: 50px;
+        background: white;
+        border-radius: 8px;
+        margin: 20px;
+    }
+
+    .grafana-fallback.show {
+        display: block;
     }
 </style>
 @endpush
@@ -245,8 +263,6 @@
         </div>
     </div>
 
-
-
     <!-- Form Section -->
     <div class="search row mb-4">
         <div class="col-12">
@@ -263,13 +279,6 @@
                                 @foreach($projects as $project)
                                 <option value="{{ $project->project_code }}">{{ $project->project_code }}</option>
                                 @endforeach
-                                <!-- <option value="W000301">W000301</option>
-                                <option value="W000302">W000302</option>
-                                <option value="W000303">W000303</option>
-                                <option value="W000304">W000304</option>
-                                <option value="W000305">W000305</option>
-                                <option value="W000306">W000306</option>
-                                <option value="W000307">W000307</option> -->
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -278,29 +287,13 @@
                                 @foreach($checkpoints as $checkpoint)
                                 <option value="{{ $checkpoint->point_name }}">{{ $checkpoint->point_name }}</option>
                                 @endforeach
-                                <!-- <option value="Penawaran Permintaan">Penawaran Permintaan</option>
-                                <option value="Evatek">Evatek</option>
-                                <option value="Negosiasi">Negosiasi</option>
-                                <option value="Usulan Pengadaan / OC">Usulan Pengadaan / OC</option>
-                                <option value="Pengesahan Kontrak">Pengesahan Kontrak</option>
-                                <option value="Pengiriman Material">Pengiriman Material</option>
-                                <option value="Pembayaran DP">Pembayaran DP</option>
-                                <option value="Proses Importasi / Produksi">Proses Importasi / Produksi</option>
-                                <option value="Kedatangan Material">Kedatangan Material</option>
-                                <option value="Serah Terima Dokumen">Serah Terima Dokumen</option>
-                                <option value="Inspeksi Barang">Inspeksi Barang</option>
-                                <option value="Berita Acara / NCR">Berita Acara / NCR</option>
-                                <option value="Verifikasi Dokumen">Verifikasi Dokumen</option>
-                                <option value="Pembayaran">Pembayaran</option>
-                                <option value="completed">Selesai</option>
-                                <option value="cancelled">Dibatalkan</option> -->
                             </select>
                         </div>
                         <div class="col-md-2">
                             <select class="form-select" name="priority">
                                 <option value="">Semua Prioritas</option>
                                 @foreach($priority as $priorityOption)
-                                <option value="{{ $priorityOption -> priority }}">{{$priorityOption -> priority }}</option>
+                                <option value="{{ $priorityOption->priority }}">{{ $priorityOption->priority }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -310,21 +303,37 @@
         </div>
     </div>
 
-    <div style="position: relative; height: 600px; margin-top: 15px; overflow: hidden; border-radius: 8px;">
-         <iframe 
-                id="grafanaChart"
-                src="http://localhost:3000/d/juxnfgn/project-pal-grafik?orgId=1&from=now-1y&to=now&kiosk" 
-                width="100%" 
-                height="100%" 
-                frameborder="0"
-                style="border: none; display: block;"
-                title="Grafana Dashboard">
-            </iframe>
+    <!-- Grafana Chart -->
+    <!-- Grafana Chart -->
+    <div class="grafana-container">
+        <iframe
+            id="grafanaChart"
+            src="http://localhost:3000/d-solo/prb58hz/pal-visualisasi?orgId=1&panelId=1&theme=dark&refresh=5s"
+            width="100%"
+            height="100%"
+            frameborder="0"
+            style="border: none; display: block;"
+            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+            referrerpolicy="no-referrer-when-downgrade"
+            title="Grafana Dashboard">
+        </iframe>
+    </div>
+    <div class="grafana-container">
+        <iframe
+            id="grafanaChart"
+            src="http://localhost:3000/d-solo/prb58hz/pal-visualisasi?orgId=1&from=1702024747377&to=1765183147377&timezone=browser&theme=dark&panelId=panel-2&__feature.dashboardSceneSolo=true"
+            width="100%"
+            height="100%"
+            frameborder="0"
+            style="border: none; display: block;"
+            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+            referrerpolicy="no-referrer-when-downgrade"
+            title="Grafana Dashboard">
+        </iframe>
     </div>
 
-    {{-- ===== TABLE (dengan gaya mirip Payment) ===== --}}
+    <!-- Table Section -->
     <div class="dashboard-table-wrapper">
-
         <div class="dashboard-table-title">
             <span>Daftar Pengadaan</span>
         </div>
@@ -369,7 +378,6 @@
                             $status = $procurement->status_procurement;
                             $currentCheckpoint = $procurement->current_checkpoint;
 
-                            // Determine badge color and text based on status
                             if ($status === 'completed') {
                             $badgeColor = '#28AC00';
                             $text = 'Selesai';
@@ -378,7 +386,6 @@
                             $text = 'Dibatalkan';
                             } elseif ($status === 'in_progress') {
                             $badgeColor = '#ECAD02';
-                            // Show current checkpoint name, fallback to 'Sedang Proses'
                             $text = $currentCheckpoint ?: 'Sedang Proses';
                             } else {
                             $badgeColor = '#555';
@@ -403,7 +410,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="text-center py-5">
+                        <td colspan="11" class="text-center py-5">
                             <i class="bi bi-inbox" style="font-size:40px; color:#bbb;"></i>
                             <p class="text-muted mt-2">Tidak ada data pengadaan</p>
                         </td>
@@ -418,45 +425,66 @@
                 {{ $procurements->links() }}
             </div>
         </div>
-
     </div>
-    <!-- Chart Section Project Statistics -->
-    <!-- Chart Section Project Statistics -->
 </div>
 
 @endsection
 
-
 @push('scripts')
+<!-- Load Lodash FIRST - VERY IMPORTANT -->
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-    // Function to update Grafana time range
-    function updateGrafanaTime(from, to) {
-        const iframe = document.getElementById('grafanaFrame');
-        const baseUrl = 'https://jundan87.grafana.net/d-solo/jubx2zx/project-pal';
-        iframe.src = `${baseUrl}?orgId=1&from=${from}&to=${to}&panelId=2&theme=light&refresh=5s`;
-    }
-
-    // Event listeners for date inputs
+    // ==========================================
+    // GRAFANA IFRAME ERROR HANDLING
+    // ==========================================
     document.addEventListener('DOMContentLoaded', function() {
-        const presetRange = document.getElementById('presetRange');
-        const startDate = document.getElementById('startDate');
-        const endDate = document.getElementById('endDate');
-        const filterBtn = document.getElementById('filterBtn');
-        const resetBtn = document.getElementById('resetBtn');
+        const grafanaIframe = document.getElementById('grafanaChart');
+        const fallbackDiv = document.getElementById('grafana-fallback');
 
-        if (resetBtn) {
-            resetBtn.addEventListener('click', function() {
-                presetRange.value = 'last-6-months';
-                startDate.value = '';
-                endDate.value = '';
-                updateGrafanaTime('now-6M', 'now');
-            });
-        }
+        // Check if iframe loaded successfully
+        grafanaIframe.addEventListener('load', function() {
+            console.log('✅ Grafana iframe loaded successfully');
+            fallbackDiv.classList.remove('show');
+        });
+
+        // Handle iframe errors
+        grafanaIframe.addEventListener('error', function() {
+            console.error('❌ Grafana iframe failed to load');
+            fallbackDiv.classList.add('show');
+            grafanaIframe.style.display = 'none';
+        });
+
+        // Timeout check - if iframe doesn't load in 10 seconds, show fallback
+        setTimeout(function() {
+            try {
+                const iframeDoc = grafanaIframe.contentDocument || grafanaIframe.contentWindow.document;
+                if (!iframeDoc || iframeDoc.body.innerHTML === '') {
+                    console.warn('⚠️ Grafana iframe appears empty, showing fallback');
+                    fallbackDiv.classList.add('show');
+                }
+            } catch (e) {
+                // Cross-origin error is expected and means iframe loaded from different origin (which is fine)
+                console.log('📊 Grafana loaded from different origin (this is normal)');
+            }
+        }, 10000);
     });
 
-
+    // ==========================================
+    // PROCUREMENT TABLE SEARCH & FILTER
+    // ==========================================
     document.addEventListener('DOMContentLoaded', function() {
+        // Check if lodash is loaded
+        if (typeof _ === 'undefined') {
+            console.error('❌ Lodash is not loaded! Debounce will not work properly.');
+            return;
+        } else {
+            console.log('✅ Lodash loaded successfully');
+        }
+
         const searchInput = document.querySelector('input[name="search"]');
         const checkpointSelect = document.querySelector('select[name="checkpoint"]');
         const prioritySelect = document.querySelector('select[name="priority"]');
@@ -465,13 +493,16 @@
         const paginationWrap = document.getElementById('procurements-pagination');
 
         if (!searchInput || !checkpointSelect || !prioritySelect || !tbody || !paginationWrap) {
-            console.error('Missing required elements');
+            console.error('❌ Missing required form elements');
             return;
         }
 
         let currentPage = 1;
         let lastPagination = null;
 
+        // ==========================================
+        // STATUS BADGE HELPER
+        // ==========================================
         function getStatusBadge(status, checkpoint) {
             let badgeColor, text;
 
@@ -490,15 +521,18 @@
             }
 
             return `<span class="badge" style="background-color: ${badgeColor}; color:white; padding:6px 12px; font-weight:600; border-radius:6px;">
-            ${text}
-        </span>`;
+                ${text}
+            </span>`;
         }
 
+        // ==========================================
+        // RENDER TABLE ROWS
+        // ==========================================
         function renderRows(items) {
             if (!Array.isArray(items) || items.length === 0) {
                 tbody.innerHTML = `
                 <tr>
-                    <td colspan="10" class="text-center py-5">
+                    <td colspan="11" class="text-center py-5">
                         <i class="bi bi-inbox" style="font-size: 40px; color: #bbb;"></i>
                         <p class="text-muted mt-2">Tidak ada data pengadaan</p>
                     </td>
@@ -507,14 +541,15 @@
                 return;
             }
 
-            tbody.innerHTML = items.map(p => {
+            tbody.innerHTML = items.map((p, index) => {
                 const priorityClass = p.priority?.toLowerCase() || '';
                 const priorityText = p.priority?.toUpperCase() || '-';
 
                 return `
             <tr>
-                <td style="padding: 12px 8px; text-align:center;"><strong>${p.project_code}</strong></td>
-                <td style="padding: 12px 8px; text-align:center"><strong>${p.code_procurement}</strong></td>
+                <td style="padding: 12px 8px; text-align:center;"><strong>${index + 1}</strong></td>
+                <td style="padding: 12px 8px; text-align:center"><strong>${p.project_code || '-'}</strong></td>
+                <td style="padding: 12px 8px; text-align:center"><strong>${p.code_procurement || '-'}</strong></td>
                 <td style="padding: 12px 8px;">${p.name_procurement?.substring(0, 40) || '-'}</td>
                 <td style="padding: 12px 8px; text-align: center;">${p.department_name || '-'}</td>
                 <td style="padding: 12px 8px; text-align: center;">${p.start_date || '-'}</td>
@@ -539,6 +574,9 @@
             renderPagination();
         }
 
+        // ==========================================
+        // RENDER PAGINATION
+        // ==========================================
         function renderPagination() {
             if (!lastPagination) {
                 paginationWrap.innerHTML = '';
@@ -549,28 +587,34 @@
             let html = `<nav><ul class="pagination">`;
 
             html += p.current_page > 1 ?
-                `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page - 1})">← Sebelumnya</a></li>` :
+                `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page - 1}); return false;">← Sebelumnya</a></li>` :
                 `<li class="page-item disabled"><span class="page-link">← Sebelumnya</span></li>`;
 
             for (let i = 1; i <= p.last_page; i++) {
                 html += i === p.current_page ?
                     `<li class="page-item active"><span class="page-link">${i}</span></li>` :
-                    `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${i})">${i}</a></li>`;
+                    `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${i}); return false;">${i}</a></li>`;
             }
 
             html += p.has_more ?
-                `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page + 1})">Berikutnya →</a></li>` :
+                `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page + 1}); return false;">Berikutnya →</a></li>` :
                 `<li class="page-item disabled"><span class="page-link">Berikutnya →</span></li>`;
 
             html += `</ul></nav>`;
             paginationWrap.innerHTML = html;
         }
 
+        // ==========================================
+        // GO TO PAGE
+        // ==========================================
         window.goToPage = function(page) {
             currentPage = page;
             fetchProcurements();
         };
 
+        // ==========================================
+        // FETCH PROCUREMENTS
+        // ==========================================
         function fetchProcurements() {
             const q = encodeURIComponent(searchInput.value.trim());
             const checkpoint = encodeURIComponent(checkpointSelect.value);
@@ -578,21 +622,28 @@
             const project = encodeURIComponent(projectSelect.value);
 
             const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&priority=${priority}&project=${project}&page=${currentPage}`;
+
+            console.log('🔍 Fetching:', url);
+
             fetch(url, {
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 })
-                .then(res => res.json())
                 .then(res => {
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return res.json();
+                })
+                .then(res => {
+                    console.log('✅ Data received:', res);
                     lastPagination = res.pagination;
                     renderRows(res.data);
                 })
                 .catch(err => {
-                    console.error("Search error:", err);
+                    console.error("❌ Search error:", err);
                     tbody.innerHTML = `
                     <tr>
-                        <td colspan="10" class="text-center py-5">
+                        <td colspan="11" class="text-center py-5">
                             <i class="bi bi-exclamation-circle" style="font-size: 48px; color: #f00;"></i>
                             <p class="text-danger mt-2">Terjadi kesalahan: ${err.message}</p>
                         </td>
@@ -600,15 +651,23 @@
                 });
         }
 
-        const debouncedFetch = debounce(() => {
+        // ==========================================
+        // DEBOUNCED FETCH
+        // ==========================================
+        const debouncedFetch = _.debounce(() => {
             currentPage = 1;
             fetchProcurements();
         }, 300);
 
+        // ==========================================
+        // EVENT LISTENERS
+        // ==========================================
         searchInput.addEventListener('input', debouncedFetch);
         checkpointSelect.addEventListener('change', debouncedFetch);
         prioritySelect.addEventListener('change', debouncedFetch);
         projectSelect.addEventListener('change', debouncedFetch);
+
+        console.log('✅ Dashboard script initialized successfully');
     });
 </script>
 @endpush
