@@ -74,28 +74,6 @@ class InquiryQuotationController extends Controller
                 ]
             );
 
-                        // ===========================================
-            //  CREATE EVATEK ITEM PER VENDOR PER ITEM
-            // ===========================================
-            $items = $procurement->items; // semua item dalam procurement
-
-            foreach ($items as $item) {
-                EvatekItem::firstOrCreate(
-                    [
-                        'item_id'        => $item->item_id,
-                        'vendor_id'      => $validated['vendor_id'],  // vendor dari inquiry
-                        'procurement_id' => $procurement->procurement_id
-                    ],
-                    [
-                        'start_date'       => now()->toDateString(),
-                        'target_date'      => $validated['target_quotation'] ?? null,
-                        'current_revision' => 'R0',
-                        'status'           => 'on_progress',
-                        'current_date'     => now()->toDateString(),
-                    ]
-                );
-            }
-
             DB::commit();
 
             return redirect()->route('procurements.show', $procurement->procurement_id)
@@ -110,7 +88,6 @@ class InquiryQuotationController extends Controller
                 ->withInput();
         }
     }
-    
 
     /**
      * Update Inquiry Quotation
@@ -143,10 +120,10 @@ class InquiryQuotationController extends Controller
 
             $inquiryQuotation->update($validated);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Inquiry & Quotation berhasil diperbarui'
-            ]);
+            return redirect()
+            ->back()
+            ->with('success', 'Inquiry & Quotation berhasil diperbarui');
+
 
         } catch (\Exception $e) {
             Log::error('Error updating inquiry quotation: ' . $e->getMessage());

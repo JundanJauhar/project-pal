@@ -167,23 +167,41 @@ class CheckpointTransitionService
     /** 2 → 3: bisa diisi validasi Inquiry & Quotation kalau dibutuhkan */
     protected function validateCheckpoint2To3(): void
     {
-        // Contoh (kalau nanti mau di-aktifkan):
-        // if (!$this->procurement->inquiryQuotations()->exists()) {
-        //     $this->errors[] = 'Minimal harus ada 1 Inquiry & Quotation.';
-        // }
+        if(!$this->procurement->inquiryQuotations()->exists()){
+        $this->errors[] = 'Minimal harus ada 1 Inquiry & Quotation.';
+        }
     }
 
     /** 3 → 4: Evatek → Negotiation */
     protected function validateCheckpoint3To4(): void
     {
-        // Bisa diisi validasi bahwa semua Evatek yang wajib sudah approved, dsb.
+        $allEvatek = $this->procurement->evatekItems()->get();
+
+        if ($allEvatek->isEmpty()) {
+            $this->errors[] = 'Belum ada EVATEK untuk procurement ini.';
+            return;
+        }
+
+        $allItemIds = $allEvatek->pluck('item_id')->unique();
+
+        $itemIdsWithApproved = $allEvatek
+            ->where('status', 'approve')
+            ->pluck('item_id')
+            ->unique();
+
+        $missingItems = $allItemIds->diff($itemIdsWithApproved);
+
+        if ($missingItems->isNotEmpty()) {
+            $this->errors[] = 'Setiap item harus memiliki minimal satu vendor EVATEK yang approve.';
+        }
     }
 
     /** 4 → 5: Negotiation → Usulan Pengadaan / OC */
     protected function validateCheckpoint4To5(): void
     {
-        // Untuk saat ini tidak ada syarat khusus.
-        // Kalau mau, bisa dicek minimal ada 1 negotiation record.
+        if(!$this->procurement->negotiations()->exists()){
+        $this->errors[] = 'Minimal 1 negotiation.';
+        }
     }
 
     /** ✅ 5 → 6: Usulan Pengadaan / OC → Pengesahan Kontrak (WAJIB vendor) */
