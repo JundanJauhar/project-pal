@@ -171,7 +171,7 @@
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
                         <input type="email" class="form-control @error('email') is-invalid @enderror" id="email"
-                            name="email" value="{{ old('email') }}" placeholder="supplychain@gmail.com" required
+                            name="email" value="" placeholder="" required
                             autofocus>
                         @error('email')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -182,7 +182,7 @@
                         <label for="password" class="form-label text=mute">Password</label>
                         <div style="position: relative;">
                             <input type="password" class="form-control @error('password') is-invalid @enderror"
-                                id="password" name="password" placeholder="••••••••••••" required>
+                                id="password" name="password" placeholder="" required>
                             <span class="password-toggle" onclick="togglePassword()">
                                 <i class="bi bi-eye-slash" id="toggleIcon"></i>
                             </span>

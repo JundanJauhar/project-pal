@@ -311,13 +311,15 @@
     </div>
 
     <div style="position: relative; height: 600px; margin-top: 15px; overflow: hidden; border-radius: 8px;">
-        <iframe
-            src="http://localhost:3000/d/adq2brz/dashboard-tracking-pt-pal?orgId=1&from=now-6h&to=now&timezone=browser&theme=dark&panelId=2&kiosk=tv"
-            width="100%"
-            height="100%"
-            frameborder="0"
-            style="border: none; border-radius: 8px;">
-        </iframe>
+         <iframe 
+                id="grafanaChart"
+                src="http://localhost:3000/d/juxnfgn/project-pal-grafik?orgId=1&from=now-1y&to=now&kiosk" 
+                width="100%" 
+                height="100%" 
+                frameborder="0"
+                style="border: none; display: block;"
+                title="Grafana Dashboard">
+            </iframe>
     </div>
 
     {{-- ===== TABLE (dengan gaya mirip Payment) ===== --}}
