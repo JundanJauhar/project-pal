@@ -26,6 +26,7 @@ use App\Http\Controllers\VendorEvatekController;
 use App\Http\Controllers\InquiryQuotationController;
 use App\Http\Controllers\NegotiationController;
 use App\Http\Controllers\MaterialDeliveryController;
+use Illuminate\Container\Attributes\DB;
 
 // Redirect root → login
 Route::get('/', fn() => redirect()->route('login'));
@@ -48,6 +49,10 @@ Route::post('/login', function (Request $request) {
             return redirect()->route('ums.users.index'); // langsung ke UMS
         }
 
+        if(in_array(Auth::user()->roles, ['sekretaris'])){
+            return redirect()->route('sekdir.dashboard');
+        }
+
         return redirect()->route('dashboard');
     }
 
@@ -62,28 +67,6 @@ Route::post('/logout', function (Request $request) {
     $request->session()->regenerateToken();
     return redirect()->route('login');
 })->name('logout');
-
-Route::get('/project-stats', function () {
-    try {
-        $stats = DB::table('projects')
-            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, COUNT(*) as count')
-            ->whereRaw('created_at >= DATE_SUB(NOW(), INTERVAL 2 MONTH)')
-            ->groupBy('month')
-            ->orderBy('month', 'ASC')
-            ->get();
-
-        return response()->json([
-            'months' => $stats->pluck('month')->toArray(),
-            'counts' => $stats->pluck('count')->toArray(),
-            'success' => true
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'success' => false
-        ], 500);
-    }
-});
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();

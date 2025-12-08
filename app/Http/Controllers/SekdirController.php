@@ -29,7 +29,7 @@ class SekdirController extends Controller
             'procurementProgress.checkpoint'
         ])
         ->whereHas('procurementProgress', function($query) {
-            $query->where('checkpoint_id', 4)
+            $query->where('checkpoint_id', 6)
                   ->where('status', 'in_progress'); // Only pending
         })
         ->orderBy('created_at', 'desc')
@@ -43,7 +43,7 @@ class SekdirController extends Controller
             'procurementProgress.checkpoint'
         ])
         ->whereHas('procurementProgress', function($query) {
-            $query->where('checkpoint_id', 4)
+            $query->where('checkpoint_id', 6)
                   ->where('status', 'completed'); // Only approved
         })
         ->orderBy('updated_at', 'desc')
@@ -57,7 +57,7 @@ class SekdirController extends Controller
             'procurementProgress.checkpoint'
         ])
         ->whereHas('procurementProgress', function($query) {
-            $query->where('checkpoint_id', 4)
+            $query->where('checkpoint_id', 6)
                   ->where('status', 'rejected'); // Only rejected
         })
         ->orderBy('updated_at', 'desc')
@@ -65,15 +65,15 @@ class SekdirController extends Controller
 
         // Calculate statistics
         $totalPending = Procurement::whereHas('procurementProgress', function($query) {
-            $query->where('checkpoint_id', 4)->where('status', 'in_progress');
+            $query->where('checkpoint_id', 6)->where('status', 'in_progress');
         })->count();
 
         $totalApproved = Procurement::whereHas('procurementProgress', function($query) {
-            $query->where('checkpoint_id', 4)->where('status', 'completed');
+            $query->where('checkpoint_id', 6)->where('status', 'completed');
         })->count();
 
         $totalRejected = Procurement::whereHas('procurementProgress', function($query) {
-            $query->where('checkpoint_id', 4)->where('status', 'rejected');
+            $query->where('checkpoint_id', 6)->where('status', 'rejected');
         })->count();
 
         $totalProcurements = $totalPending + $totalApproved + $totalRejected;
@@ -560,8 +560,8 @@ public function approvalSubmit(Request $request, $procurement_id)
 
     $procurement = Procurement::findOrFail($procurement_id);
 
-    $sekdirCheckpointId = 4; // Pengesahan Kontrak
-    $nextCheckpointId = 5;   // Pengiriman Material
+    $sekdirCheckpointId = 6; // Pengesahan Kontrak
+    $nextCheckpointId = 7;   // Pengiriman Material
 
     // Update progress CP4
     $progress = ProcurementProgress::firstOrNew([
