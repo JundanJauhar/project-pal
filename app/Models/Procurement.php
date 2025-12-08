@@ -54,6 +54,26 @@ class Procurement extends Model
         return $this->hasMany(ProcurementProgress::class, 'procurement_id', 'procurement_id');
     }
 
+        public function negotiations()
+    {
+        return $this->hasMany(Negotiation::class, 'procurement_id', 'procurement_id');
+    }
+
+    public function inquiryQuotations()
+    {
+        return $this->hasMany(InquiryQuotation::class, 'procurement_id', 'procurement_id');
+    }
+
+        public function evatekItems()
+    {
+        return $this->hasMany(EvatekItem::class, 'procurement_id', 'procurement_id');
+    }
+
+    public function materialDeliveries()
+    {
+        return $this->hasMany(MaterialDelivery::class, 'procurement_id', 'procurement_id');
+    }
+
     public function getCurrentCheckpointAttribute()
     {
         // Only applicable for in_progress status

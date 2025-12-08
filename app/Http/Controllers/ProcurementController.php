@@ -193,106 +193,80 @@ class ProcurementController extends Controller
     }
 
     /**
-     * Display the specified procurement with evatek items
-     * ✅ PERBAIKAN: Hapus duplikasi, gunakan query langsung
+     * Display the specified procurement with all related data
      */
-public function show($id)
-{
-    $procurement = Procurement::with([
-        'requestProcurements.items',
-        'requestProcurements.vendor',
-        'procurementProgress.checkpoint',
-        'project',
-        'department'
-    ])->findOrFail($id);
+    public function show($id)
+    {
+        $procurement = Procurement::with([
+            'requestProcurements.items',
+            'requestProcurements.vendor',
+            'procurementProgress.checkpoint',
+            'project',
+            'department',
+            'evatekItems',
+            'inquiryQuotations',
+            'negotiations',
+            'materialDeliveries'
+        ])->findOrFail($id);
 
-    // Semua checkpoint
-    $checkpoints = Checkpoint::orderBy('point_sequence', 'asc')->get();
+        $checkpoints = Checkpoint::orderBy('point_sequence', 'asc')->get();
 
-    // Current stage
-    $service = new CheckpointTransitionService($procurement);
-    $currentCheckpoint = $service->getCurrentCheckpoint();
+        $currentStageIndex = 0;
+        $service = new CheckpointTransitionService($procurement);
+        $currentCheckpoint = $service->getCurrentCheckpoint();
+        $currentCheckpointSequence = $currentCheckpoint?->point_sequence ?? null;
 
-    $currentStageIndex = $currentCheckpoint ? $currentCheckpoint->point_sequence : 0;
-    $currentStageName  = $currentCheckpoint ? $currentCheckpoint->point_name : null;
-
-
-    ActivityLogger::log(
-        module: 'Procurement',
-        action: 'view_procurement_detail',
-        targetId: $procurement->procurement_id,
-        details: ['user_id' => Auth::id()]
-    );
-
-
-    // ------------------------------------------
-    // 🔥 PERSIAPAN DATA YANG DIPAKAI DI BLADE
-    // ------------------------------------------
-
-    // Vendor verified
-    $vendors = Vendor::where('legal_status', 'verified')
-        ->orderBy('name_vendor', 'asc')
-        ->get();
-
-    // Evatek items
-    $evatekItems = EvatekItem::where('procurement_id', $procurement->procurement_id)
-    ->whereHas('revisions', function ($q) {
-        $q->where('status', 'approve');
-    })
-    ->with([
-        'item',
-        'vendor',
-        'revisions' => function ($q) {
-            $q->where('status', 'approve')
-              ->orderBy('revision_id', 'desc');
+        if ($currentCheckpoint) {
+            $currentStageIndex = $currentCheckpoint->point_sequence;
         }
-    ])
-    ->get()
-    // hilangkan duplikasi item jika by vendor
-    ->unique('item_id')
-    ->values();
 
+        $vendors = Vendor::where('legal_status', 'verified')
+            ->orderBy('name_vendor', 'asc')
+            ->get();
 
-    // Inquiry & Quotation
-    $inquiryQuotations = InquiryQuotation::where('procurement_id', $procurement->procurement_id)
-        ->with('vendor')
-        ->orderBy('tanggal_inquiry', 'desc')
-        ->get();
+        // Query evatek items that exist for this procurement
+        $evatekItems = EvatekItem::where('procurement_id', $procurement->procurement_id)
+            ->with([
+                'item',
+                'vendor',
+                'revisions' => function ($query) {
+                    $query->orderBy('revision_id', 'desc');
+                }
+            ])
+            ->get();
 
-    $iqVendors = InquiryQuotation::where('procurement_id', $procurement->procurement_id)
-        ->with('vendor')
-        ->get();
+        $inquiryQuotations = InquiryQuotation::where('procurement_id', $procurement->procurement_id)
+            ->with('vendor')
+            ->orderBy('tanggal_inquiry', 'desc')
+            ->get();
 
-    // Negotiation
-    $negotiations = Negotiation::where('procurement_id', $procurement->procurement_id)
-    ->with('vendor')   // ← WAJIB
-    ->orderBy('created_at', 'desc')
-    ->get();
+        $negotiations = Negotiation::where('procurement_id', $procurement->procurement_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
+        $materialDeliveries = MaterialDelivery::where('procurement_id', $procurement->procurement_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-    // Material Delivery
-    $materialDeliveries = MaterialDelivery::where('procurement_id', $procurement->procurement_id)
-        ->orderBy('created_at', 'desc')
-        ->get();
+        ActivityLogger::log(
+            module: 'Procurement',
+            action: 'view_procurement_detail',
+            targetId: $procurement->procurement_id,
+            details: ['user_id' => Auth::id()]
+        );
 
-    // -----------------------------
-    // ✅ RETURN VIEW HANYA SATU
-    // -----------------------------
-    return view('procurements.show', compact(
-        'procurement',
-        'checkpoints',
-        'currentStageIndex',
-        'currentStageName',
-        'vendors',
-        'evatekItems',
-        'inquiryQuotations',
-        'iqVendors',
-        'negotiations',
-        'materialDeliveries'
-    ));
-}
-
-
+        return view('procurements.show', compact(
+            'procurement', 
+            'checkpoints', 
+            'currentStageIndex', 
+            'vendors',
+            'evatekItems',
+            'inquiryQuotations',
+            'negotiations',
+            'materialDeliveries',
+            'currentCheckpointSequence'
+        ));
+    }
 
     public function getProgress($id)
     {
@@ -357,50 +331,6 @@ public function show($id)
         );
 
         return redirect()->back()->with('success', 'Progress procurement berhasil diperbarui');
-    }
-
-    public function completeStage(Request $request, $id)
-    {
-        $procurement = Procurement::with(['procurementProgress.checkpoint'])->findOrFail($id);
-
-        $service = new CheckpointTransitionService($procurement);
-        $currentCheckpoint = $service->getCurrentCheckpoint();
-
-        if (!$currentCheckpoint) {
-            return redirect()->back()->with('error', 'Tidak ada checkpoint aktif untuk procurement ini.');
-        }
-
-        try {
-            $result = $service->transition($currentCheckpoint->point_sequence, [
-                'notes' => 'Stage diselesaikan dari halaman detail procurement oleh user ' . Auth::id(),
-            ]);
-
-            if (!($result['success'] ?? false)) {
-                return redirect()->back()
-                    ->with('error', 'Gagal menyelesaikan stage: ' . ($result['message'] ?? 'Unknown error'));
-            }
-
-            ActivityLogger::log(
-                module: 'Procurement',
-                action: 'complete_stage',
-                targetId: $procurement->procurement_id,
-                details: [
-                    'user_id' => Auth::id(),
-                    'checkpoint_id' => $currentCheckpoint->point_id ?? null,
-                    'checkpoint_name' => $currentCheckpoint->point_name ?? null,
-                ]
-            );
-
-            return redirect()->back()->with(
-                'success',
-                'Stage "' . ($currentCheckpoint->point_name ?? 'tanpa nama') . '" berhasil diselesaikan.'
-            );
-        } catch (\Exception $e) {
-            \Log::error('Error completeStage procurement ' . $id . ': ' . $e->getMessage());
-
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan saat menyelesaikan stage: ' . $e->getMessage());
-        }
     }
 
     public function byProject($projectId)
