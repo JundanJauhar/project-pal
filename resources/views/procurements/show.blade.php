@@ -262,11 +262,57 @@
         border: 1px solid #002e5c;
     }
 
-</style>
+    .btn-action-abort {
+        background: #BD0000;
+        color: white;
+        border: 1px solid #BD0000;
+    }
 
-<!-- <div class="header-logo-wrapper">
-    <img src="{{ asset('images/logo-pal.png') }}" alt="Logo PAL" class="logo">
-</div> -->
+    .btn-action-abort:hover {
+        background: #930000;
+        color: white;
+        border: 1px solid #930000;
+    }
+
+    .btn-simpan-wrapper {
+        display: flex;
+        justify-content: end;
+        margin-bottom: 12px;
+        margin-right: 20px;
+
+    }
+
+    .btn-action-simpan {
+        background: #003d82;
+        color: white;
+        border: 1px solid #003d82;
+        align-items: end;
+    }
+
+    .btn-action-simpan:hover {
+        background: #002e5c;
+        color: white;
+        border: 1px solid #002e5c;
+    }
+
+    .modal-dialog {
+        margin: 0 auto;
+        top: 50%;
+        transform: translateY(-50%) !important;
+    }
+
+    @media (min-width: 576px){
+        .modal.show .modal-dialog {
+            margin: 0 auto;
+        }
+    }
+
+    .modal.fade .modal-dialog {
+        transition: transform .3s ease-out;
+    }
+
+
+</style>
 
 {{-- Back Link --}}
 <div class="px-4 mb-3">
@@ -381,11 +427,7 @@
     </div>
                 
     {{-- Detail Items Pengadaan --}}
-    <h5 class="section-title mt-4">Detail Item Pengadaan</h5>
-    
-    @php
-        $grandTotal = 0;
-    @endphp
+    <h5 class="section-title mt-4">Detail Item Pengadaan</h5>   
 
     @forelse($procurement->requestProcurements as $request)
         @if($request->items->count() > 0)
@@ -402,10 +444,6 @@
                     </thead>
                     <tbody>
                         @foreach ($request->items as $index => $item)
-                        @php
-                            $itemTotal = $item->unit_price * $item->amount;
-                            $grandTotal += $itemTotal;
-                        @endphp
                         <tr>
                             <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $index + 1 }}</td>
                             <td style="padding: 12px 8px; text-align: left; color: #000;">{{ $item->item_name }}</td>
@@ -442,13 +480,15 @@
         <h5 class="section-title">Inquiry & Quotation</h5>
         <div class="dashboard-table-wrapper">
             <div class="table-responsive">
+                <div class="btn-simpan-wrapper">
                  @if($currentStageIndex==2 && count($inquiryQuotations)>0)
                 <form action="{{ route('checkpoint.transition', $procurement->procurement_id) }}" method="POST">
                     @csrf
                     <input type="hidden" name="from_checkpoint" value="2">
-                    <button class="btn btn-success">Simpan → Evatek</button>
+                    <button class="btn btn-sm btn-action-simpan"><i class="bi bi-box-arrow-down"></i>Simpan</button>
                 </form>
                 @endif
+                </div>
                 <table class="dashboard-table">
                     <thead>
                         <tr>
@@ -484,7 +524,7 @@
                                 <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $iq->lead_time ?? '-' }}</td>
                                 <td style="padding: 12px 8px; text-align: center; color: #000;">
                                     @if($iq->nilai_harga)
-                                        Rp {{ number_format($iq->nilai_harga, 0, ',', '.') }} {{ $iq->currency }}
+                                         {{ number_format($iq->nilai_harga, 0, ',', '.') }} {{ $iq->currency }}
                                     @else
                                         -
                                     @endif
@@ -498,53 +538,66 @@
                                 </td>
                             </tr>
 
-                            {{-- =============================
-                                MODAL EDIT
-                            ============================== --}}
-                            <div class="modal fade" id="modalEditIQ{{ $iq->inquiry_quotation_id }}" tabindex="-1">
-                                <div class="modal-dialog">
+                            <div class="modal fade iq-modal" id="modalEditIQ{{ $iq->inquiry_quotation_id }}" tabindex="-1">
+                                <div class="modal-dialog modal-lg">
                                     <div class="modal-content">
 
                                         <div class="modal-header">
-                                            <h5 class="modal-title">Edit Inquiry - {{ $iq->vendor->name_vendor }}</h5>
+                                            <h5 class="modal-title">Edit Inquiry & Quotation</h5>
                                         </div>
 
                                         <form method="POST" action="{{ route('inquiry-quotation.update', $iq->inquiry_quotation_id) }}">
                                             @csrf
-                                            <div class="modal-body">
+                                            <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
 
-                                                <div class="mb-3">
-                                                    <label>Tanggal Inquiry *</label>
+                                            <div class="modal-body row g-3">
+
+                                                {{-- Vendor --}}
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Vendor *</label>
+                                                    <select name="vendor_id" class="form-select" required>
+                                                        @foreach($vendors as $vendor)
+                                                            <option value="{{ $vendor->id_vendor }}"
+                                                                @selected($vendor->id_vendor == $iq->vendor_id)>
+                                                                {{ $vendor->name_vendor }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
+                                                {{-- Tanggal inquiry --}}
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Tanggal Inquiry *</label>
                                                     <input type="date" name="tanggal_inquiry" class="form-control"
                                                         value="{{ $iq->tanggal_inquiry->format('Y-m-d') }}" required>
                                                 </div>
 
-                                                <div class="mb-3">
-                                                    <label>Tanggal Quotation</label>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Tanggal Quotation</label>
                                                     <input type="date" name="tanggal_quotation" class="form-control"
                                                         value="{{ $iq->tanggal_quotation?->format('Y-m-d') }}">
                                                 </div>
 
-                                                <div class="mb-3">
-                                                    <label>Target Quotation</label>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Target Quotation</label>
                                                     <input type="date" name="target_quotation" class="form-control"
                                                         value="{{ $iq->target_quotation?->format('Y-m-d') }}">
                                                 </div>
 
-                                                <div class="mb-3">
-                                                    <label>Lead Time</label>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Lead Time</label>
                                                     <input type="text" name="lead_time" class="form-control"
                                                         value="{{ $iq->lead_time }}">
                                                 </div>
 
-                                                <div class="mb-3">
-                                                    <label>Nilai Harga</label>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Nilai Harga</label>
                                                     <input type="number" name="nilai_harga" class="form-control"
                                                         value="{{ $iq->nilai_harga }}">
                                                 </div>
 
-                                                <div class="mb-3">
-                                                    <label>Mata Uang</label>
+                                                <div class="col-md-12">
+                                                    <label class="form-label">Currency</label>
                                                     <select name="currency" class="form-select">
                                                         <option value="IDR" @selected($iq->currency=='IDR')>IDR</option>
                                                         <option value="USD" @selected($iq->currency=='USD')>USD</option>
@@ -553,17 +606,18 @@
                                                     </select>
                                                 </div>
 
-                                                <div class="mb-3">
-                                                    <label>Catatan</label>
+                                                <div class="col-12">
+                                                    <label class="form-label">Notes</label>
                                                     <textarea name="notes" class="form-control">{{ $iq->notes }}</textarea>
                                                 </div>
 
                                             </div>
 
                                             <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                <button type="sumbit" class="btn btn-primary">Simpan</button>
+                                                <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>
+                                                <button type="submit" class="btn btn-sm btn-action-create">Simpan</button>
                                             </div>
+
                                         </form>
 
                                     </div>
@@ -572,11 +626,6 @@
 
                         @empty
                         @endforelse
-
-
-                        {{-- =============================
-                            2. BARIS KOSONG UNTUK CREATE IQ
-                        ============================== --}}
                         <tr>
                             <td>{{ $row }}</td>
                             <td colspan="6" class="text-center text-muted">Belum ada Inquiry & Quotation</td>
@@ -590,26 +639,24 @@
                         </tr>
 
 
-                        {{-- =============================
-                            MODAL CREATE INQUIRY
-                        ============================== --}}
-                        <div class="modal fade" id="modalCreateIQ" tabindex="-1">
-                            <div class="modal-dialog">
+                        <div class="modal fade iq-modal" id="modalCreateIQ" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
                                 <div class="modal-content">
-
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Create Inquiry & Quotation</h5>
-                                    </div>
 
                                     <form method="POST" action="{{ route('inquiry-quotation.store', $procurement->project_id) }}">
                                         @csrf
+                                        <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
 
-                                        <div class="modal-body">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Create Inquiry & Quotation</h5>
+                                        </div>
+
+                                        <div class="modal-body row g-3">
 
                                             <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
 
                                             {{-- Pilih Vendor --}}
-                                            <div class="mb-3">
+                                            <div class="col-md-6">
                                                 <label>Pilih Vendor *</label>
                                                 <select name="vendor_id" class="form-select" required>
                                                     <option value="" disabled selected>Pilih vendor</option>
@@ -622,37 +669,37 @@
                                             </div>
 
                                             {{-- tanggal inquiry --}}
-                                            <div class="mb-3">
+                                            <div class="col-md-6">
                                                 <label>Tanggal Inquiry *</label>
                                                 <input type="date" name="tanggal_inquiry" class="form-control" required>
                                             </div>
 
                                             {{-- tanggal quotation --}}
-                                            <div class="mb-3">
+                                            <div class="col-md-6">
                                                 <label>Tanggal Quotation</label>
                                                 <input type="date" name="tanggal_quotation" class="form-control">
                                             </div>
 
                                             {{-- target quotation --}}
-                                            <div class="mb-3">
+                                            <div class="col-md-6">
                                                 <label>Target Quotation</label>
                                                 <input type="date" name="target_quotation" class="form-control">
                                             </div>
 
                                             {{-- lead time --}}
-                                            <div class="mb-3">
+                                            <div class="col-md-6">
                                                 <label>Lead Time</label>
                                                 <input type="text" name="lead_time" class="form-control" placeholder="ex: 7 hari kerja">
                                             </div>
 
                                             {{-- nilai harga --}}
-                                            <div class="mb-3">
+                                            <div class="col-md-6">
                                                 <label>Nilai Harga</label>
                                                 <input type="number" name="nilai_harga" class="form-control" placeholder="0">
                                             </div>
 
                                             {{-- currency --}}
-                                            <div class="mb-3">
+                                            <div class="col-md-12">
                                                 <label>Mata Uang</label>
                                                 <select name="currency" class="form-select">
                                                     <option value="IDR">IDR</option>
@@ -663,7 +710,7 @@
                                             </div>
 
                                             {{-- Notes --}}
-                                            <div class="mb-3">
+                                            <div class="col-12">
                                                 <label>Catatan</label>
                                                 <textarea name="notes" class="form-control" rows="3"></textarea>
                                             </div>
@@ -671,8 +718,8 @@
                                         </div>
 
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                            <button type="submit" class="btn btn-success">Simpan</button>
+                                            <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>
+                                            <button type="submit" class="btn btn-sm btn-action-create">Simpan</button>
                                         </div>
 
                                     </form>
@@ -816,40 +863,25 @@
                                 @if(!in_array($item->item_id, $evatekItemIds))
                                     @php $row++; @endphp
                                     <tr>
-                                        {{-- No --}}
                                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                                             {{ $row }}
                                         </td>
 
-                                        {{-- Nama Item --}}
                                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                                             {{ $item->item_name }}
                                         </td>
 
-                                        {{-- Revision --}}
-                                        <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                            <span style="color: #999;">-</span>
-                                        </td>
+                                        <td>-</td>
 
-                                        {{-- Tanggal Start --}}
-                                        <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                            <span style="color: #999;">-</span>
-                                        </td>
+                                        <td>-</td>
 
-                                        {{-- Tanggal Target --}}
-                                        <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                            <span style="color: #999;">-</span>
-                                        </td>
+                                        <td>-</td>
 
-                                        {{-- Hasil Evatek --}}
-                                        <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                            <span style="color: #999;">-</span>
-                                        </td>
+                                        <td>-</td>
 
-                                        {{-- Tanggal Hasil --}}
-                                        <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                            <span style="color: #999;">-</span>
-                                        </td>
+                                        <td>-</td>
+
+                                        <td>-</td>
 
                                         {{-- Vendor --}}
                                         <td style="padding: 12px 8px; text-align: center; color: #000;">
@@ -914,8 +946,8 @@
                                                             </div>
 
                                                             <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                                <button type="submit" class="btn btn-primary" style="background: #28a745; border: none;">Buat Evatek</button>
+                                                                <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>
+                                                                <button type="submit" class="btn btn-sm btn-action-create">Buat Evatek</button>
                                                             </div>
                                                         </form>
                                                     </div>
@@ -947,6 +979,13 @@
         <h5 class="section-title">Negotiation</h5>
         <div class="dashboard-table-wrapper">
             <div class="table-responsive">
+                @if($currentCheckpointSequence==4 && count($negotiations)>0)
+                <form action="{{ route('checkpoint.transition', $procurement->procurement_id) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="from_checkpoint" value="4">
+                    <button class="btn btn-sm btn-action-simpan"><i class="bi bi-box-arrow-down"></i>Simpan</button>
+                </form>
+                @endif
                 <table class="dashboard-table">
                     <thead>
                         <tr>
@@ -985,55 +1024,76 @@
                                 </td>
                             </tr>
 
-                            {{-- Modal Edit --}}
-                            <div class="modal fade" id="modalEditNeg{{ $neg->negotiation_id }}">
-                                <div class="modal-dialog">
+                            {{-- Modal Edit Negotiation --}}
+                            <div class="modal fade negotiation-modal" id="modalEditNeg{{ $neg->negotiation_id }}" tabindex="-1">
+                                <div class="modal-dialog modal-lg">
                                     <div class="modal-content">
 
                                         <form method="POST" action="{{ route('negotiation.update', $neg->negotiation_id) }}">
                                             @csrf
 
                                             <div class="modal-header">
-                                                <h5>Edit Negotiation</h5>
+                                                <h5 class="modal-title">Edit Negotiation</h5>
                                             </div>
 
-                                            <div class="modal-body">
+                                            <div class="modal-body row g-3">
 
-                                                <label>Vendor</label>
-                                                <select name="vendor_id" class="form-control" required>
-                                                    @foreach($vendors as $v)
-                                                        <option value="{{ $v->id_vendor }}"
-                                                            {{ $v->id_vendor == $neg->vendor_id ? 'selected' : '' }}>
-                                                            {{ $v->name_vendor }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+                                                {{-- VENDOR --}}
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Vendor *</label>
+                                                    <select name="vendor_id" class="form-select" required>
+                                                        @foreach($vendors as $v)
+                                                            <option value="{{ $v->id_vendor }}"
+                                                                {{ $v->id_vendor == $neg->vendor_id ? 'selected' : '' }}>
+                                                                {{ $v->name_vendor }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
 
-                                                <label class="mt-2">HPS</label>
-                                                <input type="number" name="hps" class="form-control" value="{{ $neg->hps }}">
+                                                {{-- HPS --}}
+                                                <div class="col-md-6">
+                                                    <label class="form-label">HPS</label>
+                                                    <input type="number" name="hps" class="form-control" value="{{ $neg->hps }}">
+                                                </div>
 
-                                                <label class="mt-2">Budget</label>
-                                                <input type="number" name="budget" class="form-control" value="{{ $neg->budget }}">
+                                                {{-- BUDGET --}}
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Budget</label>
+                                                    <input type="number" name="budget" class="form-control" value="{{ $neg->budget }}">
+                                                </div>
 
-                                                <label class="mt-2">Harga Final</label>
-                                                <input type="number" name="harga_final" class="form-control" value="{{ $neg->harga_final }}">
+                                                {{-- HARGA FINAL --}}
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Harga Final</label>
+                                                    <input type="number" name="harga_final" class="form-control" value="{{ $neg->harga_final }}">
+                                                </div>
 
-                                                <label class="mt-2">Tanggal Kirim</label>
-                                                <input type="date" name="tanggal_kirim" class="form-control"
-                                                    value="{{ $neg->tanggal_kirim ? $neg->tanggal_kirim->format('Y-m-d') : '' }}">
+                                                {{-- TANGGAL KIRIM --}}
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Tanggal Kirim</label>
+                                                    <input type="date" name="tanggal_kirim" class="form-control"
+                                                        value="{{ $neg->tanggal_kirim ? $neg->tanggal_kirim->format('Y-m-d') : '' }}">
+                                                </div>
 
-                                                <label class="mt-2">Tanggal Terima</label>
-                                                <input type="date" name="tanggal_terima" class="form-control"
-                                                    value="{{ $neg->tanggal_terima ? $neg->tanggal_terima->format('Y-m-d') : '' }}">
+                                                {{-- TANGGAL TERIMA --}}
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Tanggal Terima</label>
+                                                    <input type="date" name="tanggal_terima" class="form-control"
+                                                        value="{{ $neg->tanggal_terima ? $neg->tanggal_terima->format('Y-m-d') : '' }}">
+                                                </div>
 
-                                                <label class="mt-2">Catatan</label>
-                                                <textarea name="notes" class="form-control">{{ $neg->notes }}</textarea>
+                                                {{-- NOTES --}}
+                                                <div class="col-12">
+                                                    <label class="form-label">Note</label>
+                                                    <textarea name="notes" class="form-control" rows="3">{{ $neg->notes }}</textarea>
+                                                </div>
 
                                             </div>
 
                                             <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                <button type="submit" class="btn btn-success">Simpan</button>
+                                                <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>
+                                                <button type="submit" class="btn btn-sm btn-action-create">Simpan</button>
                                             </div>
 
                                         </form>
@@ -1041,6 +1101,7 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
                         @endforeach
 
                         {{-- Tombol CREATE selalu muncul --}}
@@ -1060,14 +1121,6 @@
                 </table>
             </div>
         </div>
-        @endif
-
-        @if($currentCheckpointSequence==4 && count($negotiations)>0)
-        <form action="{{ route('checkpoint.transition', $procurement->procurement_id) }}" method="POST">
-            @csrf
-            <input type="hidden" name="from_checkpoint" value="4">
-            <button class="btn btn-success">Simpan → Pengiriman</button>
-        </form>
         @endif
 
 
@@ -1137,8 +1190,8 @@
                         </div>
 
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                            <button type="sumbit" class="btn btn-success">Simpan</button>
+                            <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>
+                            <button type="sumbit" class="btn btn-sm btn-action-create">Simpan</button>
                         </div>
 
                     </form>
@@ -1148,7 +1201,7 @@
         </div>
 
 
-        @if ($currentCheckpointSequence >= 8)
+
         <h5 class="section-title">Pengiriman Material</h5>
         <div class="dashboard-table-wrapper">
             <div class="table-responsive">
@@ -1180,7 +1233,7 @@
                                 <td style="padding: 14px 8px; text-align: center; color: #000; border-bottom: 1px solid #DFDFDF; font-size: 15px;">{{ $delivery->eta_pal ? $delivery->eta_pal->format('d/m/Y') : '-' }}</td>
                                 <td style="padding: 14px 8px; text-align: center; color: #000; border-bottom: 1px solid #DFDFDF; font-size: 15px;">{{ substr($delivery->remark ?? '-', 0, 30) }}</td>
                                 <td style="padding: 14px 8px; text-align: center; color: #000; border-bottom: 1px solid #DFDFDF; font-size: 15px;">
-                                    <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalEditDel{{ $row }}" style="background: #ffc107; color: #000; padding: 6px 12px; border-radius: 4px; border: none; font-size: 12px; font-weight: 600; cursor: pointer;">Edit</button>
+                                    <button type="button" class="btn btn-sm btn-action-edit" data-bs-toggle="modal" data-bs-target="#modalEditDel{{ $row }}">Edit</button>
 
                                     <div class="modal fade" id="modalEditDel{{ $row }}" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog">
@@ -1190,31 +1243,40 @@
                                                 </div>
                                                 <form method="POST" action="{{ route('material-delivery.update', $delivery->delivery_id) }}">
                                                     @csrf
-                                                    <div class="modal-body">
-                                                        <div class="mb-3">
-                                                            <label class="form-label" style="font-weight: 600; font-size: 14px;">Incoterms</label>
-                                                            <input type="text" name="incoterms" class="form-control" value="{{ $delivery->incoterms ?? '' }}" placeholder="Contoh: FOB, CIF, DDP" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                                                    <div class="modal-body row g-3">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">Incoterms</label>
+                                                            <input type="text" name="incoterms" class="form-control"
+                                                                value="{{ $delivery->incoterms ?? '' }}">
                                                         </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label" style="font-weight: 600; font-size: 14px;">ETD (Estimated Time Departure)</label>
-                                                            <input type="date" name="etd" class="form-control" value="{{ $delivery->etd ? $delivery->etd->format('Y-m-d') : '' }}" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">ETD</label>
+                                                            <input type="date" name="etd" class="form-control"
+                                                                value="{{ $delivery->etd?->format('Y-m-d') }}">
                                                         </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label" style="font-weight: 600; font-size: 14px;">ETA SBY Port</label>
-                                                            <input type="date" name="eta_sby_port" class="form-control" value="{{ $delivery->eta_sby_port ? $delivery->eta_sby_port->format('Y-m-d') : '' }}" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">ETA SBY Port</label>
+                                                            <input type="date" name="eta_sby_port" class="form-control"
+                                                                value="{{ $delivery->eta_sby_port?->format('Y-m-d') }}">
                                                         </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label" style="font-weight: 600; font-size: 14px;">ETA PAL</label>
-                                                            <input type="date" name="eta_pal" class="form-control" value="{{ $delivery->eta_pal ? $delivery->eta_pal->format('Y-m-d') : '' }}" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+
+                                                        <div class="col-md-6">
+                                                            <label class="form-label">ETA PAL</label>
+                                                            <input type="date" name="eta_pal" class="form-control"
+                                                                value="{{ $delivery->eta_pal?->format('Y-m-d') }}">
                                                         </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label" style="font-weight: 600; font-size: 14px;">Remark</label>
-                                                            <textarea name="remark" class="form-control" rows="3" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">{{ $delivery->remark ?? '' }}</textarea>
+
+                                                        <div class="col-md-12">
+                                                            <label class="form-label">Remark</label>
+                                                            <textarea name="remark" class="form-control" rows="3">{{ $delivery->remark ?? '' }}</textarea>
                                                         </div>
+
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                        <button type="submit" class="btn btn-primary" style="background: #28a745; border: none;">Simpan</button>
+                                                        <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>
+                                                        <button type="submit" class="btn btn-sm btn-action-create">Simpan</button>
                                                     </div>
                                                 </form>
                                             </div>
@@ -1239,44 +1301,49 @@
                                         <td style="padding: 14px 8px; text-align: center; color: #000; border-bottom: 1px solid #DFDFDF; font-size: 15px;">{{ $item->item_name }}</td>
                                         <td colspan="5" style="padding: 14px 8px; text-align: center; color: #999; border-bottom: 1px solid #DFDFDF; font-size: 15px;">-</td>
                                         <td style="padding: 14px 8px; text-align: center; color: #000; border-bottom: 1px solid #DFDFDF; font-size: 15px;">
-                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCreateDel{{ $row }}" style="background: #007bff; color: white; padding: 6px 12px; border-radius: 4px; border: none; font-size: 12px; font-weight: 600; cursor: pointer;">Create</button>
+                                            <button type="button" class="btn btn-sm btn-action-create" data-bs-toggle="modal" data-bs-target="#modalCreateDel{{ $row }}">Create</button>
 
                                             <div class="modal fade" id="modalCreateDel{{ $row }}" tabindex="-1" aria-hidden="true">
                                                 <div class="modal-dialog">
                                                     <div class="modal-content">
                                                         <div class="modal-header">
                                                             <h5 class="modal-title">Input Pengiriman Material - {{ $item->item_name }}</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                         </div>
                                                         <form method="POST" action="{{ route('material-delivery.store', $procurement->project_id) }}">
                                                             @csrf
-                                                            <div class="modal-body">
-                                                                <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
-                                                                <input type="hidden" name="item_id" value="{{ $item->item_id }}">
-                                                                <div class="mb-3">
-                                                                    <label class="form-label" style="font-weight: 600; font-size: 14px;">Incoterms</label>
-                                                                    <input type="text" name="incoterms" class="form-control" placeholder="Contoh: FOB, CIF, DDP" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                                                                </div>
-                                                                <div class="mb-3">
-                                                                    <label class="form-label" style="font-weight: 600; font-size: 14px;">ETD</label>
-                                                                    <input type="date" name="etd" class="form-control" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                                                                </div>
-                                                                <div class="mb-3">
-                                                                    <label class="form-label" style="font-weight: 600; font-size: 14px;">ETA SBY Port</label>
-                                                                    <input type="date" name="eta_sby_port" class="form-control" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                                                                </div>
-                                                                <div class="mb-3">
-                                                                    <label class="form-label" style="font-weight: 600; font-size: 14px;">ETA PAL</label>
-                                                                    <input type="date" name="eta_pal" class="form-control" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                                                                </div>
-                                                                <div class="mb-3">
-                                                                    <label class="form-label" style="font-weight: 600; font-size: 14px;">Remark</label>
-                                                                    <textarea name="remark" class="form-control" rows="3" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;"></textarea>
-                                                                </div>
+                                                            <div class="modal-body row g-3">
+                                                            <input type="hidden" name="item_id" value="{{ $item->item_id }}">
+
+                                                            <div class="col-md-6">
+                                                                <label class="form-label">Incoterms</label>
+                                                                <input type="text" name="incoterms" class="form-control">
                                                             </div>
+
+                                                            <div class="col-md-6">
+                                                                <label class="form-label">ETD</label>
+                                                                <input type="date" name="etd" class="form-control">
+                                                            </div>
+
+                                                            <div class="col-md-6">
+                                                                <label class="form-label">ETA SBY Port</label>
+                                                                <input type="date" name="eta_sby_port" class="form-control">
+                                                            </div>
+
+                                                            <div class="col-md-6">
+                                                                <label class="form-label">ETA PAL</label>
+                                                                <input type="date" name="eta_pal" class="form-control">
+                                                            </div>
+
+                                                            <div class="col-md-12">
+                                                                <label class="form-label">Remark</label>
+                                                                <textarea name="remark" class="form-control" rows="3"></textarea>
+                                                            </div>
+
+                                                        </div>
+
                                                             <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                                                                <button type="submit" class="btn btn-primary" style="background: #28a745; border: none;">Simpan</button>
+                                                                <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>
+                                                                <button type="submit" class="btn btn-sm btn-action-create">Simpan</button>
                                                             </div>
                                                         </form>
                                                     </div>
@@ -1301,7 +1368,7 @@
                 </table>
             </div>
         </div>
-        @endif
+        
     @endif
 
     </div>
