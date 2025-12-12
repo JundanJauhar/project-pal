@@ -6,7 +6,7 @@ namespace App\Services;
  * CheckpointIconService
  * 
  * Service untuk manage icon yang tepat untuk setiap checkpoint
- * Menggunakan Bootstrap Icons (bi) atau FontAwesome (fa)
+ * Menggunakan Bootstrap Icons (bi)
  */
 class CheckpointIconService
 {
@@ -19,19 +19,17 @@ class CheckpointIconService
     public static function getIconClass(int $checkpointSequence): string
     {
         $icons = [
-            1 => 'bi-file-earmark-text',           // Penawaran Permintaan
-            2 => 'bi-clipboard-check',             // Evatek
-            3 => 'bi-file-earmark-pdf',            // Usulan Pengadaan / OC
-            4 => 'bi-pen-fill',                    // Pengesahan Kontrak
-            5 => 'bi-truck',                       // Pengiriman Material
-            6 => 'bi-credit-card-fill',            // Pembayaran DP
-            7 => 'bi-gear-fill',                   // Proses Importasi / Produksi
-            8 => 'bi-box-seam-fill',               // Kedatangan Material
-            9 => 'bi-hand-thumbs-up-fill',        // Serah Terima Dokumen
-            10 => 'bi-search',                     // Inspeksi Barang
-            11 => 'bi-file-earmark-check-fill',    // Berita Acara / NCR
-            12 => 'bi-file-earmark-check-2',       // Verifikasi Dokumen
-            13 => 'bi-check-circle-fill',          // Pembayaran
+            1 => 'bi-file-earmark-text',           // Permintaan Pengadaan
+            2 => 'bi-chat-dots',                   // Inquiry & Quotation
+            3 => 'bi-clipboard-check',             // Evatek
+            4 => 'bi-handshake',                   // Negotiation
+            5 => 'bi-file-earmark-pdf',            // Usulan Pengadaan / OC
+            6 => 'bi-pen-fill',                    // Pengesahan Kontrak
+            7 => 'bi-credit-card-fill',            // Pembayaran DP
+            8 => 'bi-truck',                       // Pengiriman Material
+            9 => 'bi-box-seam-fill',               // Kedatangan Material
+            10 => 'bi-file-earmark-check-fill',    // Verifikasi Dokumen
+            11 => 'bi-check-circle-fill',          // Pembayaran
         ];
 
         return $icons[$checkpointSequence] ?? 'bi-circle-fill';
@@ -46,66 +44,56 @@ class CheckpointIconService
     {
         return [
             1 => [
-                'name' => 'Penawaran Permintaan',
+                'name' => 'Permintaan Pengadaan',
                 'icon' => 'bi-file-earmark-text',
-                'description' => 'Submission of procurement request'
+                'description' => 'Procurement request submission'
             ],
             2 => [
+                'name' => 'Inquiry & Quotation',
+                'icon' => 'bi-chat-dots',
+                'description' => 'Inquiry and quotation process'
+            ],
+            3 => [
                 'name' => 'Evatek',
                 'icon' => 'bi-clipboard-check',
                 'description' => 'Technical evaluation'
             ],
-            3 => [
+            4 => [
+                'name' => 'Negotiation',
+                'icon' => 'bi-handshake',
+                'description' => 'Price and term negotiation'
+            ],
+            5 => [
                 'name' => 'Usulan Pengadaan / OC',
                 'icon' => 'bi-file-earmark-pdf',
                 'description' => 'Procurement proposal'
             ],
-            4 => [
+            6 => [
                 'name' => 'Pengesahan Kontrak',
                 'icon' => 'bi-pen-fill',
                 'description' => 'Contract approval'
             ],
-            5 => [
-                'name' => 'Pengiriman Material',
-                'icon' => 'bi-truck',
-                'description' => 'Material delivery'
-            ],
-            6 => [
+            7 => [
                 'name' => 'Pembayaran DP',
                 'icon' => 'bi-credit-card-fill',
                 'description' => 'Down payment'
             ],
-            7 => [
-                'name' => 'Proses Importasi / Produksi',
-                'icon' => 'bi-gear-fill',
-                'description' => 'Import/Production process'
-            ],
             8 => [
+                'name' => 'Pengiriman Material',
+                'icon' => 'bi-truck',
+                'description' => 'Material delivery'
+            ],
+            9 => [
                 'name' => 'Kedatangan Material',
                 'icon' => 'bi-box-seam-fill',
                 'description' => 'Material arrival'
             ],
-            9 => [
-                'name' => 'Serah Terima Dokumen',
-                'icon' => 'bi-hand-thumbs-up-fill',
-                'description' => 'Document handover'
-            ],
             10 => [
-                'name' => 'Inspeksi Barang',
-                'icon' => 'bi-search',
-                'description' => 'Goods inspection'
-            ],
-            11 => [
-                'name' => 'Berita Acara / NCR',
-                'icon' => 'bi-file-earmark-check-fill',
-                'description' => 'Berita Acara / NCR Report'
-            ],
-            12 => [
                 'name' => 'Verifikasi Dokumen',
-                'icon' => 'bi bi-file-earmark-post',
+                'icon' => 'bi-file-earmark-check-fill',
                 'description' => 'Document verification'
             ],
-            13 => [
+            11 => [
                 'name' => 'Pembayaran',
                 'icon' => 'bi-check-circle-fill',
                 'description' => 'Final payment'
