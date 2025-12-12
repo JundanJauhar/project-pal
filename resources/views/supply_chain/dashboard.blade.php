@@ -10,9 +10,18 @@
         font-size: 12px;
         font-weight: 600;
     }
-    .priority-tinggi { color: #BD0000; }
-    .priority-sedang { color: #FFBB00; }
-    .priority-rendah { color: #6f6f6f; }
+
+    .priority-tinggi {
+        color: #BD0000;
+    }
+
+    .priority-sedang {
+        color: #FFBB00;
+    }
+
+    .priority-rendah {
+        color: #6f6f6f;
+    }
 
     .tambah .btn {
         background: #003d82;
@@ -122,7 +131,7 @@
         border: 1px solid #ddd;
         font-size: 14px;
     }
-    
+
     .dashboard-search-box input {
         border: none;
         background: transparent;
@@ -130,7 +139,7 @@
         outline: none;
         font-size: 14px;
     }
-    
+
     .dashboard-search-box i {
         font-size: 14px;
         color: #777;
@@ -176,37 +185,25 @@
         <div class="col-12">
             <div class="card card-custom">
                 <div class="card-body">
-                    <form id="filter-form" class="row g-3 align-items-end">
+                    <form id="filter-form" class="row g-3 align-items-end" method="GET" action="{{ route('supply-chain.dashboard') }}">
                         <div class="col-md-4">
-                            <input type="text" class="form-control" name="search" placeholder="Cari Pengadaan..." value="">
+                            <input id="searchInput" type="text" class="form-control" name="search" placeholder="Cari Pengadaan..." value="{{ request('search') }}">
                         </div>
                         <div class="col-md-3">
-                            <select class="form-select" name="checkpoint">
-                                <option value="">Semua Checkpoint</option>
-                                <option value="Penawaran Permintaan">Penawaran Permintaan</option>
-                                <option value="Evatek">Evatek</option>
-                                <option value="Negosiasi">Negosiasi</option>
-                                <option value="Usulan Pengadaan / OC">Usulan Pengadaan / OC</option>
-                                <option value="Pengesahan Kontrak">Pengesahan Kontrak</option>
-                                <option value="Pengiriman Material">Pengiriman Material</option>
-                                <option value="Pembayaran DP">Pembayaran DP</option>
-                                <option value="Proses Importasi / Produksi">Proses Importasi / Produksi</option>
-                                <option value="Kedatangan Material">Kedatangan Material</option>
-                                <option value="Serah Terima Dokumen">Serah Terima Dokumen</option>
-                                <option value="Inspeksi Barang">Inspeksi Barang</option>
-                                <option value="Berita Acara / NCR">Berita Acara / NCR</option>
-                                <option value="Verifikasi Dokumen">Verifikasi Dokumen</option>
-                                <option value="Pembayaran">Pembayaran</option>
-                                <option value="completed">Selesai</option>
-                                <option value="rejected">Ditolak</option>
+                            <select id="statusFilter" class="form-select" name="status">
+                                <option value="">Semua Status Vendor</option>
+                                <option value="belum_ada_vendor" {{ request('status') === 'belum_ada_vendor' ? 'selected' : '' }}>Belum ada vendor</option>
+                                <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
+                                <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
+                                <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <select class="form-select" name="priority">
+                            <select id="priorityFilter" class="form-select" name="priority">
                                 <option value="">Semua Prioritas</option>
-                                <option value="rendah">Rendah</option>
-                                <option value="sedang">Sedang</option>
-                                <option value="tinggi">Tinggi</option>
+                                @foreach(['Tinggi', 'Sedang', 'Rendah'] as $priority)
+                                <option value="{{ $priority }}" {{ request('priority') === $priority ? 'selected' : '' }}>{{ $priority }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="tambah col-md-2 text-end">
@@ -221,115 +218,95 @@
     </div>
 
     <!-- Table -->
-        <div class="dashboard-table-wrapper">
-            <div class="table-responsive">
-                <table class="dashboard-table">
-                    <thead>
-                        <tr>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode Pengadaan</th>
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Pengadaan</th>
-                            <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Department</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
-                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        @forelse($procurements as $procurement)
-                        @php
-                            $service = new \App\Services\CheckpointTransitionService($procurement);
-                            $currentCheckpoint = $service->getCurrentCheckpoint();
-                            $currentSequence = $currentCheckpoint?->point_sequence;
-                        @endphp
-                        <tr data-name="{{ strtolower($procurement->name_procurement) }} {{ strtolower($procurement->code_procurement) }}">
-                            <td style="padding: 12px 8px; text-align: center; color: #000;"><strong>{{ $procurement->project->project_code ?? '-' }}</strong></td>
-                            <td style="padding: 12px 8px; text-align: center;  color: #000;"><strong>{{ $procurement->code_procurement }}</strong></td>
-                            <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ Str::limit($procurement->name_procurement, 40) }}</td>
-                            <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ $procurement->department->department_name ?? '-' }}</td>
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                @php
-                                    $requestProcurement = $procurement->requestProcurements->first();
-                                    $vendor = $requestProcurement?->vendor;
-                                @endphp
+    <div class="dashboard-table-wrapper">
+        <div class="table-responsive">
+            <table class="dashboard-table">
+                <thead>
+                    <tr>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode Pengadaan</th>
+                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Pengadaan</th>
+                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Department</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    @forelse($procurements as $procurement)
+                    @php
+                    $service = new \App\Services\CheckpointTransitionService($procurement);
+                    $currentCheckpoint = $service->getCurrentCheckpoint();
+                    $currentSequence = $currentCheckpoint?->point_sequence;
+                    @endphp
+                    <tr data-name="{{ strtolower($procurement->name_procurement) }} {{ strtolower($procurement->code_procurement) }}">
+                        <td style="padding: 12px 8px; text-align: center; color: #000;"><strong>{{ $procurement->project->project_code ?? '-' }}</strong></td>
+                        <td style="padding: 12px 8px; text-align: center;  color: #000;"><strong>{{ $procurement->code_procurement }}</strong></td>
+                        <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ Str::limit($procurement->name_procurement, 40) }}</td>
+                        <td style="padding: 12px 8px; text-align: left;  color: #000;">{{ $procurement->department->department_name ?? '-' }}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            @php
+                            $requestProcurement = $procurement->requestProcurements->first();
+                            $vendor = $requestProcurement?->vendor;
+                            @endphp
 
-                                {{-- Jika vendor belum dipilih --}}
-                                @if (!$vendor)
+                            {{-- Jika vendor belum dipilih --}}
+                            @if (!$vendor)
 
-                                    {{-- Tampilkan tombol hanya jika berada di checkpoint 3 --}}
-                                    @if ($currentSequence == 5)
-                                        <a href="{{ route('supply-chain.vendor.pilih', $procurement->procurement_id) }}"
-                                        class="btn btn-sm btn-primary" wire:navigate>
-                                            <i class="bi bi-plus-circle"></i> Kelola Vendor
-                                        </a>
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
+                            {{-- Tampilkan tombol hanya jika berada di checkpoint 3 --}}
+                            @if ($currentSequence == 5)
+                            <a href="{{ route('supply-chain.vendor.pilih', $procurement->procurement_id) }}"
+                                class="btn btn-sm btn-primary" wire:navigate>
+                                <i class="bi bi-plus-circle"></i> Kelola Vendor
+                            </a>
+                            @else
+                            <span class="text-muted">-</span>
+                            @endif
 
-                                {{-- Jika vendor sudah dipilih --}}
-                                @else
-                                    {{ $vendor->name_vendor }}
-                                @endif
+                            {{-- Jika vendor sudah dipilih --}}
+                            @else
+                            {{ $vendor->name_vendor }}
+                            @endif
 
-                            </td>
-                            <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->start_date->format('d/m/Y') }}</td>
-                            <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->end_date->format('d/m/Y') }}</td>
-                            <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
-                                <span class="priority-badge priority-{{ strtolower($procurement->priority) }}">
-                                    {{ strtoupper($procurement->priority) }}
-                                </span>
-                            </td>
-                            <!-- <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
-                                <a href="{{ route('procurements.show', $procurement->procurement_id) }}" class="btn btn-sm btn-primary" wire:navigate>
-                                    Detail
-                                </a>
-                            </td> -->
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="8" class="text-center">Tidak ada data pengadaan</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </td>
+                        <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->start_date->format('d/m/Y') }}</td>
+                        <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $procurement->end_date->format('d/m/Y') }}</td>
+                        <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
+                            <span class="priority-badge priority-{{ strtolower($procurement->priority) }}">
+                                {{ strtoupper($procurement->priority) }}
+                            </span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="8" class="text-center">Tidak ada data pengadaan</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+            <div class="mt-3">
+                {{ $procurements->links() }}
             </div>
         </div>
+    </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
+    const filterForm = document.getElementById('filter-form');
     const searchInput = document.getElementById('searchInput');
     const statusFilter = document.getElementById('statusFilter');
     const priorityFilter = document.getElementById('priorityFilter');
-    const tableBody = document.getElementById('tableBody');
 
-    function filterTable() {
-        const searchValue = searchInput.value.toLowerCase();
-        const statusValue = statusFilter.value.toLowerCase();
-        const priorityValue = priorityFilter.value.toLowerCase();
-        const rows = tableBody.querySelectorAll('tr[data-name]');
-
-        rows.forEach(row => {
-            const name = row.getAttribute('data-name');
-            const status = row.querySelector('td:nth-child(8)')?.textContent.toLowerCase() || '';
-            const priority = row.querySelector('.priority-badge')?.textContent.toLowerCase() || '';
-
-            const matchSearch = name.includes(searchValue);
-            const matchStatus = !statusValue || status.includes(statusValue);
-            const matchPriority = !priorityValue || priority.includes(priorityValue);
-
-            row.style.display = (matchSearch && matchStatus && matchPriority) ? '' : 'none';
-        });
-    }
-
+    let debounceTimer;
     searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(filterTable, 300);
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => filterForm.submit(), 400);
     });
 
-    statusFilter.addEventListener('change', filterTable);
-    priorityFilter.addEventListener('change', filterTable);
+    statusFilter.addEventListener('change', () => filterForm.submit());
+    priorityFilter.addEventListener('change', () => filterForm.submit());
 </script>
 @endpush
