@@ -49,6 +49,10 @@ Route::post('/login', function (Request $request) {
             return redirect()->route('ums.users.index'); // langsung ke UMS
         }
 
+        if(in_array(Auth::user()->roles, ['sekretaris'])){
+            return redirect()->route('sekdir.dashboard');
+        }
+
         return redirect()->route('dashboard');
     }
 

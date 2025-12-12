@@ -59,7 +59,8 @@ class SupplyChainController extends Controller
                 }
             })
             ->orderBy('start_date', 'desc')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
         ActivityLogger::log(
             module: 'Supply Chain',
