@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id('payment_schedule_id');
 
             $table->unsignedBigInteger('project_id')->nullable();
-            $table->unsignedBigInteger('contract_id')->nullable();
 
             $table->string('payment_type', 100)->nullable();
             $table->decimal('amount', 15, 2)->default(0);
@@ -34,7 +33,6 @@ return new class extends Migration
 
             // FK
             $table->foreign('project_id')->references('project_id')->on('projects')->cascadeOnDelete();
-            $table->foreign('contract_id')->references('contract_id')->on('contracts')->cascadeOnDelete();
             $table->foreign('verified_by_accounting')->references('user_id')->on('users')->nullOnDelete();
             $table->foreign('verified_by_treasury')->references('user_id')->on('users')->nullOnDelete();
         });

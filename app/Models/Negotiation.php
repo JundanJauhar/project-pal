@@ -17,12 +17,16 @@ class Negotiation extends Model
         'procurement_id',
         'vendor_id',
         'hps',
+        'currency_hps',
         'budget',
+        'currency_budget',
         'harga_final',
+        'currency_harga_final',
         'tanggal_kirim',
         'tanggal_terima',
         'notes',
     ];
+
 
     protected $casts = [
         'hps' => 'decimal:2',
@@ -42,6 +46,4 @@ class Negotiation extends Model
     {
         return $this->belongsTo(Vendor::class, 'vendor_id', 'id_vendor');
     }
-
-
 }

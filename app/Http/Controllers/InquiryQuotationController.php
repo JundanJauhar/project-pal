@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\InquiryQuotation;
 use App\Models\Procurement;
 use App\Models\Vendor;
@@ -20,6 +21,15 @@ class InquiryQuotationController extends Controller
         if (Auth::user()->roles !== 'supply_chain' && Auth::user()->roles !== 'admin') {
             abort(403, 'Unauthorized action.');
         }
+
+        // sebelum validasi
+        if ($request->filled('nilai_harga')) {
+            $raw = preg_replace('/\D/', '', $request->nilai_harga); // hapus semua non digit
+            $request->merge([
+                'nilai_harga' => $raw   // ganti jadi angka murni
+            ]);
+        }
+
 
         $validated = $request->validate([
             'procurement_id' => 'required|exists:procurement,procurement_id',
@@ -78,7 +88,6 @@ class InquiryQuotationController extends Controller
 
             return redirect()->route('procurements.show', $procurement->procurement_id)
                 ->with('success', "Inquiry & Quotation untuk vendor {$vendor->name_vendor} berhasil disimpan");
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error storing inquiry quotation: ' . $e->getMessage());
@@ -99,6 +108,15 @@ class InquiryQuotationController extends Controller
         if (Auth::user()->roles !== 'supply_chain' && Auth::user()->roles !== 'admin') {
             abort(403, 'Unauthorized action.');
         }
+
+        // sebelum validasi
+        if ($request->filled('nilai_harga')) {
+            $raw = preg_replace('/\D/', '', $request->nilai_harga); // hapus semua non digit
+            $request->merge([
+                'nilai_harga' => $raw   // ganti jadi angka murni
+            ]);
+        }
+
 
         $validated = $request->validate([
             'tanggal_inquiry' => 'required|date',
@@ -121,10 +139,8 @@ class InquiryQuotationController extends Controller
             $inquiryQuotation->update($validated);
 
             return redirect()
-            ->back()
-            ->with('success', 'Inquiry & Quotation berhasil diperbarui');
-
-
+                ->back()
+                ->with('success', 'Inquiry & Quotation berhasil diperbarui');
         } catch (\Exception $e) {
             Log::error('Error updating inquiry quotation: ' . $e->getMessage());
 
@@ -154,7 +170,6 @@ class InquiryQuotationController extends Controller
 
             return redirect()->route('procurements.show', $procurementId)
                 ->with('success', 'Inquiry & Quotation berhasil dihapus');
-
         } catch (\Exception $e) {
             Log::error('Error deleting inquiry quotation: ' . $e->getMessage());
 
@@ -194,7 +209,6 @@ class InquiryQuotationController extends Controller
                 'data' => $inquiryQuotations,
                 'count' => count($inquiryQuotations)
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error getting inquiry quotations: ' . $e->getMessage());
 
@@ -205,4 +219,3 @@ class InquiryQuotationController extends Controller
         }
     }
 }
-?>
