@@ -26,7 +26,8 @@ use App\Http\Controllers\VendorEvatekController;
 use App\Http\Controllers\InquiryQuotationController;
 use App\Http\Controllers\NegotiationController;
 use App\Http\Controllers\MaterialDeliveryController;
-use Illuminate\Container\Attributes\DB;
+use App\Http\Controllers\CheckpointTransitionController;
+
 
 // Redirect root → login
 Route::get('/', fn() => redirect()->route('login'));
@@ -66,10 +67,6 @@ Route::post('/logout', function (Request $request) {
     $request->session()->regenerateToken();
     return redirect()->route('login');
 })->name('logout');
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
 
 /*
 |--------------------------------------------------------------------------
