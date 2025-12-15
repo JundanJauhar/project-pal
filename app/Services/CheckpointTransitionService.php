@@ -88,21 +88,6 @@ class CheckpointTransitionService
         }
     }
 
-    /**
-     * Mapping validasi 11 checkpoint:
-     *
-     * 1  Permintaan Pengadaan
-     * 2  Inquiry & Quotation
-     * 3  Evatek
-     * 4  Negotiation
-     * 5  Usulan Pengadaan / OC      → Supply Chain kelola vendor
-     * 6  Pengesahan Kontrak         → Sekretaris: kontrak disahkan (contract_signed)
-     * 7  Pembayaran DP              → Accounting: bayar DP
-     * 8  Pengiriman Material        → Supply Chain: tabel pengiriman material
-     * 9  Kedatangan Material        → QA: inspeksi barang
-     * 10 Verifikasi Dokumen         → Accounting
-     * 11 Pembayaran                 → Treasury: pembayaran final
-     */
     protected function validateTransitionPreconditions(Checkpoint $fromCheckpoint, ?Checkpoint $toCheckpoint): void
     {
         $sequence = $fromCheckpoint->point_sequence;
@@ -167,8 +152,8 @@ class CheckpointTransitionService
     /** 2 → 3: bisa diisi validasi Inquiry & Quotation kalau dibutuhkan */
     protected function validateCheckpoint2To3(): void
     {
-        if(!$this->procurement->inquiryQuotations()->exists()){
-        $this->errors[] = 'Minimal harus ada 1 Inquiry & Quotation.';
+        if (!$this->procurement->inquiryQuotations()->exists()) {
+            $this->errors[] = 'Minimal harus ada 1 Inquiry & Quotation.';
         }
     }
 
@@ -199,24 +184,24 @@ class CheckpointTransitionService
     /** 4 → 5: Negotiation → Usulan Pengadaan / OC */
     protected function validateCheckpoint4To5(): void
     {
-        if(!$this->procurement->negotiations()->exists()){
-        $this->errors[] = 'Minimal 1 negotiation.';
+        if (!$this->procurement->negotiations()->exists()) {
+            $this->errors[] = 'Minimal 1 negotiation.';
         }
     }
 
     /** 5 → 6: Usulan Pengadaan / OC → Pengesahan Kontrak (WAJIB vendor) */
     protected function validateCheckpoint5To6(): void
     {
-        if (!$this->procurement->requestProcurements()->whereNotNull('vendor_id')->exists()) {
-            $this->errors[] = 'Vendor wajib dipilih sebelum melanjutkan ke Pengesahan Kontrak';
+        if (!$this->procurement->pengadaanOcs()->exists()) {
+            $this->errors[] = 'Minimal 1 pengadaanOC.';
         }
     }
 
     /** 6 → 7: Pengesahan Kontrak → Pembayaran DP (WAJIB kontrak disahkan) */
     protected function validateCheckpoint6To7(): void
     {
-        if (empty($this->data['contract_signed'])) {
-            $this->errors[] = 'Kontrak harus ditandatangani sebelum melanjutkan ke Pembayaran DP';
+        if (!$this->procurement->pengesahanKontraks()->exists()) {
+            $this->errors[] = 'Minimal 1 pengesahanKontrak.';
         }
     }
 
@@ -367,7 +352,7 @@ class CheckpointTransitionService
 
         if (!$existingPayment) {
             $amount = $this->procurement->requestProcurements
-                ->flatMap(fn ($rp) => $rp->items)
+                ->flatMap(fn($rp) => $rp->items)
                 ->sum('total_price');
 
             \App\Models\PaymentSchedule::create([
@@ -422,7 +407,9 @@ class CheckpointTransitionService
 
     protected function notifyDivision(int $divisionId, string $title, string $message): void
     {
-        $users = \App\Models\User::whereHas('division', fn ($q) =>
+        $users = \App\Models\User::whereHas(
+            'division',
+            fn($q) =>
             $q->where('division_id', $divisionId)
         )->get();
 

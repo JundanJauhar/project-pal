@@ -33,7 +33,6 @@ class CheckpointTransitionController extends Controller
             'from_checkpoint' => 'required|integer|min:1|max:14',
             'notes' => 'nullable|string|max:1000',
             'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            // Additional data fields per checkpoint
             'evaluation_notes' => 'nullable|string',
             'negotiation_result' => 'nullable|string',
             'oc_document' => 'nullable|string',

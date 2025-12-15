@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 class PengesahanKontrakController extends Controller
 {
-    public function store(Request $request, $projectId)
+    public function store(Request $request, $procurementId)
     {
         if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
             abort(403, 'Unauthorized action.');
@@ -33,10 +33,7 @@ class PengesahanKontrakController extends Controller
         try {
             DB::beginTransaction();
 
-            $proc = Procurement::findOrFail($validated['procurement_id']);
-            if ($proc->project_id != $projectId) {
-                throw new \Exception('Procurement tidak sesuai dengan project.');
-            }
+            $procurement = Procurement::findOrFail($procurementId);
 
             $validated['currency'] = $validated['currency'] ?? 'IDR';
 
@@ -44,12 +41,13 @@ class PengesahanKontrakController extends Controller
 
             DB::commit();
 
-            return redirect()->route('procurements.show', $proc->procurement_id)
-                ->with('success', 'Pengesahan kontrak berhasil disimpan.');
+            return redirect()
+                ->route('procurements.show', $procurement->procurement_id)
+                ->with('success', 'Pengadaan OC berhasil disimpan.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error storing PengesahanKontrak: '.$e->getMessage());
-            return back()->with('error', 'Gagal menyimpan: '.$e->getMessage())->withInput();
+            Log::error('Error storing PengesahanKontrak: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menyimpan: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -84,8 +82,8 @@ class PengesahanKontrakController extends Controller
                 ->with('success', 'Pengesahan kontrak berhasil diperbarui.');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error updating PengesahanKontrak: '.$e->getMessage());
-            return back()->with('error', 'Gagal memperbarui: '.$e->getMessage())->withInput();
+            Log::error('Error updating PengesahanKontrak: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memperbarui: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -103,16 +101,16 @@ class PengesahanKontrakController extends Controller
             return redirect()->route('procurements.show', $procId)
                 ->with('success', 'Pengesahan kontrak berhasil dihapus.');
         } catch (\Exception $e) {
-            Log::error('Error deleting PengesahanKontrak: '.$e->getMessage());
-            return back()->with('error', 'Gagal menghapus: '.$e->getMessage());
+            Log::error('Error deleting PengesahanKontrak: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
         }
     }
 
     public function getByProcurement($procurementId)
     {
         $list = PengesahanKontrak::where('procurement_id', $procurementId)
-            ->with(['vendor','kontrak'])
-            ->orderBy('created_at','desc')
+            ->with(['vendor', 'kontrak'])
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json(['success' => true, 'data' => $list]);

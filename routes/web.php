@@ -25,6 +25,8 @@ use App\Http\Controllers\EvatekController;
 use App\Http\Controllers\VendorEvatekController;
 use App\Http\Controllers\InquiryQuotationController;
 use App\Http\Controllers\NegotiationController;
+use App\Http\Controllers\PengadaanOcController;
+use App\Http\Controllers\PengesahanKontrakController;
 use App\Http\Controllers\MaterialDeliveryController;
 use App\Http\Controllers\CheckpointTransitionController;
 
@@ -232,6 +234,35 @@ Route::middleware(['auth'])->group(function () {
     
     Route::get('/supply-chain/material-delivery/procurement/{procurementId}', [MaterialDeliveryController::class, 'getByProcurement'])
         ->name('material-delivery.getByProcurement');
+
+    // ===== PENGADAAN OC ROUTES =====
+    
+    Route::post('/supply-chain/pengadaan-oc/{procurementId}', [PengadaanOcController::class, 'store'])
+        ->name('pengadaan-oc.store');
+
+    Route::post('/supply-chain/pengadaan-oc/update/{id}', [PengadaanOcController::class, 'update'])
+        ->name('pengadaan-oc.update');
+
+    Route::delete('/supply-chain/pengadaan-oc/delete/{id}', [PengadaanOcController::class, 'delete'])
+        ->name('pengadaan-oc.delete');
+
+    Route::get('/supply-chain/pengadaan-oc/procurement/{procurementId}', [PengadaanOcController::class, 'getByProcurement'])
+        ->name('pengadaan-oc.getByProcurement');
+
+
+    // ===== PENGESAHAN KONTRAK ROUTES =====
+    
+    Route::post('/supply-chain/pengesahan-kontrak/{procurementId}', [PengesahanKontrakController::class, 'store'])
+        ->name('pengesahan-kontrak.store');
+
+    Route::post('/supply-chain/pengesahan-kontrak/update/{id}', [PengesahanKontrakController::class, 'update'])
+        ->name('pengesahan-kontrak.update');
+
+    Route::delete('/supply-chain/pengesahan-kontrak/delete/{id}', [PengesahanKontrakController::class, 'delete'])
+        ->name('pengesahan-kontrak.delete');
+
+    Route::get('/supply-chain/pengesahan-kontrak/procurement/{procurementId}', [PengesahanKontrakController::class, 'getByProcurement'])
+        ->name('pengesahan-kontrak.getByProcurement');
 
     /*
     |--------------------------------------------------------------------------

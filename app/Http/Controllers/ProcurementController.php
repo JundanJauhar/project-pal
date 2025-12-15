@@ -22,32 +22,33 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\ActivityLogger;
-
+use App\Models\PengadaanOC;
+use App\Models\PengesahanKontrak;
 
 class ProcurementController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
-        
+
         $query = Procurement::with(['project', 'department', 'requestProcurements.vendor', 'procurementProgress.checkpoint']);
-        
+
         // Filter by vendor_id if user has vendor_id
         if ($user->vendor_id) {
-            $query->whereHas('requestProcurements', function($q) use ($user) {
+            $query->whereHas('requestProcurements', function ($q) use ($user) {
                 $q->where('id_vendor', $user->vendor_id);
             });
         }
-        
+
         $procurements = $query->orderBy('created_at', 'desc')
             ->paginate(20);
 
-            ActivityLogger::log(
-                module: 'Procurement',
-                action: 'view_procurement_list',
-                targetId: null,
-                details: ['user_id' => Auth::id()]
-            );
+        ActivityLogger::log(
+            module: 'Procurement',
+            action: 'view_procurement_list',
+            targetId: null,
+            details: ['user_id' => Auth::id()]
+        );
 
         return view('procurements.index', compact('procurements'));
     }
@@ -67,10 +68,6 @@ class ProcurementController extends Controller
         return view('procurements.create', compact('departments', 'projects'));
     }
 
-    /**
-     * Store a newly created procurement with items
-     * Automatically complete checkpoint 1 and move to checkpoint 2 (Evatek)
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -98,7 +95,6 @@ class ProcurementController extends Controller
 
             $projectCode = $validated['project_code'];
 
-            // Generate kode procurement
             $last = Procurement::where('code_procurement', 'like', $projectCode . '-%')
                 ->orderByRaw("LENGTH(code_procurement) desc")
                 ->orderBy('code_procurement', 'desc')
@@ -127,10 +123,8 @@ class ProcurementController extends Controller
                 $validated['project_id'] = $project->project_id ?? $project->id ?? null;
             }
 
-            // Create procurement
             $procurement = Procurement::create($validated);
 
-            // Create RequestProcurement
             $requestProcurement = RequestProcurement::create([
                 'procurement_id' => $procurement->procurement_id,
                 'project_id' => $project->project_id ?? null,
@@ -141,7 +135,6 @@ class ProcurementController extends Controller
                 'deadline_date' => $validated['end_date'],
             ]);
 
-            // Save items
             foreach ($request->items as $itemData) {
                 Item::create([
                     'request_procurement_id' => $requestProcurement->request_id,
@@ -153,11 +146,9 @@ class ProcurementController extends Controller
                 ]);
             }
 
-            // ========== AUTO CHECKPOINT TRANSITION ==========
-            // Complete Checkpoint 1 (Penawaran Permintaan) and move to Checkpoint 2 (Evatek)
             $service = new CheckpointTransitionService($procurement);
             $transitionResult = $service->transition(1, [
-                'notes' => 'Procurement dibuat dan siap untuk evaluasi teknis',
+                'notes' => 'Procurement dibuat dan siap untuk Inquiry & Quotation',
             ]);
 
             if (!$transitionResult['success']) {
@@ -181,8 +172,7 @@ class ProcurementController extends Controller
             );
 
             return redirect()->route('procurements.show', $procurement->procurement_id)
-                ->with('success', 'Procurement berhasil dibuat dengan kode ' . $finalCode . '. Procurement telah masuk ke tahap Evatek.');
-
+                ->with('success', 'Procurement berhasil dibuat dengan kode ' . $finalCode . '. Procurement telah masuk ke tahap InquiryQuotation.');
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Procurement creation failed: ' . $e->getMessage());
@@ -192,9 +182,7 @@ class ProcurementController extends Controller
         }
     }
 
-    /**
-     * Display the specified procurement with all related data
-     */
+
     public function show($id)
     {
         $procurement = Procurement::with([
@@ -206,6 +194,8 @@ class ProcurementController extends Controller
             'evatekItems',
             'inquiryQuotations',
             'negotiations',
+            'pengadaanOcs',
+            'pengesahanKontraks',
             'materialDeliveries'
         ])->findOrFail($id);
 
@@ -224,7 +214,6 @@ class ProcurementController extends Controller
             ->orderBy('name_vendor', 'asc')
             ->get();
 
-        // Query evatek items that exist for this procurement
         $evatekItems = EvatekItem::where('procurement_id', $procurement->procurement_id)
             ->with([
                 'item',
@@ -244,8 +233,18 @@ class ProcurementController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $pengadaanOcs = PengadaanOC::where('procurement_id', $procurement->procurement_id)
+            ->with('vendor')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         $materialDeliveries = MaterialDelivery::where('procurement_id', $procurement->procurement_id)
             ->orderBy('created_at', 'desc')
+            ->get();
+
+        $pengesahanKontraks = PengesahanKontrak::where('procurement_id', $procurement->procurement_id)
+            ->with(['vendor','kontrak'])
+            ->orderBy('created_at','desc')
             ->get();
 
         ActivityLogger::log(
@@ -256,13 +255,15 @@ class ProcurementController extends Controller
         );
 
         return view('procurements.show', compact(
-            'procurement', 
-            'checkpoints', 
-            'currentStageIndex', 
+            'procurement',
+            'checkpoints',
+            'currentStageIndex',
             'vendors',
             'evatekItems',
             'inquiryQuotations',
             'negotiations',
+            'pengadaanOcs',
+            'pengesahanKontraks',
             'materialDeliveries',
             'currentCheckpointSequence'
         ));
@@ -277,12 +278,12 @@ class ProcurementController extends Controller
             ->orderBy('checkpoint_id')
             ->get();
 
-            ActivityLogger::log(
-                module: 'Procurement',
-                action: 'view_procurement_progress',
-                targetId: $procurement->procurement_id,
-                details: ['user_id' => Auth::id()]
-            );
+        ActivityLogger::log(
+            module: 'Procurement',
+            action: 'view_procurement_progress',
+            targetId: $procurement->procurement_id,
+            details: ['user_id' => Auth::id()]
+        );
 
         return response()->json($progress);
     }
@@ -331,25 +332,6 @@ class ProcurementController extends Controller
         );
 
         return redirect()->back()->with('success', 'Progress procurement berhasil diperbarui');
-    }
-
-    public function byProject($projectId)
-    {
-        $project = Project::findOrFail($projectId);
-
-        $procurements = $project->procurements()
-            ->with(['department', 'requestProcurements.vendor', 'procurementProgress.checkpoint'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
-
-            ActivityLogger::log(
-                module: 'Procurement',
-                action: 'view_procurements_by_project',
-                targetId: $project->project_id,
-                details: ['user_id' => Auth::id()]
-            );
-
-        return view('procurements.by-project', compact('project', 'procurements'));
     }
 
     public function search(Request $request)
