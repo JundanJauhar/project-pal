@@ -15,7 +15,7 @@ use Carbon\Carbon;
 class InquiryQuotationController extends Controller
 {
 
-    public function store(Request $request, $projectId)
+    public function store(Request $request, $procurementId)
     {
         // Authorization check
         if (Auth::user()->roles !== 'supply_chain' && Auth::user()->roles !== 'admin') {
@@ -57,10 +57,10 @@ class InquiryQuotationController extends Controller
             $procurement = Procurement::findOrFail($validated['procurement_id']);
             $vendor = Vendor::findOrFail($validated['vendor_id']);
 
-            // Validasi procurement milik project
-            if ($procurement->project_id != $projectId) {
-                throw new \Exception('Procurement tidak sesuai dengan project.');
+            if ((int)$validated['procurement_id'] !== (int)$procurementId) {
+                throw new \Exception('Invalid procurement reference.');
             }
+
 
             // Set default currency
             if (empty($validated['currency'])) {
@@ -98,10 +98,6 @@ class InquiryQuotationController extends Controller
         }
     }
 
-    /**
-     * Update Inquiry Quotation
-     * PUT /inquiry-quotation/{inquiryQuotationId}
-     */
     public function update(Request $request, $inquiryQuotationId)
     {
         // Authorization check

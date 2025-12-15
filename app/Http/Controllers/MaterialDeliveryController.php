@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\MaterialDelivery;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 class MaterialDeliveryController extends Controller
 {
-    public function store(Request $request, $projectId)
+    public function store(Request $request, $procurementId)
     {
         if (Auth::user()->roles !== 'supply_chain' && Auth::user()->roles !== 'admin') {
             abort(403, 'Unauthorized action.');
@@ -25,26 +26,18 @@ class MaterialDeliveryController extends Controller
             'atd' => 'nullable|date',
             'ata_sby_port' => 'nullable|date|after_or_equal:atd',
             'remark' => 'nullable|string|max:1000',
-        ], [
-            'procurement_id.required' => 'Pilih procurement terlebih dahulu',
-            'eta_sby_port.after_or_equal' => 'ETA SBY Port harus setelah atau sama dengan ETD',
-            'eta_pal.after_or_equal' => 'ETA PAL harus setelah atau sama dengan ETA SBY Port',
-            'ata_sby_port.after_or_equal' => 'ATA SBY Port harus setelah atau sama dengan ATD',
         ]);
 
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
-
-            $procurement = Procurement::findOrFail($validated['procurement_id']);
-
-            if ($procurement->project_id != $projectId) {
-                throw new \Exception('Procurement tidak sesuai dengan project.');
+            if ((int) $validated['procurement_id'] !== (int) $procurementId) {
+                throw new \Exception('Invalid procurement reference.');
             }
 
-            $delivery = MaterialDelivery::updateOrCreate(
-                [
-                    'procurement_id' => $validated['procurement_id'],
-                ],
+            $procurement = Procurement::findOrFail($procurementId);
+
+            MaterialDelivery::updateOrCreate(
+                ['procurement_id' => $procurementId],
                 [
                     'incoterms' => $validated['incoterms'] ?? null,
                     'etd' => $validated['etd'] ?? null,
@@ -58,17 +51,19 @@ class MaterialDeliveryController extends Controller
 
             DB::commit();
 
-            return redirect()->route('procurements.show', $procurement->procurement_id)
+            return redirect()
+                ->route('procurements.show', $procurementId)
                 ->with('success', 'Pengiriman Material berhasil disimpan');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error storing material delivery: ' . $e->getMessage());
 
-            return redirect()->back()
-                ->with('error', 'Gagal menyimpan Pengiriman Material: ' . $e->getMessage())
-                ->withInput();
+            return back()
+                ->withInput()
+                ->with('error', 'Gagal menyimpan Pengiriman Material: ' . $e->getMessage());
         }
     }
+
 
     public function update(Request $request, $deliveryId)
     {
@@ -96,14 +91,13 @@ class MaterialDeliveryController extends Controller
 
             $delivery = MaterialDelivery::findOrFail($deliveryId);
             $procurementId = $delivery->procurement_id;
-            
+
             $delivery->update($validated);
 
             DB::commit();
 
             return redirect()->route('procurements.show', $procurementId)
                 ->with('success', 'Pengiriman Material berhasil diperbarui');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating material delivery: ' . $e->getMessage());
@@ -129,7 +123,6 @@ class MaterialDeliveryController extends Controller
 
             return redirect()->route('procurements.show', $procurementId)
                 ->with('success', 'Pengiriman Material berhasil dihapus');
-
         } catch (\Exception $e) {
             Log::error('Error deleting material delivery: ' . $e->getMessage());
 
@@ -142,18 +135,17 @@ class MaterialDeliveryController extends Controller
     {
         try {
             $deliveries = MaterialDelivery::where('procurement_id', $procurementId)
-                ->with(['delivery'])
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($del) {
                     return [
                         'delivery_id' => $del->delivery_id,
                         'incoterms' => $del->incoterms ?? '-',
-                        'etd' => $del->etd ? $del->etd->format('d/m/Y') : '-',
-                        'eta_sby_port' => $del->eta_sby_port ? $del->eta_sby_port->format('d/m/Y') : '-',
-                        'eta_pal' => $del->eta_pal ? $del->eta_pal->format('d/m/Y') : '-',
-                        'atd' => $del->atd ? $del->atd->format('d/m/Y') : '-',
-                        'ata_sby_port' => $del->ata_sby_port ? $del->ata_sby_port->format('d/m/Y') : '-',
+                        'etd' => optional($del->etd)->format('d/m/Y'),
+                        'eta_sby_port' => optional($del->eta_sby_port)->format('d/m/Y'),
+                        'eta_pal' => optional($del->eta_pal)->format('d/m/Y'),
+                        'atd' => optional($del->atd)->format('d/m/Y'),
+                        'ata_sby_port' => optional($del->ata_sby_port)->format('d/m/Y'),
                         'remark' => $del->remark ?? '-',
                     ];
                 });
@@ -163,13 +155,12 @@ class MaterialDeliveryController extends Controller
                 'data' => $deliveries,
                 'count' => count($deliveries)
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error getting material deliveries: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
+                'message' => $e->getMessage()
             ], 500);
         }
     }

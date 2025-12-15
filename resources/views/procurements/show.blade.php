@@ -325,7 +325,7 @@
     <div class="info-grid">
         <div>
             <div class="info-item">
-                <div class="info-label">Project</div>
+                <div class="info-label">Procurement</div>
                 <div class="info-value"><strong>{{ $procurement->code_procurement }}</strong></div>
             </div>
 
@@ -647,7 +647,7 @@
                         <div class="modal-dialog modal-lg">
                             <div class="modal-content">
 
-                                <form method="POST" action="{{ route('inquiry-quotation.store', $procurement->project_id) }}">
+                                <form method="POST" action="{{ route('inquiry-quotation.store', $procurement->procurement_id) }}">
                                     @csrf
                                     <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
 
@@ -656,8 +656,6 @@
                                     </div>
 
                                     <div class="modal-body row g-3">
-
-                                        <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
 
                                         {{-- Pilih Vendor --}}
                                         <div class="col-md-6">
@@ -902,7 +900,6 @@
                                 Create
                             </button>
 
-                            <!-- Modal untuk input data evatek -->
                             <div class="modal fade" id="modalEvatek{{ $row }}" tabindex="-1" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
@@ -1388,7 +1385,7 @@
             <div class="modal fade" id="modalCreateDelivery" tabindex="-1">
                 <div class="modal-dialog">
                     <div class="modal-content">
-                        <form method="POST" action="{{ route('material-delivery.store', $procurement->project_id) }}">
+                        <form method="POST" action="{{ route('material-delivery.store', $procurement->procurement_id) }}">
                             @csrf
 
                             <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">

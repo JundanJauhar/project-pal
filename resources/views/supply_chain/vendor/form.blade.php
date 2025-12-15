@@ -128,29 +128,3 @@
 
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    // Auto-generate project code suggestion
-    document.addEventListener('DOMContentLoaded', function() {
-        @if(!isset($project))
-        const codeInput = document.getElementById('code_project');
-        if (codeInput && !codeInput.value) {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const random = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-            codeInput.value = `KCJ-${year}${month}987-${random}`;
-        }
-        @endif
-
-        // Validate end date > start date
-        const startDate = document.getElementById('start_date');
-        const endDate = document.getElementById('end_date');
-
-        startDate.addEventListener('change', function() {
-            endDate.min = this.value;
-        });
-    });
-</script>
-@endpush

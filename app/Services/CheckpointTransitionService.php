@@ -204,7 +204,7 @@ class CheckpointTransitionService
         }
     }
 
-    /** ✅ 5 → 6: Usulan Pengadaan / OC → Pengesahan Kontrak (WAJIB vendor) */
+    /** 5 → 6: Usulan Pengadaan / OC → Pengesahan Kontrak (WAJIB vendor) */
     protected function validateCheckpoint5To6(): void
     {
         if (!$this->procurement->requestProcurements()->whereNotNull('vendor_id')->exists()) {
@@ -212,7 +212,7 @@ class CheckpointTransitionService
         }
     }
 
-    /** ✅ 6 → 7: Pengesahan Kontrak → Pembayaran DP (WAJIB kontrak disahkan) */
+    /** 6 → 7: Pengesahan Kontrak → Pembayaran DP (WAJIB kontrak disahkan) */
     protected function validateCheckpoint6To7(): void
     {
         if (empty($this->data['contract_signed'])) {

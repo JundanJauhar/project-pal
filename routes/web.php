@@ -145,12 +145,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/projects/select-vendor/{procurement_id}', [SupplyChainController::class, 'selectVendor'])
             ->name('select-vendor');
         
-        Route::get('/material-shipping', [SupplyChainController::class, 'materialShipping'])
-            ->name('material-shipping');
-        
-        Route::post('/projects/{projectId}/material-arrival', [SupplyChainController::class, 'updateMaterialArrival'])
-            ->name('material-arrival');
-        
         Route::get('/evatek', [EvatekController::class, 'index'])
             ->name('evatek.index');
         
@@ -199,15 +193,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])
             ->name('vendor.simpan');
     });
-
-    /*
-    |--------------------------------------------------------------------------
-    | ✅ INQUIRY, NEGOTIATION, MATERIAL DELIVERY (OUTSIDE PREFIX)
-    |--------------------------------------------------------------------------
-    */
     
     // ===== INQUIRY & QUOTATION ROUTES =====
-    Route::post('/supply-chain/project/{projectId}/inquiry-quotation', [InquiryQuotationController::class, 'store'])
+    Route::post('/supply-chain/inquiry-quotation/{procurementId}',[InquiryQuotationController::class, 'store'])
         ->name('inquiry-quotation.store');
     
     Route::post('/supply-chain/inquiry-quotation/{inquiryQuotationId}', [InquiryQuotationController::class, 'update'])
@@ -220,7 +208,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('inquiry-quotation.getByProcurement');
     
     // ===== NEGOTIATION ROUTES =====
-    Route::post('/supply-chain/project/{projectId}/negotiation', [NegotiationController::class, 'store'])
+    Route::post('/supply-chain/negotiation/{procurementId}', [NegotiationController::class, 'store'])
         ->name('negotiation.store');
     
     Route::post('/supply-chain/negotiation/{negotiationId}', [NegotiationController::class, 'update'])
@@ -233,7 +221,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('negotiation.getByProcurement');
     
     // ===== MATERIAL DELIVERY ROUTES =====
-    Route::post('/supply-chain/project/{projectId}/material-delivery', [MaterialDeliveryController::class, 'store'])
+    Route::post('/supply-chain/material-delivery/{procurementId}', [MaterialDeliveryController::class, 'store'])
         ->name('material-delivery.store');
     
     Route::post('/supply-chain/material-delivery/{deliveryId}', [MaterialDeliveryController::class, 'update'])

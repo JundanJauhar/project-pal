@@ -96,23 +96,6 @@
         font-size: 13px !important;
     }
 
-    {{-- ✅ Auto-refresh indicator --}}
-    .refresh-indicator {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #28a745;
-        color: white;
-        padding: 8px 12px;
-        border-radius: 4px;
-        font-size: 12px;
-        z-index: 1000;
-        display: none;
-    }
-
-    .refresh-indicator.show {
-        display: block;
-    }
 </style>
 @endpush
 

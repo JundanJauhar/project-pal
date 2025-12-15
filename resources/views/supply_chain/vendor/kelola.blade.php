@@ -370,7 +370,6 @@
     <div class="vendor-table-title">
         <span>Daftar Vendor</span>
 
-        <!-- Search + Tambah di kanan -->
         <div class="d-flex gap-2 align-items-center" style="flex: 0 0 auto;">
             {{-- Search --}}
             <div class="vendor-search-box">
@@ -384,7 +383,7 @@
             {{-- Tambah Vendor --}}
             @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
             <div class="tambah" style="min-width: 120px;">
-                <a href="{{ route('supply-chain.vendor.form', ['redirect' => 'kelola']) }}"
+                <a href="{{ route('supply-chain.vendor.form') }}"
                    class="btn-tambah-vendor"
                    wire:navigate>
                     <i class="bi bi-plus-circle"></i> Tambah
@@ -398,38 +397,27 @@
         <table class="vendor-table">
             <thead>
                 <tr>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">ID Vendor</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;" >No</th>
                     <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Vendor</th>
                     <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Alamat</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kontak</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Email</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status Legal</th>
+                    <!-- <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status Legal</th> -->
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Importer</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                 </tr>
             </thead>
             <tbody id="vendorTableBody">
+                @php $row = 1; @endphp
                 @forelse($vendors as $vendor)
                 <tr>
-                    <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
-                        <strong>{{ $vendor->id_vendor }}</strong>
-                    </td>
-                    <td style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">
-                        {{ $vendor->name_vendor }}
-                    </td>
-                    <td style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">
-                        {{ Str::limit($vendor->address ?? '-', 30) }}
-                    </td>
-                    <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
-                        {{ $vendor->phone_number ?? '-' }}
-                    </td>
-                    <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
-                        {{ $vendor->email ?? '-' }}
-                    </td>
-                    <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
-                        {{ $vendor->legal_status ?? '-' }}
-                    </td>
-                    <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
+                    <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $row++ }}</td>
+                    <td style="padding: 12px 8px; text-align: left; color: #000;">{{ $vendor->name_vendor }}</td>
+                    <td style="padding: 12px 8px; text-align: left; color: #000;">{{ Str::limit($vendor->address ?? '-', 30) }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $vendor->phone_number ?? '-' }} </td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $vendor->email ?? '-' }} </td>
+                    <!-- <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $vendor->legal_status ?? '-' }} </td> -->
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">
                         @if($vendor->is_importer)
                         <span class="badge bg-success">
                             <i class="bi bi-globe"></i> Ya

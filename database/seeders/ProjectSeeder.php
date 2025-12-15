@@ -72,11 +72,6 @@ class ProjectSeeder extends Seeder
             [
                 'project_name' => 'Pengadaan Material Kapal Fregat',
                 'description' => 'Pengadaan material utama untuk kapal fregat kelas sigma',
-                'owner_division_id' => 2,
-                'priority' => 'tinggi',
-                'start_date' => Carbon::now()->subDays(90),
-                'end_date' => Carbon::now()->addDays(30),
-                'status_project' => 'completed',
             ]
         );
 
@@ -89,11 +84,6 @@ class ProjectSeeder extends Seeder
             [
                 'project_name' => 'Pengadaan Sistem Radar Navigasi',
                 'description' => 'Pengadaan radar navigasi untuk kapal perang',
-                'owner_division_id' => 2,
-                'priority' => 'tinggi',
-                'start_date' => Carbon::now()->subDays(45),
-                'end_date' => Carbon::now()->addDays(60),
-                'status_project' => 'negosiasi_harga',
             ]
         );
 
@@ -106,11 +96,6 @@ class ProjectSeeder extends Seeder
             [
                 'project_name' => 'Pengadaan Mesin Diesel Utama',
                 'description' => 'Mesin diesel untuk kapal tanker',
-                'owner_division_id' => 7,
-                'priority' => 'sedang',
-                'start_date' => Carbon::now()->subDays(20),
-                'end_date' => Carbon::now()->addDays(120),
-                'status_project' => 'review_sc',
             ]
         );
 
@@ -123,11 +108,6 @@ class ProjectSeeder extends Seeder
             [
                 'project_name' => 'Pengadaan Peralatan Keselamatan Kapal',
                 'description' => 'Life jacket, fire extinguisher, dll.',
-                'owner_division_id' => 1,
-                'priority' => 'sedang',
-                'start_date' => Carbon::now()->subDays(5),
-                'end_date' => Carbon::now()->addDays(90),
-                'status_project' => 'draft',
             ]
         );
 
@@ -140,11 +120,6 @@ class ProjectSeeder extends Seeder
             [
                 'project_name' => 'Pengadaan Cat Anti Karat & Coating',
                 'description' => 'Cat marine grade untuk kapal',
-                'owner_division_id' => 2,
-                'priority' => 'rendah',
-                'start_date' => Carbon::now()->subDays(15),
-                'end_date' => Carbon::now()->addDays(75),
-                'status_project' => 'persetujuan_sekretaris',
             ]
         );
 
@@ -157,11 +132,6 @@ class ProjectSeeder extends Seeder
             [
                 'project_name' => 'Pengadaan Sistem Komunikasi Satelit',
                 'description' => 'Sistem satelit untuk kapal jelajah jauh',
-                'owner_division_id' => 2,
-                'priority' => 'tinggi',
-                'start_date' => Carbon::now()->subDays(30),
-                'end_date' => Carbon::now()->addDays(90),
-                'status_project' => 'pembuatan_hps',
             ]
         );
 
@@ -174,11 +144,6 @@ class ProjectSeeder extends Seeder
             [
                 'project_name' => 'Pengadaan Generator Listrik',
                 'description' => 'Generator cadangan 500 KVA',
-                'owner_division_id' => 2,
-                'priority' => 'sedang',
-                'start_date' => Carbon::now()->subDays(25),
-                'end_date' => Carbon::now()->addDays(80),
-                'status_project' => 'pemilihan_vendor',
             ]
         );
 

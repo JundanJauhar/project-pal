@@ -22,7 +22,7 @@ class DashboardController extends Controller
         $user = Auth::user();
         $checkpoints = Checkpoint::all();
         $projects = Project::all();
-        $priority = Project::select('priority')->distinct()->get();
+        $priority = Procurement::select('priority')->distinct()->get();
 
         // Get ALL procurements with checkpoint data, filtered by vendor if applicable
         $allProcurementsQuery = Procurement::with([
