@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Item;
 use App\Models\EvatekItem;
 use App\Models\EvatekRevision;
-use App\Models\Project;
+use App\Models\Procurement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\ActivityLogger;
@@ -18,7 +18,7 @@ class EvatekController extends Controller
      * Show Evatek review page for a selected evatek item
      * ✅ PERBAIKAN: Gunakan $evatekId bukan $itemId
      */
-        public function review($evatekId)
+    public function review($evatekId)
     {
         $evatek = EvatekItem::with([
             'item',
@@ -66,29 +66,23 @@ class EvatekController extends Controller
 
 
 
-    /**
-     * Show daftar permintaan (items) untuk project - Evatek listing
-     */
-    public function daftarPermintaan($projectId)
-    {
-        $project = Project::findOrFail($projectId);
-        
-        // Get evatek items for this project through procurement
-        $evatekItems = EvatekItem::whereIn('procurement_id', function ($query) use ($projectId) {
-            $query->select('procurement_id')
-                  ->from('procurement')
-                  ->where('project_id', $projectId);
-        })->with([
-            'item', 
-            'vendor', 
-            'procurement', 
-            'revisions' => function ($query) {
-                $query->latest('revision_id');
-            }
-        ])->get();
 
-        return view('desain.daftar-permintaan', compact('project', 'evatekItems'));
+    public function daftarPermintaan($procurementId)
+    {
+        $evatekItems = EvatekItem::with([
+            'item',
+            'vendor',
+            'procurement',
+            'latestRevision'
+        ])
+            ->where('procurement_id', $procurementId)
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        return view('desain.daftar-permintaan', compact('evatekItems'));
     }
+
+
 
 
     /**
@@ -240,10 +234,6 @@ class EvatekController extends Controller
         return response()->json(['success' => true]);
     }
 
-
-    /**
-     * Mark revision as "Revision Needed" and create new revision (R1, R2…)
-     */
     public function revise(Request $request)
     {
         $revision = EvatekRevision::findOrFail($request->revision_id);

@@ -163,7 +163,7 @@ Route::middleware(['auth'])->group(function () {
             ->name('input-item.store')
             ->where('projectId', '[0-9]+');
 
-        Route::post('/project/{projectId}/evatek-item', [SupplyChainController::class, 'storeEvatekItem'])
+        Route::post('/supply-chain/evatek-item/{procurementId}', [SupplyChainController::class, 'storeEvatekItem'])
             ->name('evatek-item.store')
             ->where('projectId', '[0-9]+');
 
