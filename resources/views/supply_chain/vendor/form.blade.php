@@ -13,6 +13,7 @@
                 <form method="POST" action="{{ isset($vendor) ? route('supply-chain.vendor.update', $vendor->id_vendor) : route('supply-chain.vendor.store') }}">
                     @csrf
                     @if(isset($vendor))
+                        @method('PUT')
                     @endif
                     <input type="hidden" name="redirect" value="{{ $redirect ?? 'kelola' }}">
                     <div class="mb-3">
@@ -36,39 +37,38 @@
                                 class="form-control @error('phone_number') is-invalid @enderror"
                                 id="phone_number"
                                 name="phone_number"
-                                value="{{ isset($vendor) ? $vendor->phone_number : ''}}"
+                                value="{{ isset($vendor) ? $vendor->phone_number : old('phone_number') }}"
                                 placeholder="+62 812 3456 7890"
-                                {{ isset($project) ? 'readonly' : 'required' }}>
+                                required>
                             @error('phone_number')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label for="owner_division_id" class="form-label">Email <span class="text-danger">*</span></label>
-                            <input type="text"
+                            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email"
                                 class="form-control @error('email') is-invalid @enderror"
                                 id="email"
                                 name="email"
-                                value="{{ isset($vendor) ? $vendor->email : ''}}"
-                                placeholder="example@gmail.com"
-                                {{ isset($project) ? 'readonly' : 'required' }}>
+                                value="{{ isset($vendor) ? $vendor->email : old('email') }}"
+                                placeholder="sales@krakatau.com"
+                                required>
                             @error('email')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                            <div class="form-text">
+                                <small><i class="bi bi-info-circle"></i> Email perusahaan</small>
+                            </div>
                         </div>
                     </div>
-
                     <div class="mb-3">
-                        <label for="description" class="form-label">Alamat Perusahaan</label>
+                        <label for="address" class="form-label">Alamat Perusahaan</label>
                         <textarea class="form-control @error('address') is-invalid @enderror"
                             id="address"
                             name="address"
                             rows="4"
-                            value="{{ isset($vendor) ? $vendor->address : ''}}"
-                            placeholder="">
-                        </textarea>
+                            placeholder="Masukkan alamat lengkap perusahaan">{{ isset($vendor) ? $vendor->address : old('address') }}</textarea>
                         @error('address')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -104,7 +104,7 @@
                                 id="is_importer"
                                 name="is_importer"
                                 value="1"
-                                {{ old('is_importer') ? 'checked' : '' }}>
+                                {{ (isset($vendor) && $vendor->is_importer) || old('is_importer') ? 'checked' : '' }}>
                             <label class="form-check-label" for="is_importer">
                                 Vendor adalah Importir
                             </label>

@@ -658,7 +658,32 @@
 <body>
 <!-- Navbar -->
 @if(!isset($hideNavbar) || !$hideNavbar)
-    @if(Auth::check() && Auth::user()->roles !== 'vendor')
+    @if(Auth::guard('vendor')->check())
+        {{-- Navbar khusus Vendor: Logo + Nama Vendor + Logout --}}
+        <nav class="navbar navbar-expand-lg navbar-light navbar-custom">
+            <div class="container-fluid">
+                <a class="navbar-brand d-flex align-items-center ms-4" href="{{ route('vendor.index') }}" wire:navigate>
+                    <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo">
+                </a>
+                
+                <div class="ms-auto d-flex align-items-center me-4 gap-3">
+                    {{-- Nama Vendor --}}
+                    <span class="text-dark fw-semibold" style="font-size: 15px;">
+                        {{ Auth::guard('vendor')->user()->name_vendor ?? 'Vendor' }}
+                    </span>
+                    
+                    {{-- Logout Button --}}
+                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-2">
+                            <i class="bi bi-box-arrow-right"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </nav>
+    @elseif(Auth::check())
         {{-- Navbar untuk Internal Users (Dashboard, Projects, dll) --}}
         <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
             <div class="container-fluid">
@@ -784,31 +809,6 @@
                             </ul>
                         </li>
                     </ul>
-                </div>
-            </div>
-        </nav>
-    @else
-        {{-- Navbar khusus Vendor: Logo + Nama Vendor + Logout --}}
-        <nav class="navbar navbar-expand-lg navbar-light navbar-custom">
-            <div class="container-fluid">
-                <a class="navbar-brand d-flex align-items-center ms-4" href="{{ route('vendor.index') }}" wire:navigate>
-                    <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo">
-                </a>
-                
-                <div class="ms-auto d-flex align-items-center me-4 gap-3">
-                    {{-- Nama Vendor --}}
-                    <span class="text-dark fw-semibold" style="font-size: 15px;">
-                        {{ Auth::user()->vendor->name_vendor ?? Auth::user()->name }}
-                    </span>
-                    
-                    {{-- Logout Button --}}
-                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-2">
-                            <i class="bi bi-box-arrow-right"></i>
-                            <span>Logout</span>
-                        </button>
-                    </form>
                 </div>
             </div>
         </nav>

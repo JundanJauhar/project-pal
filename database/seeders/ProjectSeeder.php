@@ -32,7 +32,6 @@ class ProjectSeeder extends Seeder
                 'address' => 'Jl. Industri No. 1, Cilegon, Banten',
                 'phone_number' => '021-12345678',
                 'email' => 'sales@krakatausteel.com',
-                'legal_status' => 'verified',
                 'is_importer' => false,
             ],
             [
@@ -41,7 +40,6 @@ class ProjectSeeder extends Seeder
                 'address' => 'Jl. Gatot Subroto, Bandung',
                 'phone_number' => '022-87654321',
                 'email' => 'procurement@pindad.com',
-                'legal_status' => 'verified',
                 'is_importer' => false,
             ],
             [
@@ -50,7 +48,6 @@ class ProjectSeeder extends Seeder
                 'address' => 'Jl. Pajajaran No. 154, Bandung',
                 'phone_number' => '022-98765432',
                 'email' => 'sales@indonesian-aerospace.com',
-                'legal_status' => 'verified',
                 'is_importer' => true,
             ],
         ];

@@ -27,6 +27,7 @@ use App\Http\Controllers\InquiryQuotationController;
 use App\Http\Controllers\NegotiationController;
 use App\Http\Controllers\MaterialDeliveryController;
 use App\Http\Controllers\CheckpointTransitionController;
+use App\Http\Controllers\VendorController;
 
 
 // Redirect root → login
@@ -38,12 +39,31 @@ Route::get('/login', fn() => view('auth.login'))
 
 Route::post('/login', function (Request $request) {
     $credentials = $request->validate([
-        'email' => 'required|email',
+        'email' => 'required',
         'password' => 'required',
     ]);
 
-    if (Auth::attempt($credentials, $request->boolean('remember'))) {
+    // Coba login sebagai vendor dulu jika email berakhiran @vendor.com
+    if (str_ends_with(strtolower($credentials['email']), '@vendor.com')) {
+        if (Auth::guard('vendor')->attempt(['user_vendor' => $credentials['email'], 'password' => $credentials['password']], $request->boolean('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->route('vendor.index'); // Redirect ke halaman vendor evatek
+        }
+        
+        return back()->withErrors([
+            'email' => 'Email login atau password vendor salah.',
+        ]);
+    }
+
+    // Jika bukan vendor (@vendor.com), coba login sebagai user biasa dengan email
+    $emailCredentials = [
+        'email' => $credentials['email'],
+        'password' => $credentials['password']
+    ];
+
+    if (Auth::attempt($emailCredentials, $request->boolean('remember'))) {
         $request->session()->regenerate();
+        
         // Redirect berdasarkan role
         if (Auth::user()->roles === 'superadmin') {
             return redirect()->route('ums.users.index'); // langsung ke UMS
@@ -62,23 +82,68 @@ Route::post('/login', function (Request $request) {
 })->middleware('guest');
 
 Route::post('/logout', function (Request $request) {
-    Auth::logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
+    // Logout vendor guard jika vendor yang login
+    if (Auth::guard('vendor')->check()) {
+        Auth::guard('vendor')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login');
+    }
+    
+    // Logout web guard jika user internal yang login
+    if (Auth::check()) {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login');
+    }
+    
+    // Jika tidak ada yang login, redirect ke login
     return redirect()->route('login');
 })->name('logout');
 
 /*
 |--------------------------------------------------------------------------
+| VENDOR ROUTES (Menggunakan guard 'vendor', HARUS DI LUAR middleware 'auth')
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth:vendor')->group(function () {
+    Route::get('/vendor', [VendorEvatekController::class, 'index'])
+        ->name('vendor.index');
+    
+    Route::get('/vendor/profile', [VendorEvatekController::class, 'profile'])
+        ->name('vendor.profile');
+    
+    Route::put('/vendor/profile', [VendorEvatekController::class, 'updateProfile'])
+        ->name('vendor.profile.update');
+    
+    // Vendor Evatek Routes
+    Route::get('/vendor/evatek/{evatekId}/review', [VendorEvatekController::class, 'reviewEvatek'])
+        ->name('vendor.evatek.review');
+    
+    Route::post('/vendor/evatek/save-link', [VendorEvatekController::class, 'saveVendorLink'])
+        ->name('vendor.evatek.save-link');
+    
+    Route::post('/vendor/evatek/save-log', [VendorEvatekController::class, 'saveLog'])
+        ->name('vendor.evatek.save-log');
+});
+
+Route::redirect('/vendor/dashboard', '/vendor');
+Route::redirect('/vendor/evatek', '/vendor');
+
+/*
+|--------------------------------------------------------------------------
 | PROTECTED ROUTES (User harus login)
+| Middleware 'redirect.if.vendor' memastikan vendor tidak bisa akses route ini
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
 
-    // Dashboard
+    // Dashboard (hanya untuk internal user, bukan vendor)
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
+    
     Route::get('/dashboard/division/{divisionId}', [DashboardController::class, 'divisionDashboard'])->name('dashboard.division');
     Route::get('/dashboard/statistics', [DashboardController::class, 'getStatistics'])->name('dashboard.statistics');
     Route::get('/dashboard/timeline/{projectId}', [DashboardController::class, 'getProcurementTimeline'])->name('dashboard.timeline');
@@ -177,7 +242,7 @@ Route::middleware(['auth'])->group(function () {
             ->name('get-procurement-items')
             ->where('procurementId', '[0-9]+');
         
-        // ========== VENDOR ROUTES ==========
+        // ========== VENDOR ROUTES (Supply Chain) ==========
         Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])
             ->name('vendor.kelola');
         
@@ -347,22 +412,47 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [SekdirController::class, 'dashboard'])->name('dashboard');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | VENDOR
-    |--------------------------------------------------------------------------
-    */
-    Route::get('/vendor', [VendorEvatekController::class, 'index'])
-        ->name('vendor.index');
+// ===== DEBUG ROUTES (HARUS DI LUAR MIDDLEWARE AUTH) =====
+Route::get('/debug/vendor-reset', function() {
+    $vendors = \App\Models\Vendor::all();
+    
+    echo "<h2>Debug: Reset Password Vendor</h2>";
+    echo "<table border='1' cellpadding='8' style='border-collapse: collapse;'>";
+    echo "<tr style='background: #e0e0e0;'><th>ID</th><th>Name</th><th>Email Login (user_vendor)</th><th>Current Password Hash</th><th>Action</th></tr>";
+    
+    foreach ($vendors as $vendor) {
+        echo "<tr>";
+        echo "<td>{$vendor->id_vendor}</td>";
+        echo "<td>{$vendor->name_vendor}</td>";
+        echo "<td><strong>{$vendor->user_vendor}</strong></td>";
+        echo "<td style='font-size:10px; max-width:200px; overflow:hidden;'>{$vendor->password}</td>";
+        echo "<td>";
+        echo "<form method='POST' action='/debug/vendor-reset/{$vendor->id_vendor}' style='margin:0;'>";
+        echo csrf_field();
+        echo "<button type='submit' style='padding:5px 10px; background:#4CAF50; color:white; border:none; cursor:pointer;'>Reset to 'password'</button>";
+        echo "</form>";
+        echo "</td>";
+        echo "</tr>";
+    }
+    echo "</table>";
+    
+    echo "<hr><h3>Test Login:</h3>";
+    echo "<p>Setelah reset, login dengan:</p>";
+    echo "<ul>";
+    foreach ($vendors as $vendor) {
+        echo "<li>Email: <strong>{$vendor->user_vendor}</strong> | Password: <strong>password</strong></li>";
+    }
+    echo "</ul>";
+});
 
-    Route::redirect('/vendor/dashboard', '/vendor');
-    Route::redirect('/vendor/evatek', '/vendor');
+Route::post('/debug/vendor-reset/{id}', function($id) {
+    $vendor = \App\Models\Vendor::findOrFail($id);
+    $vendor->password = \Illuminate\Support\Facades\Hash::make('password');
+    $vendor->save();
+    
+    return redirect('/debug/vendor-reset')->with('success', "Password vendor {$vendor->name_vendor} berhasil direset!");
+});
 
-    /*
-    |--------------------------------------------------------------------------
-    | DEBUG ROUTES
-    |--------------------------------------------------------------------------
-    */
     Route::get('/debug/inspection/{procurement_id}', function($procurement_id) {
         $procurement = \App\Models\Procurement::with([
             'requestProcurements.items.inspectionReports',
