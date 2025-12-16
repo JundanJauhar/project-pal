@@ -10,7 +10,8 @@ class ActivityLogController extends Controller
 {
     public function index(Request $request)
     {
-        $query = ActivityLog::with('actor')->orderBy('id', 'desc');
+        $query = ActivityLog::with('actor')
+            ->orderByDesc('created_at');
 
         if ($request->filled('module')) {
             $query->where('module', $request->module);
@@ -28,7 +29,7 @@ class ActivityLogController extends Controller
             $query->whereDate('created_at', $request->date);
         }
 
-        $logs = $query->paginate(20);
+        $logs = $query->paginate(20)->withQueryString();
 
         return view('ums.activity_logs.index', compact('logs'));
     }
@@ -36,6 +37,7 @@ class ActivityLogController extends Controller
     public function show($id)
     {
         $log = ActivityLog::with('actor')->findOrFail($id);
+
         return view('ums.activity_logs.show', compact('log'));
     }
 }
