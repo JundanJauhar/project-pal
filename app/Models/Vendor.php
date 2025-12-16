@@ -4,15 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\Hash;
 
-class Vendor extends Model
+class Vendor extends Authenticatable
 {
     protected $table = 'vendors';
     protected $primaryKey = 'id_vendor';
     protected $keyType = 'string';
     public $incrementing = false;
-
 
     protected $fillable = [
         'id_vendor',
@@ -20,6 +20,13 @@ class Vendor extends Model
         'address',
         'phone_number',
         'email',
+        'user_vendor',
+        'password',
+        'is_importer',
+    ];
+
+    protected $hidden = [
+        'password',
     ];
 
     protected $casts = [
@@ -33,51 +40,58 @@ class Vendor extends Model
     {
         parent::boot();
 
-        // Otomatis buat akun user ketika vendor baru dibuat
-        static::created(function ($vendor) {
-            $emailPrefix = self::generateEmailPrefix($vendor->name_vendor);
-            $email = $emailPrefix . '@pal.com';
-
-            User::updateOrCreate(
-                ['email' => $email],
-                [
-                    'name' => $vendor->name_vendor,
-                    'password' => Hash::make('password'),
-                    'vendor_id' => $vendor->id_vendor,
-                    'roles' => 'vendor',
-                    'status' => 'active',
-                ]
-            );
-        });
-
-        // Update user ketika vendor diupdate
-        static::updated(function ($vendor) {
-            $user = User::where('vendor_id', $vendor->id_vendor)->first();
+        // Auto-generate user_vendor (email login) dan password saat vendor dibuat
+        static::creating(function ($vendor) {
+            if (empty($vendor->user_vendor)) {
+                $vendor->user_vendor = self::generateEmailVendor($vendor->name_vendor);
+            }
             
-            if ($user) {
-                $user->update([
-                    'name' => $vendor->name_vendor,
-                ]);
+            if (empty($vendor->password)) {
+                $vendor->password = Hash::make('password'); // default password
             }
         });
     }
 
     /**
-     * Generate email prefix from vendor name
+     * Generate user_vendor (email login) from vendor name
+     * Contoh: "PT Mega Persada" -> "megapersada@vendor.com"
      */
-    private static function generateEmailPrefix($vendorName): string
+    private static function generateEmailVendor($vendorName): string
     {
-        // Hapus "PT", "CV", "UD" dll dari nama
-        $name = preg_replace('/^(PT|CV|UD|Tbk)\s*/i', '', $vendorName);
+        // Hapus "PT", "CV", "UD", "Tbk" dll dari nama
+        $name = preg_replace('/^(PT|CV|UD|Tbk)\.?\s*/i', '', $vendorName);
         
-        // Ambil kata pertama atau jika ada brand terkenal ambil itu
-        $words = explode(' ', trim($name));
-        $prefix = strtolower($words[0]);
+        // Hapus semua spasi dan karakter special, lowercase
+        $cleanName = strtolower(preg_replace('/[^A-Za-z0-9]/', '', $name));
         
-        // Hapus karakter special dan spasi
-        $prefix = preg_replace('/[^a-z0-9]/', '', $prefix);
+        // Format email login dengan @vendor.com
+        $baseEmail = $cleanName . '@vendor.com';
         
-        return $prefix;
+        // Pastikan unique dengan menambah angka jika sudah ada
+        $email = $baseEmail;
+        $counter = 1;
+        while (self::where('user_vendor', $email)->exists()) {
+            $email = str_replace('@vendor.com', $counter . '@vendor.com', $baseEmail);
+            $counter++;
+        }
+        
+        return $email;
+    }
+
+    /**
+     * Override getAuthPassword untuk autentikasi
+     */
+    public function getAuthPassword()
+    {
+        return $this->password;
+    }
+
+    /**
+     * Get the name of the unique identifier for the user.
+     */
+    public function getAuthIdentifierName()
+    {
+        return 'user_vendor';
     }
 
     /**
@@ -92,13 +106,4 @@ class Vendor extends Model
     {
         return $this->hasMany(EvatekItem::class, 'vendor_id', 'id_vendor');
     }
-
-    /**
-     * Get user account for this vendor
-     */
-    public function user()
-    {
-        return $this->hasOne(User::class, 'vendor_id', 'id_vendor');
-    }
-
 }

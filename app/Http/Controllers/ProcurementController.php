@@ -210,9 +210,7 @@ class ProcurementController extends Controller
             $currentStageIndex = $currentCheckpoint->point_sequence;
         }
 
-        $vendors = Vendor::where('legal_status', 'verified')
-            ->orderBy('name_vendor', 'asc')
-            ->get();
+        $vendors = Vendor::orderBy('name_vendor', 'asc')->get();
 
         $evatekItems = EvatekItem::where('procurement_id', $procurement->procurement_id)
             ->with([

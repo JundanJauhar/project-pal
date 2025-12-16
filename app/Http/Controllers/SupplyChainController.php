@@ -87,9 +87,7 @@ class SupplyChainController extends Controller
             ->with('requestProcurements.items')
             ->orderBy('code_procurement', 'asc')
             ->get();
-        $vendors = Vendor::where('legal_status', 'verified')
-            ->orderBy('name_vendor', 'asc')
-            ->get();
+        
 
         return view('supply_chain.input-item', compact('project', 'procurements', 'vendors'));
     }
@@ -210,7 +208,13 @@ class SupplyChainController extends Controller
 
             $createdVendors = [];
 
-            foreach ($validated['vendor_ids'] as $vendorId) {
+            $vendorIds = $validated['vendor_ids'];
+
+            foreach ($vendorIds as $vendorId) {
+                $existingRequest = RequestProcurement::where('procurement_id', $validated['procurement_id'])
+                    ->where('vendor_id', $vendorId)
+                    ->where('project_id', $projectId)
+                    ->first();
 
                 $exists = EvatekItem::where([
                     'procurement_id' => $procurementId,
@@ -254,7 +258,87 @@ class SupplyChainController extends Controller
 
             DB::commit();
 
-            $vendorNames = Vendor::whereIn('id_vendor', $createdVendors)
+            return redirect()->route('supply-chain.dashboard')
+                ->with('success', "Item '{$item->item_name}' berhasil ditambahkan untuk {$vendorNames}!");
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error storing item: ' . $e->getMessage());
+
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
+     * Store Evatek item(s) directly
+     */
+    public function storeEvatekItem(Request $request, $projectId)
+    {
+        if (Auth::user()->roles !== 'supply_chain' && Auth::user()->roles !== 'admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'procurement_id' => 'required|exists:procurement,procurement_id',
+            'item_id' => 'required|exists:items,item_id',
+            'vendor_ids' => 'required|array|min:1',
+            'vendor_ids.*' => 'required|exists:vendors,id_vendor',
+            'start_date' => 'nullable|date',
+            'target_date' => 'nullable|date|after:today',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $project = Project::findOrFail($projectId);
+            $item = Item::findOrFail($validated['item_id']);
+            $procurement = Procurement::findOrFail($validated['procurement_id']);
+
+            if ($procurement->project_id != $projectId) {
+                throw new \Exception('Procurement tidak sesuai dengan project.');
+            }
+
+            $created = [];
+            foreach ($validated['vendor_ids'] as $vendorId) {
+                $targetDate = $validated['target_date']
+                    ? \Carbon\Carbon::parse($validated['target_date'])->toDateString()
+                    : $procurement->end_date->toDateString();
+
+                $evatek = EvatekItem::firstOrCreate(
+                    [
+                        'item_id' => $item->item_id,
+                        'procurement_id' => $procurement->procurement_id,
+                        'vendor_id' => $vendorId,
+                    ],
+                    [
+                        'project_id' => $projectId,
+                        'start_date' => now()->toDateString(),
+                        'target_date' => $targetDate,
+                        'current_revision' => 'R0',
+                        'status' => 'on_progress',
+                        'current_date' => null,
+                    ]
+                );
+
+                $created[] = $evatek;
+            }
+
+            ActivityLogger::log(
+                module: 'Vendor',
+                action: 'store_evatek_item',
+                targetId: $item->item_id,
+                details: ['user_id' => Auth::id()]
+            );
+
+            DB::commit();
+
+            $vendorNames = Vendor::whereIn('id_vendor', $validated['vendor_ids'])
                 ->pluck('name_vendor')
                 ->implode(', ');
 
@@ -336,14 +420,11 @@ class SupplyChainController extends Controller
                     ->orWhere('id_vendor', 'like', "%{$search}%")
                     ->orWhere('address', 'like', "%{$search}%");
             })
-            ->where('legal_status', 'verified')
             ->orderBy('id_vendor', 'asc')
             ->get();
 
         $stats = [
             'total' => Vendor::count(),
-            'active' => Vendor::where('legal_status', 'approved')->count(),
-            'pending' => Vendor::where('legal_status', 'pending')->count(),
             'importer' => Vendor::where('is_importer', true)->count(),
         ];
 
@@ -512,14 +593,14 @@ class SupplyChainController extends Controller
                 'address' => 'nullable|string|max:500',
                 'phone_number' => 'required|string|max:20',
                 'email' => 'required|email|max:255|unique:vendors,email',
+                'user_vendor' => 'nullable|string|max:100|unique:vendors,user_vendor',
                 'is_importer' => 'nullable|boolean',
             ]);
 
             DB::beginTransaction();
 
             $lastVendor = Vendor::orderByRaw('CAST(SUBSTRING(id_vendor, 3) AS UNSIGNED) DESC')->first();
-
-            if ($lastVendor && preg_match('/^V-(\d+)$/', $lastVendor->id_vendor, $matches)) {
+            if ($lastVendor && preg_match('/^(\d+)$/', $lastVendor->id_vendor, $matches)) {
                 $lastNumber = intval($matches[1]);
             } else {
                 $lastNumber = 0;
@@ -527,7 +608,7 @@ class SupplyChainController extends Controller
 
             do {
                 $lastNumber++;
-                $idVendor = 'V-' . str_pad($lastNumber, 3, '0', STR_PAD_LEFT);
+                $idVendor = str_pad($lastNumber, 3, '0', STR_PAD_LEFT); // 001, 002, 003
             } while (Vendor::where('id_vendor', $idVendor)->exists());
 
             $vendor = Vendor::create([
@@ -536,8 +617,8 @@ class SupplyChainController extends Controller
                 'address' => $validated['address'] ?? null,
                 'phone_number' => $validated['phone_number'],
                 'email' => $validated['email'],
+                'user_vendor' => $validated['user_vendor'] ?? null, // auto-generate di model jika null
                 'is_importer' => $request->has('is_importer') ? 1 : 0,
-                'legal_status' => 'pending',
             ]);
 
             ActivityLogger::log(
@@ -553,7 +634,7 @@ class SupplyChainController extends Controller
             $routeName = $redirect === 'pilih' ? 'supply-chain.vendor.pilih' : 'supply-chain.vendor.kelola';
 
             return redirect()->route($routeName)
-                ->with('success', 'Vendor "' . $vendor->name_vendor . '" berhasil ditambahkan dengan ID: ' . $idVendor);
+                ->with('success', 'Vendor "' . $vendor->name_vendor . '" berhasil ditambahkan dengan ID: ' . $idVendor . ', Email Login: ' . $vendor->user_vendor);
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
             return back()
