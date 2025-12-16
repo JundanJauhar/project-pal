@@ -4,226 +4,254 @@ namespace App\Http\Controllers\UMS;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Division;
 use App\Helpers\AuditLogger;
 use App\Helpers\ActivityLogger;
-use Maatwebsite\Excel\Facades\Excel;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class UsersController extends Controller
 {
-    public function index()
+    /**
+     * ===============================
+     * LIST USER
+     * ===============================
+     */
+    public function index(Request $request)
     {
-        $users = User::orderBy('name', 'asc')->get();
-        return view('ums.users.index', compact('users'));
+        $query = User::with('division')->orderBy('name');
+
+        // SEARCH
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(fn ($q) =>
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+            );
+        }
+
+        // FILTER DIVISION
+        if ($request->filled('division')) {
+            $query->whereHas('division', fn ($q) =>
+                $q->where('division_name', $request->division)
+            );
+        }
+
+        // FILTER ROLE
+        if ($request->filled('role')) {
+            $query->where('roles', $request->role);
+        }
+
+        // FILTER STATUS
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        return view('ums.users.index', [
+            'users'     => $query->get(),
+            'divisions' => Division::orderBy('division_name')->get(),
+            'roles'     => User::select('roles')->distinct()->pluck('roles'),
+        ]);
     }
 
+    /**
+     * ===============================
+     * CREATE FORM
+     * ===============================
+     */
     public function create()
     {
-        $divisions = Division::all();
-        $roles = [
-            'superadmin', 'admin', 'sekretaris', 'sekretaris_direksi',
-            'desain', 'supply_chain', 'treasury', 'accounting', 'qa', 'user'
-        ];
-        return view('ums.users.create', compact('divisions', 'roles'));
+        return view('ums.users.create', [
+            'divisions' => Division::orderBy('division_name')->get(),
+            'roles' => [
+                'superadmin',
+                'admin',
+                'sekretaris',
+                'desain',
+                'supply_chain',
+                'treasury',
+                'accounting',
+                'qa',
+                'user',
+            ],
+        ]);
     }
 
+    /**
+     * ===============================
+     * STORE USER
+     * ===============================
+     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:6',
-            'roles' => 'required|string',
-            'division_id' => 'nullable|integer',
+        // ❌ hanya superadmin boleh membuat user
+        if (Auth::user()->roles !== 'superadmin') {
+            abort(403, 'Tidak memiliki izin.');
+        }
+
+        $data = $request->validate([
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:users,email',
+            'password'    => 'required|min:6',
+            'roles'       => 'required|string',
+            'division_id' => 'nullable|exists:divisions,division_id',
         ]);
 
         $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'roles' => $validated['roles'],
-            'division_id' => $validated['division_id'],
-            'status' => 'active',
+            ...$data,
+            'password' => Hash::make($data['password']),
+            'status'   => 'active',
         ]);
 
         AuditLogger::log(
             action: 'create_user',
             table: 'users',
             targetId: $user->user_id,
-            details: [
-                'created_by' => Auth::id(),
-                'data' => $user->toArray(),
-            ]
+            details: ['created_by' => Auth::id()]
         );
 
         ActivityLogger::log(
             module: 'User Management',
             action: 'create',
-            targetId: $user->user_id,
-            details: [
-                'created_by' => Auth::id(),
-                'data' => $user->toArray(),
-            ]
+            targetId: $user->user_id
         );
 
-        return redirect()->route('ums.users.index')->with('success', 'User berhasil dibuat.');
+        return redirect()
+            ->route('ums.users.index')
+            ->with('success', 'User berhasil dibuat.');
     }
 
+    /**
+     * ===============================
+     * EDIT FORM
+     * ===============================
+     */
     public function edit($user_id)
     {
-        $user = User::findOrFail($user_id);
-        $divisions = Division::all();
-        $roles = [
-            'superadmin', 'admin', 'sekretaris', 'sekretaris_direksi',
-            'desain', 'supply_chain', 'treasury', 'accounting', 'qa', 'user'
-        ];
-        return view('ums.users.edit', compact('user', 'divisions', 'roles'));
+        return view('ums.users.edit', [
+            'user'      => User::with('division')->findOrFail($user_id),
+            'divisions' => Division::orderBy('division_name')->get(),
+            'roles' => [
+                'superadmin',
+                'admin',
+                'sekretaris',
+                'desain',
+                'supply_chain',
+                'treasury',
+                'accounting',
+                'qa',
+                'user',
+            ],
+        ]);
     }
 
+    /**
+     * ===============================
+     * UPDATE USER
+     * ===============================
+     */
     public function update(Request $request, $user_id)
     {
         $user = User::findOrFail($user_id);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => "required|email|unique:users,email,{$user_id},user_id",
-            'roles' => 'required|string',
-            'division_id' => 'nullable|integer',
+        // ❌ Proteksi superadmin
+        if ($user->roles === 'superadmin' && Auth::user()->roles !== 'superadmin') {
+            abort(403, 'Tidak memiliki izin.');
+        }
+
+        $data = $request->validate([
+            'name'        => 'required|string|max:255',
+            'email'       => "required|email|unique:users,email,{$user_id},user_id",
+            'roles'       => 'required|string',
+            'division_id' => 'nullable|exists:divisions,division_id',
         ]);
 
         $before = $user->toArray();
-
-        $user->update([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'roles' => $validated['roles'],
-            'division_id' => $validated['division_id'],
-        ]);
+        $user->update($data);
 
         AuditLogger::log(
             action: 'update_user',
             table: 'users',
             targetId: $user->user_id,
-            details: [
-                'updated_by' => Auth::id(),
-                'before' => $before,
-                'after' => $user->toArray(),
-            ]
+            details: ['before' => $before, 'after' => $user->toArray()]
         );
 
         ActivityLogger::log(
             module: 'User Management',
             action: 'update',
-            targetId: $user->user_id,
-            details: [
-                'updated_by' => Auth::id(),
-                'before' => $before,
-                'after' => $user->toArray(),
-            ]
+            targetId: $user->user_id
         );
 
-        return redirect()->route('ums.users.index')->with('success', 'User berhasil diperbarui.');
+        return redirect()
+            ->route('ums.users.index')
+            ->with('success', 'User berhasil diperbarui.');
     }
 
-    public function resetPassword(Request $request, $user_id)
+    /**
+     * ===============================
+     * TOGGLE STATUS
+     * ===============================
+     */
+    public function toggleStatus($user_id)
     {
         $user = User::findOrFail($user_id);
 
-        $request->validate([
-            'password' => 'required|min:6'
-        ]);
+        // ❌ superadmin tidak boleh dinonaktifkan
+        if ($user->roles === 'superadmin') {
+            return back()->with('error', 'Super Admin tidak dapat dinonaktifkan.');
+        }
 
-        $before = $user->toArray();
-
+        $before = $user->status;
         $user->update([
-            'password' => Hash::make($request->password),
+            'status' => $before === 'active' ? 'inactive' : 'active',
         ]);
 
         AuditLogger::log(
-            action: 'reset_password',
+            action: 'toggle_user_status',
             table: 'users',
             targetId: $user->user_id,
-            details: [
-                'reset_by' => Auth::id(),
-                'before' => $before,
-            ]
+            details: ['before' => $before, 'after' => $user->status]
         );
 
         ActivityLogger::log(
             module: 'User Management',
-            action: 'reset_password',
-            targetId: $user->user_id,
-            details: [
-                'reset_by' => Auth::id(),
-                'before' => $before,
-            ]
+            action: 'toggle_status',
+            targetId: $user->user_id
         );
 
-        return redirect()->route('ums.users.index')->with('success', 'Password berhasil direset.');
+        return back()->with('success', 'Status user berhasil diperbarui.');
     }
 
-    public function forceLogout($user_id)
-    {
-        $user = User::findOrFail($user_id);
-
-        DB::table('sessions')->where('user_id', $user_id)->delete();
-
-        AuditLogger::log(
-            action: 'force_logout',
-            table: 'users',
-            targetId: $user->user_id,
-            details: [
-                'force_logout_by' => Auth::id(),
-                'user' => $user->toArray(),
-            ]
-        );
-
-        ActivityLogger::log(
-            module: 'User Management',
-            action: 'force_logout',
-            targetId: $user->user_id,
-            details: [
-                'force_logout_by' => Auth::id(),
-                'user' => $user->toArray(),
-            ]
-        );
-
-        return back()->with('success', 'User berhasil di-force logout.');
-    }
-
+    /**
+     * ===============================
+     * DELETE USER
+     * ===============================
+     */
     public function destroy($user_id)
     {
         $user = User::findOrFail($user_id);
+
+        // ❌ superadmin tidak boleh dihapus
+        if ($user->roles === 'superadmin') {
+            return back()->with('error', 'Super Admin tidak dapat dihapus.');
+        }
 
         AuditLogger::log(
             action: 'delete_user',
             table: 'users',
             targetId: $user->user_id,
-            details: [
-                'deleted_by' => Auth::id(),
-                'data' => $user->toArray(),
-            ]
+            details: ['deleted_by' => Auth::id()]
         );
 
         ActivityLogger::log(
             module: 'User Management',
             action: 'delete',
-            targetId: $user->user_id,
-            details: [
-                'deleted_by' => Auth::id(),
-                'data' => $user->toArray(),
-            ]
+            targetId: $user->user_id
         );
 
         $user->delete();
 
-        return redirect()->route('ums.users.index')->with('success', 'User telah dihapus.');
+        return back()->with('success', 'User berhasil dihapus.');
     }
-
-    
 }

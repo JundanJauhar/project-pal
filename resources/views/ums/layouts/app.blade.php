@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,93 +20,111 @@
             overflow-y: scroll;
         }
 
-        /* --------------- SIDEBAR --------------- */
+        /* ================= SIDEBAR ================= */
         .ums-sidebar {
-            width: 240px;
+            width: 260px;
             height: 100vh;
             background: #ffffff;
             border-right: 1px solid #e4e4e4;
             position: fixed;
             top: 0;
             left: 0;
-            padding: 28px 20px;
+            padding: 24px 18px;
+            display: flex;
+            flex-direction: column;
         }
 
         .ums-sidebar .logo {
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: center;
+            text-align: center;
+            margin-bottom: 26px;
         }
 
         .ums-sidebar .logo img {
-            width: 130px;
+            width: 140px;
         }
 
-        .ums-sidebar .menu-title {
+        .menu-section {
+            margin-bottom: 20px;
+        }
+
+        .menu-title {
             font-size: 12px;
             font-weight: 700;
             color: #6d6d6d;
-            margin-top: 20px;
-            margin-bottom: 8px;
+            margin: 16px 10px 8px;
             text-transform: uppercase;
         }
 
-        .ums-sidebar .nav-link {
+        .nav-link {
             font-size: 14px;
             font-weight: 600;
             color: #333;
             padding: 10px 14px;
             border-radius: 8px;
             margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .ums-sidebar .nav-link:hover {
-            background: #f0f0f0;
+        .nav-link:hover {
+            background: #f2f2f2;
         }
 
-        .ums-sidebar .nav-link.active {
+        .nav-link.active {
             background: #003d82;
             color: #fff !important;
         }
 
-        /* --------------- TOPBAR --------------- */
-        .ums-topbar {
-            position: fixed;
-            left: 240px;
-            right: 0;
-            top: 0;
-            height: 58px;
-            background: #ffffff;
-            border-bottom: 1px solid #e4e4e4;
+        /* ================= USER DROPDOWN ================= */
+        .sidebar-user {
+            margin-top: auto;
+            border-top: 1px solid #e4e4e4;
+            padding-top: 14px;
+        }
+
+        .sidebar-user button {
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 28px;
-            z-index: 50;
         }
 
-        .ums-topbar .page-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #000;
+        .sidebar-user button:hover {
+            background: #f0f0f0;
         }
 
-        .ums-topbar .user {
-            font-weight: 600;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        /* --------------- CONTENT WRAPPER --------------- */
+        /* ================= CONTENT ================= */
         .ums-content {
-            margin-left: 240px;
-            margin-top: 70px;
+            margin-left: 260px;
             padding: 32px 40px;
         }
 
-        /* SUCCESS & ERROR ALERT */
+        /* ================= GLOBAL TABLE STYLE ================= */
+        /* Wrapper halaman tabel */
+        .page-card,
+        .audit-wrapper {
+            background: #ffffffff !important;
+        }
+
+        /* Baris tabel */
+        table.user-table tbody tr,
+        table.audit-table tbody tr {
+            background: #ffffffff !important;
+        }
+
+        /* Header tabel */
+        table.user-table thead th,
+        table.audit-table thead th {
+            background: #ffffffff !important;
+        }
+
+        /* ================= ALERT ================= */
         .alert-custom {
             border-radius: 10px;
             font-size: 14px;
@@ -120,101 +137,102 @@
 
 <body>
 
-    <!-- SIDEBAR -->
-    <aside class="ums-sidebar">
-        <div class="logo">
-            <img src="{{ asset('images/logo-pal.png') }}" alt="PAL">
-        </div>
+<!-- ================= SIDEBAR ================= -->
+<aside class="ums-sidebar">
 
-        <div class="menu-title">User Management</div>
-        <ul class="nav flex-column">
+    <div class="logo">
+        <img src="{{ asset('images/logo-pal.png') }}" alt="PAL Indonesia">
+    </div>
 
-            <li class="nav-item">
-                <a class="nav-link {{ request()->is('ums/users*') ? 'active' : '' }}"
-                    href="{{ route('ums.users.index') }}">
-                    <i class="bi bi-people-fill me-2"></i> Users
-                </a>
-            </li>
+    <a class="nav-link" href="#">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </a>
 
-            <!-- <li class="nav-item">
-                <a class="nav-link {{ request()->is('ums/scopes*') ? 'active' : '' }}"
-                    href="{{ route('ums.admin_scopes.index') }}">
-                    <i class="bi bi-shield-lock-fill me-2"></i> Admin Scopes
-                </a>
-            </li> -->
+    <div class="menu-section">
+        <div class="menu-title">Access Control</div>
 
-            <li class="nav-item">
-                <a class="nav-link {{ request()->is('ums/audit*') ? 'active' : '' }}"
-                    href="{{ route('ums.audit_logs.index') }}">
-                    <i class="bi bi-clipboard-data me-2"></i> Audit Logs
-                </a>
-            </li>
+        <a class="nav-link {{ request()->is('ums/users*') ? 'active' : '' }}"
+           href="{{ route('ums.users.index') }}">
+            <i class="bi bi-people"></i> User
+        </a>
 
-            <li class="nav-item">
-                <a class="nav-link {{ request()->is('ums/activity-logs*') ? 'active' : '' }}"
-                href="{{ route('ums.activity_logs.index') }}">
-                    <i class="bi bi-clock-history me-2"></i> Activity Logs
-                </a>
-            </li>
+        <a class="nav-link" href="#">
+            <i class="bi bi-person-badge"></i> Roles
+        </a>
 
-            <li class="nav-item">
-                <a class="nav-link {{ request()->is('ums/settings*') ? 'active' : '' }}"
-                    href="{{ route('ums.settings.index') }}">
-                    <i class="bi bi-gear-fill me-2"></i> Settings
-                </a>
+        <a class="nav-link" href="#">
+            <i class="bi bi-shield-lock"></i> Permissions
+        </a>
+    </div>
+
+    <div class="menu-section">
+        <div class="menu-title">Audit & Monitoring</div>
+
+        <a class="nav-link {{ request()->is('ums/audit*') ? 'active' : '' }}"
+           href="{{ route('ums.audit_logs.index') }}">
+            <i class="bi bi-clipboard-data"></i> Audit Logs
+        </a>
+
+        <a class="nav-link {{ request()->is('ums/activity-logs*') ? 'active' : '' }}"
+           href="{{ route('ums.activity_logs.index') }}">
+            <i class="bi bi-activity"></i> Activity
+        </a>
+
+        <a class="nav-link {{ request()->is('ums/sessions*') ? 'active' : '' }}"
+            href="{{ route('ums.sessions.index') }}">
+            <i class="bi bi-pc-display"></i> Sessions Monitoring
+        </a>
+
+    </div>
+
+    <a class="nav-link {{ request()->is('ums/settings*') ? 'active' : '' }}"
+       href="{{ route('ums.settings.index') }}">
+        <i class="bi bi-gear"></i> System Settings
+    </a>
+
+    <div class="sidebar-user dropdown">
+        <button data-bs-toggle="dropdown">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-person-circle fs-5"></i>
+                <span>{{ Auth::user()->name }}</span>
+            </div>
+            <i class="bi bi-chevron-up"></i>
+        </button>
+
+        <ul class="dropdown-menu w-100">
+            <li>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="dropdown-item">
+                        <i class="bi bi-box-arrow-right me-2"></i> Logout
+                    </button>
+                </form>
             </li>
         </ul>
-    </aside>
+    </div>
 
-    <!-- TOPBAR -->
-    <header class="ums-topbar">
-        <div class="page-title">
-            @yield('title')
+</aside>
+
+<!-- ================= CONTENT ================= -->
+<main class="ums-content">
+
+    @if(session('success'))
+        <div class="alert alert-success alert-custom">
+            <i class="bi bi-check-circle-fill"></i> {{ session('success') }}
         </div>
+    @endif
 
-        <div class="user dropdown">
-            <span>{{ Auth::user()->name }}</span>
-            <i class="bi bi-person-circle fs-4" data-bs-toggle="dropdown" style="cursor: pointer;"></i>
-
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button class="dropdown-item">
-                            <i class="bi bi-box-arrow-right"></i> Logout
-                        </button>
-                    </form>
-                </li>
-            </ul>
+    @if(session('error'))
+        <div class="alert alert-danger alert-custom">
+            <i class="bi bi-exclamation-circle-fill"></i> {{ session('error') }}
         </div>
-    </header>
+    @endif
 
-    <!-- CONTENT WRAPPER -->
-    <main class="ums-content">
+    @yield('content')
+</main>
 
-        {{-- Success notification --}}
-        @if(session('success'))
-            <div class="alert alert-success alert-custom">
-                <i class="bi bi-check-circle-fill"></i> {{ session('success') }}
-            </div>
-        @endif
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+@stack('scripts')
 
-        {{-- Error notification --}}
-        @if(session('error'))
-            <div class="alert alert-danger alert-custom">
-                <i class="bi bi-exclamation-circle-fill"></i> {{ session('error') }}
-            </div>
-        @endif
-
-        @yield('content')
-    </main>
-
-
-    <!-- SCRIPTS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    @stack('scripts')
 </body>
-
 </html>
