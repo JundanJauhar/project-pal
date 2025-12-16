@@ -181,99 +181,99 @@ class SupplyChainController extends Controller
 
 
 
-    public function storeEvatekItem(Request $request, $procurementId)
-    {
-        if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
-            abort(403, 'Unauthorized action.');
-        }
+    // public function storeEvatekItem(Request $request, $procurementId)
+    // {
+    //     if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
+    //         abort(403, 'Unauthorized action.');
+    //     }
 
-        $validated = $request->validate([
-            'item_id' => 'required|exists:items,item_id',
-            'vendor_ids' => 'required|array|min:1',
-            'vendor_ids.*' => 'required|exists:vendors,id_vendor',
-            'target_date' => 'nullable|date|after_or_equal:today',
-        ]);
+    //     $validated = $request->validate([
+    //         'item_id' => 'required|exists:items,item_id',
+    //         'vendor_ids' => 'required|array|min:1',
+    //         'vendor_ids.*' => 'required|exists:vendors,id_vendor',
+    //         'target_date' => 'nullable|date|after_or_equal:today',
+    //     ]);
 
-        DB::beginTransaction();
-        try {
-            $procurement = Procurement::with('project')->findOrFail($procurementId);
-            $item = Item::findOrFail($validated['item_id']);
+    //     DB::beginTransaction();
+    //     try {
+    //         $procurement = Procurement::with('project')->findOrFail($procurementId);
+    //         $item = Item::findOrFail($validated['item_id']);
 
-            if (
-                Auth::user()->department_id !== $procurement->project->department_id
-                && Auth::user()->roles !== 'admin'
-            ) {
-                abort(403);
-            }
+    //         if (
+    //             Auth::user()->department_id !== $procurement->project->department_id
+    //             && Auth::user()->roles !== 'admin'
+    //         ) {
+    //             abort(403);
+    //         }
 
-            $createdVendors = [];
+    //         $createdVendors = [];
 
-            $vendorIds = $validated['vendor_ids'];
+    //         $vendorIds = $validated['vendor_ids'];
 
-            foreach ($vendorIds as $vendorId) {
-                $existingRequest = RequestProcurement::where('procurement_id', $validated['procurement_id'])
-                    ->where('vendor_id', $vendorId)
-                    ->where('project_id', $projectId)
-                    ->first();
+    //         foreach ($vendorIds as $vendorId) {
+    //             $existingRequest = RequestProcurement::where('procurement_id', $validated['procurement_id'])
+    //                 ->where('vendor_id', $vendorId)
+    //                 ->where('project_id', $projectId)
+    //                 ->first();
 
-                $exists = EvatekItem::where([
-                    'procurement_id' => $procurementId,
-                    'item_id' => $item->item_id,
-                    'vendor_id' => $vendorId,
-                ])->exists();
+    //             $exists = EvatekItem::where([
+    //                 'procurement_id' => $procurementId,
+    //                 'item_id' => $item->item_id,
+    //                 'vendor_id' => $vendorId,
+    //             ])->exists();
 
-                if ($exists) {
-                    continue;
-                }
+    //             if ($exists) {
+    //                 continue;
+    //             }
 
-                $evatek = EvatekItem::create([
-                    'procurement_id' => $procurementId,
-                    'project_id' => $procurement->project_id,
-                    'item_id' => $item->item_id,
-                    'vendor_id' => $vendorId,
-                    'start_date' => now(),
-                    'target_date' => $validated['target_date'] ?? $procurement->end_date,
-                    'current_revision' => 'R0',
-                    'status' => 'on_progress',
-                    'current_date' => null,
-                ]);
+    //             $evatek = EvatekItem::create([
+    //                 'procurement_id' => $procurementId,
+    //                 'project_id' => $procurement->project_id,
+    //                 'item_id' => $item->item_id,
+    //                 'vendor_id' => $vendorId,
+    //                 'start_date' => now(),
+    //                 'target_date' => $validated['target_date'] ?? $procurement->end_date,
+    //                 'current_revision' => 'R0',
+    //                 'status' => 'on_progress',
+    //                 'current_date' => null,
+    //             ]);
 
-                $createdVendors[] = $vendorId;
-            }
+    //             $createdVendors[] = $vendorId;
+    //         }
 
-            if (empty($createdVendors)) {
-                return back()->with('warning', 'Evatek untuk item dan vendor tersebut sudah ada.');
-            }
+    //         if (empty($createdVendors)) {
+    //             return back()->with('warning', 'Evatek untuk item dan vendor tersebut sudah ada.');
+    //         }
 
-            ActivityLogger::log(
-                module: 'Evatek',
-                action: 'create_evatek_item',
-                targetId: $item->item_id,
-                details: [
-                    'procurement_id' => $procurementId,
-                    'vendors' => $createdVendors,
-                    'user_id' => Auth::id(),
-                ]
-            );
+    //         ActivityLogger::log(
+    //             module: 'Evatek',
+    //             action: 'create_evatek_item',
+    //             targetId: $item->item_id,
+    //             details: [
+    //                 'procurement_id' => $procurementId,
+    //                 'vendors' => $createdVendors,
+    //                 'user_id' => Auth::id(),
+    //             ]
+    //         );
 
-            DB::commit();
+    //         DB::commit();
 
-            return redirect()->route('supply-chain.dashboard')
-                ->with('success', "Item '{$item->item_name}' berhasil ditambahkan untuk {$vendorNames}!");
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack();
-            return redirect()->back()
-                ->withErrors($e->errors())
-                ->withInput();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error storing item: ' . $e->getMessage());
+    //         return redirect()->route('supply-chain.dashboard')
+    //             ->with('success', "Item '{$item->item_name}' berhasil ditambahkan untuk {$vendorNames}!");
+    //     } catch (\Illuminate\Validation\ValidationException $e) {
+    //         DB::rollBack();
+    //         return redirect()->back()
+    //             ->withErrors($e->errors())
+    //             ->withInput();
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         Log::error('Error storing item: ' . $e->getMessage());
 
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
-                ->withInput();
-        }
-    }
+    //         return redirect()->back()
+    //             ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
+    //             ->withInput();
+    //     }
+    // }
 
     /**
      * Store Evatek item(s) directly

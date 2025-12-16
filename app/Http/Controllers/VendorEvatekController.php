@@ -25,16 +25,33 @@ class VendorEvatekController extends Controller
 
         // Ambil evatek items HANYA untuk vendor ini berdasarkan id_vendor
         $evatekItems = EvatekItem::where('vendor_id', $vendor->id_vendor)
-            ->with(['item', 'procurement', 'project'])
+            ->with(['item', 'procurement', 'project','latestRevision'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
         // Statistics untuk vendor ini
-        $stats = [
+           $stats = [
             'total_evatek' => EvatekItem::where('vendor_id', $vendor->id_vendor)->count(),
-            'pending' => EvatekItem::where('vendor_id', $vendor->id_vendor)->where('status', 'pending')->count(),
-            'approved' => EvatekItem::where('vendor_id', $vendor->id_vendor)->where('status', 'approved')->count(),
-            'rejected' => EvatekItem::where('vendor_id', $vendor->id_vendor)->where('status', 'rejected')->count(),
+            'pending' => EvatekItem::where('vendor_id', $vendor->id_vendor)
+                ->whereHas('latestRevision', function($q) {
+                    $q->where('status', 'pending');
+                })
+                ->count(),
+            'approved' => EvatekItem::where('vendor_id', $vendor->id_vendor)
+                ->whereHas('latestRevision', function($q) {
+                    $q->where('status', 'approve');
+                })
+                ->count(),
+            'rejected' => EvatekItem::where('vendor_id', $vendor->id_vendor)
+                ->whereHas('latestRevision', function($q) {
+                    $q->where('status', 'not approve');
+                })
+                ->count(),
+            'revisi' => EvatekItem::where('vendor_id', $vendor->id_vendor)
+                ->whereHas('latestRevision', function($q) {
+                    $q->where('status', 'revisi');
+                })
+                ->count(),
         ];
 
 
