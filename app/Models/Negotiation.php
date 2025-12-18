@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Helpers\CurrencyConverter;
 
 class Negotiation extends Model
 {
@@ -35,6 +36,45 @@ class Negotiation extends Model
         'tanggal_kirim' => 'date',
         'tanggal_terima' => 'date',
     ];
+
+    protected $appends = [
+        'deviasi_hps',
+        'deviasi_budget',
+    ];
+
+    public function getHargaFinalInHpsCurrency()
+    {
+        return CurrencyConverter::convert(
+            $this->harga_final,
+            $this->currency_harga_final,
+            $this->currency_hps
+        );
+    }
+
+    public function getBudgetInHpsCurrency()
+    {
+        return CurrencyConverter::convert(
+            $this->budget,
+            $this->currency_budget,
+            $this->currency_hps
+        );
+    }
+
+    public function getDeviasiHpsAttribute()
+    {
+        if (!$this->hps || !$this->harga_final) return null;
+
+        return $this->getHargaFinalInHpsCurrency() - $this->hps;
+    }
+
+    public function getDeviasiBudgetAttribute()
+    {
+        if (!$this->budget || !$this->harga_final) return null;
+
+        return $this->getHargaFinalInHpsCurrency() - $this->getBudgetInHpsCurrency();
+    }
+
+
 
     // Relationships
     public function procurement()

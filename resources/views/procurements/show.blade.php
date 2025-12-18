@@ -489,6 +489,12 @@
     'procurements.partials.pengesahan_kontrak',
     compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
 
+    {{-- ================= Kontrak ================= --}}
+    @includeWhen(
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
+    'procurements.partials.kontrak',
+    compact('procurement', 'kontraks', 'vendors', 'currentCheckpointSequence'))
+    
     {{-- ================= Material Delivery ================= --}}
     @includeWhen(
     auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 8,

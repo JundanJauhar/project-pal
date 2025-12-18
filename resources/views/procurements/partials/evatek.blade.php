@@ -166,7 +166,7 @@
                                     <div class="modal-header">
                                         <h5 class="modal-title">Input Evatek - {{ $item->item_name }}</h5>
                                     </div>
-                                    <form method="POST" action="{{ route('supply-chain.evatek-item.store', $procurement->project_id) }}">
+                                    <form method="POST" action="{{ route('supply-chain.evatek-item.store', $procurement->procurement_id) }}">
                                         @csrf
                                         <div class="modal-body">
                                             <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">

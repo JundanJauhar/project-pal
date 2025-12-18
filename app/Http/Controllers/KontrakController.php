@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 class KontrakController extends Controller
 {
-    public function store(Request $request, $projectId)
+    public function store(Request $request, $procurementId)
     {
         if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
             abort(403, 'Unauthorized action.');
@@ -35,10 +35,7 @@ class KontrakController extends Controller
         try {
             DB::beginTransaction();
 
-            $proc = Procurement::findOrFail($validated['procurement_id']);
-            if ($proc->project_id != $projectId) {
-                throw new \Exception('Procurement tidak sesuai dengan project.');
-            }
+            $procurement = Procurement::findOrFail($procurementId);
 
             $validated['currency'] = $validated['currency'] ?? 'IDR';
 
@@ -46,7 +43,7 @@ class KontrakController extends Controller
 
             DB::commit();
 
-            return redirect()->route('procurements.show', $proc->procurement_id)
+            return redirect()->route('procurements.show', $procurement->procurement_id)
                 ->with('success', 'Kontrak berhasil dibuat.');
         } catch (\Exception $e) {
             DB::rollBack();

@@ -9,21 +9,21 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class NegotiationController extends Controller
 {
 
     public function store(Request $request, $procurementId)
     {
-        if (Auth::user()->roles !== 'supply_chain' && Auth::user()->roles !== 'admin') {
+        if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
             abort(403, 'Unauthorized action.');
         }
 
         foreach (['hps', 'budget', 'harga_final'] as $field) {
             if ($request->filled($field)) {
-                $raw = preg_replace('/\D/', '', $request->input($field));
-                $request->merge([$field => $raw]);
+                $request->merge([
+                    $field => preg_replace('/\D/', '', $request->input($field))
+                ]);
             }
         }
 
@@ -41,9 +41,11 @@ class NegotiationController extends Controller
             'notes' => 'nullable|string|max:1000',
         ]);
 
-        DB::beginTransaction();
         try {
-            if ((int) $validated['procurement_id'] !== (int) $procurementId) {
+            DB::beginTransaction();
+
+            // ===== VALIDASI ROUTE vs FORM =====
+            if ((int)$validated['procurement_id'] !== (int)$procurementId) {
                 throw new \Exception('Invalid procurement reference.');
             }
 
@@ -53,12 +55,16 @@ class NegotiationController extends Controller
             Negotiation::create([
                 'procurement_id' => $procurementId,
                 'vendor_id' => $validated['vendor_id'],
-                'currency_hps' => $validated['currency_hps'] ?? null,
+
+                'currency_hps' => $validated['currency_hps'] ?? 'IDR',
                 'hps' => $validated['hps'] ?? null,
-                'currency_budget' => $validated['currency_budget'] ?? null,
+
+                'currency_budget' => $validated['currency_budget'] ?? 'IDR',
                 'budget' => $validated['budget'] ?? null,
-                'currency_harga_final' => $validated['currency_harga_final'] ?? null,
+
+                'currency_harga_final' => $validated['currency_harga_final'] ?? 'IDR',
                 'harga_final' => $validated['harga_final'] ?? null,
+
                 'tanggal_kirim' => $validated['tanggal_kirim'] ?? null,
                 'tanggal_terima' => $validated['tanggal_terima'] ?? null,
                 'notes' => $validated['notes'] ?? null,
@@ -79,17 +85,17 @@ class NegotiationController extends Controller
         }
     }
 
-
     public function update(Request $request, $negotiationId)
     {
-        if (Auth::user()->roles !== 'supply_chain' && Auth::user()->roles !== 'admin') {
+        if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
             abort(403, 'Unauthorized action.');
         }
 
         foreach (['hps', 'budget', 'harga_final'] as $field) {
             if ($request->filled($field)) {
-                $raw = preg_replace('/\D/', '', $request->input($field));
-                $request->merge([$field => $raw]);
+                $request->merge([
+                    $field => preg_replace('/\D/', '', $request->input($field))
+                ]);
             }
         }
 
@@ -111,75 +117,52 @@ class NegotiationController extends Controller
 
             $neg->update([
                 'vendor_id' => $validated['vendor_id'],
-                'currency_hps' => $validated['currency_hps'] ?? null,
+
+                'currency_hps' => $validated['currency_hps'] ?? 'IDR',
                 'hps' => $validated['hps'] ?? null,
-                'currency_budget' => $validated['currency_budget'] ?? null,
+
+                'currency_budget' => $validated['currency_budget'] ?? 'IDR',
                 'budget' => $validated['budget'] ?? null,
-                'currency_harga_final' => $validated['currency_harga_final'] ?? null,
+
+                'currency_harga_final' => $validated['currency_harga_final'] ?? 'IDR',
                 'harga_final' => $validated['harga_final'] ?? null,
+
                 'tanggal_kirim' => $validated['tanggal_kirim'] ?? null,
                 'tanggal_terima' => $validated['tanggal_terima'] ?? null,
                 'notes' => $validated['notes'] ?? null,
             ]);
 
-            return redirect()->back()->with('success', 'Negotiation berhasil diperbarui');
+            return redirect()
+                ->route('procurements.show', $neg->procurement_id)
+                ->with('success', 'Negotiation berhasil diperbarui');
         } catch (\Exception $e) {
             Log::error('Error updating negotiation: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal memperbarui Negotiation: ' . $e->getMessage());
+
+            return back()
+                ->with('error', 'Gagal memperbarui Negotiation: ' . $e->getMessage());
         }
     }
 
     public function delete($negotiationId)
     {
-        if (Auth::user()->roles !== 'supply_chain' && Auth::user()->roles !== 'admin') {
+        if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
             abort(403, 'Unauthorized action.');
         }
 
         try {
             $neg = Negotiation::findOrFail($negotiationId);
             $procurementId = $neg->procurement_id;
+
             $neg->delete();
 
-            return redirect()->route('procurements.show', $procurementId)
+            return redirect()
+                ->route('procurements.show', $procurementId)
                 ->with('success', 'Negotiation berhasil dihapus');
         } catch (\Exception $e) {
             Log::error('Error deleting negotiation: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal menghapus Negotiation: ' . $e->getMessage());
-        }
-    }
 
-    public function getByProcurement($procurementId)
-    {
-        try {
-            $negs = Negotiation::where('procurement_id', $procurementId)
-                ->with(['vendor'])
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->map(function ($n) {
-                    return [
-                        'negotiation_id' => $n->negotiation_id,
-                        'vendor_id' => $n->vendor_id,
-                        'vendor_name' => $n->vendor->name_vendor ?? '-',
-                        'hps' => $n->hps ? number_format($n->hps, 0, ',', '.') : '-',
-                        'currency_hps' => $n->currency_hps,
-                        'budget' => $n->budget ? number_format($n->budget, 0, ',', '.') : '-',
-                        'currency_budget' => $n->currency_budget,
-                        'harga_final' => $n->harga_final ? number_format($n->harga_final, 0, ',', '.') : '-',
-                        'currency_harga_final' => $n->currency_harga_final,
-                        'tanggal_kirim' => $n->tanggal_kirim ? $n->tanggal_kirim->format('d/m/Y') : '-',
-                        'tanggal_terima' => $n->tanggal_terima ? $n->tanggal_terima->format('d/m/Y') : '-',
-                        'notes' => $n->notes ?? '-',
-                    ];
-                });
-
-            return response()->json([
-                'success' => true,
-                'data' => $negs,
-                'count' => count($negs)
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error getting negotiations: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+            return back()
+                ->with('error', 'Gagal menghapus Negotiation: ' . $e->getMessage());
         }
     }
 }

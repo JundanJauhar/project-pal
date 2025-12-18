@@ -23,6 +23,8 @@
                     <th>Harga Final</th>
                     <th>Tanggal Kirim</th>
                     <th>Tanggal Terima</th>
+                    <th>Deviasi vs HPS</th>
+                    <th>Deviasi vs Budget</th>
                     <th>Note</th>
                     <th>Aksi</th>
                 </tr>
@@ -55,6 +57,25 @@
 
                     <td>{{ $neg->tanggal_kirim?->format('d/m/Y') ?? '-' }}</td>
                     <td>{{ $neg->tanggal_terima?->format('d/m/Y') ?? '-' }}</td>
+                    <td>
+                        @if(!is_null($neg->deviasi_hps))
+                        <span class="{{ $neg->deviasi_hps <= 0 ? 'text-success' : 'text-danger' }}">
+                            {{ number_format($neg->deviasi_hps, 0, ',', '.') }} {{ $neg->currency_hps }}
+                        </span>
+                        @else
+                        -
+                        @endif
+                    </td>
+
+                    <td>
+                        @if(!is_null($neg->deviasi_budget))
+                        <span class="{{ $neg->deviasi_budget <= 0 ? 'text-success' : 'text-danger' }}">
+                            {{ number_format($neg->deviasi_budget, 0, ',', '.') }} {{ $neg->currency_hps }}
+                        </span>
+                        @else
+                        -
+                        @endif
+                    </td>
                     <td>{{ $neg->notes ?? '-' }}</td>
 
                     <td>
@@ -73,7 +94,7 @@
                             <form method="POST"
                                 action="{{ route('negotiation.update', $neg->negotiation_id) }}">
                                 @csrf
-
+                                <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
                                 <div class="modal-header">
                                     <h5>Edit Negotiation</h5>
                                 </div>
@@ -177,7 +198,7 @@
                 {{-- IF EMPTY --}}
                 <tr>
                     <td>{{ $row }}</td>
-                    <td colspan="7" class="text-center text-muted">Belum ada Negotiation</td>
+                    <td colspan="9" class="text-center text-muted">Belum ada Negotiation</td>
                     <td>
                         <button class="btn btn-sm btn-action-create"
                             data-bs-toggle="modal" data-bs-target="#modalCreateNeg">

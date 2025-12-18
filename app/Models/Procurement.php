@@ -54,7 +54,7 @@ class Procurement extends Model
         return $this->hasMany(ProcurementProgress::class, 'procurement_id', 'procurement_id');
     }
 
-        public function negotiations()
+    public function negotiations()
     {
         return $this->hasMany(Negotiation::class, 'procurement_id', 'procurement_id');
     }
@@ -64,19 +64,24 @@ class Procurement extends Model
         return $this->hasMany(InquiryQuotation::class, 'procurement_id', 'procurement_id');
     }
 
-        public function evatekItems()
+    public function evatekItems()
     {
         return $this->hasMany(EvatekItem::class, 'procurement_id', 'procurement_id');
     }
 
-        public function pengadaanOcs()
+    public function pengadaanOcs()
     {
         return $this->hasMany(PengadaanOc::class, 'procurement_id', 'procurement_id');
-    }   
+    }
 
-        public function pengesahanKontraks()
+    public function pengesahanKontraks()
     {
         return $this->hasMany(PengesahanKontrak::class, 'procurement_id', 'procurement_id');
+    }
+
+    public function kontraks()
+    {
+        return $this->hasMany(Kontrak::class, 'procurement_id', 'procurement_id');
     }
 
     public function materialDeliveries()
@@ -98,10 +103,10 @@ class Procurement extends Model
 
         // Find the checkpoint that is currently in_progress
         $currentProgress = $progressCollection
-            ->filter(function($progress) {
+            ->filter(function ($progress) {
                 return $progress->status === 'in_progress' && $progress->checkpoint;
             })
-            ->sortBy(function($progress) {
+            ->sortBy(function ($progress) {
                 return $progress->checkpoint->point_sequence ?? 999;
             })
             ->first();
@@ -114,10 +119,10 @@ class Procurement extends Model
         // Fallback: Find the LAST completed checkpoint
         // This means the next checkpoint should be "in_progress" but hasn't been created yet
         $lastCompleted = $progressCollection
-            ->filter(function($progress) {
+            ->filter(function ($progress) {
                 return $progress->status === 'completed' && $progress->checkpoint;
             })
-            ->sortByDesc(function($progress) {
+            ->sortByDesc(function ($progress) {
                 return $progress->checkpoint->point_sequence ?? 0;
             })
             ->first();
@@ -126,11 +131,11 @@ class Procurement extends Model
             // Get the next checkpoint after the last completed one
             $nextCheckpointSequence = $lastCompleted->checkpoint->point_sequence + 1;
             $nextCheckpoint = \App\Models\Checkpoint::where('point_sequence', $nextCheckpointSequence)->first();
-            
+
             if ($nextCheckpoint) {
                 return $nextCheckpoint->point_name;
             }
-            
+
             // If no next checkpoint, return the last completed checkpoint name
             return $lastCompleted->checkpoint->point_name;
         }
@@ -168,7 +173,7 @@ class Procurement extends Model
     {
         // ⚠️ WARNING: This method returns values that don't match the database enum
         // It's kept for backward compatibility but should not be used
-        
+
         $progressCollection = $this->relationLoaded('procurementProgress')
             ? $this->procurementProgress
             : $this->procurementProgress()->get();

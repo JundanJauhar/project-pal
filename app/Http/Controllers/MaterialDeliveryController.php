@@ -52,7 +52,7 @@ class MaterialDeliveryController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('procurements.show', $procurementId)
+                ->route('procurements.show', $procurement->$procurementId)
                 ->with('success', 'Pengiriman Material berhasil disimpan');
         } catch (\Exception $e) {
             DB::rollBack();

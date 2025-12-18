@@ -27,6 +27,7 @@ use App\Http\Controllers\InquiryQuotationController;
 use App\Http\Controllers\NegotiationController;
 use App\Http\Controllers\PengadaanOcController;
 use App\Http\Controllers\PengesahanKontrakController;
+use App\Http\Controllers\KontrakController;
 use App\Http\Controllers\MaterialDeliveryController;
 use App\Http\Controllers\CheckpointTransitionController;
 use App\Http\Controllers\VendorController;
@@ -51,7 +52,7 @@ Route::post('/login', function (Request $request) {
             $request->session()->regenerate();
             return redirect()->route('vendor.index'); // Redirect ke halaman vendor evatek
         }
-        
+
         return back()->withErrors([
             'email' => 'Email login atau password vendor salah.',
         ]);
@@ -65,13 +66,13 @@ Route::post('/login', function (Request $request) {
 
     if (Auth::attempt($emailCredentials, $request->boolean('remember'))) {
         $request->session()->regenerate();
-        
+
         // Redirect berdasarkan role
         if (Auth::user()->roles === 'superadmin') {
             return redirect()->route('ums.users.index'); // langsung ke UMS
         }
 
-        if(in_array(Auth::user()->roles, ['sekretaris'])){
+        if (in_array(Auth::user()->roles, ['sekretaris'])) {
             return redirect()->route('sekdir.dashboard');
         }
 
@@ -91,7 +92,7 @@ Route::post('/logout', function (Request $request) {
         $request->session()->regenerateToken();
         return redirect()->route('login');
     }
-    
+
     // Logout web guard jika user internal yang login
     if (Auth::check()) {
         Auth::logout();
@@ -99,7 +100,7 @@ Route::post('/logout', function (Request $request) {
         $request->session()->regenerateToken();
         return redirect()->route('login');
     }
-    
+
     // Jika tidak ada yang login, redirect ke login
     return redirect()->route('login');
 })->name('logout');
@@ -112,20 +113,20 @@ Route::post('/logout', function (Request $request) {
 Route::middleware('auth:vendor')->group(function () {
     Route::get('/vendor', [VendorEvatekController::class, 'index'])
         ->name('vendor.index');
-    
+
     Route::get('/vendor/profile', [VendorEvatekController::class, 'profile'])
         ->name('vendor.profile');
-    
+
     Route::put('/vendor/profile', [VendorEvatekController::class, 'updateProfile'])
         ->name('vendor.profile.update');
-    
+
     // Vendor Evatek Routes
     Route::get('/vendor/evatek/{evatekId}/review', [VendorEvatekController::class, 'reviewEvatek'])
         ->name('vendor.evatek.review');
-    
+
     Route::post('/vendor/evatek/save-link', [VendorEvatekController::class, 'saveVendorLink'])
         ->name('vendor.evatek.save-link');
-    
+
     Route::post('/vendor/evatek/save-log', [VendorEvatekController::class, 'saveLog'])
         ->name('vendor.evatek.save-log');
 });
@@ -145,7 +146,7 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
     // Dashboard (hanya untuk internal user, bukan vendor)
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
-    
+
     Route::get('/dashboard/division/{divisionId}', [DashboardController::class, 'divisionDashboard'])->name('dashboard.division');
     Route::get('/dashboard/statistics', [DashboardController::class, 'getStatistics'])->name('dashboard.statistics');
     Route::get('/dashboard/timeline/{projectId}', [DashboardController::class, 'getProcurementTimeline'])->name('dashboard.timeline');
@@ -186,41 +187,41 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('supply-chain')->name('supply-chain.')->group(function () {
-        
+
         // Dashboard
         Route::get('/dashboard', [SupplyChainController::class, 'dashboard'])
             ->name('dashboard');
-        
+
         Route::post('/dashboard/store', [SupplyChainController::class, 'storePengadaan'])
             ->name('dashboard.store');
-        
+
         Route::get('/projects/{projectId}/review', [SupplyChainController::class, 'reviewProject'])
             ->name('review-project');
-        
+
         Route::post('/projects/{projectId}/approve', [SupplyChainController::class, 'approveReview'])
             ->name('approve-review');
-        
+
         Route::get('/material-requests', [SupplyChainController::class, 'materialRequests'])
             ->name('material-requests');
-        
+
         Route::post('/material-requests/{requestId}', [SupplyChainController::class, 'updateMaterialRequest'])
             ->name('update-material-request');
-        
+
         Route::get('/vendors', [SupplyChainController::class, 'vendors'])
             ->name('vendors');
-        
+
         Route::post('/projects/select-vendor/{procurement_id}', [SupplyChainController::class, 'selectVendor'])
             ->name('select-vendor');
-        
+
         Route::get('/evatek', [EvatekController::class, 'index'])
             ->name('evatek.index');
-        
+
         Route::get('/evatek/create', [EvatekController::class, 'create'])
             ->name('evatek.create');
-        
+
         Route::post('/evatek/store', [EvatekController::class, 'store'])
             ->name('evatek.store');
-        
+
         // ========== INPUT ITEM ROUTES ==========
         Route::get('/project/{projectId}/input-item', [SupplyChainController::class, 'inputItem'])
             ->name('input-item')
@@ -237,97 +238,29 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
         Route::get('/get-procurement-items/{procurementId}', [SupplyChainController::class, 'getProcurementItems'])
             ->name('get-procurement-items')
             ->where('procurementId', '[0-9]+');
-        
+
         // ========== VENDOR ROUTES (Supply Chain) ==========
         Route::get('/vendor/kelola', [SupplyChainController::class, 'kelolaVendor'])
             ->name('vendor.kelola');
-        
+
         Route::post('/vendor/store', [SupplyChainController::class, 'storeVendor'])
             ->name('vendor.store');
-        
+
         Route::get('/vendor/form', [SupplyChainController::class, 'formVendor'])
             ->name('vendor.form');
-        
+
         Route::get('/vendor/detail', [SupplyChainController::class, 'detailVendor'])
             ->name('vendor.detail');
-        
+
         Route::get('/vendor/pilih/{procurement_id}', [SupplyChainController::class, 'pilihVendor'])
             ->name('vendor.pilih');
-        
+
         Route::put('/vendor/update/{id_vendor}', [SupplyChainController::class, 'updateVendor'])
             ->name('vendor.update');
-        
+
         Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])
             ->name('vendor.simpan');
     });
-    
-    // ===== INQUIRY & QUOTATION ROUTES =====
-    Route::post('/supply-chain/inquiry-quotation/{procurementId}',[InquiryQuotationController::class, 'store'])
-        ->name('inquiry-quotation.store');
-    
-    Route::post('/supply-chain/inquiry-quotation/{inquiryQuotationId}', [InquiryQuotationController::class, 'update'])
-        ->name('inquiry-quotation.update');
-    
-    Route::delete('/supply-chain/inquiry-quotation/{inquiryQuotationId}', [InquiryQuotationController::class, 'delete'])
-        ->name('inquiry-quotation.delete');
-    
-    Route::get('/supply-chain/inquiry-quotation/procurement/{procurementId}', [InquiryQuotationController::class, 'getByProcurement'])
-        ->name('inquiry-quotation.getByProcurement');
-    
-    // ===== NEGOTIATION ROUTES =====
-    Route::post('/supply-chain/negotiation/{procurementId}', [NegotiationController::class, 'store'])
-        ->name('negotiation.store');
-    
-    Route::post('/supply-chain/negotiation/{negotiationId}', [NegotiationController::class, 'update'])
-        ->name('negotiation.update');
-    
-    Route::delete('/supply-chain/negotiation/{negotiationId}', [NegotiationController::class, 'delete'])
-        ->name('negotiation.delete');
-    
-    Route::get('/supply-chain/negotiation/procurement/{procurementId}', [NegotiationController::class, 'getByProcurement'])
-        ->name('negotiation.getByProcurement');
-    
-    // ===== MATERIAL DELIVERY ROUTES =====
-    Route::post('/supply-chain/material-delivery/{procurementId}', [MaterialDeliveryController::class, 'store'])
-        ->name('material-delivery.store');
-    
-    Route::post('/supply-chain/material-delivery/{deliveryId}', [MaterialDeliveryController::class, 'update'])
-        ->name('material-delivery.update');
-    
-    Route::delete('/supply-chain/material-delivery/{deliveryId}', [MaterialDeliveryController::class, 'delete'])
-        ->name('material-delivery.delete');
-    
-    Route::get('/supply-chain/material-delivery/procurement/{procurementId}', [MaterialDeliveryController::class, 'getByProcurement'])
-        ->name('material-delivery.getByProcurement');
-
-    // ===== PENGADAAN OC ROUTES =====
-    
-    Route::post('/supply-chain/pengadaan-oc/{procurementId}', [PengadaanOcController::class, 'store'])
-        ->name('pengadaan-oc.store');
-
-    Route::post('/supply-chain/pengadaan-oc/update/{id}', [PengadaanOcController::class, 'update'])
-        ->name('pengadaan-oc.update');
-
-    Route::delete('/supply-chain/pengadaan-oc/delete/{id}', [PengadaanOcController::class, 'delete'])
-        ->name('pengadaan-oc.delete');
-
-    Route::get('/supply-chain/pengadaan-oc/procurement/{procurementId}', [PengadaanOcController::class, 'getByProcurement'])
-        ->name('pengadaan-oc.getByProcurement');
-
-
-    // ===== PENGESAHAN KONTRAK ROUTES =====
-    
-    Route::post('/supply-chain/pengesahan-kontrak/{procurementId}', [PengesahanKontrakController::class, 'store'])
-        ->name('pengesahan-kontrak.store');
-
-    Route::post('/supply-chain/pengesahan-kontrak/update/{id}', [PengesahanKontrakController::class, 'update'])
-        ->name('pengesahan-kontrak.update');
-
-    Route::delete('/supply-chain/pengesahan-kontrak/delete/{id}', [PengesahanKontrakController::class, 'delete'])
-        ->name('pengesahan-kontrak.delete');
-
-    Route::get('/supply-chain/pengesahan-kontrak/procurement/{procurementId}', [PengesahanKontrakController::class, 'getByProcurement'])
-        ->name('pengesahan-kontrak.getByProcurement');
 
     /*
     |--------------------------------------------------------------------------
@@ -344,6 +277,172 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
         Route::get('/statistics', [PaymentController::class, 'statistics'])->name('statistics');
     });
 
+
+    Route::prefix('supply-chain/inquiry-quotation')->group(function () {
+
+        // CREATE (PROCUREMENT BASED)
+        Route::post(
+            '/procurement/{procurementId}',
+            [InquiryQuotationController::class, 'store']
+        )->name('inquiry-quotation.store');
+
+        // UPDATE (INQUIRY QUOTATION BASED)
+        Route::post(
+            '/{inquiryQuotationId}/update',
+            [InquiryQuotationController::class, 'update']
+        )->name('inquiry-quotation.update');
+
+        // DELETE
+        Route::delete(
+            '/{inquiryQuotationId}',
+            [InquiryQuotationController::class, 'delete']
+        )->name('inquiry-quotation.delete');
+
+        // GET BY PROCUREMENT
+        Route::get(
+            '/procurement/{procurementId}',
+            [InquiryQuotationController::class, 'getByProcurement']
+        )->name('inquiry-quotation.getByProcurement');
+    });
+
+
+    // ===== NEGOTIATION ROUTES (FIXED) =====
+    Route::prefix('supply-chain/negotiation')->group(function () {
+
+        // CREATE (PROCUREMENT BASED)
+        Route::post(
+            '/procurement/{procurementId}',
+            [NegotiationController::class, 'store']
+        )->name('negotiation.store');
+
+        // UPDATE (NEGOTIATION BASED)
+        Route::post(
+            '/{negotiationId}/update',
+            [NegotiationController::class, 'update']
+        )->name('negotiation.update');
+
+        // DELETE
+        Route::delete(
+            '/{negotiationId}',
+            [NegotiationController::class, 'delete']
+        )->name('negotiation.delete');
+
+        // AJAX
+        Route::get(
+            '/procurement/{procurementId}',
+            [NegotiationController::class, 'getByProcurement']
+        )->name('negotiation.getByProcurement');
+    });
+
+    Route::prefix('supply-chain/material-delivery')->group(function () {
+
+        // CREATE (PROCUREMENT BASED)
+        Route::post(
+            '/procurement/{procurementId}',
+            [MaterialDeliveryController::class, 'store']
+        )->name('material-delivery.store');
+
+        // UPDATE (DELIVERY BASED)
+        Route::post(
+            '/{deliveryId}/update',
+            [MaterialDeliveryController::class, 'update']
+        )->name('material-delivery.update');
+
+        // DELETE
+        Route::delete(
+            '/{deliveryId}',
+            [MaterialDeliveryController::class, 'delete']
+        )->name('material-delivery.delete');
+
+        // GET BY PROCUREMENT
+        Route::get(
+            '/procurement/{procurementId}',
+            [MaterialDeliveryController::class, 'getByProcurement']
+        )->name('material-delivery.getByProcurement');
+    });
+
+    Route::prefix('supply-chain/pengadaan-oc')->group(function () {
+
+        // CREATE (PROCUREMENT BASED)
+        Route::post(
+            '/procurement/{procurementId}',
+            [PengadaanOcController::class, 'store']
+        )->name('pengadaan-oc.store');
+
+        // UPDATE (OC BASED)
+        Route::post(
+            '/{pengadaanOcId}/update',
+            [PengadaanOcController::class, 'update']
+        )->name('pengadaan-oc.update');
+
+        // DELETE
+        Route::delete(
+            '/{pengadaanOcId}',
+            [PengadaanOcController::class, 'delete']
+        )->name('pengadaan-oc.delete');
+
+        // GET BY PROCUREMENT
+        Route::get(
+            '/procurement/{procurementId}',
+            [PengadaanOcController::class, 'getByProcurement']
+        )->name('pengadaan-oc.getByProcurement');
+    });
+
+    Route::prefix('supply-chain/pengesahan-kontrak')->group(function () {
+
+        // CREATE (PROCUREMENT BASED)
+        Route::post(
+            '/procurement/{procurementId}',
+            [PengesahanKontrakController::class, 'store']
+        )->name('pengesahan-kontrak.store');
+
+        // UPDATE (KONTRAK BASED)
+        Route::post(
+            '/{pengesahanKontrakId}/update',
+            [PengesahanKontrakController::class, 'update']
+        )->name('pengesahan-kontrak.update');
+
+        // DELETE
+        Route::delete(
+            '/{pengesahanKontrakId}',
+            [PengesahanKontrakController::class, 'delete']
+        )->name('pengesahan-kontrak.delete');
+
+        // GET BY PROCUREMENT
+        Route::get(
+            '/procurement/{procurementId}',
+            [PengesahanKontrakController::class, 'getByProcurement']
+        )->name('pengesahan-kontrak.getByProcurement');
+    });
+
+    Route::prefix('supply-chain/kontrak')->group(function () {
+
+        // CREATE (PROCUREMENT BASED)
+        Route::post(
+            '/procurement/{procurementId}',
+            [KontrakController::class, 'store']
+        )->name('kontrak.store');
+
+        // UPDATE (KONTRAK BASED)
+        Route::post(
+            '/{kontrakId}/update',
+            [KontrakController::class, 'update']
+        )->name('kontrak.update');
+
+        // DELETE
+        Route::delete(
+            '/{kontrakId}',
+            [KontrakController::class, 'delete']
+        )->name('kontrak.delete');
+
+        // GET BY PROCUREMENT
+        Route::get(
+            '/procurement/{procurementId}',
+            [KontrakController::class, 'getByProcurement']
+        )->name('kontrak.getByProcurement');
+    });
+
+
     /*
     |--------------------------------------------------------------------------
     | QA
@@ -352,7 +451,7 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
     Route::prefix('inspections')->name('inspections.')->group(function () {
         Route::get('/', [InspectionController::class, 'index'])->name('index');
         Route::get('/{id}', [InspectionController::class, 'show'])->name('show');
-        
+
         // NCR REPORTS
         Route::get('/ncr', [InspectionController::class, 'ncrReports'])->name('ncr.index');
         Route::get('/ncr/{id}', [InspectionController::class, 'showNcr'])->name('ncr.show');
@@ -364,9 +463,9 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
     Route::get('/qa/detail-approval/{procurement_id}', [DetailApprovalController::class, 'show'])->name('qa.detail-approval');
     Route::post('/qa/detail-approval/{procurement_id}/save', [DetailApprovalController::class, 'saveAll'])->name('qa.detail-approval.save');
 
-    
+
     Route::post('/checkpoint/transition/{procurementId}', [CheckpointTransitionController::class, 'transition'])
-    ->name('checkpoint.transition');
+        ->name('checkpoint.transition');
 
 
     /*
@@ -375,26 +474,26 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('desain')->name('desain.')->group(function () {
-        
+
         // Dashboard
         Route::get('/dashboard', [DesainController::class, 'dashboard'])
             ->name('dashboard');
-        
+
         // List Project
         Route::get('/list-project', [DesainListProjectController::class, 'list'])
             ->name('list-project');
-        
+
         // Daftar Pengadaan (Item Listing)
         Route::get('/project/{id}/permintaan', [EvatekController::class, 'daftarPermintaan'])
             ->name('daftar-pengadaan');
-        
+
         // ========== PENGADAAN FORM ==========
         Route::get('/project/{id}/pengadaan', [DesainListProjectController::class, 'formPengadaan'])
             ->name('permintaan-pengadaan');
-        
+
         Route::post('/project/{id}/pengadaan/kirim', [DesainListProjectController::class, 'kirimPengadaan'])
             ->name('kirim-pengadaan');
-        
+
         // ========== EVATEK ROUTES ==========
         Route::get('/evatek/item/{evatekId}', [EvatekController::class, 'review'])
             ->name('review-evatek')
@@ -403,13 +502,13 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
         // AJAX actions untuk Evatek
         Route::post('/evatek/save-link', [EvatekController::class, 'saveLink'])
             ->name('evatek.save-link');
-        
+
         Route::post('/evatek/approve', [EvatekController::class, 'approve'])
             ->name('evatek.approve');
-        
+
         Route::post('/evatek/reject', [EvatekController::class, 'reject'])
             ->name('evatek.reject');
-        
+
         Route::post('/evatek/revisi', [EvatekController::class, 'revise'])
             ->name('evatek.revisi');
 
@@ -431,63 +530,63 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
         Route::get('/dashboard', [SekdirController::class, 'dashboard'])->name('dashboard');
     });
 
-// ===== DEBUG ROUTES (HARUS DI LUAR MIDDLEWARE AUTH) =====
-Route::get('/debug/vendor-reset', function() {
-    $vendors = \App\Models\Vendor::all();
-    
-    echo "<h2>Debug: Reset Password Vendor</h2>";
-    echo "<table border='1' cellpadding='8' style='border-collapse: collapse;'>";
-    echo "<tr style='background: #e0e0e0;'><th>ID</th><th>Name</th><th>Email Login (user_vendor)</th><th>Current Password Hash</th><th>Action</th></tr>";
-    
-    foreach ($vendors as $vendor) {
-        echo "<tr>";
-        echo "<td>{$vendor->id_vendor}</td>";
-        echo "<td>{$vendor->name_vendor}</td>";
-        echo "<td><strong>{$vendor->user_vendor}</strong></td>";
-        echo "<td style='font-size:10px; max-width:200px; overflow:hidden;'>{$vendor->password}</td>";
-        echo "<td>";
-        echo "<form method='POST' action='/debug/vendor-reset/{$vendor->id_vendor}' style='margin:0;'>";
-        echo csrf_field();
-        echo "<button type='submit' style='padding:5px 10px; background:#4CAF50; color:white; border:none; cursor:pointer;'>Reset to 'password'</button>";
-        echo "</form>";
-        echo "</td>";
-        echo "</tr>";
-    }
-    echo "</table>";
-    
-    echo "<hr><h3>Test Login:</h3>";
-    echo "<p>Setelah reset, login dengan:</p>";
-    echo "<ul>";
-    foreach ($vendors as $vendor) {
-        echo "<li>Email: <strong>{$vendor->user_vendor}</strong> | Password: <strong>password</strong></li>";
-    }
-    echo "</ul>";
-});
+    // ===== DEBUG ROUTES (HARUS DI LUAR MIDDLEWARE AUTH) =====
+    Route::get('/debug/vendor-reset', function () {
+        $vendors = \App\Models\Vendor::all();
 
-Route::post('/debug/vendor-reset/{id}', function($id) {
-    $vendor = \App\Models\Vendor::findOrFail($id);
-    $vendor->password = \Illuminate\Support\Facades\Hash::make('password');
-    $vendor->save();
-    
-    return redirect('/debug/vendor-reset')->with('success', "Password vendor {$vendor->name_vendor} berhasil direset!");
-});
+        echo "<h2>Debug: Reset Password Vendor</h2>";
+        echo "<table border='1' cellpadding='8' style='border-collapse: collapse;'>";
+        echo "<tr style='background: #e0e0e0;'><th>ID</th><th>Name</th><th>Email Login (user_vendor)</th><th>Current Password Hash</th><th>Action</th></tr>";
 
-    Route::get('/debug/inspection/{procurement_id}', function($procurement_id) {
+        foreach ($vendors as $vendor) {
+            echo "<tr>";
+            echo "<td>{$vendor->id_vendor}</td>";
+            echo "<td>{$vendor->name_vendor}</td>";
+            echo "<td><strong>{$vendor->user_vendor}</strong></td>";
+            echo "<td style='font-size:10px; max-width:200px; overflow:hidden;'>{$vendor->password}</td>";
+            echo "<td>";
+            echo "<form method='POST' action='/debug/vendor-reset/{$vendor->id_vendor}' style='margin:0;'>";
+            echo csrf_field();
+            echo "<button type='submit' style='padding:5px 10px; background:#4CAF50; color:white; border:none; cursor:pointer;'>Reset to 'password'</button>";
+            echo "</form>";
+            echo "</td>";
+            echo "</tr>";
+        }
+        echo "</table>";
+
+        echo "<hr><h3>Test Login:</h3>";
+        echo "<p>Setelah reset, login dengan:</p>";
+        echo "<ul>";
+        foreach ($vendors as $vendor) {
+            echo "<li>Email: <strong>{$vendor->user_vendor}</strong> | Password: <strong>password</strong></li>";
+        }
+        echo "</ul>";
+    });
+
+    Route::post('/debug/vendor-reset/{id}', function ($id) {
+        $vendor = \App\Models\Vendor::findOrFail($id);
+        $vendor->password = \Illuminate\Support\Facades\Hash::make('password');
+        $vendor->save();
+
+        return redirect('/debug/vendor-reset')->with('success', "Password vendor {$vendor->name_vendor} berhasil direset!");
+    });
+
+    Route::get('/debug/inspection/{procurement_id}', function ($procurement_id) {
         $procurement = \App\Models\Procurement::with([
             'requestProcurements.items.inspectionReports',
             'procurementProgress.checkpoint'
         ])->findOrFail($procurement_id);
 
         echo "<h2>Debug: " . $procurement->code_procurement . "</h2>";
-        
+
         // Items & Inspection
         echo "<h3>1️⃣  Items & Inspection Status</h3>";
         $items = $procurement->requestProcurements->flatMap->items;
         $totalItems = $items->count();
-        
+
         echo "<table border='1' cellpadding='8' style='border-collapse: collapse; margin: 10px 0;'>";
         echo "<tr style='background: #e0e0e0;'><th>Item ID</th><th>Name</th><th>Result</th><th>Inspection Date</th></tr>";
-        
+
         foreach ($items as $item) {
             $latest = $item->inspectionReports->sortByDesc('inspection_date')->first();
             $result = $latest?->result ?? '<span style="color: red;">NOT INSPECTED</span>';
@@ -507,10 +606,10 @@ Route::post('/debug/vendor-reset/{id}', function($id) {
             $latest = $it->inspectionReports->sortByDesc('inspection_date')->first();
             return $latest?->result ?? null;
         });
-        $inspectedItems = $latestResults->filter(fn ($r) => !is_null($r))->count();
-        $passedCount = $latestResults->filter(fn ($r) => $r === 'passed')->count();
-        $failedCount = $latestResults->filter(fn ($r) => $r === 'failed')->count();
-        
+        $inspectedItems = $latestResults->filter(fn($r) => !is_null($r))->count();
+        $passedCount = $latestResults->filter(fn($r) => $r === 'passed')->count();
+        $failedCount = $latestResults->filter(fn($r) => $r === 'failed')->count();
+
         echo "<ul>";
         echo "<li>Total Items: <strong>$totalItems</strong></li>";
         echo "<li>Inspected Items: <strong>$inspectedItems</strong></li>";
@@ -520,9 +619,9 @@ Route::post('/debug/vendor-reset/{id}', function($id) {
 
         // Status
         echo "<h3>3️⃣  Procurement Status</h3>";
-        $allPassed = $latestResults->every(fn ($r) => $r === 'passed');
-        $allFailed = $latestResults->every(fn ($r) => $r === 'failed');
-        
+        $allPassed = $latestResults->every(fn($r) => $r === 'passed');
+        $allFailed = $latestResults->every(fn($r) => $r === 'failed');
+
         if ($inspectedItems === 0) {
             $statusProc = 'BUTUH (belum inspeksi)';
             $color = 'orange';
@@ -539,22 +638,22 @@ Route::post('/debug/vendor-reset/{id}', function($id) {
             $statusProc = 'SEDANG (mixed results)';
             $color = 'blue';
         }
-        
+
         echo "<p style='font-size: 18px; font-weight: bold; color: $color;'>Status: $statusProc</p>";
 
         // Checkpoint Progress
         echo "<h3>4️⃣  Checkpoint Progress</h3>";
         echo "<table border='1' cellpadding='8' style='border-collapse: collapse; margin: 10px 0;'>";
         echo "<tr style='background: #e0e0e0;'><th>Checkpoint</th><th>Sequence</th><th>Status</th><th>Start Date</th><th>End Date</th><th>Updated</th></tr>";
-        
+
         foreach ($procurement->procurementProgress as $progress) {
-            $statusColor = match($progress->status) {
+            $statusColor = match ($progress->status) {
                 'completed' => '#c8e6c9',
                 'in_progress' => '#bbdefb',
                 'not_started' => '#f5f5f5',
                 default => '#fff9c4'
             };
-            
+
             echo "<tr style='background: $statusColor;'>";
             echo "<td>" . $progress->checkpoint->point_name . "</td>";
             echo "<td>" . $progress->checkpoint->point_sequence . "</td>";
@@ -573,7 +672,7 @@ Route::post('/debug/vendor-reset/{id}', function($id) {
             'procurement_id' => $procurement_id,
             'checkpoint_id' => $cp11->point_id
         ])->first() : null;
-        
+
         if (!$cp11Progress) {
             echo "<p style='color: red;'>❌ CP11 PROGRESS NOT FOUND</p>";
         } elseif ($inspectedItems === $totalItems && $cp11Progress->status === 'in_progress') {
@@ -585,24 +684,23 @@ Route::post('/debug/vendor-reset/{id}', function($id) {
         } else {
             echo "<p style='color: blue;'>ℹ️  CP11 Status: " . $cp11Progress->status . "</p>";
         }
-        
     })->name('debug.inspection');
 
     /**
      * View recent logs
      */
-    Route::get('/debug/logs', function() {
+    Route::get('/debug/logs', function () {
         $logFile = storage_path('logs/laravel.log');
         $logs = file_exists($logFile) ? file_get_contents($logFile) : 'No logs found';
-        
+
         $lines = explode("\n", $logs);
-        $filtered = array_filter($lines, function($line) {
-            return stripos($line, 'checkpoint') !== false || 
-                   stripos($line, 'inspection') !== false ||
-                   stripos($line, 'transition') !== false ||
-                   stripos($line, 'simpanVendor') !== false;
+        $filtered = array_filter($lines, function ($line) {
+            return stripos($line, 'checkpoint') !== false ||
+                stripos($line, 'inspection') !== false ||
+                stripos($line, 'transition') !== false ||
+                stripos($line, 'simpanVendor') !== false;
         });
-        
+
         echo "<h2>Recent Checkpoint/Inspection Logs</h2>";
         echo "<p><a href='" . route('debug.logs') . "'>↻ Refresh</a></p>";
         echo "<pre style='background: #1e1e1e; color: #00ff00; padding: 15px; overflow-x: auto; font-family: monospace; font-size: 12px; border-radius: 5px;'>";
@@ -615,31 +713,31 @@ Route::post('/debug/vendor-reset/{id}', function($id) {
     /**
      * Force trigger transition
      */
-    Route::post('/debug/force-transition/{procurement_id}', function($procurement_id) {
+    Route::post('/debug/force-transition/{procurement_id}', function ($procurement_id) {
         $procurement = \App\Models\Procurement::with('requestProcurements.items.inspectionReports')->findOrFail($procurement_id);
-        
+
         $items = $procurement->requestProcurements->flatMap->items;
         $latestResults = $items->map(function ($it) {
             $latest = $it->inspectionReports->sortByDesc('inspection_date')->first();
             return $latest?->result ?? null;
         });
-        
-        $allPassed = $latestResults->every(fn ($r) => $r === 'passed');
-        $allFailed = $latestResults->every(fn ($r) => $r === 'failed');
-        
+
+        $allPassed = $latestResults->every(fn($r) => $r === 'passed');
+        $allFailed = $latestResults->every(fn($r) => $r === 'failed');
+
         if (!$allPassed && !$allFailed) {
             return response()->json(['error' => 'Not all items have consistent inspection result'], 422);
         }
-        
+
         $statusProc = $allPassed ? 'lolos' : 'gagal';
-        
+
         \Log::info("🔨 [DEBUG] FORCE TRANSITION - Procurement: {$procurement_id}, Status: {$statusProc}");
-        
+
         $service = new \App\Services\CheckpointTransitionService($procurement);
         $result = $service->transitionInspection($statusProc);
-        
+
         \Log::info("🔨 [DEBUG] FORCE TRANSITION RESULT: " . json_encode($result));
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Transition triggered manually',
@@ -649,6 +747,5 @@ Route::post('/debug/vendor-reset/{id}', function($id) {
     })->name('debug.force-transition');
 
     // UMS ROUTES
-    require __DIR__.'/ums.php';
-
+    require __DIR__ . '/ums.php';
 }); // End of middleware(['auth']) group
