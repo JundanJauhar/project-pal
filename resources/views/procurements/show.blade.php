@@ -494,7 +494,7 @@
     auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
     'procurements.partials.kontrak',
     compact('procurement', 'kontraks', 'vendors', 'currentCheckpointSequence'))
-    
+
     {{-- ================= Material Delivery ================= --}}
     @includeWhen(
     auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 8,
@@ -502,7 +502,7 @@
     compact('procurement', 'materialDeliveries')
     )
 
-    
+
 
 
 
@@ -532,5 +532,22 @@
         document.getElementById('currencyInput').value = cur;
         document.getElementById('dropdownCurrency').innerText = cur;
     }
+
+    function selectCurrencyEditNegotiation(type, cur, id) {
+        document.getElementById(`currencyEdit${type}${id}`).value = cur;
+        document.getElementById(`dropdownCurrency${type}${id}`).innerText = cur;
+    }
+
+    function selectCurrencyCreateNegotiation(type, cur) {
+        document.getElementById(`currencyCreate${type}`).value = cur;
+        document.getElementById(`dropdownCurrency${type}Create`).innerText = cur;
+    }
+
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('currency-input')) {
+            let value = e.target.value.replace(/\D/g, '');
+            e.target.value = value ? new Intl.NumberFormat('id-ID').format(value) : '';
+        }
+    });
 </script>
 @endpush

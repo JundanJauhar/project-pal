@@ -18,14 +18,14 @@
         <table class="dashboard-table">
             <thead>
                 <tr>
-                    <th>No</th>
-                    <th>Vendor</th>
-                    <th>Nilai</th>
-                    <th>Kadep → Kadiv</th>
-                    <th>Kadiv → CTO</th>
-                    <th>CTO → CEO</th>
-                    <th>Tgl ACC</th>
-                    <th>Aksi</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">No</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Nilai</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kadep → Kadiv</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kadiv → CTO</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">CTO → CEO</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tgl ACC</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                 </tr>
             </thead>
 
@@ -34,20 +34,20 @@
 
                 @forelse($pengadaanOcs as $po)
                 <tr>
-                    <td>{{ $no++ }}</td>
-                    <td>{{ $po->vendor?->name_vendor ?? '-' }}</td>
-                    <td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $no++ }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $po->vendor?->name_vendor ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">
                         @if($po->nilai)
                             {{ number_format($po->nilai, 0, ',', '.') }} {{ $po->currency }}
                         @else
                             -
                         @endif
                     </td>
-                    <td>{{ $po->tgl_kadep_to_kadiv?->format('d/m/Y') ?? '-' }}</td>
-                    <td>{{ $po->tgl_kadiv_to_cto?->format('d/m/Y') ?? '-' }}</td>
-                    <td>{{ $po->tgl_cto_to_ceo?->format('d/m/Y') ?? '-' }}</td>
-                    <td>{{ $po->tgl_acc?->format('d/m/Y') ?? '-' }}</td>
-                    <td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $po->tgl_kadep_to_kadiv?->format('d/m/Y') ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $po->tgl_kadiv_to_cto?->format('d/m/Y') ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $po->tgl_cto_to_ceo?->format('d/m/Y') ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $po->tgl_acc?->format('d/m/Y') ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">
                         <button class="btn btn-sm btn-action-edit"
                             data-bs-toggle="modal"
                             data-bs-target="#modalEditPO{{ $po->pengadaan_oc_id }}">

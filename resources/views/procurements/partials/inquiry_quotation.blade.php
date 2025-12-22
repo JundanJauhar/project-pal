@@ -155,10 +155,13 @@
 
                 @empty
                 @endforelse
+                @if($inquiryQuotations->count() == 0 && $currentCheckpointSequence == 2)
                 <tr>
                     <td>{{ $row }}</td>
-                    <td colspan="6" class="text-center text-muted">Belum ada Inquiry & Quotation</td>
-                    <td>
+                    <td colspan="6" class="text-center text-muted">
+                        Belum ada Inquiry & Quotation
+                    </td>
+                    <td class="text-center">
                         <button class="btn btn-sm btn-action-create"
                             data-bs-toggle="modal"
                             data-bs-target="#modalCreateIQ">
@@ -166,6 +169,22 @@
                         </button>
                     </td>
                 </tr>
+                @endif
+
+                {{-- ================= ROW CREATE (HANYA SAAT CHECKPOINT 2) ================= --}}
+                @if($inquiryQuotations->count() > 0 && $currentCheckpointSequence == 2)
+                <tr>
+                    <td colspan="7"></td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-action-create"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalCreateIQ">
+                            Create
+                        </button>
+                    </td>
+                </tr>
+                @endif
+
 
 
                 <div class="modal fade iq-modal" id="modalCreateIQ" tabindex="-1">

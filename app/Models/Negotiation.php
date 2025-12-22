@@ -28,7 +28,6 @@ class Negotiation extends Model
         'notes',
     ];
 
-
     protected $casts = [
         'hps' => 'decimal:2',
         'budget' => 'decimal:2',
@@ -42,8 +41,12 @@ class Negotiation extends Model
         'deviasi_budget',
     ];
 
-    public function getHargaFinalInHpsCurrency()
+    public function getHargaFinalInHpsCurrency(): ?float
     {
+        if (!$this->harga_final || !$this->currency_harga_final || !$this->currency_hps) {
+            return null;
+        }
+
         return CurrencyConverter::convert(
             $this->harga_final,
             $this->currency_harga_final,
@@ -51,8 +54,12 @@ class Negotiation extends Model
         );
     }
 
-    public function getBudgetInHpsCurrency()
+    public function getBudgetInHpsCurrency(): ?float
     {
+        if (!$this->budget || !$this->currency_budget || !$this->currency_hps) {
+            return null;
+        }
+
         return CurrencyConverter::convert(
             $this->budget,
             $this->currency_budget,
@@ -60,30 +67,52 @@ class Negotiation extends Model
         );
     }
 
-    public function getDeviasiHpsAttribute()
+    public function getDeviasiHpsAttribute(): ?float
     {
-        if (!$this->hps || !$this->harga_final) return null;
+        if (!$this->hps || !$this->harga_final) {
+            return null;
+        }
 
-        return $this->getHargaFinalInHpsCurrency() - $this->hps;
+        $hargaFinalInHps = $this->getHargaFinalInHpsCurrency();
+
+        if ($hargaFinalInHps === null) {
+            return null;
+        }
+
+        return $this->hps - $hargaFinalInHps;
     }
 
-    public function getDeviasiBudgetAttribute()
+    public function getDeviasiBudgetAttribute(): ?float
     {
-        if (!$this->budget || !$this->harga_final) return null;
+        if (!$this->budget || !$this->harga_final) {
+            return null;
+        }
 
-        return $this->getHargaFinalInHpsCurrency() - $this->getBudgetInHpsCurrency();
+        $budgetInHps = $this->getBudgetInHpsCurrency();
+        $hargaFinalInHps = $this->getHargaFinalInHpsCurrency();
+
+        if ($budgetInHps === null || $hargaFinalInHps === null) {
+            return null;
+        }
+
+        return $budgetInHps - $hargaFinalInHps;
     }
 
-
-
-    // Relationships
     public function procurement()
     {
-        return $this->belongsTo(Procurement::class, 'procurement_id', 'procurement_id');
+        return $this->belongsTo(
+            Procurement::class,
+            'procurement_id',
+            'procurement_id'
+        );
     }
 
     public function vendor()
     {
-        return $this->belongsTo(Vendor::class, 'vendor_id', 'id_vendor');
+        return $this->belongsTo(
+            Vendor::class,
+            'vendor_id',
+            'id_vendor'
+        );
     }
 }

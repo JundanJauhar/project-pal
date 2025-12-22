@@ -18,6 +18,18 @@
             </thead>
             <tbody>
                 @php
+                /**
+                * Vendor yang VALID untuk Evatek
+                * = vendor yang sudah dikirimi Inquiry & Quotation
+                */
+                $evatekVendors = collect($inquiryQuotations ?? [])
+                ->map(fn ($iq) => $iq->vendor)
+                ->filter() // buang null
+                ->unique('id_vendor') // cegah duplikat
+                ->values();
+                @endphp
+
+                @php
                 $row = 0;
                 // Collect all item IDs yang sudah punya evatek
                 $evatekItemIds = $evatekItems->pluck('item_id')->toArray();
@@ -185,26 +197,35 @@
                                                 <small style="color: #666;">Default: Tanggal target procurement</small>
                                             </div>
 
-                                            {{-- Vendor Selection --}}
+                                            {{-- Vendor Selection (HANYA dari Inquiry & Quotation) --}}
                                             <div class="mb-3">
-                                                <label class="form-label" style="font-weight: 600; font-size: 14px;">Pilih Vendor *</label>
+                                                <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                                                    Pilih Vendor *
+                                                </label>
+
                                                 <select name="vendor_ids[]"
                                                     class="form-select"
                                                     multiple
                                                     size="4"
                                                     required
                                                     style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                                                    @forelse($vendors as $vendor)
-                                                    <option value="{{ $vendor->id_vendor }}"
-                                                        @if($vendor->id_vendor == $request->vendor_id) selected @endif>
+
+                                                    @forelse($evatekVendors as $vendor)
+                                                    <option value="{{ $vendor->id_vendor }}">
                                                         {{ $vendor->name_vendor }}
                                                     </option>
                                                     @empty
-                                                    <option disabled>Tidak ada vendor yang tersedia</option>
+                                                    <option disabled>
+                                                        Tidak ada vendor dari Inquiry & Quotation
+                                                    </option>
                                                     @endforelse
                                                 </select>
-                                                <small style="color: #666;">Gunakan Ctrl+Click untuk memilih multiple vendor</small>
+
+                                                <small style="color: #666;">
+                                                    Vendor berasal dari Inquiry & Quotation yang sudah dibuat
+                                                </small>
                                             </div>
+
                                         </div>
 
                                         <div class="modal-footer">
