@@ -71,7 +71,7 @@
                                 <div class="modal-body row g-3">
 
                                     <div class="col-md-6">
-                                        <label>Vendor</label>
+                                        <label class="form-label">Vendor</label>
                                         <select name="vendor_id" class="form-select">
                                             <option value="">-</option>
                                             @foreach($vendors as $vendor)
@@ -84,50 +84,56 @@
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label>Nilai</label>
+                                        <label class="form-label">Nilai</label>
                                         <div class="input-group">
-                                            <input type="number" name="nilai" class="form-control"
-                                                value="{{ $po->nilai }}">
-                                            <select name="currency" class="form-select">
+                                            <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                                data-bs-toggle="dropdown" id="dropdownCurrencyEdit{{ $po->pengadaan_oc_id }}">
+                                                {{ $po->currency ?? 'IDR' }}
+                                            </button>
+
+                                            <ul class="dropdown-menu">
                                                 @foreach(['IDR','USD','EUR','SGD'] as $cur)
-                                                <option value="{{ $cur }}" @selected($cur == $po->currency)>
-                                                    {{ $cur }}
-                                                </option>
+                                                <li><a class="dropdown-item" onclick="selectCurrencyEditPO('{{ $cur }}', '{{ $po->pengadaan_oc_id }}')">{{ $cur }}</a></li>
                                                 @endforeach
-                                            </select>
+                                            </ul>
+
+                                            <input type="text" name="nilai" class="form-control currency-input"
+                                                value="{{ $po->nilai }}">
+                                            <input type="hidden" name="currency" id="currencyEditPO{{ $po->pengadaan_oc_id }}"
+                                                value="{{ $po->currency }}">
                                         </div>
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label>Kadep → Kadiv</label>
+                                        <label class="form-label">Kadep → Kadiv</label>
                                         <input type="date" name="tgl_kadep_to_kadiv"
                                             class="form-control"
                                             value="{{ $po->tgl_kadep_to_kadiv?->format('Y-m-d') }}">
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label>Kadiv → CTO</label>
+                                        <label class="form-label">Kadiv → CTO</label>
                                         <input type="date" name="tgl_kadiv_to_cto"
                                             class="form-control"
                                             value="{{ $po->tgl_kadiv_to_cto?->format('Y-m-d') }}">
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label>CTO → CEO</label>
+                                        <label class="form-label">CTO → CEO</label>
                                         <input type="date" name="tgl_cto_to_ceo"
                                             class="form-control"
                                             value="{{ $po->tgl_cto_to_ceo?->format('Y-m-d') }}">
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label>Tanggal ACC</label>
+                                        <label class="form-label">Tanggal ACC</label>
                                         <input type="date" name="tgl_acc"
                                             class="form-control"
                                             value="{{ $po->tgl_acc?->format('Y-m-d') }}">
                                     </div>
 
                                     <div class="col-12">
-                                        <label>Catatan</label>
+                                        <label class="form-label">Catatan</label>
                                         <textarea name="remarks"
                                             class="form-control">{{ $po->remarks }}</textarea>
                                     </div>
@@ -162,6 +168,20 @@
                     </td>
                 </tr>
                 @endforelse
+
+                {{-- ================= ROW CREATE ================= --}}
+                @if($pengadaanOcs->count() > 0 && $currentCheckpointSequence == 5)
+                <tr>
+                    <td colspan="7"></td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-action-create"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalCreatePO">
+                            Create
+                        </button>
+                    </td>
+                </tr>
+                @endif
             </tbody>
         </table>
     </div>
@@ -182,11 +202,11 @@
                 <div class="modal-body row g-3">
 
                     <div class="col-md-6">
-                        <label>Vendor</label>
-                        <select name="vendor_id" class="form-select">
-                            <option value="">-</option>
+                        <label class="form-label">Vendor *</label>
+                        <select name="vendor_id" id="vendorSelectPO" class="form-select" required>
+                            <option value="">-- Pilih Vendor --</option>
                             @foreach($vendors as $vendor)
-                            <option value="{{ $vendor->id_vendor }}">
+                            <option value="{{ $vendor->id_vendor }}" data-negotiations="{{ base64_encode(json_encode($negotiations->where('vendor_id', $vendor->id_vendor)->values())) }}">
                                 {{ $vendor->name_vendor }}
                             </option>
                             @endforeach
@@ -194,40 +214,41 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label>Nilai</label>
+                        <label class="form-label">Nilai</label>
                         <div class="input-group">
-                            <input type="number" name="nilai" class="form-control">
-                            <select name="currency" class="form-select">
-                                @foreach(['IDR','USD','EUR','SGD'] as $cur)
-                                <option value="{{ $cur }}">{{ $cur }}</option>
-                                @endforeach
-                            </select>
+                            <span class="input-group-text" id="currencyCreatePODisplay">
+                                IDR
+                            </span>
+
+                            <input type="text" class="form-control" placeholder="0" disabled id="nilaiPODisplay">
                         </div>
+                        <input type="hidden" name="nilai" id="nilaiPO" value="">
+                        <input type="hidden" name="currency" id="currencyCreatePO" value="IDR">
                     </div>
 
                     <div class="col-md-6">
-                        <label>Kadep → Kadiv</label>
+                        <label class="form-label">Kadep → Kadiv</label>
                         <input type="date" name="tgl_kadep_to_kadiv" class="form-control">
                     </div>
 
                     <div class="col-md-6">
-                        <label>Kadiv → CTO</label>
+                        <label class="form-label">Kadiv → CTO</label>
                         <input type="date" name="tgl_kadiv_to_cto" class="form-control">
                     </div>
 
                     <div class="col-md-6">
-                        <label>CTO → CEO</label>
+                        <label class="form-label">CTO → CEO</label>
                         <input type="date" name="tgl_cto_to_ceo" class="form-control">
                     </div>
 
                     <div class="col-md-6">
-                        <label>Tanggal ACC</label>
+                        <label class="form-label">Tanggal ACC</label>
                         <input type="date" name="tgl_acc" class="form-control">
                     </div>
 
                     <div class="col-12">
-                        <label>Catatan</label>
-                        <textarea name="remarks" class="form-control"></textarea>
+                        <label class="form-label">Catatan</label>
+                        <textarea name="remarks" class="form-control" rows="3"></textarea>
                     </div>
 
                 </div>
