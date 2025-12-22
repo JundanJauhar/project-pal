@@ -195,6 +195,26 @@
                         </div>
                     </div>
 
+                    <!-- CAPTCHA -->
+                    <div class="mb-3">
+                        <label class="form-label">Captcha</label>
+
+                        <div class="captcha-box">
+                            <img src="{{ route('captcha.generate') }}"
+                                 alt="captcha"
+                                 onclick="this.src='{{ route('captcha.generate') }}?'+Math.random()">
+
+                            <input type="text" name="captcha"
+                                   class="form-control @error('captcha') is-invalid @enderror"
+                                   placeholder="Masukkan captcha"
+                                   required>
+                        </div>
+
+                        <div class="captcha-note">
+                            Klik gambar untuk memperbarui captcha
+                        </div>
+                    </div>
+                    
                     <div class="mb-3 form-check">
                         <input type="checkbox" class="form-check-input" id="remember" name="remember">
                         <label class="form-check-label" for="remember">

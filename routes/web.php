@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 // Controllers
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\CaptchaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProcurementController;
@@ -32,78 +33,21 @@ use App\Http\Controllers\CheckpointTransitionController;
 use App\Http\Controllers\VendorController;
 
 
-// Redirect root → login
-Route::get('/', fn() => redirect()->route('login'));
-
-Route::get('/login', fn() => view('auth.login'))
+// login
+Route::get('/login', [LoginController::class, 'show'])
     ->name('login')
     ->middleware('guest');
 
-Route::post('/login', function (Request $request) {
-    $credentials = $request->validate([
-        'email' => 'required',
-        'password' => 'required',
-    ]);
+Route::post('/login', [LoginController::class, 'authenticate'])
+    ->middleware(['guest', 'throttle:5,1']);
 
-    // Coba login sebagai vendor dulu jika email berakhiran @vendor.com
-    if (str_ends_with(strtolower($credentials['email']), '@vendor.com')) {
-        if (Auth::guard('vendor')->attempt(['user_vendor' => $credentials['email'], 'password' => $credentials['password']], $request->boolean('remember'))) {
-            $request->session()->regenerate();
-            return redirect()->route('vendor.index'); // Redirect ke halaman vendor evatek
-        }
-        
-        return back()->withErrors([
-            'email' => 'Email login atau password vendor salah.',
-        ]);
-    }
+Route::post('/logout', [LoginController::class, 'logout'])
+    ->name('logout');
 
-    // Jika bukan vendor (@vendor.com), coba login sebagai user biasa dengan email
-    $emailCredentials = [
-        'email' => $credentials['email'],
-        'password' => $credentials['password']
-    ];
 
-    if (Auth::attempt($emailCredentials, $request->boolean('remember'))) {
-        $request->session()->regenerate();
-        
-        // Redirect berdasarkan role
-        if (Auth::user()->roles === 'superadmin') {
-            return redirect()->route('ums.users.index'); // langsung ke UMS
-        }
-
-        if(in_array(Auth::user()->roles, ['sekretaris'])){
-            return redirect()->route('sekdir.dashboard');
-        }
-
-        return redirect()->route('dashboard');
-    }
-
-    return back()->withErrors([
-        'email' => 'Email atau password salah.',
-    ]);
-})->middleware('guest');
-
-Route::post('/logout', function (Request $request) {
-    // Logout vendor guard jika vendor yang login
-    if (Auth::guard('vendor')->check()) {
-        Auth::guard('vendor')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return redirect()->route('login');
-    }
-    
-    // Logout web guard jika user internal yang login
-    if (Auth::check()) {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return redirect()->route('login');
-    }
-    
-    // Jika tidak ada yang login, redirect ke login
-    return redirect()->route('login');
-})->name('logout');
-
+//Capthca
+Route::get('/captcha', [CaptchaController::class, 'generate'])
+    ->name('captcha.generate');
 /*
 |--------------------------------------------------------------------------
 | VENDOR ROUTES (Menggunakan guard 'vendor', HARUS DI LUAR middleware 'auth')
