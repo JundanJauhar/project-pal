@@ -21,7 +21,7 @@ class PengadaanOcController extends Controller
         $validated = $request->validate([
             'vendor_id' => 'nullable|exists:vendors,id_vendor',
             'currency' => 'nullable|string|max:10',
-            'nilai' => 'nullable|numeric|min:0',
+            'nilai' => 'nullable|numeric',
             'tgl_kadep_to_kadiv' => 'nullable|date',
             'tgl_kadiv_to_cto' => 'nullable|date',
             'tgl_cto_to_ceo' => 'nullable|date',
@@ -70,7 +70,7 @@ class PengadaanOcController extends Controller
         $validated = $request->validate([
             'vendor_id' => 'nullable|exists:vendors,id_vendor',
             'currency' => 'nullable|string|max:10',
-            'nilai' => 'nullable|numeric|min:0',
+            'nilai' => 'nullable|numeric',
             'tgl_kadep_to_kadiv' => 'nullable|date',
             'tgl_kadiv_to_cto' => 'nullable|date',
             'tgl_cto_to_ceo' => 'nullable|date',
@@ -82,7 +82,14 @@ class PengadaanOcController extends Controller
             DB::beginTransaction();
 
             $po = PengadaanOc::findOrFail($id);
+            
             $validated['currency'] = $validated['currency'] ?? 'IDR';
+            
+            // Jika nilai tidak dikirim (dari hidden input kosong), retain nilai lama
+            if (!isset($validated['nilai']) || $validated['nilai'] === null || $validated['nilai'] === '') {
+                unset($validated['nilai']);
+            }
+            
             $po->update($validated);
 
             DB::commit();

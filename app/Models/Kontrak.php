@@ -9,7 +9,7 @@ class Kontrak extends Model
 {
     use HasFactory;
 
-    protected $table = 'kontrak';
+    protected $table = 'kontraks';
     protected $primaryKey = 'kontrak_id';
     public $timestamps = true;
 

@@ -489,6 +489,12 @@
     'procurements.partials.pengesahan_kontrak',
     compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
 
+    {{-- ================= Kontrak ================= --}}
+    @includeWhen(
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
+    'procurements.partials.kontrak',
+    compact('procurement', 'kontraks', 'vendors', 'currentCheckpointSequence'))
+
     {{-- ================= Material Delivery ================= --}}
     @includeWhen(
     auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 8,
@@ -496,7 +502,7 @@
     compact('procurement', 'materialDeliveries')
     )
 
-    
+
 
 
 
@@ -526,5 +532,83 @@
         document.getElementById('currencyInput').value = cur;
         document.getElementById('dropdownCurrency').innerText = cur;
     }
+
+    function selectCurrencyEditNegotiation(type, cur, id) {
+        document.getElementById(`currencyEdit${type}${id}`).value = cur;
+        document.getElementById(`dropdownCurrency${type}${id}`).innerText = cur;
+    }
+
+    function selectCurrencyCreateNegotiation(type, cur) {
+        document.getElementById(`currencyCreate${type}`).value = cur;
+        document.getElementById(`dropdownCurrency${type}Create`).innerText = cur;
+    }
+
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('currency-input')) {
+            let value = e.target.value.replace(/\D/g, '');
+            e.target.value = value ? new Intl.NumberFormat('id-ID').format(value) : '';
+        }
+    });
+
+    function selectCurrencyEditPO(cur, id) {
+        document.getElementById('currencyEditPO' + id).value = cur;
+        document.getElementById('dropdownCurrencyEdit' + id).innerText = cur;
+    }
+
+    function selectCurrencyCreatePO(cur) {
+        document.getElementById('currencyCreatePO').value = cur;
+        document.getElementById('dropdownCurrencyCreatePO').innerText = cur;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const vendorSelect = document.getElementById('vendorSelectPO');
+        const nilaiDisplay = document.getElementById('nilaiPODisplay');
+        const nilaiHidden = document.getElementById('nilaiPO');
+        const currencyDisplay = document.getElementById('currencyCreatePODisplay');
+        const currencyInput = document.getElementById('currencyCreatePO');
+
+        if (vendorSelect) {
+            vendorSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const negotiationsData = selectedOption.getAttribute('data-negotiations');
+
+                if (negotiationsData) {
+                    try {
+                        const negotiations = JSON.parse(atob(negotiationsData));
+
+                        if (negotiations.length > 0) {
+                            const latestNegotiation = negotiations[negotiations.length - 1];
+
+                            if (latestNegotiation.harga_final) {
+                                nilaiDisplay.value = new Intl.NumberFormat('id-ID').format(latestNegotiation.harga_final);
+                                nilaiHidden.value = latestNegotiation.harga_final;
+                                currencyDisplay.innerText = latestNegotiation.currency_harga_final || 'IDR';
+                                currencyInput.value = latestNegotiation.currency_harga_final || 'IDR';
+                            } else {
+                                nilaiDisplay.value = '';
+                                nilaiHidden.value = '';
+                                currencyDisplay.innerText = 'IDR';
+                                currencyInput.value = 'IDR';
+                            }
+                        } else {
+                            nilaiDisplay.value = '';
+                            nilaiHidden.value = '';
+                            currencyDisplay.innerText = 'IDR';
+                            currencyInput.value = 'IDR';
+                        }
+                    } catch (e) {
+                        console.error('Error parsing negotiations data:', e);
+                        nilaiDisplay.value = '';
+                        nilaiHidden.value = '';
+                    }
+                } else {
+                    nilaiDisplay.value = '';
+                    nilaiHidden.value = '';
+                    currencyDisplay.innerText = 'IDR';
+                    currencyInput.value = 'IDR';
+                }
+            });
+        }
+    });
 </script>
 @endpush

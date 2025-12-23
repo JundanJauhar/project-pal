@@ -16,14 +16,16 @@ use App\Models\Vendor;
 use App\Models\EvatekItem;
 use App\Models\InquiryQuotation;
 use App\Models\Negotiation;
+use App\Models\PengadaanOC;
+use App\Models\PengesahanKontrak;
+use App\Models\Kontrak;
 use App\Models\MaterialDelivery;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\ActivityLogger;
-use App\Models\PengadaanOC;
-use App\Models\PengesahanKontrak;
+
 
 class ProcurementController extends Controller
 {
@@ -196,6 +198,7 @@ class ProcurementController extends Controller
             'negotiations',
             'pengadaanOcs',
             'pengesahanKontraks',
+            'kontraks',
             'materialDeliveries'
         ])->findOrFail($id);
 
@@ -245,6 +248,11 @@ class ProcurementController extends Controller
             ->orderBy('created_at','desc')
             ->get();
 
+        $kontraks = Kontrak::where('procurement_id', $procurement->procurement_id)
+            ->with('vendor')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         ActivityLogger::log(
             module: 'Procurement',
             action: 'view_procurement_detail',
@@ -262,6 +270,7 @@ class ProcurementController extends Controller
             'negotiations',
             'pengadaanOcs',
             'pengesahanKontraks',
+            'kontraks',
             'materialDeliveries',
             'currentCheckpointSequence'
         ));
