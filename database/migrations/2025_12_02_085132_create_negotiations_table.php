@@ -23,6 +23,7 @@ return new class extends Migration
 
             $table->date('tanggal_kirim')->nullable();
             $table->date('tanggal_terima')->nullable();
+            $table->string('lead_time')->nullable();
             $table->longText('notes')->nullable();
 
             $table->timestamps();

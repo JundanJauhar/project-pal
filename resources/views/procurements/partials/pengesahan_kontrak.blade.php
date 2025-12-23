@@ -25,6 +25,7 @@
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kadiv → CTO</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">CTO → CEO</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tgl ACC</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Remarks</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                 </tr>
             </thead>
@@ -38,15 +39,16 @@
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $pk->vendor?->name_vendor ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">
                         @if($pk->nilai)
-                            {{ number_format($pk->nilai, 0, ',', '.') }} {{ $pk->currency }}
+                        {{ number_format($pk->nilai, 0, ',', '.') }} {{ $pk->currency }}
                         @else
-                            -
+                        -
                         @endif
                     </td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $pk->tgl_kadep_to_kadiv?->format('d/m/Y') ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $pk->tgl_kadiv_to_cto?->format('d/m/Y') ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $pk->tgl_cto_to_ceo?->format('d/m/Y') ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $pk->tgl_acc?->format('d/m/Y') ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $pk->remarks ?? '-' }}</td>
                     <td>
                         <button class="btn btn-sm btn-action-edit"
                             data-bs-toggle="modal"
@@ -84,37 +86,56 @@
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label>Nilai</label>
+                                        <label class="form-label">Nilai</label>
                                         <div class="input-group">
-                                            <input type="number" name="nilai"class="form-control"
-                                                value="{{ $pk->nilai }}">
-                                            <select name="currency" class="form-select">
+                                            <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                                data-bs-toggle="dropdown" id="dropdownCurrencyEdit{{ $pk->pengesahan_id }}">
+                                                {{ $pk->currency ?? 'IDR' }}
+                                            </button>
+
+                                            <ul class="dropdown-menu">
                                                 @foreach(['IDR','USD','EUR','SGD'] as $cur)
-                                                <option value="{{ $cur }}"@selected($cur == $pk->currency)>
-                                                    {{ $cur }}
-                                                </option>
+                                                <li><a class="dropdown-item" onclick="selectCurrencyEditPK('{{ $cur }}', '{{ $pk->pengesahan_id }}')">{{ $cur }}</a></li>
                                                 @endforeach
-                                            </select>
+                                            </ul>
+
+                                            <input type="text" name="nilai" class="form-control currency-input"
+                                                value="{{ $pk->nilai }}">
+                                            <input type="hidden" name="currency" id="currencyEditPK{{ $pk->pengesahan_id }}"
+                                                value="{{ $pk->currency }}">
                                         </div>
                                     </div>
 
-                                    @foreach([
-                                        'tgl_kadep_to_kadiv' => 'Kadep → Kadiv',
-                                        'tgl_kadiv_to_cto' => 'Kadiv → CTO',
-                                        'tgl_cto_to_ceo' => 'CTO → CEO',
-                                        'tgl_acc' => 'Tanggal ACC'
-                                    ] as $field => $label)
                                     <div class="col-md-6">
-                                        <label>{{ $label }}</label>
-                                        <input type="date"
-                                            name="{{ $field }}"
+                                        <label class="form-label">Kadep → Kadiv</label>
+                                        <input type="date" name="tgl_kadep_to_kadiv"
                                             class="form-control"
-                                            value="{{ $pk->$field?->format('Y-m-d') }}">
+                                            value="{{ $pk->tgl_kadep_to_kadiv?->format('Y-m-d') }}">
                                     </div>
-                                    @endforeach
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Kadiv → CTO</label>
+                                        <input type="date" name="tgl_kadiv_to_cto"
+                                            class="form-control"
+                                            value="{{ $pk->tgl_kadiv_to_cto?->format('Y-m-d') }}">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">CTO → CEO</label>
+                                        <input type="date" name="tgl_cto_to_ceo"
+                                            class="form-control"
+                                            value="{{ $pk->tgl_cto_to_ceo?->format('Y-m-d') }}">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tanggal ACC</label>
+                                        <input type="date" name="tgl_acc"
+                                            class="form-control"
+                                            value="{{ $pk->tgl_acc?->format('Y-m-d') }}">
+                                    </div>
 
                                     <div class="col-12">
-                                        <label>Catatan</label>
+                                        <label class="form-label">Remarks</label>
                                         <textarea name="remarks"
                                             class="form-control">{{ $pk->remarks }}</textarea>
                                     </div>
@@ -137,7 +158,7 @@
 
                 @empty
                 <tr>
-                    <td colspan="7" class="text-center text-muted">
+                    <td colspan="8" class="text-center text-muted">
                         Belum ada Pengesahan Kontrak
                     </td>
                     <td>
@@ -149,6 +170,20 @@
                     </td>
                 </tr>
                 @endforelse
+
+                {{-- ================= ROW CREATE ================= --}}
+                @if($pengadaanOcs->count() > 0 && $currentCheckpointSequence == 6)
+                <tr>
+                    <td colspan="8"></td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-action-create"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalCreatePK">
+                            Create
+                        </button>
+                    </td>
+                </tr>
+                @endif
             </tbody>
         </table>
     </div>
@@ -183,32 +218,41 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label>Nilai</label>
+                        <label class="form-label">Nilai</label>
                         <div class="input-group">
-                            <input type="number" name="nilai" class="form-control">
-                            <select name="currency" class="form-select">
-                                @foreach(['IDR','USD','EUR','SGD'] as $cur)
-                                <option value="{{ $cur }}">{{ $cur }}</option>
-                                @endforeach
-                            </select>
+                            <span class="input-group-text" id="currencyCreatePKDisplay">
+                                IDR
+                            </span>
+
+                            <input type="text" class="form-control" placeholder="0" disabled id="nilaiPKDisplay">
                         </div>
+                        <input type="hidden" name="nilai" id="nilaiPK" value="">
+                        <input type="hidden" name="currency" id="currencyCreatePK" value="IDR">
                     </div>
 
-                    @foreach([
-                        'tgl_kadep_to_kadiv' => 'Kadep → Kadiv',
-                        'tgl_kadiv_to_cto' => 'Kadiv → CTO',
-                        'tgl_cto_to_ceo' => 'CTO → CEO',
-                        'tgl_acc' => 'Tanggal ACC'
-                    ] as $field => $label)
                     <div class="col-md-6">
-                        <label>{{ $label }}</label>
-                        <input type="date" name="{{ $field }}" class="form-control">
+                        <label class="form-label">Kadep → Kadiv</label>
+                        <input type="date" name="tgl_kadep_to_kadiv" class="form-control">
                     </div>
-                    @endforeach
+
+                    <div class="col-md-6">
+                        <label class="form-label">Kadiv → CTO</label>
+                        <input type="date" name="tgl_kadiv_to_cto" class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">CTO → CEO</label>
+                        <input type="date" name="tgl_cto_to_ceo" class="form-control">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Tanggal ACC</label>
+                        <input type="date" name="tgl_acc" class="form-control">
+                    </div>
 
                     <div class="col-12">
-                        <label>Catatan</label>
-                        <textarea name="remarks" class="form-control"></textarea>
+                        <label class="form-label">Remarks</label>
+                        <textarea name="remarks" class="form-control" rows="3"></textarea>
                     </div>
 
                 </div>

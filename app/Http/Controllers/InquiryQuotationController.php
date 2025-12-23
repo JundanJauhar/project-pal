@@ -67,7 +67,6 @@ class InquiryQuotationController extends Controller
                 $validated['currency'] = 'IDR';
             }
 
-            // Create atau update inquiry quotation
             $inquiryQuotation = InquiryQuotation::updateOrCreate(
                 [
                     'procurement_id' => $validated['procurement_id'],

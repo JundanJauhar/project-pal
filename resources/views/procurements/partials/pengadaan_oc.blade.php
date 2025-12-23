@@ -25,6 +25,7 @@
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kadiv → CTO</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">CTO → CEO</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tgl ACC</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Remarks</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                 </tr>
             </thead>
@@ -47,6 +48,7 @@
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $po->tgl_kadiv_to_cto?->format('d/m/Y') ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $po->tgl_cto_to_ceo?->format('d/m/Y') ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $po->tgl_acc?->format('d/m/Y') ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $po->remarks ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">
                         <button class="btn btn-sm btn-action-edit"
                             data-bs-toggle="modal"
@@ -133,7 +135,7 @@
                                     </div>
 
                                     <div class="col-12">
-                                        <label class="form-label">Catatan</label>
+                                        <label class="form-label">Remarks</label>
                                         <textarea name="remarks"
                                             class="form-control">{{ $po->remarks }}</textarea>
                                     </div>
@@ -156,7 +158,7 @@
 
                 @empty
                 <tr>
-                    <td colspan="7" class="text-center text-muted">
+                    <td colspan="8" class="text-center text-muted">
                         Belum ada Pengadaan OC
                     </td>
                     <td>
@@ -172,7 +174,7 @@
                 {{-- ================= ROW CREATE ================= --}}
                 @if($pengadaanOcs->count() > 0 && $currentCheckpointSequence == 5)
                 <tr>
-                    <td colspan="7"></td>
+                    <td colspan="8"></td>
                     <td class="text-center">
                         <button class="btn btn-sm btn-action-create"
                             data-bs-toggle="modal"
@@ -247,7 +249,7 @@
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label">Catatan</label>
+                        <label class="form-label">Remarks</label>
                         <textarea name="remarks" class="form-control" rows="3"></textarea>
                     </div>
 

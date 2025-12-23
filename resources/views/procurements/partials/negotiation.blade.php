@@ -22,6 +22,7 @@
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Harga Final</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Kirim</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Terima</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Lead Time</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Deviasi vs HPS</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Deviasi vs Budget</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Note</th>
@@ -30,6 +31,19 @@
             </thead>
 
             <tbody>
+
+                @php
+                /**
+                * Vendor yang VALID untuk Negotiation
+                * = vendor yang sudah dikirimi Inquiry & Quotation
+                */
+                $negotiationVendors = collect($inquiryQuotations ?? [])
+                ->map(fn ($iq) => $iq->vendor)
+                ->filter() // buang null
+                ->unique('id_vendor') // cegah duplikat
+                ->values();
+                @endphp
+
                 @if ($errors->any())
                 <div class="alert alert-danger">
                     <ul>
@@ -65,6 +79,7 @@
 
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $neg->tanggal_kirim?->format('d/m/Y') ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $neg->tanggal_terima?->format('d/m/Y') ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $neg->lead_time ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">
                         @if(!is_null($neg->deviasi_hps))
                         @php
@@ -137,10 +152,10 @@
                                     <div class="col-md-6">
                                         <label class="form-label">Vendor *</label>
                                         <select name="vendor_id" class="form-select" required>
-                                            @foreach($vendors as $v)
-                                            <option value="{{ $v->id_vendor }}"
-                                                @selected($v->id_vendor==$neg->vendor_id)>
-                                                {{ $v->name_vendor }}
+                                            @foreach($negotiationVendors as $vendor)
+                                            <option value="{{ $vendor->id_vendor }}"
+                                                @selected($vendor->id_vendor == $neg->vendor_id)>
+                                                {{ $vendor->name_vendor }}
                                             </option>
                                             @endforeach
                                         </select>
@@ -227,8 +242,16 @@
                                             value="{{ $neg->tanggal_terima?->format('Y-m-d') }}">
                                     </div>
 
+                                    {{-- lead time --}}
+                                    <div class="col-md-6">
+                                        <label class="form-label">Lead Time</label>
+                                        <input type="text" name="lead_time"
+                                            class="form-control"
+                                            value="{{ $neg->lead_time }}">
+                                    </div>
+
                                     {{-- note --}}
-                                    <div class="col-12">
+                                    <div class="col-6">
                                         <label class="form-label">Note</label>
                                         <textarea name="notes" class="form-control">{{ $neg->notes }}</textarea>
                                     </div>
@@ -251,7 +274,7 @@
                 @if($negotiations->count() == 0 && $currentCheckpointSequence == 4)
                 <tr>
                     <td>{{ $row }}</td>
-                    <td colspan="9" class="text-center text-muted">Belum ada Negotiation</td>
+                    <td colspan="10" class="text-center text-muted">Belum ada Negotiation</td>
                     <td>
                         <button class="btn btn-sm btn-action-create"
                             data-bs-toggle="modal" data-bs-target="#modalCreateNeg">
@@ -264,7 +287,7 @@
                 {{-- ================= ROW CREATE (HANYA SAAT CHECKPOINT 4) ================= --}}
                 @if($negotiations->count() > 0 && $currentCheckpointSequence == 4)
                 <tr>
-                    <td colspan="10"></td>
+                    <td colspan="11"></td>
                     <td class="text-center">
                         <button class="btn btn-sm btn-action-create"
                             data-bs-toggle="modal"
@@ -294,10 +317,21 @@
                                         <label class="form-label">Vendor *</label>
                                         <select name="vendor_id" class="form-select" required>
                                             <option value="" disabled selected>-- Pilih Vendor --</option>
-                                            @foreach($vendors as $v)
-                                            <option value="{{ $v->id_vendor }}">{{ $v->name_vendor }}</option>
-                                            @endforeach
+
+                                            @forelse($negotiationVendors as $vendor)
+                                            <option value="{{ $vendor->id_vendor }}">
+                                                {{ $vendor->name_vendor }}
+                                            </option>
+                                            @empty
+                                            <option disabled>
+                                                Tidak ada vendor dari Inquiry & Quotation
+                                            </option>
+                                            @endforelse
                                         </select>
+
+                                        <small style="color:#666;">
+                                            Vendor berasal dari Inquiry & Quotation
+                                        </small>
                                     </div>
 
                                     {{-- HPS --}}
@@ -380,7 +414,14 @@
                                         <input type="date" name="tanggal_terima" class="form-control">
                                     </div>
 
-                                    <div class="col-12">
+                                    {{-- lead time --}}
+                                    <div class="col-md-6">
+                                        <label class="form-label">Lead Time</label>
+                                        <input type="text" name="lead_time" class="form-control" placeholder="ex: 2 minggu">
+                                    </div>
+
+                                    {{-- note --}}
+                                    <div class="col-6">
                                         <label class="form-label">Note</label>
                                         <textarea name="notes" class="form-control" rows="3"></textarea>
                                     </div>
