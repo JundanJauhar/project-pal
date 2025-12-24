@@ -83,6 +83,16 @@ class Procurement extends Model
     {
         return $this->hasMany(Kontrak::class, 'procurement_id', 'procurement_id');
     }
+    
+    public function pembayarans()
+    {
+        return $this->hasMany(Pembayaran::class, 'procurement_id', 'procurement_id');
+    }
+
+    public function jaminans()
+    {
+        return $this->hasMany(JaminanPembayaran::class, 'procurement_id', 'procurement_id');
+    }
 
     public function materialDeliveries()
     {

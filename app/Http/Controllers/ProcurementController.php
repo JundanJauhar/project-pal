@@ -20,6 +20,8 @@ use App\Models\PengadaanOC;
 use App\Models\PengesahanKontrak;
 use App\Models\Kontrak;
 use App\Models\MaterialDelivery;
+use App\Models\Pembayaran;
+use App\Models\JaminanPembayaran;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -199,6 +201,8 @@ class ProcurementController extends Controller
             'pengadaanOcs',
             'pengesahanKontraks',
             'kontraks',
+            'pembayarans',
+            'jaminans',
             'materialDeliveries'
         ])->findOrFail($id);
 
@@ -253,6 +257,16 @@ class ProcurementController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $pembayarans = Pembayaran::where('procurement_id', $procurement->procurement_id)
+            ->with('vendor')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $jaminans = JaminanPembayaran::where('procurement_id', $procurement->procurement_id)
+        ->with('vendor')
+        ->orderBy('created_at', 'asc')
+        ->get();
+    
         ActivityLogger::log(
             module: 'Procurement',
             action: 'view_procurement_detail',
@@ -271,6 +285,8 @@ class ProcurementController extends Controller
             'pengadaanOcs',
             'pengesahanKontraks',
             'kontraks',
+            'pembayarans',
+            'jaminans',
             'materialDeliveries',
             'currentCheckpointSequence'
         ));
