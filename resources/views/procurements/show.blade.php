@@ -483,15 +483,15 @@
     'procurements.partials.pengadaan_oc',
     compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
 
-    {{-- ================= Contract Review (Setelah Pengadaan OC selesai) ================= --}}
+    {{-- ================= Review Kontrak (Setelah Pengadaan OC selesai) ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $hasPengadaanOcCompleted,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
     'procurements.partials.contract_review',
-    compact('procurement','contractReviews','pengadaanOcVendors','currentCheckpointSequence'))
+    compact('procurement', 'contractReviews', 'pengadaanOcVendors', 'currentCheckpointSequence'))
 
-    {{-- ================= Pengesahan Kontrak (Setelah Contract Review di-approve) ================= --}}
+    {{-- ================= Pengesahan Kontrak ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $hasApprovedContractReview,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
     'procurements.partials.pengesahan_kontrak',
     compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
 
