@@ -32,6 +32,9 @@ use App\Http\Controllers\MaterialDeliveryController;
 use App\Http\Controllers\CheckpointTransitionController;
 use App\Http\Controllers\VendorController;
 
+Route::get('/', function () {
+    return redirect()->route('login');
+});
 
 // login
 Route::get('/login', [LoginController::class, 'show'])

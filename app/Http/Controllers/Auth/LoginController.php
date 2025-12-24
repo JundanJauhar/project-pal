@@ -24,9 +24,9 @@ class LoginController extends Controller
     public function authenticate(Request $request)
     {
         /*
-        |--------------------------------------------------------------------------
+        |----------------------------------------------------------------------
         | 1. VALIDASI INPUT DASAR
-        |--------------------------------------------------------------------------
+        |----------------------------------------------------------------------
         */
         $credentials = $request->validate([
             'email'    => 'required|string',
@@ -35,22 +35,39 @@ class LoginController extends Controller
         ]);
 
         /*
-        |--------------------------------------------------------------------------
-        | 2. VALIDASI CAPTCHA (ON-PREMISE)
-        |--------------------------------------------------------------------------
+        |----------------------------------------------------------------------
+        | 2. VALIDASI CAPTCHA (ON-PREMISE + EXPIRED)
+        |----------------------------------------------------------------------
         */
-        $captchaSession = Session::get('captcha_code');
+        $captcha = Session::get('captcha');
 
-        if (!$captchaSession || strtoupper($request->captcha) !== $captchaSession) {
+        // Captcha tidak ada di session
+        if (!$captcha) {
             throw ValidationException::withMessages([
-                'captcha' => 'Captcha tidak sesuai. Silakan coba lagi.',
+                'captcha' => 'Captcha telah kedaluwarsa. Silakan ulangi.',
+            ]);
+        }
+
+        // Captcha expired (lebih dari 20 detik)
+        if (now()->timestamp > $captcha['expires_at']) {
+            Session::forget('captcha');
+
+            throw ValidationException::withMessages([
+                'captcha' => 'Captcha telah kedaluwarsa. Silakan ulangi.',
+            ]);
+        }
+
+        // Captcha tidak cocok
+        if (strtoupper($request->captcha) !== $captcha['code']) {
+            throw ValidationException::withMessages([
+                'captcha' => 'Captcha tidak sesuai.',
             ]);
         }
 
         /*
-        |--------------------------------------------------------------------------
+        |----------------------------------------------------------------------
         | 3. LOGIN VENDOR
-        |--------------------------------------------------------------------------
+        |----------------------------------------------------------------------
         */
         if (str_ends_with(strtolower($credentials['email']), '@vendor.com')) {
 
@@ -60,7 +77,7 @@ class LoginController extends Controller
             ], $request->boolean('remember'))) {
 
                 $request->session()->regenerate();
-                Session::forget('captcha_code');
+                Session::forget('captcha');
 
                 return redirect()->route('vendor.index');
             }
@@ -71,9 +88,9 @@ class LoginController extends Controller
         }
 
         /*
-        |--------------------------------------------------------------------------
+        |----------------------------------------------------------------------
         | 4. LOGIN USER INTERNAL
-        |--------------------------------------------------------------------------
+        |----------------------------------------------------------------------
         */
         if (Auth::attempt([
             'email'    => $credentials['email'],
@@ -81,7 +98,7 @@ class LoginController extends Controller
         ], $request->boolean('remember'))) {
 
             $request->session()->regenerate();
-            Session::forget('captcha_code');
+            Session::forget('captcha');
 
             if (Auth::user()->roles === 'superadmin') {
                 return redirect()->route('ums.users.index');
@@ -95,9 +112,9 @@ class LoginController extends Controller
         }
 
         /*
-        |--------------------------------------------------------------------------
+        |----------------------------------------------------------------------
         | 5. LOGIN GAGAL
-        |--------------------------------------------------------------------------
+        |----------------------------------------------------------------------
         */
         throw ValidationException::withMessages([
             'email' => 'Email atau password salah.',
