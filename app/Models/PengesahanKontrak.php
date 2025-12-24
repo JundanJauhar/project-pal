@@ -15,7 +15,6 @@ class PengesahanKontrak extends Model
 
     protected $fillable = [
         'procurement_id',
-        'kontrak_id',
         'vendor_id',
         'currency',
         'nilai',
@@ -37,11 +36,6 @@ class PengesahanKontrak extends Model
     public function procurement()
     {
         return $this->belongsTo(Procurement::class, 'procurement_id', 'procurement_id');
-    }
-
-    public function kontrak()
-    {
-        return $this->belongsTo(Kontrak::class, 'kontrak_id', 'kontrak_id');
     }
 
     public function vendor()

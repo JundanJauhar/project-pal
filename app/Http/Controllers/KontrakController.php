@@ -19,6 +19,7 @@ class KontrakController extends Controller
 
         $validated = $request->validate([
             'procurement_id' => 'required|exists:procurement,procurement_id',
+            'no_po' => 'nullable|string|max:255',
             'item_id' => 'nullable|exists:items,item_id',
             'vendor_id' => 'nullable|exists:vendors,id_vendor',
             'tgl_kontrak' => 'nullable|date',
@@ -59,6 +60,7 @@ class KontrakController extends Controller
         }
 
         $validated = $request->validate([
+            'no_po' => 'nullable|string|max:255',
             'item_id' => 'nullable|exists:items,item_id',
             'vendor_id' => 'nullable|exists:vendors,id_vendor',
             'tgl_kontrak' => 'nullable|date',

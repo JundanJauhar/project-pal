@@ -31,11 +31,24 @@
             </thead>
 
             <tbody>
-                @php $no = 1; @endphp
+
+                @php
+                /**
+                * Vendor yang VALID untuk PengesahanKontrak
+                * = vendor yang sudah dikirimi Inquiry & Quotation
+                */
+                $pkVendors = collect($inquiryQuotations ?? [])
+                ->map(fn ($iq) => $iq->vendor)
+                ->filter() // buang null
+                ->unique('id_vendor') // cegah duplikat
+                ->values();
+                @endphp
+
+                @php $row = 1; @endphp
 
                 @forelse($pengesahanKontraks as $pk)
                 <tr>
-                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $no++ }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $row++ }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $pk->vendor?->name_vendor ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">
                         @if($pk->nilai)
@@ -72,11 +85,11 @@
 
                                 <div class="modal-body row g-3">
 
+                                    {{-- vendor --}}
                                     <div class="col-md-6">
-                                        <label>Vendor</label>
-                                        <select name="vendor_id" class="form-select">
-                                            <option value="">-</option>
-                                            @foreach($vendors as $vendor)
+                                        <label class="form-label">Vendor *</label>
+                                        <select name="vendor_id" class="form-select" required>
+                                            @foreach($pkVendors as $vendor)
                                             <option value="{{ $vendor->id_vendor }}"
                                                 @selected($vendor->id_vendor == $pk->vendor_id)>
                                                 {{ $vendor->name_vendor }}
@@ -157,11 +170,14 @@
                 </div>
 
                 @empty
+                @endforelse
+                @if($pengesahanKontraks->count() == 0 && $currentCheckpointSequence == 6)
                 <tr>
-                    <td colspan="8" class="text-center text-muted">
-                        Belum ada Pengesahan Kontrak
+                    <td>{{ $row }}</td>
+                    <td colspan="7" class="text-center text-muted">
+                        Belum ada Inquiry & Quotation
                     </td>
-                    <td>
+                    <td class="text-center">
                         <button class="btn btn-sm btn-action-create"
                             data-bs-toggle="modal"
                             data-bs-target="#modalCreatePK">
@@ -169,10 +185,10 @@
                         </button>
                     </td>
                 </tr>
-                @endforelse
+                @endif
 
-                {{-- ================= ROW CREATE ================= --}}
-                @if($pengadaanOcs->count() > 0 && $currentCheckpointSequence == 6)
+                <!-- {{-- ================= ROW CREATE (HANYA SAAT CHECKPOINT 2) ================= --}}
+                @if($pengesahanKontraks->count() > 0 && $currentCheckpointSequence == 6)
                 <tr>
                     <td colspan="8"></td>
                     <td class="text-center">
@@ -183,7 +199,7 @@
                         </button>
                     </td>
                 </tr>
-                @endif
+                @endif -->
             </tbody>
         </table>
     </div>
@@ -205,16 +221,26 @@
 
                 <div class="modal-body row g-3">
 
+                    {{-- vendor --}}
                     <div class="col-md-6">
-                        <label>Vendor</label>
-                        <select name="vendor_id" class="form-select">
-                            <option value="">-</option>
-                            @foreach($vendors as $vendor)
+                        <label class="form-label">Vendor *</label>
+                        <select name="vendor_id" class="form-select" required>
+                            <option value="" disabled selected>-- Pilih Vendor --</option>
+
+                            @forelse($pkVendors as $vendor)
                             <option value="{{ $vendor->id_vendor }}">
                                 {{ $vendor->name_vendor }}
                             </option>
-                            @endforeach
+                            @empty
+                            <option disabled>
+                                Tidak ada vendor dari Inquiry & Quotation
+                            </option>
+                            @endforelse
                         </select>
+
+                        <small style="color:#666;">
+                            Vendor berasal dari Inquiry & Quotation
+                        </small>
                     </div>
 
                     <div class="col-md-6">

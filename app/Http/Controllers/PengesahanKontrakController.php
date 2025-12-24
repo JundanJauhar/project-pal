@@ -19,7 +19,6 @@ class PengesahanKontrakController extends Controller
 
         $validated = $request->validate([
             'procurement_id' => 'required|exists:procurement,procurement_id',
-            'kontrak_id' => 'nullable|exists:kontrak,kontrak_id',
             'vendor_id' => 'nullable|exists:vendors,id_vendor',
             'currency' => 'nullable|string|max:10',
             'nilai' => 'nullable|numeric|min:0',
@@ -34,8 +33,6 @@ class PengesahanKontrakController extends Controller
             DB::beginTransaction();
 
             $procurement = Procurement::findOrFail($procurementId);
-
-            $validated['currency'] = $validated['currency'] ?? 'IDR';
 
             PengesahanKontrak::create($validated);
 
@@ -58,7 +55,6 @@ class PengesahanKontrakController extends Controller
         }
 
         $validated = $request->validate([
-            'kontrak_id' => 'nullable|exists:kontrak,kontrak_id',
             'vendor_id' => 'nullable|exists:vendors,id_vendor',
             'currency' => 'nullable|string|max:10',
             'nilai' => 'nullable|numeric|min:0',
@@ -72,13 +68,19 @@ class PengesahanKontrakController extends Controller
         try {
             DB::beginTransaction();
 
-            $p = PengesahanKontrak::findOrFail($id);
+            $pk = PengesahanKontrak::findOrFail($id);
             $validated['currency'] = $validated['currency'] ?? 'IDR';
-            $p->update($validated);
+
+            // Jika nilai tidak dikirim (dari hidden input kosong), retain nilai lama
+            if (!isset($validated['nilai']) || $validated['nilai'] === null || $validated['nilai'] === '') {
+                unset($validated['nilai']);
+            }
+
+            $pk->update($validated);
 
             DB::commit();
 
-            return redirect()->route('procurements.show', $p->procurement_id)
+            return redirect()->route('procurements.show', $pk->procurement_id)
                 ->with('success', 'Pengesahan kontrak berhasil diperbarui.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -94,9 +96,9 @@ class PengesahanKontrakController extends Controller
         }
 
         try {
-            $p = PengesahanKontrak::findOrFail($id);
-            $procId = $p->procurement_id;
-            $p->delete();
+            $pk = PengesahanKontrak::findOrFail($id);
+            $procId = $pk->procurement_id;
+            $pk->delete();
 
             return redirect()->route('procurements.show', $procId)
                 ->with('success', 'Pengesahan kontrak berhasil dihapus.');

@@ -7,7 +7,9 @@
             <form action="{{ route('checkpoint.transition', $procurement->procurement_id) }}" method="POST">
                 @csrf
                 <input type="hidden" name="from_checkpoint" value="2">
-                <button class="btn btn-sm btn-action-simpan"><i class="bi bi-box-arrow-down"></i>Simpan</button>
+                <button class="btn btn-sm btn-action-simpan">
+                    <i class="bi bi-box-arrow-down"></i>Simpan
+                </button>
             </form>
             @endif
         </div>
@@ -59,7 +61,8 @@
                         </button>
                     </td>
                 </tr>
-
+                
+                {{-- modal edit --}}
                 <div class="modal fade iq-modal" id="modalEditIQ{{ $iq->inquiry_quotation_id }}" tabindex="-1">
                     <div class="modal-dialog modal-lg">
                         <div class="modal-content">
