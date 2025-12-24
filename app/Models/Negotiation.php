@@ -25,6 +25,7 @@ class Negotiation extends Model
         'currency_harga_final',
         'tanggal_kirim',
         'tanggal_terima',
+        'lead_time',
         'notes',
     ];
 

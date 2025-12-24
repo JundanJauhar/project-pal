@@ -133,6 +133,26 @@
         .forgot-password:hover {
             text-decoration: underline;
         }
+
+        .captcha-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .captcha-box img {
+            height: 40px;
+            border-radius: 6px;
+            border: 1px solid #999;
+            cursor: pointer;
+        }
+
+        .captcha-note {
+            font-size: 12px;
+            color: #555;
+            margin-top: 4px;
+        }
+
     </style>
 </head>
 
@@ -171,7 +191,7 @@
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
                         <input type="email" class="form-control @error('email') is-invalid @enderror" id="email"
-                            name="email" value="" placeholder="" required
+                            name="email" value="{{ old('email') }}" placeholder="" required
                             autofocus>
                         @error('email')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -195,6 +215,33 @@
                         </div>
                     </div>
 
+                    <!-- CAPTCHA -->
+                    <div class="mb-3">
+                        <label class="form-label">Captcha</label>
+
+                        <div class="captcha-box">
+                            <img id="captchaImage"
+                            src="{{ route('captcha.generate') }}"
+                                 alt="captcha"
+                                 onclick="refreshCaptcha()">
+
+                            <input type="text" name="captcha"
+                                class="form-control @error('captcha') is-invalid @enderror"
+                                placeholder="Masukkan captcha"
+                                required>
+
+                            @error('captcha')
+                                <div class="invalid-feedback d-block">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+
+                        <div class="captcha-note">
+                            Klik gambar untuk memperbarui captcha
+                        </div>
+                    </div>
+                    
                     <div class="mb-3 form-check">
                         <input type="checkbox" class="form-check-input" id="remember" name="remember">
                         <label class="form-check-label" for="remember">
@@ -224,7 +271,16 @@
                 toggleIcon.className = 'bi bi-eye-slash';
             }
         }
+    
+        function refreshCaptcha() {
+            const img = document.getElementById('captchaImage');
+            img.src = "{{ route('captcha.generate') }}?" + Date.now();
+        }
+
+        // auto refresh captcha setiap 20 detik
+        setInterval(refreshCaptcha, 20000);
     </script>
+
 </body>
 
 </html>
