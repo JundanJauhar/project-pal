@@ -5,47 +5,84 @@
 @section('content')
 
 <style>
-/* ================= LAYOUT ================= */
-.settings-container {
-    max-width: 1100px;
-    margin-top: 24px;
+/* =========================================================
+   ROOT & LAYOUT
+========================================================= */
+:root {
+    --bg-main: #f5f7fb;
+    --card-bg: #ffffff;
+    --border-soft: #e5e7eb;
+    --text-muted: #6b7280;
+    --text-dark: #111827;
+    --primary-dark: #111827;
+    --danger: #b91c1c;
 }
 
-/* ================= HEADER ================= */
+body {
+    background: var(--bg-main);
+}
+
+.settings-wrapper {
+    width: 100%;
+    padding: 32px 40px 120px;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
 .settings-header h3 {
     font-weight: 800;
     letter-spacing: -0.4px;
 }
 
 .settings-header p {
-    color: #6b7280;
-    max-width: 720px;
+    max-width: 760px;
+    color: var(--text-muted);
     font-size: 14px;
+    line-height: 1.6;
 }
 
-/* ================= TABS ================= */
+/* =========================================================
+   TABS (SCALABLE)
+========================================================= */
 .settings-tabs {
     display: flex;
-    gap: 18px;
-    border-bottom: 1px solid #e5e7eb;
+    gap: 6px;
+    background: #ffffff;
+    padding: 6px;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.04);
     margin-bottom: 28px;
+    overflow-x: auto;
 }
 
 .settings-tab {
-    padding: 12px 4px;
+    padding: 12px 20px;
     font-size: 14px;
     font-weight: 600;
-    color: #6b7280;
+    color: var(--text-muted);
+    border-radius: 10px;
     cursor: pointer;
-    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all .2s ease;
+}
+
+.settings-tab:hover {
+    background: #f3f4f6;
 }
 
 .settings-tab.active {
-    color: #111827;
-    border-bottom-color: #111827;
+    background: var(--primary-dark);
+    color: #ffffff;
 }
 
-/* ================= PANEL ================= */
+.settings-tab.text-danger.active {
+    background: var(--danger);
+}
+
+/* =========================================================
+   PANELS
+========================================================= */
 .settings-panel {
     display: none;
 }
@@ -54,35 +91,40 @@
     display: block;
 }
 
-/* ================= CARD ================= */
+/* =========================================================
+   CARD
+========================================================= */
 .settings-card {
-    background: #ffffff;
-    border-radius: 14px;
-    padding: 28px 30px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+    background: var(--card-bg);
+    border-radius: 18px;
+    padding: 32px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.06);
     margin-bottom: 28px;
 }
 
 .settings-card h6 {
     font-weight: 800;
-    margin-bottom: 6px;
+    font-size: 15px;
 }
 
 .settings-desc {
     font-size: 13px;
-    color: #6b7280;
-    margin-bottom: 20px;
+    color: var(--text-muted);
+    margin-bottom: 24px;
 }
 
-/* ================= FORM ================= */
+/* =========================================================
+   FORM
+========================================================= */
 label {
     font-weight: 600;
     font-size: 13px;
+    margin-bottom: 6px;
 }
 
 small {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--text-muted);
 }
 
 .readonly {
@@ -90,30 +132,57 @@ small {
     cursor: not-allowed;
 }
 
-/* ================= DANGER ================= */
+/* =========================================================
+   GRID
+========================================================= */
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* =========================================================
+   DANGER
+========================================================= */
 .danger-card {
     border: 1px solid #f3caca;
     background: #fff7f7;
 }
 
-.danger-card h6 {
-    color: #b91c1c;
-}
-
+.danger-card h6,
 .danger-card .settings-desc {
-    color: #b91c1c;
+    color: var(--danger);
 }
 
-/* ================= ACTION ================= */
+/* =========================================================
+   ACTION BAR
+========================================================= */
 .settings-action {
-    position: sticky;
+    position: fixed;
+    left: 0;
+    right: 0;
     bottom: 0;
-    background: #f9fafb;
-    padding: 16px 0;
+    background: #ffffff;
+    border-top: 1px solid var(--border-soft);
+    padding: 16px 40px;
+    z-index: 20;
+}
+
+.settings-action button {
+    max-width: 420px;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+@media (max-width: 768px) {
+    .settings-wrapper {
+        padding: 24px 20px 140px;
+    }
 }
 </style>
 
-<div class="settings-container">
+<div class="settings-wrapper">
 
     {{-- HEADER --}}
     <div class="settings-header mb-4">
@@ -136,64 +205,61 @@ small {
     <form method="POST" action="{{ route('ums.settings.update') }}">
         @csrf
 
-        {{-- ================= GENERAL ================= --}}
+        {{-- GENERAL --}}
         <div class="settings-panel active" id="general">
             <div class="settings-card">
                 <h6>General & Identity</h6>
-                <div class="settings-desc">
-                    Informasi dasar dan identitas sistem.
-                </div>
+                <div class="settings-desc">Informasi dasar dan identitas sistem.</div>
 
-                <div class="mb-3">
-                    <label>System Name</label>
-                    <input type="text" name="system_name" class="form-control"
-                           value="{{ $settings['system_name'] ?? 'User Management System' }}">
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <label>Environment</label>
-                        <input type="text" class="form-control readonly"
-                               value="Production" disabled>
+                <div class="settings-grid">
+                    <div>
+                        <label>System Name</label>
+                        <input type="text" name="system_name" class="form-control"
+                               value="{{ $settings['system_name'] ?? 'User Management System' }}">
                     </div>
-                    <div class="col-md-6">
+
+                    <div>
+                        <label>Environment</label>
+                        <input type="text" class="form-control readonly" value="Production" disabled>
+                    </div>
+
+                    <div>
                         <label>System Version</label>
-                        <input type="text" class="form-control readonly"
-                               value="v1.0.0" disabled>
+                        <input type="text" class="form-control readonly" value="v1.0.0" disabled>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- ================= SECURITY ================= --}}
+        {{-- SECURITY --}}
         <div class="settings-panel" id="security">
             <div class="settings-card">
                 <h6>Security Policy</h6>
-                <div class="settings-desc">
-                    Kebijakan keamanan untuk melindungi akun pengguna.
-                </div>
+                <div class="settings-desc">Kebijakan keamanan akun pengguna.</div>
 
-                <div class="mb-3">
-                    <label>Maximum Login Attempts</label>
-                    <input type="number" min="1" name="max_login_attempts"
-                           class="form-control"
-                           value="{{ $settings['max_login_attempts'] ?? 5 }}">
-                    <small>Akun diblokir sementara jika melewati batas login.</small>
-                </div>
+                <div class="settings-grid">
+                    <div>
+                        <label>Maximum Login Attempts</label>
+                        <input type="number" min="1" name="max_login_attempts"
+                               class="form-control"
+                               value="{{ $settings['max_login_attempts'] ?? 5 }}">
+                        <small>Akun akan diblokir sementara jika gagal login berulang.</small>
+                    </div>
 
-                <label>Password Policy</label>
-                <input type="text" class="form-control readonly"
-                       value="Minimum 8 karakter (default)" disabled>
+                    <div>
+                        <label>Password Policy</label>
+                        <input type="text" class="form-control readonly"
+                               value="Minimum 8 karakter (default)" disabled>
+                    </div>
+                </div>
             </div>
         </div>
 
-        {{-- ================= SESSION ================= --}}
+        {{-- SESSION --}}
         <div class="settings-panel" id="session">
             <div class="settings-card">
                 <h6>Session Control</h6>
-                <div class="settings-desc">
-                    Pengaturan durasi dan perilaku sesi login.
-                </div>
+                <div class="settings-desc">Durasi dan perilaku sesi login.</div>
 
                 <label>Session Timeout (minutes)</label>
                 <input type="number" min="5" name="session_timeout"
@@ -202,13 +268,11 @@ small {
             </div>
         </div>
 
-        {{-- ================= LOGGING ================= --}}
+        {{-- LOGGING --}}
         <div class="settings-panel" id="logging">
             <div class="settings-card">
                 <h6>Logging & Compliance</h6>
-                <div class="settings-desc">
-                    Retensi log untuk audit dan kepatuhan sistem.
-                </div>
+                <div class="settings-desc">Retensi log audit dan kepatuhan.</div>
 
                 <label>Log Retention (days)</label>
                 <input type="number" min="30" name="log_retention_days"
@@ -217,13 +281,11 @@ small {
             </div>
         </div>
 
-        {{-- ================= MAINTENANCE ================= --}}
+        {{-- MAINTENANCE --}}
         <div class="settings-panel" id="maintenance">
             <div class="settings-card danger-card">
                 <h6>System Maintenance</h6>
-                <div class="settings-desc">
-                    Pengaturan kritikal operasional sistem.
-                </div>
+                <div class="settings-desc">Pengaturan kritikal operasional sistem.</div>
 
                 <div class="mb-3">
                     <label>Maintenance Mode</label>
@@ -244,12 +306,11 @@ small {
         </div>
 
         {{-- ACTION --}}
-        <div class="settings-action">
+        <div class="settings-action d-flex justify-content-center">
             <button class="btn btn-dark btn-lg w-100">
                 Simpan Settings
             </button>
         </div>
-
     </form>
 </div>
 
