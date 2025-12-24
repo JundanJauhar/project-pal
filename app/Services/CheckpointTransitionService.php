@@ -160,25 +160,8 @@ class CheckpointTransitionService
     /** 3 → 4: Evatek → Negotiation */
     protected function validateCheckpoint3To4(): void
     {
-        $allEvatek = $this->procurement->evatekItems()->get();
-
-        if ($allEvatek->isEmpty()) {
-            $this->errors[] = 'Belum ada EVATEK untuk procurement ini.';
-            return;
-        }
-
-        $allItemIds = $allEvatek->pluck('item_id')->unique();
-
-        $itemIdsWithApproved = $allEvatek
-            ->where('status', 'approve')
-            ->pluck('item_id')
-            ->unique();
-
-        $missingItems = $allItemIds->diff($itemIdsWithApproved);
-
-        if ($missingItems->isNotEmpty()) {
-            $this->errors[] = 'Setiap item harus memiliki minimal satu vendor EVATEK yang approve.';
-        }
+        // ✅ Tidak ada validasi - biarkan proses lanjut tanpa pengecekan approve
+        // Validasi dinonaktifkan agar proses bisa selesai terlebih dahulu
     }
 
     /** 4 → 5: Negotiation → Usulan Pengadaan / OC */

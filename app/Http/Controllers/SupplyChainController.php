@@ -12,6 +12,8 @@ use App\Models\Hps;
 use App\Models\Notification;
 use App\Models\ProcurementProgress;
 use App\Models\EvatekItem;
+use App\Models\ContractReview;
+use App\Models\ContractReviewRevision;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -183,78 +185,164 @@ class SupplyChainController extends Controller
 
 
 
-    public function storeEvatekItem(Request $request, $procurementId)
+    // public function storeEvatekItem(Request $request, $procurementId)
+    // {
+    //     if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
+    //         abort(403, 'Unauthorized action.');
+    //     }
+
+    //     $validated = $request->validate([
+    //         'item_id' => 'required|exists:items,item_id',
+    //         'vendor_ids' => 'required|array|min:1',
+    //         'vendor_ids.*' => 'required|exists:vendors,id_vendor',
+    //         'target_date' => 'nullable|date|after_or_equal:today',
+    //     ]);
+
+    //     DB::beginTransaction();
+    //     try {
+    //         $procurement = Procurement::with('project')->findOrFail($procurementId);
+    //         $item = Item::findOrFail($validated['item_id']);
+
+    //         if (
+    //             Auth::user()->department_id !== $procurement->project->department_id
+    //             && Auth::user()->roles !== 'admin'
+    //         ) {
+    //             abort(403);
+    //         }
+
+    //         $createdVendors = [];
+
+    //         $vendorIds = $validated['vendor_ids'];
+
+    //         foreach ($vendorIds as $vendorId) {
+    //             $existingRequest = RequestProcurement::where('procurement_id', $validated['procurement_id'])
+    //                 ->where('vendor_id', $vendorId)
+    //                 ->where('project_id', $projectId)
+    //                 ->first();
+
+    //             $exists = EvatekItem::where([
+    //                 'procurement_id' => $procurementId,
+    //                 'item_id' => $item->item_id,
+    //                 'vendor_id' => $vendorId,
+    //             ])->exists();
+
+    //             if ($exists) {
+    //                 continue;
+    //             }
+
+    //             $evatek = EvatekItem::create([
+    //                 'procurement_id' => $procurementId,
+    //                 'project_id' => $procurement->project_id,
+    //                 'item_id' => $item->item_id,
+    //                 'vendor_id' => $vendorId,
+    //                 'start_date' => now(),
+    //                 'target_date' => $validated['target_date'] ?? $procurement->end_date,
+    //                 'current_revision' => 'R0',
+    //                 'status' => 'on_progress',
+    //                 'current_date' => null,
+    //             ]);
+
+    //             $createdVendors[] = $vendorId;
+    //         }
+
+    //         if (empty($createdVendors)) {
+    //             return back()->with('warning', 'Evatek untuk item dan vendor tersebut sudah ada.');
+    //         }
+
+    //         ActivityLogger::log(
+    //             module: 'Evatek',
+    //             action: 'create_evatek_item',
+    //             targetId: $item->item_id,
+    //             details: [
+    //                 'procurement_id' => $procurementId,
+    //                 'vendors' => $createdVendors,
+    //                 'user_id' => Auth::id(),
+    //             ]
+    //         );
+
+    //         DB::commit();
+
+    //         return redirect()->route('supply-chain.dashboard')
+    //             ->with('success', "Item '{$item->item_name}' berhasil ditambahkan untuk {$vendorNames}!");
+    //     } catch (\Illuminate\Validation\ValidationException $e) {
+    //         DB::rollBack();
+    //         return redirect()->back()
+    //             ->withErrors($e->errors())
+    //             ->withInput();
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         Log::error('Error storing item: ' . $e->getMessage());
+
+    //         return redirect()->back()
+    //             ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
+    //             ->withInput();
+    //     }
+    // }
+
+    /**
+     * Store Evatek item(s) directly
+     */
+    public function storeEvatekItem(Request $request, $projectId)
     {
-        if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
+        if (Auth::user()->roles !== 'supply_chain' && Auth::user()->roles !== 'admin') {
             abort(403, 'Unauthorized action.');
         }
 
         $validated = $request->validate([
+            'procurement_id' => 'required|exists:procurement,procurement_id',
             'item_id' => 'required|exists:items,item_id',
             'vendor_ids' => 'required|array|min:1',
             'vendor_ids.*' => 'required|exists:vendors,id_vendor',
-            'target_date' => 'nullable|date|after_or_equal:today',
+            'start_date' => 'nullable|date',
+            'target_date' => 'nullable|date|after:today',
         ]);
 
-        DB::beginTransaction();
         try {
-            $procurement = Procurement::with('project')->findOrFail($procurementId);
+            DB::beginTransaction();
+
+            $project = Project::findOrFail($projectId);
             $item = Item::findOrFail($validated['item_id']);
+            $procurement = Procurement::findOrFail($validated['procurement_id']);
 
-            if (
-                Auth::user()->department_id !== $procurement->project->department_id
-                && Auth::user()->roles !== 'admin'
-            ) {
-                abort(403);
+            if ($procurement->project_id != $projectId) {
+                throw new \Exception('Procurement tidak sesuai dengan project.');
             }
 
-            $createdVendors = [];
-
+            $created = [];
             foreach ($validated['vendor_ids'] as $vendorId) {
+                $targetDate = $validated['target_date']
+                    ? \Carbon\Carbon::parse($validated['target_date'])->toDateString()
+                    : $procurement->end_date->toDateString();
 
-                $exists = EvatekItem::where([
-                    'procurement_id' => $procurementId,
-                    'item_id' => $item->item_id,
-                    'vendor_id' => $vendorId,
-                ])->exists();
+                $evatek = EvatekItem::firstOrCreate(
+                    [
+                        'item_id' => $item->item_id,
+                        'procurement_id' => $procurement->procurement_id,
+                        'vendor_id' => $vendorId,
+                    ],
+                    [
+                        'project_id' => $projectId,
+                        'start_date' => now()->toDateString(),
+                        'target_date' => $targetDate,
+                        'current_revision' => 'R0',
+                        'status' => 'on_progress',
+                        'current_date' => null,
+                    ]
+                );
 
-                if ($exists) {
-                    continue;
-                }
-
-                $evatek = EvatekItem::create([
-                    'procurement_id' => $procurementId,
-                    'project_id' => $procurement->project_id,
-                    'item_id' => $item->item_id,
-                    'vendor_id' => $vendorId,
-                    'start_date' => now(),
-                    'target_date' => $validated['target_date'] ?? $procurement->end_date,
-                    'current_revision' => 'R0',
-                    'status' => 'on_progress',
-                    'current_date' => null,
-                ]);
-
-                $createdVendors[] = $vendorId;
-            }
-
-            if (empty($createdVendors)) {
-                return back()->with('warning', 'Evatek untuk item dan vendor tersebut sudah ada.');
+                $created[] = $evatek;
             }
 
             ActivityLogger::log(
-                module: 'Evatek',
-                action: 'create_evatek_item',
+                module: 'Vendor',
+                action: 'store_evatek_item',
                 targetId: $item->item_id,
-                details: [
-                    'procurement_id' => $procurementId,
-                    'vendors' => $createdVendors,
-                    'user_id' => Auth::id(),
-                ]
+                details: ['user_id' => Auth::id()]
             );
 
             DB::commit();
 
-            $vendorNames = Vendor::whereIn('id_vendor', $createdVendors)
+            $vendorNames = Vendor::whereIn('id_vendor', $validated['vendor_ids'])
                 ->pluck('name_vendor')
                 ->implode(', ');
 
@@ -303,7 +391,7 @@ class SupplyChainController extends Controller
                         ->orWhere('email', 'LIKE', "%{$search}%");
                 });
             })
-            ->orderByRaw('CAST(SUBSTRING(id_vendor, 3) AS UNSIGNED) ASC')
+            ->orderBy('id_vendor', 'asc')
             ->get();
 
         $procurements = Procurement::whereIn('status_procurement', ['pemilihan_vendor'])
@@ -517,21 +605,21 @@ class SupplyChainController extends Controller
 
             DB::beginTransaction();
 
-            $lastVendor = Vendor::orderByRaw('CAST(SUBSTRING(id_vendor, 3) AS UNSIGNED) DESC')->first();
+            // $lastVendor = Vendor::orderByRaw('CAST(SUBSTRING(id_vendor, 3) AS UNSIGNED) DESC')->first();
 
-            if ($lastVendor && preg_match('/^V-(\d+)$/', $lastVendor->id_vendor, $matches)) {
-                $lastNumber = intval($matches[1]);
-            } else {
-                $lastNumber = 0;
-            }
+            // if ($lastVendor && preg_match('/^V-(\d+)$/', $lastVendor->id_vendor, $matches)) {
+            //     $lastNumber = intval($matches[1]);
+            // } else {
+            //     $lastNumber = 0;
+            // }
 
-            do {
-                $lastNumber++;
-                $idVendor = 'V-' . str_pad($lastNumber, 3, '0', STR_PAD_LEFT);
-            } while (Vendor::where('id_vendor', $idVendor)->exists());
+            // do {
+            //     $lastNumber++;
+            //     $idVendor = 'V-' . str_pad($lastNumber, 3, '0', STR_PAD_LEFT);
+            // } while (Vendor::where('id_vendor', $idVendor)->exists());
 
             $vendor = Vendor::create([
-                'id_vendor' => $idVendor,
+                // 'id_vendor' => $idVendor,
                 'name_vendor' => $validated['name_vendor'],
                 'address' => $validated['address'] ?? null,
                 'phone_number' => $validated['phone_number'],
@@ -553,7 +641,7 @@ class SupplyChainController extends Controller
             $routeName = $redirect === 'pilih' ? 'supply-chain.vendor.pilih' : 'supply-chain.vendor.kelola';
 
             return redirect()->route($routeName)
-                ->with('success', 'Vendor "' . $vendor->name_vendor . '" berhasil ditambahkan dengan ID: ' . $idVendor);
+                ->with('success', 'Vendor "' . $vendor->name_vendor . '" berhasil ditambahkan dengan ID: ' . $vendor->id_vendor);
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
             return back()
@@ -701,6 +789,293 @@ class SupplyChainController extends Controller
             return redirect()->back()
                 ->with('error', 'Gagal menambahkan pengadaan')
                 ->withInput();
+        }
+    }
+
+    /**
+     * Store new contract review
+     */
+    public function storeContractReview(Request $request, $procurementId)
+    {
+        if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'vendor_id' => 'required|exists:vendors,id_vendor',
+            'start_date' => 'required|date',
+            'remarks' => 'nullable|string',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $procurement = Procurement::with('project')->findOrFail($procurementId);
+
+            $contractReview = ContractReview::create([
+                'procurement_id' => $procurementId,
+                'vendor_id' => $validated['vendor_id'],
+                'project_id' => $procurement->project_id,
+                'start_date' => $validated['start_date'],
+                'current_revision' => 'R0',
+                'remarks' => $validated['remarks'],
+                'status' => 'on_progress',
+            ]);
+
+            // Create initial revision
+            ContractReviewRevision::create([
+                'contract_review_id' => $contractReview->contract_review_id,
+                'revision_code' => 'R0',
+                'date_sent_to_vendor' => $validated['start_date'],
+                'created_by' => Auth::id(),
+            ]);
+
+            ActivityLogger::log(
+                module: 'Contract Review',
+                action: 'create_contract_review',
+                targetId: $contractReview->contract_review_id,
+                details: [
+                    'procurement_id' => $procurementId,
+                    'vendor_id' => $validated['vendor_id'],
+                    'user_id' => Auth::id(),
+                ]
+            );
+
+            DB::commit();
+
+            return redirect()->route('procurements.show', $procurementId)
+                ->with('success', 'Contract review berhasil dibuat');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error creating contract review: ' . $e->getMessage());
+
+            return back()
+                ->with('error', 'Gagal membuat contract review')
+                ->withInput();
+        }
+    }
+
+    /**
+     * Show contract review detail
+     */
+    public function showContractReview($contractReviewId)
+    {
+        $contractReview = ContractReview::with([
+            'procurement.project',
+            'vendor',
+            'project',
+            'revisions.creator'
+        ])->findOrFail($contractReviewId);
+
+        $procurement = $contractReview->procurement;
+        $revisions = $contractReview->revisions;
+
+        ActivityLogger::log(
+            module: 'Contract Review',
+            action: 'view_contract_review_detail',
+            targetId: $contractReviewId,
+            details: ['user_id' => Auth::id()]
+        );
+
+        return view('supply_chain.contract_review.show', compact('contractReview', 'procurement', 'revisions'));
+    }
+
+
+
+    /**
+     * Save link for contract review revision (AJAX)
+     */
+    public function saveLink(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'revision_id' => 'required|integer',
+                'vendor_link' => 'nullable|string',
+                'sc_link' => 'nullable|string',
+            ]);
+
+            $revision = ContractReviewRevision::findOrFail($validated['revision_id']);
+
+            $revision->update([
+                'vendor_link' => $validated['vendor_link'],
+                'sc_link' => $validated['sc_link'],
+            ]);
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            Log::error('Error saving link: ' . $e->getMessage());
+            return response()->json(['success' => false], 500);
+        }
+    }
+
+    /**
+     * Save activity log (AJAX)
+     */
+    public function saveLog(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'contract_review_id' => 'required|integer',
+                'log' => 'nullable|string',
+            ]);
+
+            $contractReview = ContractReview::findOrFail($validated['contract_review_id']);
+
+            $contractReview->update([
+                'log' => $validated['log'],
+            ]);
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            Log::error('Error saving log: ' . $e->getMessage());
+            return response()->json(['success' => false], 500);
+        }
+    }
+
+    /**
+     * Approve revision (AJAX)
+     */
+    public function approve(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $validated = $request->validate([
+                'revision_id' => 'required|integer',
+            ]);
+
+            $revision = ContractReviewRevision::findOrFail($validated['revision_id']);
+            $contractReview = $revision->contractReview;
+
+            $revision->update([
+                'result' => 'approve',
+                'date_result' => now()->toDateString(),
+            ]);
+
+            $contractReview->update([
+                'result' => 'approve',
+                'status' => 'completed',
+            ]);
+
+            ActivityLogger::log(
+                module: 'Contract Review',
+                action: 'approve_revision',
+                targetId: $contractReview->contract_review_id,
+                details: ['revision' => $revision->revision_code, 'user_id' => Auth::id()]
+            );
+
+            DB::commit();
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error approving revision: ' . $e->getMessage());
+            return response()->json(['success' => false], 500);
+        }
+    }
+
+    /**
+     * Reject revision (AJAX)
+     */
+    public function reject(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $validated = $request->validate([
+                'revision_id' => 'required|integer',
+            ]);
+
+            $revision = ContractReviewRevision::findOrFail($validated['revision_id']);
+            $contractReview = $revision->contractReview;
+
+            $revision->update([
+                'result' => 'not_approve',
+                'date_result' => now()->toDateString(),
+            ]);
+
+            $contractReview->update([
+                'result' => 'not_approve',
+                'status' => 'completed',
+            ]);
+
+            ActivityLogger::log(
+                module: 'Contract Review',
+                action: 'reject_revision',
+                targetId: $contractReview->contract_review_id,
+                details: ['revision' => $revision->revision_code, 'user_id' => Auth::id()]
+            );
+
+            DB::commit();
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error rejecting revision: ' . $e->getMessage());
+            return response()->json(['success' => false], 500);
+        }
+    }
+
+
+
+    /**
+     * Create new revision (AJAX)
+     */
+    public function revisi(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $validated = $request->validate([
+                'revision_id' => 'required|integer',
+            ]);
+
+            $revision = ContractReviewRevision::findOrFail($validated['revision_id']);
+            $contractReview = $revision->contractReview;
+
+            // Update old revision dengan result dan date_result
+            $revision->update([
+                'result' => 'revisi',
+                'date_result' => now()->toDateString(),
+            ]);
+
+            // Create new revision
+            $revisionNumber = intval(substr($contractReview->current_revision, 1)) + 1;
+            $newRevisionCode = 'R' . $revisionNumber;
+
+            $newRevision = ContractReviewRevision::create([
+                'contract_review_id' => $contractReview->contract_review_id,
+                'revision_code' => $newRevisionCode,
+                'date_sent_to_vendor' => now()->toDateString(),
+                'result' => 'pending',
+                'created_by' => Auth::id(),
+            ]);
+
+            $contractReview->update([
+                'current_revision' => $newRevisionCode,
+                'status' => 'on_progress',
+            ]);
+
+            ActivityLogger::log(
+                module: 'Contract Review',
+                action: 'create_revision',
+                targetId: $contractReview->contract_review_id,
+                details: ['new_revision' => $newRevisionCode, 'user_id' => Auth::id()]
+            );
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'new_revision' => [
+                    'contract_review_revision_id' => $newRevision->contract_review_revision_id,
+                    'revision_code' => $newRevision->revision_code,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error creating revision: ' . $e->getMessage());
+            return response()->json(['success' => false], 500);
         }
     }
 }
