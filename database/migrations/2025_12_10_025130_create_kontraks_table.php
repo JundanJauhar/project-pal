@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id('kontrak_id');
 
             $table->unsignedBigInteger('procurement_id');
+            $table->string('no_po')->nullable();
             $table->unsignedBigInteger('item_id')->nullable();
             $table->unsignedBigInteger('vendor_id')->nullable();
 

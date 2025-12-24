@@ -31,17 +31,30 @@
             </thead>
 
             <tbody>
-                @php $no = 1; @endphp
+
+                @php
+                /**
+                * Vendor yang VALID untuk Pengadaan OC
+                * = vendor yang sudah dikirimi Inquiry & Quotation
+                */
+                $poVendors = collect($inquiryQuotations ?? [])
+                ->map(fn ($iq) => $iq->vendor)
+                ->filter() // buang null
+                ->unique('id_vendor') // cegah duplikat
+                ->values();
+                @endphp
+
+                @php $row = 1; @endphp
 
                 @forelse($pengadaanOcs as $po)
                 <tr>
-                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $no++ }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $row++ }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $po->vendor?->name_vendor ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">
                         @if($po->nilai)
-                            {{ number_format($po->nilai, 0, ',', '.') }} {{ $po->currency }}
+                        {{ number_format($po->nilai, 0, ',', '.') }} {{ $po->currency }}
                         @else
-                            -
+                        -
                         @endif
                     </td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $po->tgl_kadep_to_kadiv?->format('d/m/Y') ?? '-' }}</td>
@@ -72,11 +85,11 @@
 
                                 <div class="modal-body row g-3">
 
+                                    {{-- vendor --}}
                                     <div class="col-md-6">
-                                        <label class="form-label">Vendor</label>
-                                        <select name="vendor_id" class="form-select">
-                                            <option value="">-</option>
-                                            @foreach($vendors as $vendor)
+                                        <label class="form-label">Vendor *</label>
+                                        <select name="vendor_id" class="form-select" required>
+                                            @foreach($poVendors as $vendor)
                                             <option value="{{ $vendor->id_vendor }}"
                                                 @selected($vendor->id_vendor == $po->vendor_id)>
                                                 {{ $vendor->name_vendor }}
@@ -85,6 +98,7 @@
                                         </select>
                                     </div>
 
+                                    {{-- nilai --}}
                                     <div class="col-md-6">
                                         <label class="form-label">Nilai</label>
                                         <div class="input-group">
@@ -157,24 +171,12 @@
                 </div>
 
                 @empty
-                <tr>
-                    <td colspan="8" class="text-center text-muted">
-                        Belum ada Pengadaan OC
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-action-create"
-                            data-bs-toggle="modal"
-                            data-bs-target="#modalCreatePO">
-                            Create
-                        </button>
-                    </td>
-                </tr>
                 @endforelse
-
-                {{-- ================= ROW CREATE ================= --}}
-                @if($pengadaanOcs->count() > 0 && $currentCheckpointSequence == 5)
+                @if($pengadaanOcs->count() == 0 && $currentCheckpointSequence == 5)
                 <tr>
-                    <td colspan="8"></td>
+                    <td>{{ $row }}</td>
+                    <td colspan="7" class="text-center text-muted">
+                        Belum ada Pengadaan OC</td>
                     <td class="text-center">
                         <button class="btn btn-sm btn-action-create"
                             data-bs-toggle="modal"
@@ -184,6 +186,96 @@
                     </td>
                 </tr>
                 @endif
+
+                <div class="modal fade" id="modalCreatePO" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+
+                            <form method="POST"
+                                action="{{ route('pengadaan-oc.store', $procurement->procurement_id) }}">
+                                @csrf
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Create Pengadaan OC</h5>
+                                </div>
+
+                                <div class="modal-body row g-3">
+
+                                    {{-- vendor --}}
+                                    <div class="col-md-6">
+                                        <label class="form-label">Vendor *</label>
+                                        <select name="vendor_id" class="form-select" required>
+                                            <option value="" disabled selected>-- Pilih Vendor --</option>
+
+                                            @forelse($poVendors as $vendor)
+                                            <option value="{{ $vendor->id_vendor }}">
+                                                {{ $vendor->name_vendor }}
+                                            </option>
+                                            @empty
+                                            <option disabled>
+                                                Tidak ada vendor dari Inquiry & Quotation
+                                            </option>
+                                            @endforelse
+                                        </select>
+
+                                        <small style="color:#666;">
+                                            Vendor berasal dari Inquiry & Quotation
+                                        </small>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nilai</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text" id="currencyCreatePODisplay">
+                                                IDR
+                                            </span>
+
+                                            <input type="text" class="form-control" placeholder="0" disabled id="nilaiPODisplay">
+                                        </div>
+                                        <input type="hidden" name="nilai" id="nilaiPO" value="">
+                                        <input type="hidden" name="currency" id="currencyCreatePO" value="IDR">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Kadep → Kadiv</label>
+                                        <input type="date" name="tgl_kadep_to_kadiv" class="form-control">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Kadiv → CTO</label>
+                                        <input type="date" name="tgl_kadiv_to_cto" class="form-control">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">CTO → CEO</label>
+                                        <input type="date" name="tgl_cto_to_ceo" class="form-control">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tanggal ACC</label>
+                                        <input type="date" name="tgl_acc" class="form-control">
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label">Remarks</label>
+                                        <textarea name="remarks" class="form-control" rows="3"></textarea>
+                                    </div>
+
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button"
+                                        class="btn btn-sm btn-action-abort"
+                                        data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit"
+                                        class="btn btn-sm btn-action-create">Simpan</button>
+                                </div>
+
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
             </tbody>
         </table>
     </div>

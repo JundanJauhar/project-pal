@@ -5,13 +5,13 @@
         <table class="dashboard-table">
             <thead>
                 <tr>
-                    <th style="padding:14px 8px;text-align:center">No</th>
-                    <th style="padding:14px 8px;text-align:center">Incoterms</th>
-                    <th style="padding:14px 8px;text-align:center">ETD</th>
-                    <th style="padding:14px 8px;text-align:center">ETA SBY Port</th>
-                    <th style="padding:14px 8px;text-align:center">ETA PAL</th>
-                    <th style="padding:14px 8px;text-align:center">Remark</th>
-                    <th style="padding:14px 8px;text-align:center">Aksi</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">No</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Incoterms</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">ETD</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">ETA SBY Port</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">ETA PAL</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Remark</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                 </tr>
             </thead>
 
@@ -21,13 +21,13 @@
                 {{-- LISTING --}}
                 @forelse($materialDeliveries as $delivery)
                 <tr>
-                    <td style="text-align:center">{{ $row++ }}</td>
-                    <td style="text-align:center">{{ $delivery->incoterms ?? '-' }}</td>
-                    <td style="text-align:center">{{ $delivery->etd?->format('d/m/Y') ?? '-' }}</td>
-                    <td style="text-align:center">{{ $delivery->eta_sby_port?->format('d/m/Y') ?? '-' }}</td>
-                    <td style="text-align:center">{{ $delivery->eta_pal?->format('d/m/Y') ?? '-' }}</td>
-                    <td style="text-align:center">{{ Str::limit($delivery->remark,30) ?? '-' }}</td>
-                    <td style="text-align:center">
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $row++ }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $delivery->incoterms ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $delivery->etd?->format('d/m/Y') ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $delivery->eta_sby_port?->format('d/m/Y') ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $delivery->eta_pal?->format('d/m/Y') ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ Str::limit($delivery->remark,30) ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">
                         <button class="btn btn-sm btn-action-edit"
                             data-bs-toggle="modal"
                             data-bs-target="#modalEditDel{{ $delivery->delivery_id }}">

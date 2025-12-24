@@ -54,10 +54,7 @@ class PengadaanOcController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error storing PengadaanOc: ' . $e->getMessage());
-
-            return back()
-                ->with('error', 'Gagal menyimpan: ' . $e->getMessage())
-                ->withInput();
+            return back()->with('error', 'Gagal menyimpan: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -70,12 +67,12 @@ class PengadaanOcController extends Controller
         $validated = $request->validate([
             'vendor_id' => 'nullable|exists:vendors,id_vendor',
             'currency' => 'nullable|string|max:10',
-            'nilai' => 'nullable|numeric',
+            'nilai' => 'nullable|numeric|min:0',
             'tgl_kadep_to_kadiv' => 'nullable|date',
             'tgl_kadiv_to_cto' => 'nullable|date',
             'tgl_cto_to_ceo' => 'nullable|date',
             'tgl_acc' => 'nullable|date',
-            'remarks' => 'nullable|string|max:2000',
+            'remarks' => 'nullable|string',
         ]);
 
         try {

@@ -244,7 +244,7 @@ class ProcurementController extends Controller
             ->get();
 
         $pengesahanKontraks = PengesahanKontrak::where('procurement_id', $procurement->procurement_id)
-            ->with(['vendor','kontrak'])
+            ->with('vendor')
             ->orderBy('created_at','desc')
             ->get();
 

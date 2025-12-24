@@ -15,6 +15,7 @@ class Kontrak extends Model
 
     protected $fillable = [
         'procurement_id',
+        'no_po',
         'item_id',
         'vendor_id',
         'tgl_kontrak',

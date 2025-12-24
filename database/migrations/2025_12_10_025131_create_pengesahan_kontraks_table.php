@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id('pengesahan_id');
 
             $table->unsignedBigInteger('procurement_id');
-            $table->unsignedBigInteger('kontrak_id')->nullable();
             $table->unsignedBigInteger('vendor_id')->nullable();
 
             $table->string('currency', 10)->default('IDR');
@@ -31,16 +30,11 @@ return new class extends Migration
                 ->references('procurement_id')->on('procurement')
                 ->cascadeOnDelete();
 
-            $table->foreign('kontrak_id')
-                ->references('kontrak_id')->on('kontraks')
-                ->nullOnDelete();
-
             $table->foreign('vendor_id')
                 ->references('id_vendor')->on('vendors')
                 ->nullOnDelete();
 
             $table->index('procurement_id');
-            $table->index('kontrak_id');
             $table->index('vendor_id');
         });
     }

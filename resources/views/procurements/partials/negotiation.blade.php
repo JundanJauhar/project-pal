@@ -1,4 +1,5 @@
 <h5 class="section-title">Negotiation</h5>
+
 <div class="dashboard-table-wrapper">
     <div class="table-responsive">
         <div class="btn-simpan-wrapper">
@@ -139,6 +140,7 @@
                 <div class="modal fade" id="modalEditNeg{{ $neg->negotiation_id }}" tabindex="-1">
                     <div class="modal-dialog modal-lg">
                         <div class="modal-content">
+
                             <form method="POST"
                                 action="{{ route('negotiation.update', $neg->negotiation_id) }}">
                                 @csrf
@@ -267,17 +269,18 @@
                         </div>
                     </div>
                 </div>
-                @empty
-                @endempty
 
-                {{-- IF EMPTY --}}
+                @empty
+                @endforelse
                 @if($negotiations->count() == 0 && $currentCheckpointSequence == 4)
                 <tr>
                     <td>{{ $row }}</td>
-                    <td colspan="10" class="text-center text-muted">Belum ada Negotiation</td>
-                    <td>
+                    <td colspan="10" class="text-center text-muted">
+                        Belum ada Negotiation</td>
+                    <td class="text-center">
                         <button class="btn btn-sm btn-action-create"
-                            data-bs-toggle="modal" data-bs-target="#modalCreateNeg">
+                            data-bs-toggle="modal" 
+                            data-bs-target="#modalCreateNeg">
                             Create
                         </button>
                     </td>
