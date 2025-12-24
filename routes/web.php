@@ -32,6 +32,10 @@ use App\Http\Controllers\KontrakController;
 use App\Http\Controllers\MaterialDeliveryController;
 use App\Http\Controllers\CheckpointTransitionController;
 use App\Http\Controllers\VendorController;
+use App\Http\Controllers\PembayaranController;
+use App\Http\Controllers\JaminanPembayaranController;
+
+
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -387,6 +391,60 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
             '/procurement/{procurementId}',
             [KontrakController::class, 'getByProcurement']
         )->name('kontrak.getByProcurement');
+    });
+
+    Route::prefix('supply-chain/pembayaran')->group(function () {
+
+        // CREATE (PROCUREMENT BASED)
+        Route::post(
+            '/procurement/{procurementId}',
+            [PembayaranController::class, 'store']
+        )->name('pembayaran.store');
+
+        // UPDATE (PEMBAYARAN BASED)
+        Route::post(
+            '/{pembayaranId}/update',
+            [PembayaranController::class, 'update']
+        )->name('pembayaran.update');
+
+        // DELETE
+        Route::delete(
+            '/{pembayaranId}',
+            [PembayaranController::class, 'delete']
+        )->name('pembayaran.delete');
+
+        // GET BY PROCUREMENT (AJAX)
+        Route::get(
+            '/procurement/{procurementId}',
+            [PembayaranController::class, 'getByProcurement']
+        )->name('pembayaran.getByProcurement');
+    });
+
+    Route::prefix('supply-chain/jaminan-pembayaran')->group(function () {
+
+    // CREATE (PROCUREMENT BASED)
+    Route::post(
+            '/procurement/{procurementId}',
+            [JaminanPembayaranController::class, 'store']
+        )->name('jaminan-pembayaran.store');
+
+        // UPDATE (JAMINAN PEMBAYARAN BASED)
+        Route::post(
+            '/{jaminanPembayaranId}/update',
+            [JaminanPembayaranController::class, 'update']
+        )->name('jaminan-pembayaran.update');
+
+        // DELETE
+        Route::delete(
+            '/{jaminanPembayaranId}',
+            [JaminanPembayaranController::class, 'delete']
+        )->name('jaminan-pembayaran.delete');
+
+        // GET BY PROCUREMENT (AJAX)
+        Route::get(
+            '/procurement/{procurementId}',
+            [JaminanPembayaranController::class, 'getByProcurement']
+        )->name('jaminan-pembayaran.getByProcurement');
     });
 
 

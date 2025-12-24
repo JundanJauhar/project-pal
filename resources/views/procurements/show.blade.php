@@ -495,6 +495,20 @@
     'procurements.partials.kontrak',
     compact('procurement', 'kontraks', 'vendors', 'currentCheckpointSequence'))
 
+    {{-- ================= Pembayaran ================= --}}
+    @includeWhen(
+        auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 7,
+        'procurements.partials.pembayaran',
+        compact('procurement','pembayarans','currentCheckpointSequence')
+    )
+
+    {{-- ================= Jaminan Pembayaran ================= --}}
+    @includeWhen(
+        auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 7,
+        'procurements.partials.jaminanpembayaran',
+        compact('procurement','jaminans','currentCheckpointSequence')
+    )
+
     {{-- ================= Material Delivery ================= --}}
     @includeWhen(
     auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
