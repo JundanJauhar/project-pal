@@ -80,6 +80,16 @@ Route::middleware('auth:vendor')->group(function () {
 
     Route::post('/vendor/evatek/save-log', [VendorEvatekController::class, 'saveLog'])
         ->name('vendor.evatek.save-log');
+
+    // Vendor Contract Review Routes
+    Route::get('/vendor/contract-review/{contractReviewId}/review', [VendorEvatekController::class, 'reviewContract'])
+        ->name('vendor.contract-review.review');
+
+    Route::post('/vendor/contract-review/save-link', [VendorEvatekController::class, 'saveContractLink'])
+        ->name('vendor.contract-review.save-link');
+
+    Route::post('/vendor/contract-review/save-log', [VendorEvatekController::class, 'saveContractLog'])
+        ->name('vendor.contract-review.save-log');
 });
 
 Route::redirect('/vendor/dashboard', '/vendor');
@@ -211,6 +221,29 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
 
         Route::post('/vendor/simpan/{procurementId}', [SupplyChainController::class, 'simpanVendor'])
             ->name('vendor.simpan');
+
+        // ========== CONTRACT REVIEW ROUTES ==========
+        Route::post('/contract-review/{procurementId}/store', [SupplyChainController::class, 'storeContractReview'])
+            ->name('contract-review.store');
+
+        Route::get('/contract-review/show/{contractReviewId}', [SupplyChainController::class, 'showContractReview'])
+            ->name('contract-review.show');
+
+        // AJAX routes for contract review detail page
+        Route::post('/contract-review/save-link', [SupplyChainController::class, 'saveLink'])
+            ->name('contract-review.save-link');
+
+        Route::post('/contract-review/save-log', [SupplyChainController::class, 'saveLog'])
+            ->name('contract-review.save-log');
+
+        Route::post('/contract-review/approve', [SupplyChainController::class, 'approve'])
+            ->name('contract-review.approve');
+
+        Route::post('/contract-review/reject', [SupplyChainController::class, 'reject'])
+            ->name('contract-review.reject');
+
+        Route::post('/contract-review/revisi', [SupplyChainController::class, 'revisi'])
+            ->name('contract-review.revisi');
     });
 
     /*

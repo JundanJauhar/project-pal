@@ -59,6 +59,11 @@ class Procurement extends Model
         return $this->hasMany(Negotiation::class, 'procurement_id', 'procurement_id');
     }
 
+    public function contractReviews()
+    {
+        return $this->hasMany(ContractReview::class, 'procurement_id', 'procurement_id');
+    }
+
     public function inquiryQuotations()
     {
         return $this->hasMany(InquiryQuotation::class, 'procurement_id', 'procurement_id');
