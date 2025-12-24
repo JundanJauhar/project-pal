@@ -6,6 +6,7 @@ use App\Models\Vendor;
 use App\Models\RequestProcurement;
 use App\Models\EvatekItem;
 use App\Models\EvatekRevision;
+use App\Models\ContractReview;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,6 +29,17 @@ class VendorEvatekController extends Controller
             ->with(['item', 'procurement', 'project','latestRevision'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
+
+        // Ambil contract reviews untuk vendor ini
+        $contractReviews = ContractReview::where('vendor_id', $vendor->id_vendor)
+            ->with([
+                'procurement.project',
+                'procurement.requestProcurements.items',
+                'project',
+                'revisions'
+            ])
+            ->orderBy('start_date', 'desc')
+            ->get();
 
         // Statistics untuk vendor ini
            $stats = [
@@ -54,9 +66,36 @@ class VendorEvatekController extends Controller
                 ->count(),
         ];
 
+        // Statistics untuk Contract Review vendor ini
+        $contractStats = [
+            'total_review' => ContractReview::where('vendor_id', $vendor->id_vendor)->count(),
+            'on_progress' => ContractReview::where('vendor_id', $vendor->id_vendor)
+                ->where('status', 'on_progress')
+                ->count(),
+            'waiting_feedback' => ContractReview::where('vendor_id', $vendor->id_vendor)
+                ->where('status', 'waiting_feedback')
+                ->count(),
+            'approved' => ContractReview::where('vendor_id', $vendor->id_vendor)
+                ->whereHas('revisions', function($q) {
+                    $q->where('result', 'approve');
+                })
+                ->count(),
+            'revisi' => ContractReview::where('vendor_id', $vendor->id_vendor)
+                ->whereHas('revisions', function($q) {
+                    $q->where('result', 'revisi');
+                })
+                ->count(),
+            'rejected' => ContractReview::where('vendor_id', $vendor->id_vendor)
+                ->whereHas('revisions', function($q) {
+                    $q->where('result', 'not_approve');
+                })
+                ->count(),
+        ];
 
-        return view('vendor.index', compact('vendor', 'evatekItems', 'stats'));
+
+        return view('vendor.index', compact('vendor', 'evatekItems', 'contractReviews', 'stats', 'contractStats'));
     }
+    
 
     public function review($evatekId)
     {
@@ -310,6 +349,125 @@ class VendorEvatekController extends Controller
 
         $evatek->log = $validated['log'];
         $evatek->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Log berhasil disimpan'
+        ]);
+    }
+
+    /**
+     * Display contract review detail for vendor
+     */
+    public function reviewContract($contractReviewId)
+    {
+        $vendor = Auth::guard('vendor')->user();
+        
+        if (!$vendor) {
+            abort(403, 'Vendor not authenticated');
+        }
+
+        $contractReview = ContractReview::with([
+            'vendor',
+            'procurement.project',
+            'procurement.requestProcurements.items',
+            'project',
+            'revisions' => function($query) {
+                $query->orderBy('revision_code', 'desc');
+            }
+        ])->findOrFail($contractReviewId);
+
+        // Verify this contract review belongs to vendor
+        if ($contractReview->vendor_id != $vendor->id_vendor) {
+            abort(403, 'Unauthorized');
+        }
+
+        $revisions = $contractReview->revisions;
+
+        if ($revisions->isEmpty()) {
+            $revision = \App\Models\ContractReviewRevision::create([
+                'contract_review_id' => $contractReview->contract_review_id,
+                'revision_code' => 'R0',
+                'vendor_link' => null,
+                'sc_link' => null,
+                'result' => 'pending',
+                'created_by' => null,
+            ]);
+
+            $revisions = collect([$revision]);
+        }
+
+        // Initialize log if null
+        if ($contractReview->log === null) {
+            $contractReview->log = '';
+        }
+
+        return view('vendor.contract-review.show', compact('contractReview', 'revisions', 'vendor'));
+    }
+
+    /**
+     * Save vendor link for contract review
+     */
+    public function saveContractLink(Request $request)
+    {
+        $vendor = Auth::guard('vendor')->user();
+        
+        if (!$vendor) {
+            return response()->json(['success' => false, 'message' => 'Vendor not authenticated'], 403);
+        }
+
+        $validated = $request->validate([
+            'revision_id' => 'required|exists:contract_review_revisions,contract_review_revision_id',
+            'vendor_link' => 'nullable|string',
+        ]);
+
+        $revision = \App\Models\ContractReviewRevision::with('contractReview')->findOrFail($validated['revision_id']);
+        
+        // Verify this contract review belongs to vendor
+        if ($revision->contractReview->vendor_id != $vendor->id_vendor) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $revision->vendor_link = $validated['vendor_link'];
+        
+        // Set tanggal feedback vendor saat pertama kali vendor save link
+        if (!$revision->date_vendor_feedback && $validated['vendor_link']) {
+            $revision->date_vendor_feedback = now()->toDateString();
+        }
+        
+        $revision->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Link berhasil disimpan'
+        ]);
+    }
+
+    /**
+     * Save activity log for contract review
+     */
+    public function saveContractLog(Request $request)
+    {
+        $vendor = Auth::guard('vendor')->user();
+        
+        if (!$vendor) {
+            return response()->json(['success' => false, 'message' => 'Vendor not authenticated'], 403);
+        }
+
+        $validated = $request->validate([
+            'contract_review_id' => 'required|exists:contract_reviews,contract_review_id',
+            'log' => 'required|string',
+        ]);
+
+        $contractReview = ContractReview::findOrFail($validated['contract_review_id']);
+        
+        // Verify this contract review belongs to vendor
+        if ($contractReview->vendor_id != $vendor->id_vendor) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $contractReview->log = $validated['log'];
+        $contractReview->save();
 
         return response()->json([
             'success' => true,

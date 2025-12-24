@@ -20,6 +20,7 @@ use App\Models\PengadaanOC;
 use App\Models\PengesahanKontrak;
 use App\Models\Kontrak;
 use App\Models\MaterialDelivery;
+use App\Models\ContractReview;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -234,9 +235,31 @@ class ProcurementController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        // Get vendors that have gone through negotiation for this procurement
+        $negotiatedVendorIds = $negotiations->pluck('vendor_id')->unique()->toArray();
+        $negotiatedVendors = Vendor::whereIn('id_vendor', $negotiatedVendorIds)
+            ->orderBy('name_vendor', 'asc')
+            ->get();
+
+        $contractReviews = ContractReview::where('procurement_id', $procurement->procurement_id)
+            ->with(['vendor', 'revisions' => function($query) {
+                $query->orderBy('revision_code', 'desc');
+            }, 'revisions.creator'])
+            ->orderBy('start_date', 'desc')
+            ->get();
+
         $pengadaanOcs = PengadaanOC::where('procurement_id', $procurement->procurement_id)
             ->with('vendor')
             ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Check if any Pengadaan OC exists (tidak perlu tgl_acc)
+        $hasPengadaanOcCompleted = $pengadaanOcs->count() > 0;
+
+        // Get vendors from all Pengadaan OC for contract review
+        $pengadaanOcVendorIds = $pengadaanOcs->pluck('vendor_id')->unique()->toArray();
+        $pengadaanOcVendors = Vendor::whereIn('id_vendor', $pengadaanOcVendorIds)
+            ->orderBy('name_vendor', 'asc')
             ->get();
 
         $materialDeliveries = MaterialDelivery::where('procurement_id', $procurement->procurement_id)
@@ -253,6 +276,9 @@ class ProcurementController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        // Check if any Contract Review is approved (to unlock Pengesahan Kontrak)
+        $hasApprovedContractReview = $contractReviews->where('result', 'approve')->count() > 0;
+
         ActivityLogger::log(
             module: 'Procurement',
             action: 'view_procurement_detail',
@@ -265,10 +291,15 @@ class ProcurementController extends Controller
             'checkpoints',
             'currentStageIndex',
             'vendors',
+            'negotiatedVendors',
             'evatekItems',
             'inquiryQuotations',
             'negotiations',
+            'contractReviews',
             'pengadaanOcs',
+            'pengadaanOcVendors',
+            'hasPengadaanOcCompleted',
+            'hasApprovedContractReview',
             'pengesahanKontraks',
             'kontraks',
             'materialDeliveries',

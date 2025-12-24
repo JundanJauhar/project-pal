@@ -140,7 +140,7 @@
             </div>
             <div class="stat-icon">
                 <div class="stat-icon-inner">
-                    <i class="bi bi-check-circle"></i>
+                    <i class="bi bi-arrow-repeat"></i>
                 </div>
             </div>
         </div>
@@ -265,6 +265,174 @@
         </tbody>
     </table>
 </div>
+
+{{-- Contract Review Section --}}
+<h2 class="fw-bold mb-3 mt-5">Review Kontrak dengan Supply Chain</h2>
+<p class="mb-4" style="color:#555;">
+    Vendor: <strong>{{ $vendor->name_vendor ?? '-' }}</strong>
+</p>
+
+{{-- Contract Review Stats Cards --}}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card stat-total">
+            <div class="stat-content">
+                <div class="stat-title">Total Review Kontrak</div>
+                <div class="stat-value">{{ $contractStats['total_review'] }}</div>
+            </div>
+            <div class="stat-icon">
+                <div class="stat-icon-inner">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-progress">
+            <div class="stat-content">
+                <div class="stat-title">Sedang Proses</div>
+                <div class="stat-value">{{ $contractStats['on_progress'] }}</div>
+            </div>
+            <div class="stat-icon">
+                <div class="stat-icon-inner">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-success">
+            <div class="stat-content">
+                <div class="stat-title">Approved</div>
+                <div class="stat-value">{{ $contractStats['approved'] }}</div>
+            </div>
+            <div class="stat-icon">
+                <div class="stat-icon-inner">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card stat-success">
+            <div class="stat-content">
+                <div class="stat-title">Revisi</div>
+                <div class="stat-value">{{ $contractStats['revisi'] }}</div>
+            </div>
+            <div class="stat-icon">
+                <div class="stat-icon-inner">
+                    <i class="bi bi-arrow-repeat"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card stat-rejected">
+            <div class="stat-content">
+                <div class="stat-title">Not Approved</div>
+                <div class="stat-value">{{ $contractStats['rejected'] }}</div>
+            </div>
+            <div class="stat-icon">
+                <div class="stat-icon-inner">
+                    <i class="bi bi-x-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="big-card mt-4">
+    <h4 style="margin-bottom: 25px; font-weight: 600; color: #333;">
+        📝 Review Kontrak dengan Supply Chain
+    </h4>
+
+    <table class="request-table">
+        <thead>
+            <tr>
+                <th style="text-align: left;">Item</th>
+                <th style="text-align: left;">Project / Procurement</th>
+                <th style="text-align: center;">Status Evatek</th>
+                <th style="text-align: center;">Catatan</th>
+                <th style="text-align: center;">Dibuat</th>
+                <th style="text-align: center;">Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($contractReviews as $review)
+            @php
+                $proc = $review->procurement ?? null;
+                $proj = $proc ? $proc->project : ($review->project ?? null);
+                $requestProc = $proc ? $proc->requestProcurements->first() : null;
+                $items = $requestProc ? $requestProc->items : collect();
+                $item = $items->first();
+            @endphp
+            <tr>
+                {{-- Item --}}
+                <td style="padding: 12px 8px; text-align: left;">
+                    <strong>{{ $item->item_name ?? 'N/A' }}</strong><br>
+                    <small class="text-muted">{{ $item->amount ?? '' }} {{ $item->unit ?? '' }}</small>
+                </td>
+
+                {{-- Project / Procurement --}}
+                <td style="padding: 12px 8px; text-align: left; font-size: 13px;">
+                    <strong>{{ $proj->project_name ?? '-' }}</strong><br>
+                    <small class="text-muted">{{ $proc->code_procurement ?? '-' }}</small>
+                </td>
+
+                {{-- Status --}}
+                <td style="padding: 12px 8px; text-align: center;">
+                    @php
+                        $latestRevision = $review->revisions->first();
+                        $statusClass = 'status-pending';
+                        $statusText = 'Pending';
+                        
+                        if($latestRevision) {
+                            if($latestRevision->result == 'approve') {
+                                $statusClass = 'status-approved';
+                                $statusText = 'Approved';
+                            } elseif($latestRevision->result == 'not_approve') {
+                                $statusClass = 'status-not-approved';
+                                $statusText = 'Not Approved';
+                            } elseif($latestRevision->result == 'revisi') {
+                                $statusClass = 'status-revisi';
+                                $statusText = 'Revisi';
+                            }
+                        }
+                    @endphp
+                    <span class="status-desain {{ $statusClass }}">{{ $statusText }}</span>
+                </td>
+
+                {{-- Catatan --}}
+                <td style="padding: 12px 8px; text-align: left; font-size: 13px;">
+                    {{ $review->remarks ?? '-' }}
+                </td>
+
+                {{-- Tanggal dibuat --}}
+                <td style="padding: 12px 8px; text-align: center; font-size: 13px;">
+                    {{ $review->start_date ? \Carbon\Carbon::parse($review->start_date)->format('d/m/Y') : '-' }}
+                </td>
+
+                <td style="padding: 12px 8px; text-align: center;">
+                    <a href="{{ route('vendor.contract-review.review', $review->contract_review_id) }}"
+                        class="btn btn-sm btn-primary"
+                        style="padding: 6px 14px; border-radius: 6px; text-decoration: none;">
+                        Review Kontrak
+                    </a>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="6" class="text-center py-5">
+                    Belum ada review kontrak untuk saat ini.
+                </td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
 @endsection
 
 @push('scripts')

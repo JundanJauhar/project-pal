@@ -469,7 +469,7 @@
     @includeWhen(
     auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 3,
     'procurements.partials.evatek',
-    compact('procurement','evatekItems','vendors'))
+    compact('procurement','evatekItems','vendors','inquiryQuotations','currentCheckpointSequence'))
 
     {{-- ================= Negotiation ================= --}}
     @includeWhen(
@@ -483,9 +483,15 @@
     'procurements.partials.pengadaan_oc',
     compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
 
-    {{-- ================= Pengesahan Kontrak ================= --}}
+    {{-- ================= Contract Review (Setelah Pengadaan OC selesai) ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
+    auth()->user()->roles === 'supply_chain' && $hasPengadaanOcCompleted,
+    'procurements.partials.contract_review',
+    compact('procurement','contractReviews','pengadaanOcVendors','currentCheckpointSequence'))
+
+    {{-- ================= Pengesahan Kontrak (Setelah Contract Review di-approve) ================= --}}
+    @includeWhen(
+    auth()->user()->roles === 'supply_chain' && $hasApprovedContractReview,
     'procurements.partials.pengesahan_kontrak',
     compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
 
