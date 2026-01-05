@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id(); // primary key default
 
             $table->unsignedBigInteger('vendor_id');
-            $table->unsignedBigInteger('procurement_id');
+            $table->unsignedBigInteger('procurement_id')->nullable();
 
             $table->string('payment_type', 20); // SKBDN | L/C | TT
             $table->decimal('percentage', 5, 2); // persen pembayaran
