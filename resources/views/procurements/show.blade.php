@@ -483,7 +483,7 @@
     'procurements.partials.pengadaan_oc',
     compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
 
-    {{-- ================= Review Kontrak (Setelah Pengadaan OC selesai) ================= --}}
+    {{-- ================= Review Kontrak ================= --}}
     @includeWhen(
     auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
     'procurements.partials.contract_review',

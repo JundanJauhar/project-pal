@@ -53,10 +53,6 @@ class PembayaranController extends Controller
                 throw new \Exception('Invalid procurement reference.');
             }
 
-            /**
-             * Ambil vendor & nilai kontrak dari pengesahan kontrak
-             * Diasumsikan hanya ada 1 kontrak aktif
-             */
             $kontrak = $procurement->kontraks()->latest()->first();
 
             if (!$kontrak) {
@@ -66,8 +62,20 @@ class PembayaranController extends Controller
             $nilaiKontrak = $kontrak->nilai;
             $currency     = $kontrak->currency ?? 'IDR';
 
-            // Hitung nilai pembayaran
             $paymentValue = ($validated['percentage'] / 100) * $nilaiKontrak;
+
+            $totalPercentage = Pembayaran::where('procurement_id', $validated['procurement_id'])
+                ->sum('percentage');
+
+            $totalAfterInsert = $totalPercentage + $validated['percentage'];
+
+            if ($totalAfterInsert > 100) {
+                throw new \Exception(
+                    'Total persentase pembayaran melebihi 100%. ' .
+                        'Sisa maksimum yang dapat ditambahkan adalah ' .
+                        (100 - $totalPercentage) . '%'
+                );
+            }
 
             Pembayaran::create([
                 'procurement_id'   => $validated['procurement_id'],
@@ -87,7 +95,6 @@ class PembayaranController extends Controller
             return redirect()
                 ->route('procurements.show', $procurement->procurement_id)
                 ->with('success', 'Pembayaran berhasil disimpan');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error storing pembayaran: ' . $e->getMessage());
@@ -139,25 +146,32 @@ class PembayaranController extends Controller
 
             $validated['currency'] = $kontrak->currency ?? 'IDR';
 
+            $totalPercentage = Pembayaran::where('procurement_id', $pembayaran->procurement_id)
+                ->where('id', '!=', $pembayaran->id)
+                ->sum('percentage');
+
+            $totalAfterUpdate = $totalPercentage + $validated['percentage'];
+
+            if ($totalAfterUpdate > 100) {
+                throw new \Exception(
+                    'Total persentase pembayaran melebihi 100%.'
+                );
+            }
+
             $pembayaran->update($validated);
 
             return redirect()
                 ->back()
                 ->with('success', 'Pembayaran berhasil diperbarui');
-
         } catch (\Exception $e) {
             Log::error('Error updating pembayaran: ' . $e->getMessage());
 
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal memperbarui Pembayaran: ' . $e->getMessage()
-            ], 500);
+            return redirect()->back()
+                ->with('error', 'Gagal memperbarui Pembayaran: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Delete Pembayaran
-     */
+
     public function delete($pembayaranId)
     {
         // Authorization check
@@ -174,7 +188,6 @@ class PembayaranController extends Controller
             return redirect()
                 ->route('procurements.show', $procurementId)
                 ->with('success', 'Pembayaran berhasil dihapus');
-
         } catch (\Exception $e) {
             Log::error('Error deleting pembayaran: ' . $e->getMessage());
 
@@ -183,9 +196,6 @@ class PembayaranController extends Controller
         }
     }
 
-    /**
-     * Get Pembayaran by Procurement (AJAX)
-     */
     public function getByProcurement($procurementId)
     {
         try {
@@ -213,14 +223,11 @@ class PembayaranController extends Controller
                 'data'    => $pembayarans,
                 'count'   => $pembayarans->count()
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error getting pembayaran: ' . $e->getMessage());
 
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return redirect()->back()
+                ->with('error', 'Gagal menghapus Pembayaran: ' . $e->getMessage());
         }
     }
 }
