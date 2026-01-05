@@ -37,7 +37,7 @@ return new class extends Migration
             $table->foreign('procurement_id')
                 ->references('procurement_id')
                 ->on('procurement')
-                ->nullOnDelete();
+                ->cascadeOnDelete();
 
             // Indexes
             $table->index('vendor_id');

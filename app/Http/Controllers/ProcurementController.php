@@ -20,12 +20,9 @@ use App\Models\PengadaanOC;
 use App\Models\PengesahanKontrak;
 use App\Models\Kontrak;
 use App\Models\MaterialDelivery;
-<<<<<<< HEAD
 use App\Models\Pembayaran;
 use App\Models\JaminanPembayaran;
-=======
 use App\Models\ContractReview;
->>>>>>> bcf695b01fe1b54e2e19d2b3e9cd5c913b4e2bb8
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
