@@ -1,3 +1,4 @@
+<div id="kontrak">
 <h5 class="section-title">Kontrak</h5>
 
 <div class="dashboard-table-wrapper">
@@ -373,4 +374,6 @@
 
         </div>
     </div>
+</div>
+</div>
 </div>

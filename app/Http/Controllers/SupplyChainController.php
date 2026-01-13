@@ -346,8 +346,9 @@ class SupplyChainController extends Controller
                 ->implode(', ');
 
             return redirect()
-                ->route('procurements.show', $procurementId)
-                ->with('success', "Evatek item '{$item->item_name}' berhasil dibuat untuk: {$vendorNames}");
+                ->route('procurements.show', $procurement->procurement_id)
+                ->with('success', "Evatek item '{$item->item_name}' berhasil dibuat untuk: {$vendorNames}")
+                ->withFragment('evatek');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('storeEvatekItem error: ' . $e->getMessage());
@@ -840,7 +841,8 @@ class SupplyChainController extends Controller
             DB::commit();
 
             return redirect()->route('procurements.show', $procurementId)
-                ->with('success', 'Contract review berhasil dibuat');
+                ->with('success', 'Contract review berhasil dibuat')
+                ->withFragment('contract-review');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error creating contract review: ' . $e->getMessage());

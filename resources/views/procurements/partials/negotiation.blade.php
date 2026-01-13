@@ -1,3 +1,4 @@
+<div id="negotiation">
 <h5 class="section-title">Negotiation</h5>
 
 <div class="dashboard-table-wrapper">
@@ -445,4 +446,6 @@
             </tbody>
         </table>
     </div>
+</div>
+</div>
 </div>

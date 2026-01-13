@@ -94,7 +94,8 @@ class PembayaranController extends Controller
 
             return redirect()
                 ->route('procurements.show', $procurement->procurement_id)
-                ->with('success', 'Pembayaran berhasil disimpan');
+                ->with('success', 'Pembayaran berhasil disimpan')
+                ->withFragment('pembayaran');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error storing pembayaran: ' . $e->getMessage());
@@ -187,7 +188,8 @@ class PembayaranController extends Controller
 
             return redirect()
                 ->route('procurements.show', $procurementId)
-                ->with('success', 'Pembayaran berhasil dihapus');
+                ->with('success', 'Pembayaran berhasil dihapus')
+                ->withFragment('pembayaran');
         } catch (\Exception $e) {
             Log::error('Error deleting pembayaran: ' . $e->getMessage());
 

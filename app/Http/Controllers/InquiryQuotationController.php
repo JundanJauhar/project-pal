@@ -86,7 +86,8 @@ class InquiryQuotationController extends Controller
             DB::commit();
 
             return redirect()->route('procurements.show', $procurement->procurement_id)
-                ->with('success', "Inquiry & Quotation untuk vendor {$vendor->name_vendor} berhasil disimpan");
+                ->with('success', "Inquiry & Quotation untuk vendor {$vendor->name_vendor} berhasil disimpan")
+                ->withFragment('inquiry');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error storing inquiry quotation: ' . $e->getMessage());
@@ -135,7 +136,8 @@ class InquiryQuotationController extends Controller
 
             return redirect()
                 ->back()
-                ->with('success', 'Inquiry & Quotation berhasil diperbarui');
+                ->with('success', 'Inquiry & Quotation berhasil diperbarui')
+                ->withFragment('inquiry');
         } catch (\Exception $e) {
             Log::error('Error updating inquiry quotation: ' . $e->getMessage());
 
@@ -164,7 +166,8 @@ class InquiryQuotationController extends Controller
             $inquiryQuotation->delete();
 
             return redirect()->route('procurements.show', $procurementId)
-                ->with('success', 'Inquiry & Quotation berhasil dihapus');
+                ->with('success', 'Inquiry & Quotation berhasil dihapus')
+                ->withFragment('inquiry');
         } catch (\Exception $e) {
             Log::error('Error deleting inquiry quotation: ' . $e->getMessage());
 

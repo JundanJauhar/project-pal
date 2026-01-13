@@ -13,6 +13,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'redirect.if.vendor' => \App\Http\Middleware\RedirectIfVendor::class,
+            'prevent.back' => \App\Http\Middleware\PreventBackHistory::class,
+        ]);
+        
+        // Apply prevent back history to web middleware group
+        $middleware->web(append: [
+            \App\Http\Middleware\PreventBackHistory::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

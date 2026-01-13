@@ -1,3 +1,4 @@
+<div id="evatek">
 <h5 class="section-title">Evatek</h5>
 <div class="dashboard-table-wrapper">
     <div class="table-responsive">
@@ -269,4 +270,6 @@
             </tbody>
         </table>
     </div>
+</div>
+</div>
 </div>

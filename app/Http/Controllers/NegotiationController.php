@@ -76,7 +76,8 @@ class NegotiationController extends Controller
 
             return redirect()
                 ->route('procurements.show', $procurementId)
-                ->with('success', "Negotiation untuk vendor {$vendor->name_vendor} berhasil disimpan");
+                ->with('success', "Negotiation untuk vendor {$vendor->name_vendor} berhasil disimpan")
+                ->withFragment('negotiation');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error storing negotiation: ' . $e->getMessage());
@@ -138,7 +139,8 @@ class NegotiationController extends Controller
 
             return redirect()
                 ->route('procurements.show', $neg->procurement_id)
-                ->with('success', 'Negotiation berhasil diperbarui');
+                ->with('success', 'Negotiation berhasil diperbarui')
+                ->withFragment('negotiation');
         } catch (\Exception $e) {
             Log::error('Error updating negotiation: ' . $e->getMessage());
 
@@ -161,7 +163,8 @@ class NegotiationController extends Controller
 
             return redirect()
                 ->route('procurements.show', $procurementId)
-                ->with('success', 'Negotiation berhasil dihapus');
+                ->with('success', 'Negotiation berhasil dihapus')
+                ->withFragment('negotiation');
         } catch (\Exception $e) {
             Log::error('Error deleting negotiation: ' . $e->getMessage());
 

@@ -1,3 +1,4 @@
+<div id="contract-review">
 <h5 class="section-title">Review Kontrak</h5>
 <div class="dashboard-table-wrapper">
     <div class="table-responsive">
@@ -204,4 +205,5 @@
             </tbody>
         </table>
     </div>
+</div>
 </div>

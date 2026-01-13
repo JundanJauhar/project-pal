@@ -1,3 +1,4 @@
+<div id="material-delivery">
 <h5 class="section-title">Pengiriman Material</h5>
 <div class="dashboard-table-wrapper">
     <div class="table-responsive">
@@ -212,4 +213,5 @@
         </div>
 
     </div>
+</div>
 </div>

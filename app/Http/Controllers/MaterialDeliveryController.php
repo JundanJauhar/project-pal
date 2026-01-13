@@ -38,26 +38,25 @@ class MaterialDeliveryController extends Controller
 
             $procurement = Procurement::findOrFail($procurementId);
 
-            MaterialDelivery::updateOrCreate(
-                ['procurement_id' => $procurementId],
-                [
-                    'incoterms' => $validated['incoterms'] ?? null,
-                    'imo_number' => $validated['imo_number'] ?? null,
-                    'container_number' => $validated['container_number'] ?? null,
-                    'etd' => $validated['etd'] ?? null,
-                    'eta_sby_port' => $validated['eta_sby_port'] ?? null,
-                    'eta_pal' => $validated['eta_pal'] ?? null,
-                    'atd' => $validated['atd'] ?? null,
-                    'ata_sby_port' => $validated['ata_sby_port'] ?? null,
-                    'remark' => $validated['remark'] ?? null,
-                ]
-            );
+            MaterialDelivery::create([
+                'procurement_id' => $procurementId,
+                'incoterms' => $validated['incoterms'] ?? null,
+                'imo_number' => $validated['imo_number'] ?? null,
+                'container_number' => $validated['container_number'] ?? null,
+                'etd' => $validated['etd'] ?? null,
+                'eta_sby_port' => $validated['eta_sby_port'] ?? null,
+                'eta_pal' => $validated['eta_pal'] ?? null,
+                'atd' => $validated['atd'] ?? null,
+                'ata_sby_port' => $validated['ata_sby_port'] ?? null,
+                'remark' => $validated['remark'] ?? null,
+            ]);
 
             DB::commit();
 
             return redirect()
-                ->route('procurements.show', $procurement->$procurementId)
-                ->with('success', 'Pengiriman Material berhasil disimpan');
+                ->route('procurements.show', $procurementId)
+                ->with('success', 'Pengiriman Material berhasil disimpan')
+                ->withFragment('material-delivery');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error storing material delivery: ' . $e->getMessage());
@@ -105,7 +104,8 @@ class MaterialDeliveryController extends Controller
             DB::commit();
 
             return redirect()->route('procurements.show', $procurementId)
-                ->with('success', 'Pengiriman Material berhasil diperbarui');
+                ->with('success', 'Pengiriman Material berhasil diperbarui')
+                ->withFragment('material-delivery');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating material delivery: ' . $e->getMessage());
@@ -130,7 +130,8 @@ class MaterialDeliveryController extends Controller
             $delivery->delete();
 
             return redirect()->route('procurements.show', $procurementId)
-                ->with('success', 'Pengiriman Material berhasil dihapus');
+                ->with('success', 'Pengiriman Material berhasil dihapus')
+                ->withFragment('material-delivery');
         } catch (\Exception $e) {
             Log::error('Error deleting material delivery: ' . $e->getMessage());
 

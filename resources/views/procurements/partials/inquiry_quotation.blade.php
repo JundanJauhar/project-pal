@@ -1,3 +1,4 @@
+<div id="inquiry">
 <h5 class="section-title">Inquiry & Quotation</h5>
 
 <div class="dashboard-table-wrapper">
@@ -281,4 +282,6 @@
             </tbody>
         </table>
     </div>
+</div>
+</div>
 </div>

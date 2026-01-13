@@ -1,3 +1,4 @@
+<div id="pengadaan-oc">
 <h5 class="section-title">Pengadaan OC</h5>
 
 <div class="dashboard-table-wrapper">
@@ -359,4 +360,6 @@
 
         </div>
     </div>
+</div>
+</div>
 </div>
