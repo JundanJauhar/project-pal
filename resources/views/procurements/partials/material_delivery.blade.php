@@ -7,6 +7,8 @@
                 <tr>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">No</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Incoterms</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">IMO Number</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Container No</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">ETD</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">ETA SBY Port</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">ETA PAL</th>
@@ -23,6 +25,19 @@
                 <tr>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $row++ }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $delivery->incoterms ?? '-' }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">
+                        @if($delivery->imo_number)
+                            <a href="https://www.vesselfinder.com/vessels/details/{{ $delivery->imo_number }}" 
+                               target="_blank" 
+                               style="color: #0066cc; text-decoration: underline;"
+                               title="Track vessel on VesselFinder">
+                                {{ $delivery->imo_number }}
+                            </a>
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $delivery->container_number ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $delivery->etd?->format('d/m/Y') ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $delivery->eta_sby_port?->format('d/m/Y') ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $delivery->eta_pal?->format('d/m/Y') ?? '-' }}</td>
@@ -52,6 +67,24 @@
                                         <label>Incoterms</label>
                                         <input type="text" name="incoterms" class="form-control"
                                             value="{{ $delivery->incoterms }}">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label>IMO Number (7 digit)</label>
+                                        <input type="text" name="imo_number" class="form-control" 
+                                            value="{{ $delivery->imo_number }}" 
+                                            placeholder="Contoh: 9234567" 
+                                            maxlength="7" 
+                                            pattern="[0-9]{7}">
+                                        <small class="text-muted">7 digit angka - untuk tracking di VesselFinder</small>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label>Container Number</label>
+                                        <input type="text" name="container_number" class="form-control" 
+                                            value="{{ $delivery->container_number }}" 
+                                            placeholder="Contoh: TRIU8935420" 
+                                            style="text-transform: uppercase;">
                                     </div>
 
                                     <div class="col-md-6">
@@ -94,7 +127,7 @@
                 {{-- ROW CREATE --}}
                 <tr>
                     <td>{{ $row }}</td>
-                    <td colspan="5" style="text-align:center;" class="text-muted">
+                    <td colspan="7" style="text-align:center;" class="text-muted">
                         @if($row == 1)
                         Belum ada pengiriman material
                         @endif
@@ -129,6 +162,22 @@
                             <div class="col-md-6">
                                 <label>Incoterms</label>
                                 <input type="text" name="incoterms" class="form-control">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label>IMO Number (7 digit)</label>
+                                <input type="text" name="imo_number" class="form-control" 
+                                    placeholder="Contoh: 9234567" 
+                                    maxlength="7" 
+                                    pattern="[0-9]{7}">
+                                <small class="text-muted">7 digit angka - untuk tracking di VesselFinder</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label>Container Number</label>
+                                <input type="text" name="container_number" class="form-control" 
+                                    placeholder="Contoh: TRIU8935420" 
+                                    style="text-transform: uppercase;">
                             </div>
 
                             <div class="col-md-6">

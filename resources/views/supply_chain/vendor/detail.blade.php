@@ -163,19 +163,6 @@
             <div class="vendor-info-label">Email:</div>
             <div class="vendor-info-value">{{ $vendor->email ?? '-' }}</div>
 
-            <div class="vendor-info-label">Status Legal:</div>
-            <div class="vendor-info-value">
-                @if($vendor->legal_status === 'verified')
-                    <span class="badge bg-success">Verified</span>
-                @elseif($vendor->legal_status === 'pending')
-                    <span class="badge bg-warning text-dark">Pending</span>
-                @elseif($vendor->legal_status === 'rejected')
-                    <span class="badge bg-danger">Rejected</span>
-                @else
-                    <span class="badge bg-secondary">{{ $vendor->legal_status ?? '-' }}</span>
-                @endif
-            </div>
-
             <div class="vendor-info-label">Importir:</div>
             <div class="vendor-info-value">
                 @if($vendor->is_importer)

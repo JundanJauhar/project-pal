@@ -89,8 +89,7 @@ class SupplyChainController extends Controller
             ->with('requestProcurements.items')
             ->orderBy('code_procurement', 'asc')
             ->get();
-        $vendors = Vendor::where('legal_status', 'verified')
-            ->orderBy('name_vendor', 'asc')
+        $vendors = Vendor::orderBy('name_vendor', 'asc')
             ->get();
 
         return view('supply_chain.input-item', compact('project', 'procurements', 'vendors'));
@@ -424,15 +423,13 @@ class SupplyChainController extends Controller
                     ->orWhere('id_vendor', 'like', "%{$search}%")
                     ->orWhere('address', 'like', "%{$search}%");
             })
-            ->where('legal_status', 'verified')
             ->orderBy('id_vendor', 'asc')
             ->get();
 
         $stats = [
             'total' => Vendor::count(),
-            'active' => Vendor::where('legal_status', 'approved')->count(),
-            'pending' => Vendor::where('legal_status', 'pending')->count(),
             'importer' => Vendor::where('is_importer', true)->count(),
+            'local' => Vendor::where('is_importer', false)->count(),
         ];
 
         ActivityLogger::log(
@@ -625,7 +622,6 @@ class SupplyChainController extends Controller
                 'phone_number' => $validated['phone_number'],
                 'email' => $validated['email'],
                 'is_importer' => $request->has('is_importer') ? 1 : 0,
-                'legal_status' => 'pending',
             ]);
 
             ActivityLogger::log(

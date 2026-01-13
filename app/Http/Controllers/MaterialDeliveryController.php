@@ -20,6 +20,8 @@ class MaterialDeliveryController extends Controller
         $validated = $request->validate([
             'procurement_id' => 'required|exists:procurement,procurement_id',
             'incoterms' => 'nullable|string|max:50',
+            'imo_number' => 'nullable|string|regex:/^[0-9]{7}$/',
+            'container_number' => 'nullable|string|max:50|regex:/^[A-Z0-9]+$/',
             'etd' => 'nullable|date',
             'eta_sby_port' => 'nullable|date|after_or_equal:etd',
             'eta_pal' => 'nullable|date|after_or_equal:eta_sby_port',
@@ -40,6 +42,8 @@ class MaterialDeliveryController extends Controller
                 ['procurement_id' => $procurementId],
                 [
                     'incoterms' => $validated['incoterms'] ?? null,
+                    'imo_number' => $validated['imo_number'] ?? null,
+                    'container_number' => $validated['container_number'] ?? null,
                     'etd' => $validated['etd'] ?? null,
                     'eta_sby_port' => $validated['eta_sby_port'] ?? null,
                     'eta_pal' => $validated['eta_pal'] ?? null,
@@ -74,6 +78,8 @@ class MaterialDeliveryController extends Controller
 
         $validated = $request->validate([
             'incoterms' => 'nullable|string|max:50',
+            'imo_number' => 'nullable|string|regex:/^[0-9]{7}$/',
+            'container_number' => 'nullable|string|max:50|regex:/^[A-Z0-9]+$/',
             'etd' => 'nullable|date',
             'eta_sby_port' => 'nullable|date|after_or_equal:etd',
             'eta_pal' => 'nullable|date|after_or_equal:eta_sby_port',
@@ -81,6 +87,8 @@ class MaterialDeliveryController extends Controller
             'ata_sby_port' => 'nullable|date|after_or_equal:atd',
             'remark' => 'nullable|string|max:1000',
         ], [
+            'imo_number.regex' => 'IMO Number harus 7 digit angka',
+            'container_number.regex' => 'Container Number harus berupa huruf kapital dan angka',
             'eta_sby_port.after_or_equal' => 'ETA SBY Port harus setelah atau sama dengan ETD',
             'eta_pal.after_or_equal' => 'ETA PAL harus setelah atau sama dengan ETA SBY Port',
             'ata_sby_port.after_or_equal' => 'ATA SBY Port harus setelah atau sama dengan ATD',

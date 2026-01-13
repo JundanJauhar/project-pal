@@ -323,28 +323,15 @@
         </div>
     </div>
 
-    {{-- Vendor Aktif --}}
+    {{-- Vendor Lokal --}}
     <div class="vendor-card green">
         <div class="vendor-card-inner">
             <div>
-                <h6>Vendor Aktif</h6>
-                <h3>{{ $vendors->where('legal_status', 'approved')->count() }}</h3>
+                <h6>Vendor Lokal</h6>
+                <h3>{{ $vendors->where('is_importer', false)->count() }}</h3>
             </div>
             <div class="vendor-card-icon">
-                <i class="bi bi-check-circle"></i>
-            </div>
-        </div>
-    </div>
-
-    {{-- Menunggu Verifikasi --}}
-    <div class="vendor-card yellow">
-        <div class="vendor-card-inner">
-            <div>
-                <h6>Menunggu Verifikasi</h6>
-                <h3>{{ $vendors->where('legal_status', 'pending')->count() }}</h3>
-            </div>
-            <div class="vendor-card-icon">
-                <i class="bi bi-clock-history"></i>
+                <i class="bi bi-geo-alt"></i>
             </div>
         </div>
     </div>
@@ -416,7 +403,6 @@
                     <td style="padding: 12px 8px; text-align: left; color: #000;">{{ Str::limit($vendor->address ?? '-', 30) }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $vendor->phone_number ?? '-' }} </td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $vendor->email ?? '-' }} </td>
-                    <!-- <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $vendor->legal_status ?? '-' }} </td> -->
                     <td style="padding: 12px 8px; text-align: center; color: #000;">
                         @if($vendor->is_importer)
                         <span class="badge bg-success">

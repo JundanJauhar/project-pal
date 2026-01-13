@@ -13,6 +13,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip ENUM modification on SQLite (used in testing)
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            echo "⏩ Skipping ENUM migration on SQLite\n";
+            return;
+        }
+
         echo "🔄 Starting migration: Alter procurement_progress status enum\n";
         
         // Step 1: Convert existing data
@@ -58,6 +64,12 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Skip ENUM modification on SQLite (used in testing)
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            echo "⏩ Skipping ENUM rollback on SQLite\n";
+            return;
+        }
+
         echo "⏪ Reverting migration...\n";
         
         // Alter back to original enum

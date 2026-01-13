@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Procurement extends Model
 {
+    use HasFactory;
     protected $table = 'procurement';
     protected $primaryKey = 'procurement_id';
 
@@ -102,6 +105,21 @@ class Procurement extends Model
     public function materialDeliveries()
     {
         return $this->hasMany(MaterialDelivery::class, 'procurement_id', 'procurement_id');
+    }
+
+    /**
+     * Payment schedules are linked via project
+     */
+    public function paymentSchedules(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            PaymentSchedule::class,
+            Project::class,
+            'project_id',           // Foreign key on projects table
+            'project_id',           // Foreign key on payment_schedules table
+            'project_id',           // Local key on procurement table
+            'project_id'            // Local key on projects table
+        );
     }
 
     public function getCurrentCheckpointAttribute()

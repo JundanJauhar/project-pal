@@ -73,29 +73,6 @@
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <!-- <div class="mb-3">
-                        <label for="legal_status" class="form-label">Status Legal</label>
-                        <select class="form-select @error('legal_status') is-invalid @enderror"
-                            id="legal_status"
-                            name="legal_status">
-                            <option value="">Pilih Status Legal</option>
-                            <option value="verified" {{ old('legal_status') == 'verified' ? 'selected' : '' }}>Verified (Terverifikasi)</option>
-                            <option value="pending" {{ old('legal_status') == 'pending' ? 'selected' : '' }}>Pending (Menunggu Verifikasi)</option>
-                            <option value="rejected" {{ old('legal_status') == 'rejected' ? 'selected' : '' }}>Rejected (Ditolak)</option>
-                            value="{{ isset($vendor) ? $vendor->legal_status : ''}}"
-                        </select>
-                        @error('legal_status')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">
-                            <small>
-                                <i class="bi bi-info-circle"></i>
-                                <strong>Verified:</strong> Vendor sudah diverifikasi dan dapat dipilih untuk project<br>
-                                <strong>Pending:</strong> Menunggu proses verifikasi dokumen legal<br>
-                                <strong>Rejected:</strong> Vendor tidak lolos verifikasi
-                            </small>
-                        </div>
-                    </div> -->
 
                     <div class="mb-3">
                         <div class="form-check">

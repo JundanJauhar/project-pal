@@ -22,7 +22,7 @@ class CheckpointIconService
             1 => 'bi-file-earmark-text',           // Permintaan Pengadaan
             2 => 'bi-chat-dots',                   // Inquiry & Quotation
             3 => 'bi-clipboard-check',             // Evatek
-            4 => 'bi bi-file-earmark-ruled',        // Negotiation
+            4 => 'bi-file-earmark-ruled',          // Negotiation
             5 => 'bi-file-earmark-pdf',            // Usulan Pengadaan / OC
             6 => 'bi-pen-fill',                    // Pengesahan Kontrak
             7 => 'bi-credit-card-fill',            // Pembayaran DP

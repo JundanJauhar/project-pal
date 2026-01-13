@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Project extends Model
 {
+    use HasFactory;
     protected $table = 'projects';
     protected $primaryKey = 'project_id';
 
@@ -102,5 +104,13 @@ class Project extends Model
     public function requests(): HasMany
     {
         return $this->hasMany(RequestProcurement::class, 'project_id', 'project_id');
+    }
+
+    /**
+     * Get payment schedules for this project
+     */
+    public function paymentSchedules(): HasMany
+    {
+        return $this->hasMany(PaymentSchedule::class, 'project_id', 'project_id');
     }
 }
