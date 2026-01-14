@@ -24,7 +24,7 @@ body {
 
 .settings-wrapper {
     width: 100%;
-    padding: 32px 40px 120px;
+    padding: 32px 40px 40px;
 }
 
 /* =========================================================
@@ -43,7 +43,7 @@ body {
 }
 
 /* =========================================================
-   TABS (SCALABLE)
+   TABS
 ========================================================= */
 .settings-tabs {
     display: flex;
@@ -155,21 +155,12 @@ small {
 }
 
 /* =========================================================
-   ACTION BAR
+   SAVE BUTTON
 ========================================================= */
-.settings-action {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: #ffffff;
-    border-top: 1px solid var(--border-soft);
-    padding: 16px 40px;
-    z-index: 20;
-}
-
-.settings-action button {
-    max-width: 420px;
+.settings-save {
+    margin-top: 32px;
+    display: flex;
+    justify-content: center;
 }
 
 /* =========================================================
@@ -177,7 +168,7 @@ small {
 ========================================================= */
 @media (max-width: 768px) {
     .settings-wrapper {
-        padding: 24px 20px 140px;
+        padding: 24px 20px 40px;
     }
 }
 </style>
@@ -305,9 +296,9 @@ small {
             </div>
         </div>
 
-        {{-- ACTION --}}
-        <div class="settings-action d-flex justify-content-center">
-            <button class="btn btn-dark btn-lg w-100">
+        {{-- SAVE BUTTON --}}
+        <div class="settings-save">
+            <button class="btn btn-dark btn-lg px-5">
                 Simpan Settings
             </button>
         </div>
