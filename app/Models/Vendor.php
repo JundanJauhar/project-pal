@@ -11,9 +11,9 @@ class Vendor extends Authenticatable
 {
     protected $table = 'vendors';
     protected $primaryKey = 'id_vendor';
-    protected $keyType = 'string';
-    public $incrementing = false;
-
+    protected $keyType = 'int';
+    public $incrementing = true;
+    
     protected $fillable = [
         'id_vendor',
         'name_vendor',
@@ -45,7 +45,7 @@ class Vendor extends Authenticatable
             if (empty($vendor->user_vendor)) {
                 $vendor->user_vendor = self::generateEmailVendor($vendor->name_vendor);
             }
-            
+
             if (empty($vendor->password)) {
                 $vendor->password = Hash::make('password'); // default password
             }
@@ -60,13 +60,13 @@ class Vendor extends Authenticatable
     {
         // Hapus "PT", "CV", "UD", "Tbk" dll dari nama
         $name = preg_replace('/^(PT|CV|UD|Tbk)\.?\s*/i', '', $vendorName);
-        
+
         // Hapus semua spasi dan karakter special, lowercase
         $cleanName = strtolower(preg_replace('/[^A-Za-z0-9]/', '', $name));
-        
+
         // Format email login dengan @vendor.com
         $baseEmail = $cleanName . '@vendor.com';
-        
+
         // Pastikan unique dengan menambah angka jika sudah ada
         $email = $baseEmail;
         $counter = 1;
@@ -74,7 +74,7 @@ class Vendor extends Authenticatable
             $email = str_replace('@vendor.com', $counter . '@vendor.com', $baseEmail);
             $counter++;
         }
-        
+
         return $email;
     }
 

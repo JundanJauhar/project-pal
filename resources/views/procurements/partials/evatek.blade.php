@@ -2,19 +2,6 @@
 <div class="dashboard-table-wrapper">
     <div class="table-responsive">
 
-        {{-- ✅ Tombol Simpan untuk transition ke checkpoint berikutnya --}}
-        <div class="btn-simpan-wrapper">
-            @if($currentCheckpointSequence == 3 && $evatekItems->count() > 0)
-            <form action="{{ route('checkpoint.transition', $procurement->procurement_id) }}" method="POST">
-                @csrf
-                <input type="hidden" name="from_checkpoint" value="3">
-                <button class="btn btn-sm btn-action-simpan">
-                    <i class="bi bi-box-arrow-down"></i> Simpan
-                </button>
-            </form>
-            @endif
-        </div>
-
         <table class="dashboard-table">
             <thead>
                 <tr>

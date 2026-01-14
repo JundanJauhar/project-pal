@@ -175,7 +175,7 @@
                 <tr>
                     <td>{{ $row }}</td>
                     <td colspan="7" class="text-center text-muted">
-                        Belum ada Inquiry & Quotation
+                        Belum ada Kontrak yang disahkan
                     </td>
                     <td class="text-center">
                         <button class="btn btn-sm btn-action-create"
@@ -186,20 +186,6 @@
                     </td>
                 </tr>
                 @endif
-
-                <!-- {{-- ================= ROW CREATE (HANYA SAAT CHECKPOINT 2) ================= --}}
-                @if($pengesahanKontraks->count() > 0 && $currentCheckpointSequence == 6)
-                <tr>
-                    <td colspan="8"></td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-action-create"
-                            data-bs-toggle="modal"
-                            data-bs-target="#modalCreatePK">
-                            Create
-                        </button>
-                    </td>
-                </tr>
-                @endif -->
             </tbody>
         </table>
     </div>
@@ -220,22 +206,23 @@
                 </div>
 
                 <div class="modal-body row g-3">
-
                     {{-- vendor --}}
                     <div class="col-md-6">
                         <label class="form-label">Vendor *</label>
-                        <select name="vendor_id" class="form-select" required>
+                        <select name="vendor_id" id="vendorSelectPK" class="form-select" required>
                             <option value="" disabled selected>-- Pilih Vendor --</option>
 
-                            @forelse($pkVendors as $vendor)
-                            <option value="{{ $vendor->id_vendor }}">
+                            @foreach($pkVendors as $vendor)
+                            @php
+                            $neg = $negotiations->where('vendor_id', $vendor->id_vendor)->last();
+                            @endphp
+                            <option
+                                value="{{ $vendor->id_vendor }}"
+                                data-harga="{{ $neg?->harga_final }}"
+                                data-currency="{{ $neg?->currency_harga_final ?? 'IDR' }}">
                                 {{ $vendor->name_vendor }}
                             </option>
-                            @empty
-                            <option disabled>
-                                Tidak ada vendor dari Inquiry & Quotation
-                            </option>
-                            @endforelse
+                            @endforeach
                         </select>
 
                         <small style="color:#666;">
