@@ -467,57 +467,57 @@
 
     {{-- ================= Evatek ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 3,
     'procurements.partials.evatek',
     compact('procurement','evatekItems','vendors','inquiryQuotations','currentCheckpointSequence'))
 
     {{-- ================= Negotiation ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 4,
     'procurements.partials.negotiation',
     compact('procurement','negotiations','vendors','currentCheckpointSequence'))
 
     {{-- ================= Pengadaan OC ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 5,
     'procurements.partials.pengadaan_oc',
     compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
 
     {{-- ================= Review Kontrak ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
     'procurements.partials.contract_review',
     compact('procurement', 'contractReviews', 'pengadaanOcVendors', 'currentCheckpointSequence'))
 
     {{-- ================= Pengesahan Kontrak ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
     'procurements.partials.pengesahan_kontrak',
     compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
 
     {{-- ================= Kontrak ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
     'procurements.partials.kontrak',
     compact('procurement', 'kontraks', 'vendors', 'currentCheckpointSequence'))
 
     {{-- ================= Pembayaran ================= --}}
     @includeWhen(
-        auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 7,
-        'procurements.partials.pembayaran',
-        compact('procurement','pembayarans','currentCheckpointSequence')
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 7,
+    'procurements.partials.pembayaran',
+    compact('procurement','pembayarans','currentCheckpointSequence')
     )
 
     {{-- ================= Jaminan Pembayaran ================= --}}
     @includeWhen(
-        auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 7,
-        'procurements.partials.jaminanpembayaran',
-        compact('procurement','jaminans','currentCheckpointSequence')
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 7,
+    'procurements.partials.jaminanpembayaran',
+    compact('procurement','jaminans','currentCheckpointSequence')
     )
 
     {{-- ================= Material Delivery ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 8,
     'procurements.partials.material_delivery',
     compact('procurement', 'materialDeliveries')
     )
@@ -582,52 +582,65 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         const vendorSelect = document.getElementById('vendorSelectPO');
+        if (!vendorSelect) return;
+
         const nilaiDisplay = document.getElementById('nilaiPODisplay');
         const nilaiHidden = document.getElementById('nilaiPO');
         const currencyDisplay = document.getElementById('currencyCreatePODisplay');
-        const currencyInput = document.getElementById('currencyCreatePO');
+        const currencyHidden = document.getElementById('currencyCreatePO');
 
-        if (vendorSelect) {
-            vendorSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const negotiationsData = selectedOption.getAttribute('data-negotiations');
+        vendorSelect.addEventListener('change', function() {
+            const selected = this.options[this.selectedIndex];
 
-                if (negotiationsData) {
-                    try {
-                        const negotiations = JSON.parse(atob(negotiationsData));
+            const harga = selected.dataset.harga;
+            const currency = selected.dataset.currency || 'IDR';
 
-                        if (negotiations.length > 0) {
-                            const latestNegotiation = negotiations[negotiations.length - 1];
+            if (harga) {
+                nilaiDisplay.value = Number(harga).toLocaleString('id-ID');
+                nilaiHidden.value = harga;
+            } else {
+                nilaiDisplay.value = '';
+                nilaiHidden.value = '';
+            }
 
-                            if (latestNegotiation.harga_final) {
-                                nilaiDisplay.value = new Intl.NumberFormat('id-ID').format(latestNegotiation.harga_final);
-                                nilaiHidden.value = latestNegotiation.harga_final;
-                                currencyDisplay.innerText = latestNegotiation.currency_harga_final || 'IDR';
-                                currencyInput.value = latestNegotiation.currency_harga_final || 'IDR';
-                            } else {
-                                nilaiDisplay.value = '';
-                                nilaiHidden.value = '';
-                                currencyDisplay.innerText = 'IDR';
-                                currencyInput.value = 'IDR';
-                            }
-                        } else {
-                            nilaiDisplay.value = '';
-                            nilaiHidden.value = '';
-                            currencyDisplay.innerText = 'IDR';
-                            currencyInput.value = 'IDR';
-                        }
-                    } catch (e) {
-                        console.error('Error parsing negotiations data:', e);
-                        nilaiDisplay.value = '';
-                        nilaiHidden.value = '';
-                    }
-                } else {
-                    nilaiDisplay.value = '';
-                    nilaiHidden.value = '';
-                    currencyDisplay.innerText = 'IDR';
-                    currencyInput.value = 'IDR';
-                }
-            });
+            currencyDisplay.innerText = currency;
+            currencyHidden.value = currency;
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const vendorSelect = document.getElementById('vendorSelectPK');
+        if (!vendorSelect) return;
+
+        const nilaiDisplay = document.getElementById('nilaiPKDisplay');
+        const nilaiHidden = document.getElementById('nilaiPK');
+        const currencyDisplay = document.getElementById('currencyCreatePKDisplay');
+        const currencyHidden = document.getElementById('currencyCreatePK');
+
+        vendorSelect.addEventListener('change', function() {
+            const selected = this.options[this.selectedIndex];
+
+            const harga = selected.dataset.harga;
+            const currency = selected.dataset.currency || 'IDR';
+
+            if (harga) {
+                nilaiDisplay.value = Number(harga).toLocaleString('id-ID');
+                nilaiHidden.value = harga;
+            } else {
+                nilaiDisplay.value = '';
+                nilaiHidden.value = '';
+            }
+
+            currencyDisplay.innerText = currency;
+            currencyHidden.value = currency;
+        });
+    });
+
+    /* Formatter angka (satu kali, global) */
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('currency-input')) {
+            let value = e.target.value.replace(/\D/g, '');
+            e.target.value = value ? new Intl.NumberFormat('id-ID').format(value) : '';
         }
     });
 </script>

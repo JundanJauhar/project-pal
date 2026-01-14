@@ -205,18 +205,20 @@
                                     {{-- vendor --}}
                                     <div class="col-md-6">
                                         <label class="form-label">Vendor *</label>
-                                        <select name="vendor_id" class="form-select" required>
-                                            <option value="" disabled selected>-- Pilih Vendor --</option>
+                                        <select name="vendor_id" id="vendorSelectPO" class="form-select" required>
+                                            <option value="">-- Pilih Vendor --</option>
 
-                                            @forelse($poVendors as $vendor)
-                                            <option value="{{ $vendor->id_vendor }}">
+                                            @foreach($poVendors as $vendor)
+                                            @php
+                                            $neg = $negotiations->firstWhere('vendor_id', $vendor->id_vendor);
+                                            @endphp
+
+                                            <option value="{{ $vendor->id_vendor }}"
+                                                data-harga="{{ $neg?->harga_final }}"
+                                                data-currency="{{ $neg?->currency_harga_final ?? 'IDR' }}">
                                                 {{ $vendor->name_vendor }}
                                             </option>
-                                            @empty
-                                            <option disabled>
-                                                Tidak ada vendor dari Inquiry & Quotation
-                                            </option>
-                                            @endforelse
+                                            @endforeach
                                         </select>
 
                                         <small style="color:#666;">
