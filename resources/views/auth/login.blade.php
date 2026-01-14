@@ -220,7 +220,8 @@
                         <label class="form-label">Captcha</label>
 
                         <div class="captcha-box">
-                            <img id="captchaImage"
+                            <img id="captchaImage"`
+                            
                             src="{{ route('captcha.generate') }}"
                                  alt="captcha"
                                  onclick="refreshCaptcha()">
