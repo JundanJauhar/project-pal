@@ -467,57 +467,57 @@
 
     {{-- ================= Evatek ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 3,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
     'procurements.partials.evatek',
     compact('procurement','evatekItems','vendors','inquiryQuotations','currentCheckpointSequence'))
 
     {{-- ================= Negotiation ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 4,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
     'procurements.partials.negotiation',
     compact('procurement','negotiations','vendors','currentCheckpointSequence'))
 
     {{-- ================= Pengadaan OC ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 5,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
     'procurements.partials.pengadaan_oc',
     compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
 
     {{-- ================= Review Kontrak ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
     'procurements.partials.contract_review',
     compact('procurement', 'contractReviews', 'pengadaanOcVendors', 'currentCheckpointSequence'))
 
     {{-- ================= Pengesahan Kontrak ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
     'procurements.partials.pengesahan_kontrak',
     compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
 
     {{-- ================= Kontrak ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
     'procurements.partials.kontrak',
     compact('procurement', 'kontraks', 'vendors', 'currentCheckpointSequence'))
 
     {{-- ================= Pembayaran ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 7,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
     'procurements.partials.pembayaran',
     compact('procurement','pembayarans','currentCheckpointSequence')
     )
 
     {{-- ================= Jaminan Pembayaran ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 7,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
     'procurements.partials.jaminanpembayaran',
     compact('procurement','jaminans','currentCheckpointSequence')
     )
 
     {{-- ================= Material Delivery ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 8,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
     'procurements.partials.material_delivery',
     compact('procurement', 'materialDeliveries')
     )
