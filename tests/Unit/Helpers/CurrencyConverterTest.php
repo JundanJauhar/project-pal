@@ -8,9 +8,9 @@ use PHPUnit\Framework\TestCase;
 class CurrencyConverterTest extends TestCase
 {
     /**
-     * Test basic currency conversion
+     * Tes konversi mata uang dasar
      */
-    public function test_converts_currency_correctly()
+    public function test_mengkonversi_mata_uang_dengan_benar()
     {
         // USD to IDR
         $result = CurrencyConverter::convert(100, 'USD', 'IDR');
@@ -26,9 +26,9 @@ class CurrencyConverterTest extends TestCase
     }
 
     /**
-     * Test conversion between same currency
+     * Tes konversi antar mata uang yang sama
      */
-    public function test_same_currency_returns_same_amount()
+    public function test_mata_uang_sama_mengembalikan_jumlah_sama()
     {
         $result = CurrencyConverter::convert(100, 'USD', 'USD');
         $this->assertEquals(100, $result);
@@ -38,9 +38,9 @@ class CurrencyConverterTest extends TestCase
     }
 
     /**
-     * Test conversion from IDR to other currencies
+     * Tes konversi dari IDR ke mata uang lain
      */
-    public function test_converts_from_idr_to_other_currencies()
+    public function test_mengkonversi_dari_idr_ke_mata_uang_lain()
     {
         // IDR to USD
         $result = CurrencyConverter::convert(16000, 'IDR', 'USD');
@@ -56,9 +56,9 @@ class CurrencyConverterTest extends TestCase
     }
 
     /**
-     * Test conversion between non-IDR currencies
+     * Tes konversi antar mata uang non-IDR
      */
-    public function test_converts_between_non_idr_currencies()
+    public function test_mengkonversi_antar_mata_uang_non_idr()
     {
         // USD to EUR: 100 USD = 1,600,000 IDR → 1,600,000 / 17,500 = 91.43 EUR
         $result = CurrencyConverter::convert(100, 'USD', 'EUR');
@@ -74,9 +74,9 @@ class CurrencyConverterTest extends TestCase
     }
 
     /**
-     * Test null or invalid inputs
+     * Tes mengembalikan null untuk input tidak valid
      */
-    public function test_returns_null_for_invalid_inputs()
+    public function test_mengembalikan_null_untuk_input_tidak_valid()
     {
         // Null amount
         $result = CurrencyConverter::convert(null, 'USD', 'IDR');
@@ -100,9 +100,9 @@ class CurrencyConverterTest extends TestCase
     }
 
     /**
-     * Test unsupported currency codes
+     * Tes mengembalikan null untuk mata uang yang tidak didukung
      */
-    public function test_returns_null_for_unsupported_currencies()
+    public function test_mengembalikan_null_untuk_mata_uang_tidak_didukung()
     {
         // Unsupported from currency
         $result = CurrencyConverter::convert(100, 'JPY', 'IDR');
@@ -118,9 +118,9 @@ class CurrencyConverterTest extends TestCase
     }
 
     /**
-     * Test decimal amounts
+     * Tes menangani jumlah desimal
      */
-    public function test_handles_decimal_amounts()
+    public function test_menangani_jumlah_desimal()
     {
         // 50.5 USD to IDR
         $result = CurrencyConverter::convert(50.5, 'USD', 'IDR');
@@ -132,9 +132,9 @@ class CurrencyConverterTest extends TestCase
     }
 
     /**
-     * Test large amounts
+     * Tes menangani jumlah besar
      */
-    public function test_handles_large_amounts()
+    public function test_menangani_jumlah_besar()
     {
         // 1 million USD to IDR
         $result = CurrencyConverter::convert(1000000, 'USD', 'IDR');
@@ -142,9 +142,9 @@ class CurrencyConverterTest extends TestCase
     }
 
     /**
-     * Test negative amounts (edge case)
+     * Tes menangani jumlah negatif (kasus edge)
      */
-    public function test_handles_negative_amounts()
+    public function test_menangani_jumlah_negatif()
     {
         // Negative conversion should work mathematically
         $result = CurrencyConverter::convert(-100, 'USD', 'IDR');

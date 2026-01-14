@@ -19,7 +19,7 @@ class LoginListenersTest extends TestCase
     /**
      * Test successful login is logged
      */
-    public function test_logs_successful_login()
+    public function test_mencatat_login_berhasil()
     {
         $user = User::factory()->create([
             'email' => 'test@example.com'
@@ -43,7 +43,7 @@ class LoginListenersTest extends TestCase
     /**
      * Test successful login captures user details
      */
-    public function test_successful_login_captures_user_details()
+    public function test_login_berhasil_mencatat_detail_user()
     {
         $user = User::factory()->create([
             'email' => 'admin@example.com',
@@ -70,7 +70,7 @@ class LoginListenersTest extends TestCase
     /**
      * Test failed login is logged
      */
-    public function test_logs_failed_login_attempt()
+    public function test_mencatat_percobaan_login_gagal()
     {
         $credentials = ['email' => 'wrong@example.com', 'password' => 'wrongpass'];
         $user = null;
@@ -93,7 +93,7 @@ class LoginListenersTest extends TestCase
     /**
      * Test failed login captures IP and user agent
      */
-    public function test_failed_login_captures_ip_and_user_agent()
+    public function test_login_gagal_mencatat_ip_dan_user_agent()
     {
         $this->app['request']->server->set('REMOTE_ADDR', '10.0.0.1');
         $this->app['request']->server->set('HTTP_USER_AGENT', 'AttackerBot/2.0');
@@ -115,7 +115,7 @@ class LoginListenersTest extends TestCase
     /**
      * Test failed login without email in credentials
      */
-    public function test_failed_login_without_email()
+    public function test_login_gagal_tanpa_email()
     {
         $credentials = ['username' => 'test', 'password' => 'wrong'];
         
@@ -131,7 +131,7 @@ class LoginListenersTest extends TestCase
     /**
      * Test multiple successful logins create separate logs
      */
-    public function test_multiple_successful_logins_create_separate_logs()
+    public function test_multiple_login_berhasil_membuat_log_terpisah()
     {
         $user1 = User::factory()->create(['email' => 'user1@example.com']);
         $user2 = User::factory()->create(['email' => 'user2@example.com']);
@@ -157,7 +157,7 @@ class LoginListenersTest extends TestCase
     /**
      * Test multiple failed login attempts are tracked
      */
-    public function test_tracks_multiple_failed_login_attempts()
+    public function test_melacak_multiple_percobaan_login_gagal()
     {
         $listener = new LogFailedLogin();
 
@@ -177,7 +177,7 @@ class LoginListenersTest extends TestCase
     /**
      * Test successful login after failed attempts
      */
-    public function test_logs_successful_login_after_failed_attempts()
+    public function test_mencatat_login_berhasil_setelah_percobaan_gagal()
     {
         $user = User::factory()->create(['email' => 'user@example.com']);
 
@@ -206,7 +206,7 @@ class LoginListenersTest extends TestCase
     /**
      * Test login listener handles remember me flag
      */
-    public function test_handles_remember_me_login()
+    public function test_menangani_login_remember_me()
     {
         $user = User::factory()->create(['email' => 'remember@example.com']);
 
@@ -227,7 +227,7 @@ class LoginListenersTest extends TestCase
     /**
      * Test login audit trail chronology
      */
-    public function test_maintains_login_audit_trail_chronology()
+    public function test_mempertahankan_kronologi_jejak_audit_login()
     {
         $user = User::factory()->create(['email' => 'timeline@example.com']);
 

@@ -266,7 +266,7 @@
     <!-- Form Section -->
     <div class="search row mb-4">
         <div class="col-12">
-            <div class="card card-custom">
+            <div class="card card-custom">         
                 <div class="card-body">
                     <form id="filter-form" class="row g-3 align-items-end">
                         <div class="col-md-4">
@@ -286,14 +286,6 @@
                                 <option value="">Semua Checkpoint</option>
                                 @foreach($checkpoints as $checkpoint)
                                 <option value="{{ $checkpoint->point_name }}">{{ $checkpoint->point_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <select class="form-select" name="priority">
-                                <option value="">Semua Prioritas</option>
-                                @foreach($priority as $priorityOption)
-                                <option value="{{ $priorityOption->priority }}">{{ $priorityOption->priority }}</option>
                                 @endforeach
                             </select>
                         </div>

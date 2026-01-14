@@ -22,9 +22,9 @@ class ActivityLoggerTest extends TestCase
     }
 
     /**
-     * Test basic activity logging
+     * Tes log aktivitas dasar berhasil
      */
-    public function test_logs_activity_successfully()
+    public function test_mencatat_aktivitas_berhasil()
     {
         $log = ActivityLogger::log(
             'procurement',
@@ -46,9 +46,9 @@ class ActivityLoggerTest extends TestCase
     }
 
     /**
-     * Test logging without target ID
+     * Tes mencatat tanpa target ID
      */
-    public function test_logs_without_target_id()
+    public function test_mencatat_tanpa_target_id()
     {
         $log = ActivityLogger::log('system', 'startup');
 
@@ -61,9 +61,9 @@ class ActivityLoggerTest extends TestCase
     }
 
     /**
-     * Test logging without details
+     * Tes mencatat tanpa detail
      */
-    public function test_logs_without_details()
+    public function test_mencatat_tanpa_detail()
     {
         $log = ActivityLogger::log('user', 'logout', 456);
 
@@ -76,9 +76,9 @@ class ActivityLoggerTest extends TestCase
     }
 
     /**
-     * Test auto-capturing IP address
+     * Tes otomatis menangkap alamat IP
      */
-    public function test_auto_captures_ip_address()
+    public function test_otomatis_menangkap_alamat_ip()
     {
         // Simulate a request with IP
         $this->app['request']->server->set('REMOTE_ADDR', '192.168.1.1');
@@ -89,9 +89,9 @@ class ActivityLoggerTest extends TestCase
     }
 
     /**
-     * Test auto-capturing user agent
+     * Tes otomatis menangkap user agent
      */
-    public function test_auto_captures_user_agent()
+    public function test_otomatis_menangkap_user_agent()
     {
         // Simulate a request with user agent
         $this->app['request']->server->set('HTTP_USER_AGENT', 'TestBrowser/1.0');
@@ -104,9 +104,9 @@ class ActivityLoggerTest extends TestCase
     }
 
     /**
-     * Test respects manually provided IP and UA
+     * Tes menghormati IP dan UA yang diinput manual
      */
-    public function test_respects_manual_ip_and_ua()
+    public function test_menghormati_ip_dan_ua_manual()
     {
         $log = ActivityLogger::log('test', 'action', null, [
             'ip' => '10.0.0.1',
@@ -120,9 +120,9 @@ class ActivityLoggerTest extends TestCase
     }
 
     /**
-     * Test logging with complex details
+     * Tes mencatat dengan detail kompleks
      */
-    public function test_logs_complex_details()
+    public function test_mencatat_detail_kompleks()
     {
         $details = [
             'changes' => [
@@ -141,9 +141,9 @@ class ActivityLoggerTest extends TestCase
     }
 
     /**
-     * Test logging with non-array details (should convert to array)
+     * Tes menangani detail non-array (harus dikonversi ke array)
      */
-    public function test_handles_non_array_details()
+    public function test_menangani_detail_non_array()
     {
         $log = ActivityLogger::log('test', 'action', null, 'string detail');
 
@@ -154,9 +154,9 @@ class ActivityLoggerTest extends TestCase
     }
 
     /**
-     * Test multiple logs preserve user context
+     * Tes multiple log mempertahankan konteks user
      */
-    public function test_multiple_logs_preserve_user_context()
+    public function test_multiple_log_pertahankan_konteks_user()
     {
         $log1 = ActivityLogger::log('module1', 'action1');
         $log2 = ActivityLogger::log('module2', 'action2');
@@ -167,9 +167,9 @@ class ActivityLoggerTest extends TestCase
     }
 
     /**
-     * Test logging as unauthenticated user
+     * Tes mencatat sebagai user yang tidak terautentikasi
      */
-    public function test_logs_without_authenticated_user()
+    public function test_mencatat_tanpa_user_terautentikasi()
     {
         Auth::logout();
 

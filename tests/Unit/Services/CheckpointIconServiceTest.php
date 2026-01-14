@@ -10,7 +10,7 @@ class CheckpointIconServiceTest extends TestCase
     /**
      * Test getting icon class for each checkpoint
      */
-    public function test_returns_correct_icon_for_each_checkpoint()
+    public function test_mengembalikan_ikon_yang_benar_untuk_setiap_checkpoint()
     {
         $expectedIcons = [
             1 => 'bi-file-earmark-text',
@@ -35,7 +35,7 @@ class CheckpointIconServiceTest extends TestCase
     /**
      * Test returns default icon for invalid checkpoint sequence
      */
-    public function test_returns_default_icon_for_invalid_sequence()
+    public function test_mengembalikan_ikon_default_untuk_sequence_tidak_valid()
     {
         $icon = CheckpointIconService::getIconClass(0);
         $this->assertEquals('bi-circle-fill', $icon);
@@ -50,7 +50,7 @@ class CheckpointIconServiceTest extends TestCase
     /**
      * Test getAllCheckpointsWithIcons returns array
      */
-    public function test_get_all_checkpoints_returns_array()
+    public function test_get_all_checkpoints_mengembalikan_array()
     {
         $checkpoints = CheckpointIconService::getAllCheckpointsWithIcons();
 
@@ -61,7 +61,7 @@ class CheckpointIconServiceTest extends TestCase
     /**
      * Test all checkpoints have required fields
      */
-    public function test_all_checkpoints_have_required_fields()
+    public function test_semua_checkpoint_memiliki_field_yang_diperlukan()
     {
         $checkpoints = CheckpointIconService::getAllCheckpointsWithIcons();
 
@@ -79,7 +79,7 @@ class CheckpointIconServiceTest extends TestCase
     /**
      * Test icons in getAllCheckpointsWithIcons match getIconClass
      */
-    public function test_icons_consistency_between_methods()
+    public function test_konsistensi_ikon_antar_method()
     {
         $checkpoints = CheckpointIconService::getAllCheckpointsWithIcons();
 
@@ -98,7 +98,7 @@ class CheckpointIconServiceTest extends TestCase
     /**
      * Test specific checkpoint names
      */
-    public function test_checkpoint_names_are_correct()
+    public function test_nama_checkpoint_sudah_benar()
     {
         $checkpoints = CheckpointIconService::getAllCheckpointsWithIcons();
 
@@ -120,7 +120,7 @@ class CheckpointIconServiceTest extends TestCase
     /**
      * Test all icons use Bootstrap Icons (bi-) prefix
      */
-    public function test_all_icons_use_bootstrap_icons_prefix()
+    public function test_semua_ikon_menggunakan_prefix_bootstrap_icons()
     {
         $checkpoints = CheckpointIconService::getAllCheckpointsWithIcons();
 
@@ -137,7 +137,7 @@ class CheckpointIconServiceTest extends TestCase
     /**
      * Test checkpoint count matches expected workflow
      */
-    public function test_has_eleven_checkpoints()
+    public function test_memiliki_sebelas_checkpoint()
     {
         $checkpoints = CheckpointIconService::getAllCheckpointsWithIcons();
 
@@ -150,7 +150,7 @@ class CheckpointIconServiceTest extends TestCase
     /**
      * Test checkpoint sequences are sequential
      */
-    public function test_checkpoint_sequences_are_sequential()
+    public function test_sequence_checkpoint_berurutan()
     {
         $checkpoints = CheckpointIconService::getAllCheckpointsWithIcons();
 

@@ -41,7 +41,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test successful transition from checkpoint 1 to 2
      */
-    public function test_successful_transition_from_checkpoint_1_to_2()
+    public function test_transisi_berhasil_dari_checkpoint_1_ke_2()
     {
         // Create request procurement (required for transition)
         \App\Models\RequestProcurement::factory()->create([
@@ -60,7 +60,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test validation failure when transitioning without required data
      */
-    public function test_transition_fails_without_request_procurement()
+    public function test_transisi_gagal_tanpa_request_procurement()
     {
         $service = new CheckpointTransitionService($this->procurement);
         $result = $service->transition(1);
@@ -73,7 +73,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test checkpoint 2 to 3 requires inquiry quotation
      */
-    public function test_checkpoint_2_to_3_requires_inquiry_quotation()
+    public function test_checkpoint_2_ke_3_memerlukan_inquiry_quotation()
     {
         $service = new CheckpointTransitionService($this->procurement);
         $result = $service->transition(2);
@@ -85,7 +85,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test checkpoint 3 to 4 transition (Evatek to Negotiation)
      */
-    public function test_checkpoint_3_to_4_transition_passes()
+    public function test_transisi_checkpoint_3_ke_4_berhasil()
     {
         // Checkpoint 3 to 4 has no validation (commented out in the code)
         $service = new CheckpointTransitionService($this->procurement);
@@ -97,7 +97,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test checkpoint 4 to 5 requires negotiation
      */
-    public function test_checkpoint_4_to_5_requires_negotiation()
+    public function test_checkpoint_4_ke_5_memerlukan_negotiation()
     {
         $service = new CheckpointTransitionService($this->procurement);
         $result = $service->transition(4);
@@ -109,7 +109,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test checkpoint 5 to 6 requires pengadaan OC
      */
-    public function test_checkpoint_5_to_6_requires_pengadaan_oc()
+    public function test_checkpoint_5_ke_6_memerlukan_pengadaan_oc()
     {
         $service = new CheckpointTransitionService($this->procurement);
         $result = $service->transition(5);
@@ -121,7 +121,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test checkpoint 6 to 7 requires pengesahan kontrak
      */
-    public function test_checkpoint_6_to_7_requires_pengesahan_kontrak()
+    public function test_checkpoint_6_ke_7_memerlukan_pengesahan_kontrak()
     {
         $service = new CheckpointTransitionService($this->procurement);
         $result = $service->transition(6);
@@ -133,7 +133,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test checkpoint progress is created and updated correctly
      */
-    public function test_creates_procurement_progress_records()
+    public function test_membuat_record_procurement_progress()
     {
         // Add request procurement
         $this->procurement->requestProcurements()->create([
@@ -172,7 +172,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test transition to completion marks procurement as completed
      */
-    public function test_final_transition_marks_procurement_completed()
+    public function test_transisi_akhir_menandai_procurement_selesai()
     {
         // Mock all requirements for checkpoint 11
         $this->user->update(['roles' => 'treasury']);
@@ -200,7 +200,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test only treasury can process final payment
      */
-    public function test_checkpoint_11_to_completion_requires_treasury_role()
+    public function test_checkpoint_11_ke_selesai_memerlukan_role_treasury()
     {
         // User is supply_chain, not treasury
         $service = new CheckpointTransitionService($this->procurement);
@@ -213,7 +213,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test checkpoint 11 requires payment date
      */
-    public function test_checkpoint_11_requires_payment_date()
+    public function test_checkpoint_11_memerlukan_tanggal_pembayaran()
     {
         $this->user->update(['roles' => 'treasury']);
         
@@ -227,7 +227,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test checkpoint 11 requires paid final payment
      */
-    public function test_checkpoint_11_requires_paid_final_payment()
+    public function test_checkpoint_11_memerlukan_pembayaran_akhir_lunas()
     {
         $this->user->update(['roles' => 'treasury']);
         
@@ -241,7 +241,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test transition rolls back on exception
      */
-    public function test_transition_rolls_back_on_exception()
+    public function test_transisi_rollback_saat_terjadi_exception()
     {
         // Try to transition from invalid checkpoint
         $service = new CheckpointTransitionService($this->procurement);
@@ -262,7 +262,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test transition notes are saved
      */
-    public function test_transition_saves_notes()
+    public function test_transisi_menyimpan_catatan()
     {
         $this->procurement->requestProcurements()->create([
             'vendor_id' => \App\Models\Vendor::factory()->create()->id_vendor,
@@ -289,7 +289,7 @@ class CheckpointTransitionServiceTest extends TestCase
     /**
      * Test user_id is recorded in progress
      */
-    public function test_transition_records_user_id()
+    public function test_transisi_mencatat_user_id()
     {
         $this->procurement->requestProcurements()->create([
             'vendor_id' => \App\Models\Vendor::factory()->create()->id_vendor,

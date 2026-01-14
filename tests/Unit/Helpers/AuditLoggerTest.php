@@ -22,9 +22,9 @@ class AuditLoggerTest extends TestCase
     }
 
     /**
-     * Test basic audit logging
+     * Tes mencatat audit berhasil
      */
-    public function test_logs_audit_successfully()
+    public function test_mencatat_audit_berhasil()
     {
         $log = AuditLogger::log(
             'CREATE',
@@ -45,9 +45,9 @@ class AuditLoggerTest extends TestCase
     }
 
     /**
-     * Test logging without table
+     * Tes mencatat tanpa tabel
      */
-    public function test_logs_without_table()
+    public function test_mencatat_tanpa_tabel()
     {
         $log = AuditLogger::log('SYSTEM_STARTUP');
 
@@ -60,9 +60,9 @@ class AuditLoggerTest extends TestCase
     }
 
     /**
-     * Test logging without target ID
+     * Tes mencatat tanpa target ID
      */
-    public function test_logs_without_target_id()
+    public function test_mencatat_tanpa_target_id()
     {
         $log = AuditLogger::log('DELETE_ALL', 'cache');
 
@@ -74,9 +74,9 @@ class AuditLoggerTest extends TestCase
     }
 
     /**
-     * Test logging without details
+     * Tes mencatat tanpa detail
      */
-    public function test_logs_without_details()
+    public function test_mencatat_tanpa_detail()
     {
         $log = AuditLogger::log('VIEW', 'users', 456);
 
@@ -90,9 +90,9 @@ class AuditLoggerTest extends TestCase
     }
 
     /**
-     * Test auto-capturing IP address
+     * Tes otomatis menangkap alamat IP
      */
-    public function test_auto_captures_ip_address()
+    public function test_otomatis_menangkap_alamat_ip()
     {
         $this->app['request']->server->set('REMOTE_ADDR', '10.20.30.40');
 
@@ -102,9 +102,9 @@ class AuditLoggerTest extends TestCase
     }
 
     /**
-     * Test auto-capturing user agent
+     * Tes otomatis menangkap user agent
      */
-    public function test_auto_captures_user_agent()
+    public function test_otomatis_menangkap_user_agent()
     {
         $this->app['request']->server->set('HTTP_USER_AGENT', 'Mozilla/5.0');
 
@@ -116,9 +116,9 @@ class AuditLoggerTest extends TestCase
     }
 
     /**
-     * Test manual IP and UA override
+     * Tes menghormati IP dan UA manual
      */
-    public function test_respects_manual_ip_and_ua()
+    public function test_menghormati_ip_dan_ua_manual()
     {
         $log = AuditLogger::log('LOGIN', null, null, [
             'ip' => '192.168.1.100',
@@ -132,9 +132,9 @@ class AuditLoggerTest extends TestCase
     }
 
     /**
-     * Test logging detailed change history
+     * Tes mencatat riwayat perubahan detail
      */
-    public function test_logs_detailed_change_history()
+    public function test_mencatat_riwayat_perubahan_detail()
     {
         $details = [
             'before' => [
@@ -158,9 +158,9 @@ class AuditLoggerTest extends TestCase
     }
 
     /**
-     * Test non-array details normalization
+     * Tes normalisasi detail non-array ke array
      */
-    public function test_normalizes_non_array_details_to_array()
+    public function test_normalisasi_detail_non_array_ke_array()
     {
         // String details
         $log = AuditLogger::log('NOTE', 'tasks', 1, 'Simple note');
@@ -173,9 +173,9 @@ class AuditLoggerTest extends TestCase
     }
 
     /**
-     * Test null details handling
+     * Tes menangani detail null
      */
-    public function test_handles_null_details()
+    public function test_menangani_detail_null()
     {
         $log = AuditLogger::log('DELETE', 'temp_files', 5, null);
 
@@ -185,9 +185,9 @@ class AuditLoggerTest extends TestCase
     }
 
     /**
-     * Test audit trail for critical operations
+     * Tes membuat jejak audit untuk operasi kritis
      */
-    public function test_creates_audit_trail_for_critical_operations()
+    public function test_membuat_jejak_audit_untuk_operasi_kritis()
     {
         // Simulate multiple audit events
         $create = AuditLogger::log('CREATE', 'contracts', 1, ['amount' => 5000000]);
@@ -208,9 +208,9 @@ class AuditLoggerTest extends TestCase
     }
 
     /**
-     * Test logging as unauthenticated user
+     * Tes mencatat tanpa user terautentikasi
      */
-    public function test_logs_without_authenticated_user()
+    public function test_mencatat_tanpa_user_terautentikasi()
     {
         Auth::logout();
 
@@ -224,9 +224,9 @@ class AuditLoggerTest extends TestCase
     }
 
     /**
-     * Test different action types
+     * Tes mencatat berbagai jenis aksi
      */
-    public function test_logs_different_action_types()
+    public function test_mencatat_berbagai_jenis_aksi()
     {
         $actions = ['CREATE', 'READ', 'UPDATE', 'DELETE', 'APPROVE', 'REJECT', 'SUBMIT'];
 
@@ -239,9 +239,9 @@ class AuditLoggerTest extends TestCase
     }
 
     /**
-     * Test concurrent logging maintains data integrity
+     * Tes pencatatan bersamaan mempertahankan integritas
      */
-    public function test_concurrent_logging_maintains_integrity()
+    public function test_pencatatan_bersamaan_pertahankan_integritas()
     {
         $userId = Auth::id();
 

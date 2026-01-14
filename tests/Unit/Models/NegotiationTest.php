@@ -15,7 +15,7 @@ class NegotiationTest extends TestCase
     /**
      * Test deviasi HPS calculation (harga lebih rendah dari HPS = positif)
      */
-    public function test_calculates_deviasi_hps_correctly()
+    public function test_menghitung_deviasi_hps_dengan_benar()
     {
         $procurement = Procurement::factory()->create();
         $vendor = Vendor::factory()->create();
@@ -36,7 +36,7 @@ class NegotiationTest extends TestCase
     /**
      * Test deviasi HPS calculation (harga lebih tinggi dari HPS = negatif)
      */
-    public function test_calculates_negative_deviasi_hps()
+    public function test_menghitung_deviasi_hps_negatif()
     {
         $procurement = Procurement::factory()->create();
         $vendor = Vendor::factory()->create();
@@ -57,7 +57,7 @@ class NegotiationTest extends TestCase
     /**
      * Test deviasi budget calculation
      */
-    public function test_calculates_deviasi_budget_correctly()
+    public function test_menghitung_deviasi_budget_dengan_benar()
     {
         $procurement = Procurement::factory()->create();
         $vendor = Vendor::factory()->create();
@@ -79,7 +79,7 @@ class NegotiationTest extends TestCase
     /**
      * Test deviasi with currency conversion
      */
-    public function test_calculates_deviasi_with_different_currencies()
+    public function test_menghitung_deviasi_dengan_mata_uang_berbeda()
     {
         $procurement = Procurement::factory()->create();
         $vendor = Vendor::factory()->create();
@@ -102,7 +102,7 @@ class NegotiationTest extends TestCase
     /**
      * Test deviasi returns null when HPS is null
      */
-    public function test_deviasi_hps_returns_null_when_hps_is_null()
+    public function test_deviasi_hps_mengembalikan_null_ketika_hps_null()
     {
         $procurement = Procurement::factory()->create();
         $vendor = Vendor::factory()->create();
@@ -122,7 +122,7 @@ class NegotiationTest extends TestCase
     /**
      * Test deviasi returns null when harga_final is null
      */
-    public function test_deviasi_hps_returns_null_when_harga_final_is_null()
+    public function test_deviasi_hps_mengembalikan_null_ketika_harga_final_null()
     {
         $procurement = Procurement::factory()->create();
         $vendor = Vendor::factory()->create();
@@ -142,7 +142,7 @@ class NegotiationTest extends TestCase
     /**
      * Test deviasi budget returns null when budget is null
      */
-    public function test_deviasi_budget_returns_null_when_budget_is_null()
+    public function test_deviasi_budget_mengembalikan_null_ketika_budget_null()
     {
         $procurement = Procurement::factory()->create();
         $vendor = Vendor::factory()->create();
@@ -162,7 +162,7 @@ class NegotiationTest extends TestCase
     /**
      * Test lead time calculation
      */
-    public function test_calculates_lead_time_correctly()
+    public function test_menghitung_lead_time_dengan_benar()
     {
         $procurement = Procurement::factory()->create();
         $vendor = Vendor::factory()->create();
@@ -184,7 +184,7 @@ class NegotiationTest extends TestCase
     /**
      * Test procurement relationship
      */
-    public function test_has_procurement_relationship()
+    public function test_memiliki_relasi_procurement()
     {
         $procurement = Procurement::factory()->create();
         $vendor = Vendor::factory()->create();
@@ -203,7 +203,7 @@ class NegotiationTest extends TestCase
     /**
      * Test vendor relationship
      */
-    public function test_has_vendor_relationship()
+    public function test_memiliki_relasi_vendor()
     {
         $procurement = Procurement::factory()->create();
         $vendor = Vendor::factory()->create();
@@ -222,7 +222,7 @@ class NegotiationTest extends TestCase
     /**
      * Test zero HPS handling
      */
-    public function test_handles_zero_hps_gracefully()
+    public function test_menangani_hps_nol_dengan_baik()
     {
         $procurement = Procurement::factory()->create();
         $vendor = Vendor::factory()->create();
@@ -244,7 +244,7 @@ class NegotiationTest extends TestCase
     /**
      * Test appended attributes are included
      */
-    public function test_appended_attributes_are_included_in_array()
+    public function test_atribut_appended_termasuk_dalam_array()
     {
         $procurement = Procurement::factory()->create();
         $vendor = Vendor::factory()->create();

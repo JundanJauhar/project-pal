@@ -20,7 +20,6 @@ class Project extends Model
         'project_name',
         'description',
         'owner_division_id',
-        'priority',
         'start_date',
         'end_date',
         'status_project',
