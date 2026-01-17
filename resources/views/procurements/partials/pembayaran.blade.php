@@ -16,10 +16,10 @@
         <div class="table-responsive">
             {{-- Button Save Checkpoint (LUAR TABLE) --}}
             <div class="btn-simpan-wrapper">
-                @if($currentCheckpointSequence == 8 && $pembayarans->count() > 0)
+                @if($currentCheckpointSequence == 7 && $pembayarans->count() > 0)
                 <form action="{{ route('checkpoint.transition', $procurement->procurement_id) }}" method="POST">
                     @csrf
-                    <input type="hidden" name="from_checkpoint" value="8">
+                    <input type="hidden" name="from_checkpoint" value="7">
                     <button class="btn btn-sm btn-action-simpan">
                         <i class="bi bi-box-arrow-down"></i> Simpan
                     </button>
@@ -105,8 +105,8 @@
                         @endforeach
                     @endif
 
-                    {{-- ✅ EMPTY STATE DENGAN CREATE BUTTON (HANYA SAAT CHECKPOINT 8 & TIDAK ADA PEMBAYARAN) --}}
-                    @if($pembayaranCount == 0 && $currentCheckpointSequence == 8)
+                    {{-- ✅ EMPTY STATE DENGAN CREATE BUTTON (HANYA SAAT CHECKPOINT 7 & TIDAK ADA PEMBAYARAN) --}}
+                    @if($pembayaranCount == 0 && $currentCheckpointSequence == 7)
                     <tr>
                         <td colspan="9" class="text-center text-muted" style="padding: 12px 8px;">
                             Belum ada data Pembayaran
@@ -121,8 +121,8 @@
                     </tr>
                     @endif
 
-                    {{-- ✅ ROW CREATE (HANYA SAAT CHECKPOINT 8 & ADA PEMBAYARAN) --}}
-                    @if($pembayaranCount > 0 && $currentCheckpointSequence == 8)
+                    {{-- ✅ ROW CREATE (HANYA SAAT CHECKPOINT 7 & ADA PEMBAYARAN) --}}
+                    @if($pembayaranCount > 0 && $currentCheckpointSequence == 7)
                     <tr>
                         <td colspan="9"></td>
                         <td class="text-center">
@@ -219,7 +219,7 @@
 {{-- ============================================ --}}
 {{-- MODAL CREATE (LUAR TABLE) --}}
 {{-- ============================================ --}}
-@if($currentCheckpointSequence == 8)
+@if($currentCheckpointSequence == 7)
 <div class="modal fade" id="modalCreatePembayaran" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">

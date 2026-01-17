@@ -40,7 +40,7 @@ class PengesahanKontrakController extends Controller
 
             return redirect()
                 ->route('procurements.show', $procurement->procurement_id)
-                ->with('success', 'Pengadaan OC berhasil disimpan.')
+                ->with('success', 'Pengesahan Kontrak berhasil disimpan.')
                 ->withFragment('pengesahan-kontrak');
         } catch (\Exception $e) {
             DB::rollBack();
