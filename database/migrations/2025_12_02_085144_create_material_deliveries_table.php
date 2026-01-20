@@ -11,19 +11,27 @@ return new class extends Migration
         Schema::create('material_deliveries', function (Blueprint $table) {
             $table->id('delivery_id');
             $table->unsignedBigInteger('procurement_id');
-            
+
             $table->string('incoterms')->nullable();
+            $table->string('imo_number', 20)->nullable();
+            $table->string('container_number', 50)->nullable();
+
             $table->date('etd')->nullable();
             $table->date('eta_sby_port')->nullable();
             $table->date('eta_pal')->nullable();
             $table->date('atd')->nullable();
             $table->date('ata_sby_port')->nullable();
+
             $table->longText('remark')->nullable();
             $table->timestamps();
-            
-            $table->foreign('procurement_id')->references('procurement_id')->on('procurement')->cascadeOnDelete();
-            
+
+            $table->foreign('procurement_id')
+                ->references('procurement_id')
+                ->on('procurement')
+                ->cascadeOnDelete();
+
             $table->index('procurement_id');
+            $table->index('imo_number');
         });
     }
 
@@ -32,4 +40,3 @@ return new class extends Migration
         Schema::dropIfExists('material_deliveries');
     }
 };
-?>
