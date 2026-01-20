@@ -2,15 +2,16 @@
     <h5 class="section-title">Jaminan Pembayaran</h5>
 
     {{-- Alert Error (LUAR TABLE) --}}
-    @if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach ($errors->all() as $error)
-            <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
+    @if ($errors->jaminan->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->jaminan->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
     @endif
+
 
     <div class="dashboard-table-wrapper">
         <div class="table-responsive">
@@ -174,6 +175,7 @@
 
                 <form method="POST" action="{{ route('jaminan-pembayaran.update', $jaminan->jaminan_pembayaran_id) }}">
                     @csrf
+                    @method('PUT')
 
                     <div class="modal-body row g-3">
                         @php
