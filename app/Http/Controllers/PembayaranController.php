@@ -37,7 +37,7 @@ class PembayaranController extends Controller
             'no_memo'          => 'nullable|string|max:100',
             'link'             => 'nullable|url|max:255',
             'target_date'      => 'nullable|date',
-            'realization_date' => 'nullable|date|after_or_equal:target_date',
+            'realization_date' => 'nullable|date',
         ], [
             'payment_type.required' => 'Jenis pembayaran harus dipilih',
             'percentage.required'   => 'Persentase pembayaran harus diisi',
@@ -128,7 +128,7 @@ class PembayaranController extends Controller
             'no_memo'          => 'nullable|string|max:100',
             'link'             => 'nullable|url|max:255',
             'target_date'      => 'nullable|date',
-            'realization_date' => 'nullable|date|after_or_equal:target_date',
+            'realization_date' => 'nullable|date',
         ]);
 
         try {
