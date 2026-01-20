@@ -22,14 +22,9 @@ class InquiryQuotationController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // sebelum validasi
-        if ($request->filled('nilai_harga')) {
-            $raw = preg_replace('/\D/', '', $request->nilai_harga); // hapus semua non digit
-            $request->merge([
-                'nilai_harga' => $raw   // ganti jadi angka murni
-            ]);
-        }
-
+        // CATATAN: Blade sudah mengirim nilai RAW (tanpa format)
+        // JavaScript menyimpan raw value ke hidden input
+        // Jadi nilai di sini sudah bersih!
 
         $validated = $request->validate([
             'procurement_id' => 'required|exists:procurement,procurement_id',
@@ -60,7 +55,6 @@ class InquiryQuotationController extends Controller
             if ((int)$validated['procurement_id'] !== (int)$procurementId) {
                 throw new \Exception('Invalid procurement reference.');
             }
-
 
             // Set default currency
             if (empty($validated['currency'])) {
@@ -105,14 +99,9 @@ class InquiryQuotationController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // sebelum validasi
-        if ($request->filled('nilai_harga')) {
-            $raw = preg_replace('/\D/', '', $request->nilai_harga); // hapus semua non digit
-            $request->merge([
-                'nilai_harga' => $raw   // ganti jadi angka murni
-            ]);
-        }
-
+        // CATATAN: Blade sudah mengirim nilai RAW (tanpa format)
+        // JavaScript menyimpan raw value ke hidden input
+        // Controller TIDAK PERLU membersihkan lagi!
 
         $validated = $request->validate([
             'tanggal_inquiry' => 'required|date',

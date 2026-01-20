@@ -95,7 +95,7 @@ class ProcurementController extends Controller
 
         DB::beginTransaction();
         try {
-            $validated['start_date'] = Carbon::now()->format('Y-m-d');
+            $validated['start_date'] = now('Asia/Jakarta');
             $validated['status_procurement'] = 'in_progress';
 
             $projectCode = $validated['project_code'];
@@ -246,7 +246,7 @@ class ProcurementController extends Controller
             ->get();
 
         $contractReviews = ContractReview::where('procurement_id', $procurement->procurement_id)
-            ->with(['vendor', 'revisions' => function($query) {
+            ->with(['vendor', 'revisions' => function ($query) {
                 $query->orderBy('revision_code', 'desc');
             }, 'revisions.creator'])
             ->orderBy('start_date', 'desc')
@@ -272,7 +272,7 @@ class ProcurementController extends Controller
 
         $pengesahanKontraks = PengesahanKontrak::where('procurement_id', $procurement->procurement_id)
             ->with('vendor')
-            ->orderBy('created_at','desc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         $kontraks = Kontrak::where('procurement_id', $procurement->procurement_id)
@@ -286,10 +286,10 @@ class ProcurementController extends Controller
             ->get();
 
         $jaminans = JaminanPembayaran::where('procurement_id', $procurement->procurement_id)
-        ->with('vendor')
-        ->orderBy('created_at', 'asc')
-        ->get();
-    
+            ->with('vendor')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
         // Check if any Contract Review is approved (to unlock Pengesahan Kontrak)
         $hasApprovedContractReview = $contractReviews->where('result', 'approve')->count() > 0;
 
@@ -361,7 +361,10 @@ class ProcurementController extends Controller
                 'status' => $validated['status'],
                 'note' => $validated['note'],
                 'user_id' => Auth::id(),
-                'end_date' => $validated['status'] === 'completed' ? now() : null,
+                'end_date' => $validated['status'] === 'completed'
+                    ? now('Asia/Jakarta')
+                    : null,
+
             ]);
         } else {
             $procurement->procurementProgress()->create([
@@ -369,8 +372,11 @@ class ProcurementController extends Controller
                 'status' => $validated['status'],
                 'note' => $validated['note'],
                 'user_id' => Auth::id(),
-                'start_date' => now(),
-                'end_date' => $validated['status'] === 'completed' ? now() : null,
+                'start_date' => now('Asia/Jakarta'),
+                'end_date' => $validated['status'] === 'completed'
+                    ? now('Asia/Jakarta')
+                    : null,
+
             ]);
         }
 
