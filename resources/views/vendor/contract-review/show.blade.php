@@ -151,12 +151,19 @@
                                 <input type="text" class="link-input sc-link" value="{{ $rev->sc_link }}" disabled>
                             </td>
                             <td>
-                                @if($rev->result == 'approve')
-                                    <span style="color: #28AC00; font-weight: 700;">✔ Approved</span>
-                                @elseif($rev->result == 'not_approve')
-                                    <span style="color: #F10303; font-weight: 700;">✘ Not Approved</span>
-                                @elseif($rev->result == 'revisi')
-                                    <span style="color: #ECAD02; font-weight: 700;">⟳ Revisi</span>
+                                @if(in_array($rev->result, ['approve', 'not_approve', 'revisi']))
+                                    <div class="d-flex flex-column align-items-center">
+                                        @if($rev->result == 'approve')
+                                            <span style="color: #28AC00; font-weight: 700;">✔ Approved</span>
+                                        @elseif($rev->result == 'not_approve')
+                                            <span style="color: #F10303; font-weight: 700;">✘ Not Approved</span>
+                                        @elseif($rev->result == 'revisi')
+                                            <span style="color: #ECAD02; font-weight: 700;">⟳ Revisi</span>
+                                        @endif
+                                        <span class="text-muted" style="font-size: 11px;">
+                                            {{ \Carbon\Carbon::parse($rev->updated_at)->format('d/m/Y H:i') }}
+                                        </span>
+                                    </div>
                                 @else
                                     <span style="color: #999;">-</span>
                                 @endif
