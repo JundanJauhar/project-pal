@@ -55,6 +55,8 @@
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
+        position: relative;
+        cursor: help;
     }
 
     .timeline-step small {
@@ -383,11 +385,14 @@
         </div>
     </div>
 
-    {{-- Timeline dengan Logic Correct dan Dynamic Icons --}}
+    {{-- Timeline dengan Logic Correct dan Dynamic Icons + TOOLTIP --}}
     <div class="timeline-container">
         @forelse($checkpoints as $checkpoint)
         @php
         $status = 'not-started'; // Default
+        $tooltipText = $checkpoint->point_name; // Default tooltip hanya nama
+        $completedAt = null;
+        $startedAt = null;
 
         // Check if this checkpoint is completed
         $completedCheckpoint = $procurement->procurementProgress
@@ -397,6 +402,11 @@
 
         if ($completedCheckpoint) {
         $status = 'completed';
+        // Format tanggal selesai checkpoint
+        if ($completedCheckpoint->end_date) {
+        $completedAt = $completedCheckpoint->end_date->format('d/m/Y H:i');
+        $tooltipText = $checkpoint->point_name . " - Selesai: " . $completedAt;
+        }
         } else {
         // Check if this is the current (active) checkpoint
         $currentCheckpoint = $procurement->procurementProgress
@@ -406,18 +416,25 @@
 
         if ($currentCheckpoint) {
         $status = 'active';
+        // Format tanggal dimulai checkpoint
+        if ($currentCheckpoint->start_date) {
+        $startedAt = $currentCheckpoint->start_date->format('d/m/Y H:i');
+        $tooltipText = $checkpoint->point_name . " - Dimulai: " . $startedAt;
+        }
         }
         }
 
         // Get appropriate icon for this checkpoint
         $iconClass = \App\Services\CheckpointIconService::getIconClass($checkpoint->point_sequence);
         @endphp
-        <div class="timeline-step {{ $status }}" title="{{ $checkpoint->point_name }}">
+
+        <div class="timeline-step {{ $status }}" title="{{ $tooltipText }}">
             <div class="timeline-icon">
                 <i class="bi {{ $iconClass }}"></i>
             </div>
             <small>{{ $checkpoint->point_name }}</small>
         </div>
+
         @empty
         <div class="text-center">Tidak ada checkpoint yang tersedia</div>
         @endforelse
@@ -531,10 +548,6 @@
     compact('procurement', 'materialDeliveries')
     )
 
-
-
-
-
 </div>
 </div>
 @endsection
@@ -551,8 +564,30 @@
     document.addEventListener('input', function(e) {
         if (!e.target.classList.contains('currency-input')) return;
 
-        let value = e.target.value.replace(/\D/g, '');
-        e.target.value = value ? new Intl.NumberFormat('id-ID').format(value) : '';
+        const raw = e.target.value.replace(/\D/g, '');
+        e.target.value = raw ? new Intl.NumberFormat('id-ID').format(raw) : '';
+
+        // Cari hidden input terdekat
+        const wrapper = e.target.closest('.input-group');
+        if (!wrapper) return;
+
+        const hidden = wrapper.querySelector('input[type="hidden"][name="nilai_harga"]');
+        if (hidden) hidden.value = raw;
+    });
+
+
+    /**
+     * =========================================
+     * FORMAT CURRENCY SAAT MODAL DIBUKA (EDIT)
+     * =========================================
+     */
+    document.addEventListener('shown.bs.modal', function(e) {
+        const inputs = e.target.querySelectorAll('.currency-input');
+
+        inputs.forEach(input => {
+            let value = input.value.replace(/\D/g, '');
+            input.value = value ? new Intl.NumberFormat('id-ID').format(value) : '';
+        });
     });
 
 
@@ -720,6 +755,5 @@
         @endif
 
     }); // END DOMContentLoaded
-
 </script>
 @endpush
