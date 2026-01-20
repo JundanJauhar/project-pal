@@ -45,17 +45,25 @@
 .link-status { font-size: 12px; color: #777; }
 
 /* buttons */
-.action-btn { border: none; font-size: 12px; font-weight: 700; border-radius: 14px; padding: 6px 14px; cursor: pointer; width: 100px; margin: 3px auto; color: white; }
+/* buttons */
+.action-btn { border: none; font-size: 12px; font-weight: 700; border-radius: 14px; padding: 6px 14px; cursor: pointer; width: 100px; margin: 3px auto; color: white; transition: all 0.3s ease; }
 .btn-save { background: #000; }
 .btn-upload { background: #000; }
-.btn-approve { background: #28AC00; }
-.btn-reject { background: #F10303; }
-.btn-revisi { background: #ECAD02; }
+
+/* Default state: Gray */
+.btn-approve, .btn-reject, .btn-revisi { background: #e0e0e0; color: #555; }
+
+/* Active states */
+.btn-approve.active { background: #28AC00; color: white; }
+.btn-reject.active { background: #F10303; color: white; }
+.btn-revisi.active { background: #ECAD02; color: white; }
 
 /* ✅ Disabled state */
 .action-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    background: #e0e0e0;
+    color: #999;
 }
 
 /* checkbox */
@@ -86,7 +94,7 @@
 
 <button class="back-btn" onclick="goBackWithRefresh()">← Back</button>
 
-<p class="procurement-name">{{ $procurement->no_procurement }} - {{ $procurement->project->nama_project ?? '-' }}</p>
+<p class="procurement-name">{{ $procurement->code_procurement }} -> {{ $procurement->project->project_name ?? '-' }} -> {{ $procurement->name_procurement ?? '-' }}</p>
 
 <h2 class="vendor-name">
     {{ $contractReview->vendor->name_vendor ?? '-' }}
@@ -141,20 +149,34 @@
                             </td>
                             <td><strong>{{ $rev->revision_code }}</strong></td>
                             <td>
-                                <input type="text" class="link-input vendor-link" value="{{ $rev->vendor_link }}">
+                                <input type="link " class="link-input vendor-link" value="{{ $rev->vendor_link }}"  readonly>
+                                <div class="link-status"></div>
+                            </td>
+                            <td>
+                                <input type="text" class="link-input sc-link" value="{{ $rev->sc_link }}" >
                                 <button class="action-btn btn-upload save-link">Save</button>
                                 <div class="link-status"></div>
                             </td>
                             <td>
-                                <input type="text" class="link-input sc-link" value="{{ $rev->sc_link }}">
-                                <button class="action-btn btn-upload save-link">Save</button>
-                                <div class="link-status"></div>
-                            </td>
-                            <td>
-                                <button class="action-btn btn-approve approve-btn">Approve</button>
-                                <button class="action-btn btn-revisi revisi-btn">Revisi</button>
-                                <button class="action-btn btn-reject reject-btn">Not Approve</button>
-                                <button class="action-btn btn-save save-status" style="display:none; background:#007bff;">Save Status</button>
+                                @if(in_array($rev->result, ['approve', 'not_approve', 'revisi']))
+                                    <div class="d-flex flex-column align-items-center">
+                                        @if($rev->result == 'approve')
+                                            <span class="fw-bold text-success">Approved</span>
+                                        @elseif($rev->result == 'not_approve')
+                                            <span class="fw-bold text-danger">Not Approved</span>
+                                        @elseif($rev->result == 'revisi')
+                                            <span class="fw-bold text-warning" style="color:#ECAD02;">Revisi</span>
+                                        @endif
+                                        <span class="text-muted" style="font-size: 11px;">
+                                            {{ \Carbon\Carbon::parse($rev->updated_at)->format('d/m/Y H:i') }}
+                                        </span>
+                                    </div>
+                                @else
+                                    <button class="action-btn btn-approve approve-btn">Approve</button>
+                                    <button class="action-btn btn-revisi revisi-btn">Revisi</button>
+                                    <button class="action-btn btn-reject reject-btn">Not Approve</button>
+                                    <button class="action-btn btn-save save-status" style="display:none; background:#007bff;">Save Status</button>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
@@ -182,9 +204,85 @@
 </div>
 
 {{-- ========================= JAVASCRIPT ========================= --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 const CSRF = "{{ csrf_token() }}";
 const CONTRACT_REVIEW_ID = "{{ $contractReview->contract_review_id }}";
+
+// ... (existing code) ...
+
+// ✅ Function untuk save status dengan konfirmasi popup
+function saveSelectedStatus(row) {
+    const selectedStatus = row.dataset.selectedStatus;
+
+    // VALIDATION: Cek apakah kedua link sudah diisi
+    const vendorLink = row.querySelector('.vendor-link').value.trim();
+    const scLink = row.querySelector('.sc-link').value.trim();
+
+    if (!vendorLink || !scLink) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Data Belum Lengkap',
+            text: 'Mohon isi "Vendor File Link" dan "SC File Link" terlebih dahulu sebelum menyimpan status.',
+            confirmButtonColor: '#3085d6',
+        });
+        return;
+    }
+    
+    if (!selectedStatus) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Peringatan',
+            text: 'Pilih status terlebih dahulu',
+            confirmButtonColor: '#3085d6',
+        });
+        return;
+    }
+    
+    let statusText = "";
+    let confirmColor = "#3085d6";
+
+    if (selectedStatus === "approve") {
+        statusText = "Approve / Setujui";
+        confirmColor = "#28AC00";
+    } else if (selectedStatus === "reject") {
+        statusText = "Not Approve / Tolak";
+        confirmColor = "#F10303";
+    } else if (selectedStatus === "revisi") {
+        statusText = "Revisi";
+        confirmColor = "#ECAD02";
+    }
+
+    Swal.fire({
+        title: 'Apakah Anda yakin?',
+        text: `Anda akan menyimpan status: ${statusText}`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: confirmColor,
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Simpan!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading
+            Swal.fire({
+                title: 'Menyimpan...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            if (selectedStatus === "approve") {
+                submitApprove(row);
+            } else if (selectedStatus === "reject") {
+                submitReject(row);
+            } else if (selectedStatus === "revisi") {
+                submitRevisi(row);
+            }
+        }
+    });
+}
 
 // ✅ Simpan disabled revisions di Set
 const disabledRevisions = new Set();
@@ -226,11 +324,7 @@ function checkDisabledRevisions() {
             const saveLinkButtons = row.querySelectorAll(".save-link");
             saveLinkButtons.forEach(btn => btn.remove());
 
-            // Hapus tombol action
-            const actionCell = row.querySelector("td:last-child");
-            if (actionCell) {
-                actionCell.innerHTML = "";
-            }
+            // Note: Action buttons are handled by server-side rendering for history
             disableRevisionPermanent(rev);
         }
     });
@@ -295,11 +389,17 @@ function saveLogToDatabase(message) {
 /* APPROVE */
 document.addEventListener("click", function(e) {
     if (e.target.classList.contains("approve-btn")) {
-        selectApprove(e.target.closest("tr"));
+        selectApprove(e.target.closest("tr"), e.target);
     }
 });
 
-function selectApprove(row) {
+function selectApprove(row, btn) {
+    // Reset all buttons in this row
+    row.querySelectorAll('.action-btn').forEach(b => b.classList.remove('active'));
+    
+    // Set this button active
+    if (btn) btn.classList.add('active');
+
     const checkbox = row.querySelector(".rev-check");
     checkbox.classList.remove("status-reject", "status-revisi");
     checkbox.classList.add("status-approve");
@@ -338,10 +438,26 @@ function submitApprove(row) {
             const saveLinkButtons = row.querySelectorAll(".save-link");
             saveLinkButtons.forEach(btn => btn.remove());
             
-            // Hapus tombol action
+            // Update Action Cell with History
             const actionCell = row.querySelector("td:last-child");
-            actionCell.innerHTML = "";
+            const dateStr = new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':');
+            actionCell.innerHTML = `
+                <div class="d-flex flex-column align-items-center">
+                    <span class="fw-bold text-success">Approved</span>
+                    <span class="text-muted" style="font-size: 11px;">${dateStr}</span>
+                </div>
+            `;
+            
             disableRevisionPermanent(row.dataset.rev);
+
+            // ✅ Close loading & Show Success
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Status Approved berhasil disimpan.',
+                timer: 2000,
+                showConfirmButton: false
+            });
         }
     });
 }
@@ -349,11 +465,17 @@ function submitApprove(row) {
 /* NOT APPROVE */
 document.addEventListener("click", function(e) {
     if (e.target.classList.contains("reject-btn")) {
-        selectReject(e.target.closest("tr"));
+        selectReject(e.target.closest("tr"), e.target);
     }
 });
 
-function selectReject(row) {
+function selectReject(row, btn) {
+    // Reset all buttons in this row
+    row.querySelectorAll('.action-btn').forEach(b => b.classList.remove('active'));
+    
+    // Set this button active
+    if (btn) btn.classList.add('active');
+
     const checkbox = row.querySelector(".rev-check");
     checkbox.classList.remove("status-approve", "status-revisi");
     checkbox.classList.add("status-reject");
@@ -392,10 +514,26 @@ function submitReject(row) {
             const saveLinkButtons = row.querySelectorAll(".save-link");
             saveLinkButtons.forEach(btn => btn.remove());
             
-            // Hapus tombol action
+            // Update Action Cell with History
             const actionCell = row.querySelector("td:last-child");
-            actionCell.innerHTML = "";
+            const dateStr = new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':');
+            actionCell.innerHTML = `
+                <div class="d-flex flex-column align-items-center">
+                    <span class="fw-bold text-danger">Not Approved</span>
+                    <span class="text-muted" style="font-size: 11px;">${dateStr}</span>
+                </div>
+            `;
+
             disableRevisionPermanent(row.dataset.rev);
+
+            // ✅ Close loading & Show Success
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Status Not Approved berhasil disimpan.',
+                timer: 2000,
+                showConfirmButton: false
+            });
         }
     });
 }
@@ -403,11 +541,17 @@ function submitReject(row) {
 /* REVISI */
 document.addEventListener("click", function(e) {
     if (e.target.classList.contains("revisi-btn")) {
-        selectRevisi(e.target.closest("tr"));
+        selectRevisi(e.target.closest("tr"), e.target);
     }
 });
 
-function selectRevisi(row) {
+function selectRevisi(row, btn) {
+    // Reset all buttons in this row
+    row.querySelectorAll('.action-btn').forEach(b => b.classList.remove('active'));
+    
+    // Set this button active
+    if (btn) btn.classList.add('active');
+
     const checkbox = row.querySelector(".rev-check");
     checkbox.classList.remove("status-approve", "status-reject");
     checkbox.classList.add("status-revisi");
@@ -444,9 +588,15 @@ function submitRevisi(row) {
         if (vendorLinkInput) vendorLinkInput.disabled = true;
         if (scLinkInput) scLinkInput.disabled = true;
 
-        // Hapus semua tombol di row ini
+        // Hapus semua tombol di row ini and replace with history
         const actionCell = row.querySelector("td:last-child");
-        actionCell.innerHTML = "";
+        const dateStr = new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':');
+        actionCell.innerHTML = `
+            <div class="d-flex flex-column align-items-center">
+                <span class="fw-bold text-warning" style="color:#ECAD02;">Revisi</span>
+                <span class="text-muted" style="font-size: 11px;">${dateStr}</span>
+            </div>
+        `;
 
         // Hapus tombol Save di kolom link
         const saveLinkButtons = row.querySelectorAll(".save-link");
@@ -459,8 +609,7 @@ function submitRevisi(row) {
             <td><input type="checkbox" class="rev-check"></td>
             <td><strong>${next.revision_code}</strong></td>
             <td>
-                <input type="text" class="link-input vendor-link">
-                <button class="action-btn btn-upload save-link">Save</button>
+                <input type="text" class="link-input vendor-link" readonly>
                 <div class="link-status"></div>
             </td>
             <td>
@@ -476,13 +625,22 @@ function submitRevisi(row) {
             </td>
         </tr>`;
 
-        document.getElementById("revisionBody").insertAdjacentHTML("beforeend", html);
+        document.getElementById("revisionBody").insertAdjacentHTML("afterbegin", html);
 
         updateStatus(next.revision_code, "On Progress");
         
         const logMessage = `⟳ ${row.dataset.rev} REVISI → ${next.revision_code} created`;
         addLog(logMessage);
         saveLogToDatabase(logMessage);
+
+        // ✅ Close loading & Show Success
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'Revisi baru berhasil dibuat.',
+            timer: 2000,
+            showConfirmButton: false
+        });
     });
 }
 
@@ -493,22 +651,7 @@ document.addEventListener("click", function(e) {
     }
 });
 
-function saveSelectedStatus(row) {
-    const selectedStatus = row.dataset.selectedStatus;
-    
-    if (!selectedStatus) {
-        alert('Pilih status terlebih dahulu');
-        return;
-    }
-    
-    if (selectedStatus === "approve") {
-        submitApprove(row);
-    } else if (selectedStatus === "reject") {
-        submitReject(row);
-    } else if (selectedStatus === "revisi") {
-        submitRevisi(row);
-    }
-}
+
 
 /* UPDATE STATUS CARD */
 function updateStatus(revCode, status) {
