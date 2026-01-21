@@ -86,12 +86,24 @@
         font-size: 14px;
         width: 150px;
     }
+
+    @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    .blink-animation {
+        animation: blink 1.5s infinite;
+    }
 </style>
 @endpush
 
 
 @section('content')
 
+<h1 class="fw-bold mb-5 text-center" >{{ $vendor->name_vendor }}</h1>
+
+<h2 class="fw-bold mb-2">Evatek Vendor</h2>
 <div class="row">
     <div class="col-md-3">
         <div class="stat-card stat-total">
@@ -159,10 +171,7 @@
         </div>
     </div>
 </div>
-<h2 class="fw-bold mb-2">Evatek Vendor</h2>
-<p class="mb-4" style="color:#555;">
-    Vendor: <strong>{{ $vendor->name_vendor ?? '-' }}</strong>
-</p>
+
 
 {{-- Filter bar sederhana --}}
 <div class="row mb-3">
@@ -268,9 +277,6 @@
 
 {{-- Contract Review Section --}}
 <h2 class="fw-bold mb-3 mt-5">Review Kontrak dengan Supply Chain</h2>
-<p class="mb-4" style="color:#555;">
-    Vendor: <strong>{{ $vendor->name_vendor ?? '-' }}</strong>
-</p>
 
 {{-- Contract Review Stats Cards --}}
 <div class="row mb-4">
@@ -344,10 +350,7 @@
 </div>
 
 <div class="big-card mt-4">
-    <h4 style="margin-bottom: 25px; font-weight: 600; color: #333;">
-        📝 Review Kontrak dengan Supply Chain
-    </h4>
-
+ 
     <table class="request-table">
         <thead>
             <tr>

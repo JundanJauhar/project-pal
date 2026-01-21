@@ -667,6 +667,55 @@
                 </a>
                 
                 <div class="ms-auto d-flex align-items-center me-4 gap-3">
+                    {{-- Notification Bell --}}
+                    @php
+                        // Check for notification count
+                        $vendorId = Auth::guard('vendor')->id();
+                        $notifCount = 0;
+                        $currentReviewId = request()->route('id'); // Capture current viewing ID if any
+                        
+                        if($vendorId) {
+                            $reviews = \App\Models\ContractReview::where('vendor_id', $vendorId)
+                                ->with(['revisions' => function($q) {
+                                    $q->orderBy('contract_review_revision_id', 'desc');
+                                }])
+                                ->get();
+                                
+                            foreach($reviews as $rev) {
+                                // Exclude if currently viewing this contract
+                                if($currentReviewId && $currentReviewId == $rev->contract_review_id) continue;
+
+                                $latest = $rev->revisions->first();
+                                if(!$latest) continue;
+                                
+                                // Condition 1: Final Decisions (Approve, Not Approve) - Show only if recent (e.g., < 3 days)
+                                if(in_array($latest->result, ['approve', 'not_approve'])) {
+                                    $date = $latest->updated_at ?? $latest->created_at;
+                                    if(\Carbon\Carbon::parse($date)->diffInDays(now()) <= 3) {
+                                        $notifCount++;
+                                    }
+                                    continue;
+                                }
+                                
+                                // Condition 2: Action Needed (Pending/Revisi + No Link)
+                                // This is a "To Do" item, so we always show it until done.
+                                if((!$latest->result || $latest->result == 'pending' || $latest->result == 'revisi') && empty($latest->vendor_link)) {
+                                    $notifCount++;
+                                    continue;
+                                }
+                            }
+                        }
+                    @endphp
+                    <a href="{{ route('vendor.notifications') }}" class="text-dark position-relative me-2" style="font-size: 20px; text-decoration: none;">
+                        <i class="bi bi-bell"></i>
+                        @if($notifCount > 0)
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px; padding: 3px 6px; min-width: 18px;">
+                                {{ $notifCount }}
+                                <span class="visually-hidden">unread messages</span>
+                            </span>
+                        @endif
+                    </a>
+
                     {{-- Nama Vendor --}}
                     <span class="text-dark fw-semibold" style="font-size: 15px;">
                         {{ Auth::guard('vendor')->user()->name_vendor ?? 'Vendor' }}

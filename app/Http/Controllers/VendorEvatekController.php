@@ -474,4 +474,100 @@ class VendorEvatekController extends Controller
             'message' => 'Log berhasil disimpan'
         ]);
     }
+
+    public function notifications()
+    {
+        $vendor = Auth::guard('vendor')->user();
+        
+        if (!$vendor) {
+            abort(403, 'Vendor not authenticated');
+        }
+
+        $reviews = ContractReview::where('vendor_id', $vendor->id_vendor)
+            ->with(['procurement.project', 'revisions' => function($q) {
+                $q->orderBy('contract_review_revision_id', 'desc');
+            }])
+            ->get();
+
+        $notifications = collect();
+
+        foreach ($reviews as $review) {
+            $latest = $review->revisions->first();
+            if (!$latest) continue;
+
+            $previous = $review->revisions->skip(1)->first();
+            $projName = $review->procurement->project->project_name ?? 'Project';
+            $revCode = $latest->revision_code;
+            $link = route('vendor.contract-review.review', $review->contract_review_id);
+            $date = $latest->updated_at ?? $latest->created_at;
+
+            // STATUS: APPROVED
+            if ($latest->result == 'approve') {
+                $notifications->push((object)[
+                    'type' => 'success',
+                    'icon' => 'bi-check-circle-fill',
+                    'color' => '#28a745', // Green
+                    'title' => 'Kontrak Disetujui',
+                    'message' => "Review kontrak untuk {$projName} ({$revCode}) telah DISETUJUI.",
+                    'link' => $link,
+                    'date' => $date,
+                    'action_label' => 'Lihat Detail'
+                ]);
+            }
+            // STATUS: NOT APPROVED
+            elseif ($latest->result == 'not_approve') {
+                $notifications->push((object)[
+                    'type' => 'danger',
+                    'icon' => 'bi-x-circle-fill',
+                    'color' => '#dc3545', // Red
+                    'title' => 'Kontrak Ditolak',
+                    'message' => "Review kontrak untuk {$projName} ({$revCode}) DITOLAK.",
+                    'link' => $link,
+                    'date' => $date,
+                    'action_label' => 'Lihat Detail'
+                ]);
+            }
+            // STATUS: REVISI (Explicit result)
+            // Note: Usually a new revision is created immediately, but if logic allows sticking on 'revisi':
+            elseif ($latest->result == 'revisi') {
+                $notifications->push((object)[
+                    'type' => 'warning',
+                    'icon' => 'bi-exclamation-triangle-fill',
+                    'color' => '#ffc107', // Yellow
+                    'title' => 'Perlu Revisi',
+                    'message' => "Review kontrak untuk {$projName} ({$revCode}) meminta REVISI.",
+                    'link' => $link,
+                    'date' => $date,
+                    'action_label' => 'Perbaiki Sekarang'
+                ]);
+            }
+            // STATUS: PENDING (Potential Action Needed)
+            elseif (!$latest->result || $latest->result == 'pending') {
+                // If vendor link is EMPTY -> ACTION NEEDED
+                if (empty($latest->vendor_link)) {
+                    $isRevisi = ($previous && $previous->result == 'revisi');
+                    $title = $isRevisi ? 'Revisi Diperlukan' : 'Butuh Upload Link';
+                    $msg = $isRevisi 
+                        ? "Permintaan revisi baru ({$revCode}) untuk {$projName}. Silakan upload dokumen perbaikan."
+                        : "Silakan upload dokumen review kontrak untuk {$projName} ({$revCode}).";
+
+                    $notifications->push((object)[
+                        'type' => 'action',
+                        'icon' => 'bi-upload',
+                        'color' => '#d32f2f', // Red for action
+                        'title' => $title,
+                        'message' => $msg,
+                        'link' => $link,
+                        'date' => $latest->created_at, // Use created_at for pending items
+                        'action_label' => 'Upload Dokumen'
+                    ]);
+                }
+            }
+        }
+
+        // Sort by date descending
+        $notifications = $notifications->sortByDesc('date');
+
+        return view('vendor.notifications', compact('notifications'));
+    }
 }

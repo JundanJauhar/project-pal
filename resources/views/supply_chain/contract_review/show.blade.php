@@ -150,8 +150,7 @@
                             <td><strong>{{ $rev->revision_code }}</strong></td>
                             <td>
                                 <input type="link " class="link-input vendor-link" value="{{ $rev->vendor_link }}"  readonly>
-                                <div class="link-status"></div>
-                            </td>
+                                </td>
                             <td>
                                 <input type="text" class="link-input sc-link" value="{{ $rev->sc_link }}" >
                                 <button class="action-btn btn-upload save-link">Save</button>
@@ -347,7 +346,6 @@ function saveLink(row) {
         },
         body: JSON.stringify({
             revision_id: row.dataset.revisionId,
-            vendor_link: row.querySelector(".vendor-link").value,
             sc_link: row.querySelector(".sc-link").value
         })
     })
@@ -355,10 +353,6 @@ function saveLink(row) {
     .then(r => {
         if (r.success) {
             row.querySelectorAll(".link-status").forEach(el => el.innerText = "Saved");
-            
-            const logMessage = `✓ Links saved for ${row.dataset.rev}`;
-            addLog(logMessage);
-            saveLogToDatabase(logMessage);
         }
     });
 }
@@ -423,10 +417,6 @@ function submitApprove(row) {
     .then(res => {
         if (res.success) {
             updateStatus(row.dataset.rev, "Approved");
-            
-            const logMessage = `✓ ${row.dataset.rev} APPROVED`;
-            addLog(logMessage);
-            saveLogToDatabase(logMessage);
             
             // Disable input link
             const vendorLinkInput = row.querySelector(".vendor-link");
@@ -499,10 +489,6 @@ function submitReject(row) {
     .then(res => {
         if (res.success) {
             updateStatus(row.dataset.rev, "Not Approved");
-            
-            const logMessage = `✗ ${row.dataset.rev} NOT APPROVED`;
-            addLog(logMessage);
-            saveLogToDatabase(logMessage);
             
             // Disable input link
             const vendorLinkInput = row.querySelector(".vendor-link");
@@ -629,11 +615,7 @@ function submitRevisi(row) {
 
         updateStatus(next.revision_code, "On Progress");
         
-        const logMessage = `⟳ ${row.dataset.rev} REVISI → ${next.revision_code} created`;
-        addLog(logMessage);
-        saveLogToDatabase(logMessage);
-
-        // ✅ Close loading & Show Success
+        // Close loading & Show Success
         Swal.fire({
             icon: 'success',
             title: 'Berhasil!',
