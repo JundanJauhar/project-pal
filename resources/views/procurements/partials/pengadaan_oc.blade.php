@@ -196,9 +196,23 @@
                                 </li>
                                 @endforeach
                             </ul>
-                            <input type="text" name="nilai" class="form-control currency-input"
-                                value="{{ $po->nilai }}">
-                            <input type="hidden" name="currency" id="currencyEditPO{{ $po->pengadaan_oc_id }}"
+                            {{-- DISPLAY --}}
+                            <input type="text"
+                                class="form-control currency-input"
+                                data-raw-target="nilaiPORaw{{ $po->pengadaan_oc_id }}"
+                                value="{{ number_format($po->nilai ?? 0, 0, ',', '.') }}"
+                                readonly>
+
+                            {{-- RAW --}}
+                            <input type="hidden"
+                                name="nilai"
+                                id="nilaiPORaw{{ $po->pengadaan_oc_id }}"
+                                value="{{ $po->nilai ?? '' }}">
+
+                            {{-- CURRENCY --}}
+                            <input type="hidden"
+                                name="currency"
+                                id="currencyEditPO{{ $po->pengadaan_oc_id }}"
                                 value="{{ $po->currency }}">
                         </div>
                     </div>

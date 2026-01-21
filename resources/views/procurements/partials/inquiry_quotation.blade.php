@@ -178,23 +178,22 @@
                                 </li>
                                 @endforeach
                             </ul>
-                            
+
                             {{-- INPUT DISPLAY (only for user to see formatted value) --}}
-                            <input type="text" 
+                            <input type="text"
                                 class="form-control currency-input"
-                                id="nilaiHargaDisplay{{ $iq->inquiry_quotation_id }}"
-                                value="{{ number_format($iq->nilai_harga, 0, ',', '.') }}"
-                                placeholder="0">
-                            
+                                data-raw-target="nilaiHargaRaw{{ $iq->inquiry_quotation_id }}"
+                                value="{{ number_format($iq->nilai_harga ?? 0, 0, ',', '.') }}">
+
                             {{-- INPUT RAW (hidden, actual value sent to server) --}}
-                            <input type="hidden" 
+                            <input type="hidden"
                                 name="nilai_harga"
                                 id="nilaiHargaRaw{{ $iq->inquiry_quotation_id }}"
                                 value="{{ $iq->nilai_harga ?? '' }}">
-                            
+
                             {{-- INPUT CURRENCY --}}
-                            <input type="hidden" 
-                                name="currency" 
+                            <input type="hidden"
+                                name="currency"
                                 id="currencyEdit{{ $iq->inquiry_quotation_id }}"
                                 value="{{ $iq->currency }}">
                         </div>
@@ -285,22 +284,22 @@
                                 <li><a class="dropdown-item" onclick="selectCurrency('EUR')">EUR</a></li>
                                 <li><a class="dropdown-item" onclick="selectCurrency('SGD')">SGD</a></li>
                             </ul>
-                            
+
                             {{-- INPUT DISPLAY (only for user to see formatted value) --}}
-                            <input type="text" 
+                            <input type="text"
                                 class="form-control currency-input"
-                                id="nilaiHargaDisplayCreate"
+                                data-raw-target="nilaiHargaRawCreate"
                                 placeholder="0">
-                            
+
                             {{-- INPUT RAW (hidden, actual value sent to server) --}}
-                            <input type="hidden" 
+                            <input type="hidden"
                                 name="nilai_harga"
                                 id="nilaiHargaRawCreate"
                                 value="">
-                            
+
                             {{-- INPUT CURRENCY --}}
-                            <input type="hidden" 
-                                name="currency" 
+                            <input type="hidden"
+                                name="currency"
                                 id="currencyInput"
                                 value="IDR">
                         </div>

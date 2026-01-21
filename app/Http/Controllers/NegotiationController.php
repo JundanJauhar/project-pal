@@ -21,6 +21,13 @@ class NegotiationController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        // CATATAN: Blade sudah mengirim nilai RAW (tanpa format)
+        // JavaScript menyimpan raw value ke hidden input
+        // Jadi nilai di sini sudah bersih!
+        // 
+        // foreach di bawah AMAN UNTUK DOUBLE-CHECK, tapi sebenernya tidak perlu
+        // Namun dibiarkan untuk keamanan maksimal
+
         foreach (['hps', 'budget', 'harga_final'] as $field) {
             if ($request->filled($field)) {
                 $request->merge([
@@ -95,6 +102,12 @@ class NegotiationController extends Controller
             abort(403);
         }
 
+        // CATATAN: Blade sudah mengirim nilai RAW (tanpa format)
+        // JavaScript menyimpan raw value ke hidden input
+        // 
+        // foreach di bawah AMAN UNTUK DOUBLE-CHECK, tapi sebenernya tidak perlu
+        // Namun dibiarkan untuk keamanan maksimal
+
         foreach (['hps', 'budget', 'harga_final'] as $field) {
             if ($request->filled($field)) {
                 $request->merge([
@@ -136,6 +149,8 @@ class NegotiationController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
 
+            // SINKRONISASI KE PENGADAAN OC & PENGESAHAN KONTRAK
+            // Ini sangat penting! Update nilai harga final ke dokumen berikutnya
             PengadaanOC::where('procurement_id', $neg->procurement_id)
                 ->where('vendor_id', $neg->vendor_id)
                 ->update([
@@ -154,7 +169,8 @@ class NegotiationController extends Controller
 
             return redirect()
                 ->route('procurements.show', $neg->procurement_id)
-                ->with('success', 'Negotiation & nilai terkait berhasil disinkronisasi');
+                ->with('success', 'Negotiation & nilai terkait berhasil disinkronisasi')
+                ->withFragment('negotiation');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Negotiation sync error: ' . $e->getMessage());

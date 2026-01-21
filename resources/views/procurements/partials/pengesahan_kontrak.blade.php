@@ -196,9 +196,23 @@
                                 </li>
                                 @endforeach
                             </ul>
-                            <input type="text" name="nilai" class="form-control currency-input"
-                                value="{{ $pk->nilai }}">
-                            <input type="hidden" name="currency" id="currencyEditPK{{ $pk->pengesahan_id }}"
+                            {{-- DISPLAY --}}
+                            <input type="text"
+                                class="form-control currency-input"
+                                data-raw-target="nilaiPKRaw{{ $pk->pengesahan_id }}"
+                                value="{{ number_format($pk->nilai ?? 0, 0, ',', '.') }}"
+                                readonly>
+
+                            {{-- RAW --}}
+                            <input type="hidden"
+                                name="nilai"
+                                id="nilaiPKRaw{{ $pk->pengesahan_id }}"
+                                value="{{ $pk->nilai ?? '' }}">
+
+                            {{-- CURRENCY --}}
+                            <input type="hidden"
+                                name="currency"
+                                id="currencyEditPK{{ $pk->pengesahan_id }}"
                                 value="{{ $pk->currency }}">
                         </div>
                     </div>
