@@ -181,38 +181,120 @@
         color: #fff;
     }
 
-    .grafana-container {
+    /* =========================
+   GRAFANA SLIDER (REFINED)
+========================= */
+
+    .grafana-slider-card {
         position: relative;
-        height: 650px;
-        margin-top: 24px;
-        border-radius: 10px;
-        overflow: hidden;
-        background: #0b0f14;
-        box-shadow: 0 8px 18px rgba(0,0,0,.25);
+        background: #ffffff;
+        border-radius: 18px;
+        padding: 26px 26px 30px;
+        box-shadow: 0 12px 26px rgba(0,0,0,.18);
+        margin: 60px 0; 
     }
 
-    .grafana-title {
-        font-size: 20px;
+    .grafana-slider-title {
+        font-size: 24px;
         font-weight: 700;
-        margin-bottom: 12px;
+        text-align: center;        
+        margin-bottom: 18px;
     }
 
-    .grafana-fallback {
-        display: none;
-        text-align: center;
-        padding: 50px;
-        background: white;
-        border-radius: 8px;
-        margin: 20px;
+    .grafana-slider-wrapper {
+        overflow: hidden;
+        position: relative;
     }
 
-    .grafana-fallback.show {
-        display: block;
+    .grafana-slider-track {
+        display: flex;
+        transition: transform 0.55s ease-in-out;
+    }
+
+    .grafana-slide {
+        min-width: 100%;
+    }
+
+    /* CARD LEBIH TINGGI */
+    .grafana-slide iframe {
+        width: 100%;
+        height: 760px;           
+        border: none;
+        background: #0b0f14;
+        border-radius: 12px;
+    }
+
+    /* Navigation arrows */
+    .grafana-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px;
+        height: 44px;
+        background: rgba(0,0,0,.8);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        font-size: 22px;
+        cursor: pointer;
+        z-index: 20;
+    }
+
+    .grafana-nav:hover {
+        background: rgba(0,0,0,.95);
+    }
+
+    .grafana-nav.left {
+        left: 14px;
+    }
+
+    .grafana-nav.right {
+        right: 14px;
     }
 </style>
 @endpush
 
 @section('content')
+
+    <div class="grafana-slider-card">
+    <div class="grafana-slider-title" id="grafanaTitle">
+     Executive Procurement Overview
+    </div>
+
+    <button class="grafana-nav left" onclick="slideGrafana(-1)">
+        <i class="bi bi-chevron-left"></i>
+    </button>
+    <button class="grafana-nav right" onclick="slideGrafana(1)">
+        <i class="bi bi-chevron-right"></i>
+    </button>
+
+    <div class="grafana-slider-wrapper">
+        <div class="grafana-slider-track" id="grafanaSlider">
+
+            <div class="grafana-slide" data-title="Executive Procurement Overview">
+                <iframe src="http://localhost:3000/d/ad56wzw/executive-procurement-overview?orgId=1&theme=dark&kiosk"></iframe>
+            </div>
+
+            <div class="grafana-slide" data-title="Procurement Lifecycle & Bottleneck">
+                <iframe src="http://localhost:3000/d/adqkrmk/procurement-lifecycle-and-bottleneck?orgId=1&theme=dark&kiosk"></iframe>
+            </div>
+
+            <div class="grafana-slide" data-title="Project & Budget Performance">
+                <iframe src="http://localhost:3000/d/adr4zqx/project-and-budget-performance?orgId=1&theme=dark&kiosk"></iframe>
+            </div>
+
+            <div class="grafana-slide" data-title="Risk, Compliance & Delay Monitoring">
+                <iframe src="http://localhost:3000/d/adsf9dg/risk-compliance-and-delay-monitoring?orgId=1&theme=dark&kiosk"></iframe>
+            </div>
+
+            <div class="grafana-slide" data-title="Vendor & Contract Performance">
+                <iframe src="http://localhost:3000/d/adkzcch/vendor-and-contract-performance?orgId=1&theme=dark&kiosk"></iframe>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 
 <div class="container-fluid px-4">
     <div class="row">
@@ -301,86 +383,6 @@
             </div>
         </div>
     </div>
-
-    {{-- ===================== --}}
-{{-- EXECUTIVE DASHBOARDS --}}
-{{-- ===================== --}}
-
-    <div class="row">
-
-        {{-- 1. Executive Procurement Overview --}}
-        <div class="col-12">
-            <div class="grafana-title">Executive Procurement Overview</div>
-            <div class="grafana-container">
-                <iframe
-                    src="http://localhost:3000/d/ad56wzw/executive-procurement-overview?orgId=1&theme=dark&kiosk"
-                    width="100%"
-                    height="100%"
-                    frameborder="0"
-                    style="border:none;">
-                </iframe>
-            </div>
-        </div>
-
-        {{-- 2. Procurement Lifecycle & Bottleneck --}}
-        <div class="col-12">
-            <div class="grafana-title mt-4">Procurement Lifecycle & Bottleneck</div>
-            <div class="grafana-container">
-                <iframe
-                    src="http://localhost:3000/d/adqkrmk/procurement-lifecycle-and-bottleneck?orgId=1&theme=dark&kiosk"
-                    width="100%"
-                    height="100%"
-                    frameborder="0"
-                    style="border:none;">
-                </iframe>
-            </div>
-        </div>
-
-        {{-- 3. Project & Budget Performance --}}
-        <div class="col-12">
-            <div class="grafana-title mt-4">Project & Budget Performance</div>
-            <div class="grafana-container">
-                <iframe
-                    src="http://localhost:3000/d/adr4zqx/project-and-budget-performance?orgId=1&theme=dark&kiosk"
-                    width="100%"
-                    height="100%"
-                    frameborder="0"
-                    style="border:none;">
-                </iframe>
-            </div>
-        </div>
-
-        {{-- 4. Risk, Compliance & Delay Monitoring --}}
-        <div class="col-12">
-            <div class="grafana-title mt-4">Risk, Compliance & Delay Monitoring</div>
-            <div class="grafana-container">
-                <iframe
-                    src="http://localhost:3000/d/adsf9dg/risk-compliance-and-delay-monitoring?orgId=1&theme=dark&kiosk"
-                    width="100%"
-                    height="100%"
-                    frameborder="0"
-                    style="border:none;">
-                </iframe>
-            </div>
-        </div>
-
-        {{-- 5. Vendor & Contract Performance --}}
-        <div class="col-12">
-            <div class="grafana-title mt-4">Vendor & Contract Performance</div>
-            <div class="grafana-container">
-                <iframe
-                    src="http://localhost:3000/d/adkzcch/vendor-and-contract-performance?orgId=1&theme=dark&kiosk"
-                    width="100%"
-                    height="100%"
-                    frameborder="0"
-                    style="border:none;">
-                </iframe>
-            </div>
-        </div>
-
-    </div>
-
-
 
     <!-- Table Section -->
     <div class="dashboard-table-wrapper">
@@ -522,6 +524,30 @@
             }
         }, 10000);
     });
+
+    let currentGrafanaIndex = 0;
+
+    function slideGrafana(direction) {
+        const slider = document.getElementById('grafanaSlider');
+        const slides = slider.children;
+        const totalSlides = slides.length;
+        const titleEl = document.getElementById('grafanaTitle');
+
+        currentGrafanaIndex += direction;
+
+        if (currentGrafanaIndex < 0) {
+            currentGrafanaIndex = totalSlides - 1;
+        } else if (currentGrafanaIndex >= totalSlides) {
+            currentGrafanaIndex = 0;
+        }
+
+        slider.style.transform = `translateX(-${currentGrafanaIndex * 100}%)`;
+
+        /* UPDATE TITLE SESUAI DASHBOARD */
+        const activeSlide = slides[currentGrafanaIndex];
+        const newTitle = activeSlide.getAttribute('data-title');
+        titleEl.textContent = newTitle;
+    }
 
     // ==========================================
     // PROCUREMENT TABLE SEARCH & FILTER
