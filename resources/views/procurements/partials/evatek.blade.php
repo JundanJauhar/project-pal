@@ -20,31 +20,26 @@
                     <tr>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">No</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Nama Item</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">PIC</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Start</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Target</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Revisi</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Revision</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Hasil</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Hasil</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Evatek Status</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     @php
-                    /**
-                    * HITUNG KONDISI TERLEBIH DAHULU
-                    */
-                    
-                    // Vendor yang VALID untuk Evatek (dari Inquiry & Quotation)
+                    // Hitung kondisi terlebih dahulu
                     $evatekVendors = collect($inquiryQuotations ?? [])
                         ->map(fn ($iq) => $iq->vendor)
                         ->filter()
                         ->unique('id_vendor')
                         ->values();
 
-                    // Semua items yang ada di procurement
                     $allItems = collect();
                     foreach ($procurement->requestProcurements as $request) {
                         foreach ($request->items as $item) {
@@ -55,15 +50,11 @@
                         }
                     }
 
-                    // Item IDs yang sudah memiliki evatek
                     $evatekItemIds = $evatekItems->pluck('item_id')->toArray();
-
-                    // Item yang belum memiliki evatek
                     $uncompletedItems = $allItems->filter(fn ($itemData) => 
                         !in_array($itemData['item']->item_id, $evatekItemIds)
                     )->values();
 
-                    // Total items
                     $totalItems = $allItems->count();
                     $evatekCount = $evatekItems->count();
                     $uncompleteCount = $uncompletedItems->count();
@@ -87,6 +78,22 @@
                                 {{ $item->item_name }}
                             </td>
 
+                            {{-- Vendor --}}
+                            <td style="padding: 12px 8px; text-align: center; color: #000;">
+                                {{ $evatek->vendor->name_vendor ?? '-' }}
+                            </td>
+
+                            {{-- PIC Evatek --}}
+                            <td style="padding: 12px 8px; text-align: center; color: #000;">
+                                @if($evatek->pic_evatek)
+                                    <span style="padding: 4px 12px; border-radius: 4px; font-weight: 600;">
+                                        {{ $evatek->pic_evatek }}
+                                    </span>
+                                @else
+                                    <span style="color: #999;">-</span>
+                                @endif
+                            </td>
+
                             {{-- Tanggal Start --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">
                                 {{ $evatek->start_date->format('d/m/Y') }}
@@ -97,15 +104,6 @@
                                 {{ $evatek->target_date?->format('d/m/Y') ?? '-' }}
                             </td>
 
-                            {{-- Tanggal Revisi --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                @if($latestRevision)
-                                {{ \Carbon\Carbon::parse($latestRevision->date)->format('d/m/Y') }}
-                                @else
-                                <span style="color: #999;">-</span>
-                                @endif
-                            </td>
-
                             {{-- Revision --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">
                                 <span style="padding: 4px 12px; border-radius: 4px; font-weight: 600;">
@@ -113,25 +111,7 @@
                                 </span>
                             </td>
 
-                            {{-- Tanggal Hasil --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                @if($latestRevision)
-                                @php
-                                $resultDate = $latestRevision->approved_at
-                                    ?? $latestRevision->not_approved_at
-                                    ?? $latestRevision->date;
-                                @endphp
-                                @if($resultDate)
-                                {{ \Carbon\Carbon::parse($resultDate)->format('d/m/Y') }}
-                                @else
-                                <span style="color: #999;">-</span>
-                                @endif
-                                @else
-                                <span style="color: #999;">-</span>
-                                @endif
-                            </td>
-
-                            {{-- Hasil Evatek --}}
+                            {{-- Status (Approval Status) --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">
                                 @php
                                 $statusColors = [
@@ -146,9 +126,22 @@
                                 </span>
                             </td>
 
-                            {{-- Vendor --}}
+                            {{-- Evatek Status (Link Input Tracking) --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                {{ $evatek->vendor->name_vendor ?? '-' }}
+                                @if($evatek->evatek_status)
+                                    @php
+                                    $evatekStatusColors = [
+                                        'evatek-vendor' => ['text' => '#FF9800', 'label' => 'evatek-vendor'],
+                                        'evatek-desain' => ['text' => '#2196F3', 'label' => 'evatek-desain'],
+                                    ];
+                                    $evatekStatusConfig = $evatekStatusColors[$evatek->evatek_status] ?? ['text' => '#999', 'label' => 'Unknown'];
+                                    @endphp
+                                    <span style="color: {{ $evatekStatusConfig['text'] }}; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 13px; display: inline-block;">
+                                        ● {{ $evatekStatusConfig['label'] }}
+                                    </span>
+                                @else
+                                    <span style="color: #999;">-</span>
+                                @endif
                             </td>
 
                             {{-- Aksi --}}
@@ -172,14 +165,20 @@
                         @endphp
                         <tr>
                             {{-- No --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                {{ $rowNum }}
-                            </td>
+                            <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $rowNum }}</td>
 
                             {{-- Nama Item --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">
                                 {{ $item->item_name }}
                             </td>
+
+                            {{-- Vendor --}}
+                            <td style="padding: 12px 8px; text-align: center; color: #000;">
+                                {{ $request->vendor->name_vendor ?? '-' }}
+                            </td>
+
+                            {{-- PIC (Kosong) --}}
+                            <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
 
                             {{-- Tanggal Start --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
@@ -187,22 +186,14 @@
                             {{-- Tanggal Target --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
 
-                            {{-- Tanggal Revisi --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
-
                             {{-- Revision --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
 
-                            {{-- Tanggal Hasil --}}
+                            {{-- Status --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
 
-                            {{-- Hasil --}}
+                            {{-- Evatek Status --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
-
-                            {{-- Vendor --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                {{ $request->vendor->name_vendor ?? '-' }}
-                            </td>
 
                             {{-- Aksi --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">
@@ -217,7 +208,7 @@
                         @endforeach
                     @endif
 
-                    {{-- ✅ EMPTY STATE: HANYA JIKA TIDAK ADA ITEM SAMA SEKALI --}}
+                    {{-- ✅ EMPTY STATE --}}
                     @if($totalItems == 0)
                     <tr>
                         <td colspan="10" class="text-center text-muted" style="padding: 12px 8px;">
@@ -255,6 +246,22 @@
                     <input type="hidden" name="item_id" value="{{ $item->item_id }}">
 
                     <div class="modal-body">
+                        {{-- PIC Evatek Selection --}}
+                        <div class="mb-3">
+                            <label class="form-label" style="font-weight: 600; font-size: 14px;">Pilih PIC *</label>
+                            <select name="pic_evatek"
+                                class="form-select"
+                                required
+                                style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                                <option value="">-- Pilih PIC --</option>
+                                <option value="EO">Engineering Officer (EO)</option>
+                                <option value="HC">Head of Construction (HC)</option>
+                                <option value="MO">Material Officer (MO)</option>
+                                <option value="HO">Head of Operations (HO)</option>
+                                <option value="SEWACO">SEWACO</option>
+                            </select>
+                        </div>
+
                         {{-- Tanggal Target Input --}}
                         <div class="mb-3">
                             <label class="form-label" style="font-weight: 600; font-size: 14px;">Tanggal Target *</label>
@@ -268,7 +275,7 @@
                             <small style="color: #666;">Default: Tanggal target procurement</small>
                         </div>
 
-                        {{-- Vendor Selection (HANYA dari Inquiry & Quotation) --}}
+                        {{-- Vendor Selection --}}
                         <div class="mb-3">
                             <label class="form-label" style="font-weight: 600; font-size: 14px;">
                                 Pilih Vendor *
