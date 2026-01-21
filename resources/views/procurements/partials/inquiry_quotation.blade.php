@@ -84,7 +84,7 @@
                     </tr>
                     @endif
 
-                    {{-- ================= ROW CREATE (HANYA SAAT CHECKPOINT 4) ================= --}}
+                    {{-- ================= ROW CREATE (HANYA SAAT CHECKPOINT 2) ================= --}}
                     @if($inquiryQuotations->count() > 0 && $currentCheckpointSequence == 2)
                     <tr>
                         <td colspan="7"></td>
@@ -161,7 +161,7 @@
                             value="{{ $iq->lead_time }}">
                     </div>
 
-                    {{-- Nilai Harga --}}
+                    {{-- Nilai Harga (PERBAIKAN: Pisahkan Display & Raw) --}}
                     <div class="col-md-6">
                         <label class="form-label">Nilai Harga</label>
                         <div class="input-group">
@@ -178,9 +178,24 @@
                                 </li>
                                 @endforeach
                             </ul>
-                            <input type="text" name="nilai_harga" class="form-control currency-input"
-                                value="{{ $iq->nilai_harga }}">
-                            <input type="hidden" name="currency" id="currencyEdit{{ $iq->inquiry_quotation_id }}"
+                            
+                            {{-- INPUT DISPLAY (only for user to see formatted value) --}}
+                            <input type="text" 
+                                class="form-control currency-input"
+                                id="nilaiHargaDisplay{{ $iq->inquiry_quotation_id }}"
+                                value="{{ number_format($iq->nilai_harga, 0, ',', '.') }}"
+                                placeholder="0">
+                            
+                            {{-- INPUT RAW (hidden, actual value sent to server) --}}
+                            <input type="hidden" 
+                                name="nilai_harga"
+                                id="nilaiHargaRaw{{ $iq->inquiry_quotation_id }}"
+                                value="{{ $iq->nilai_harga ?? '' }}">
+                            
+                            {{-- INPUT CURRENCY --}}
+                            <input type="hidden" 
+                                name="currency" 
+                                id="currencyEdit{{ $iq->inquiry_quotation_id }}"
                                 value="{{ $iq->currency }}">
                         </div>
                     </div>
@@ -257,12 +272,12 @@
                         <input type="text" name="lead_time" class="form-control" placeholder="ex: 7 hari kerja">
                     </div>
 
-                    {{-- Nilai Harga --}}
+                    {{-- Nilai Harga (PERBAIKAN: Pisahkan Display & Raw) --}}
                     <div class="col-md-6">
                         <label class="form-label">Nilai Harga</label>
                         <div class="input-group">
                             <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownCurrency" data-bs-toggle="dropdown">
-                                {{ old('currency', 'IDR') }}
+                                IDR
                             </button>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" onclick="selectCurrency('IDR')">IDR</a></li>
@@ -270,8 +285,24 @@
                                 <li><a class="dropdown-item" onclick="selectCurrency('EUR')">EUR</a></li>
                                 <li><a class="dropdown-item" onclick="selectCurrency('SGD')">SGD</a></li>
                             </ul>
-                            <input type="text" name="nilai_harga" class="form-control currency-input" placeholder="0">
-                            <input type="hidden" name="currency" id="currencyInput" value="IDR">
+                            
+                            {{-- INPUT DISPLAY (only for user to see formatted value) --}}
+                            <input type="text" 
+                                class="form-control currency-input"
+                                id="nilaiHargaDisplayCreate"
+                                placeholder="0">
+                            
+                            {{-- INPUT RAW (hidden, actual value sent to server) --}}
+                            <input type="hidden" 
+                                name="nilai_harga"
+                                id="nilaiHargaRawCreate"
+                                value="">
+                            
+                            {{-- INPUT CURRENCY --}}
+                            <input type="hidden" 
+                                name="currency" 
+                                id="currencyInput"
+                                value="IDR">
                         </div>
                     </div>
 
