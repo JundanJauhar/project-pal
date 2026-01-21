@@ -15,6 +15,8 @@ class EvatekItem extends Model
         'item_id',
         'procurement_id',
         'vendor_id',
+        'pic_evatek',           // TAMBAHAN: EO, HC, MO, HO, SEWACO
+        'evatek_status',        // TAMBAHAN: evatek-vendor, evatek-desain, evatek-complete
         'start_date',
         'target_date',
         'current_revision',
@@ -69,5 +71,83 @@ class EvatekItem extends Model
     {
         return $this->hasOne(EvatekRevision::class, 'evatek_id', 'evatek_id')
             ->latest('revision_id');
+    }
+
+    // ===== TAMBAHAN: ACCESSOR & HELPER METHODS =====
+
+    /**
+     * Accessor: Get PIC label
+     */
+    public function getPicLabelAttribute()
+    {
+        $labels = [
+            'EO' => 'Engineering Officer',
+            'HC' => 'Head of Construction',
+            'MO' => 'Material Officer',
+            'HO' => 'Head of Operations',
+            'SEWACO' => 'SEWACO',
+        ];
+        return $labels[$this->pic_evatek] ?? '-';
+    }
+
+    /**
+     * Accessor: Get Evatek Status Label & Color
+     */
+    public function getEvatekStatusLabelAttribute()
+    {
+        $labels = [
+            'evatek-vendor' => 'Waiting for Vendor',
+            'evatek-desain' => 'Waiting for Design',
+            'evatek-complete' => 'Complete',
+        ];
+        return $labels[$this->evatek_status] ?? 'Unknown';
+    }
+
+    public function getEvatekStatusColorAttribute()
+    {
+        $colors = [
+            'evatek-vendor' => '#FF9800',      // Orange - Vendor pending
+            'evatek-desain' => '#2196F3',      // Blue - Design pending
+            'evatek-complete' => '#4CAF50',    // Green - Complete
+        ];
+        return $colors[$this->evatek_status] ?? '#999';
+    }
+
+    /**
+     * Helper: Check if vendor link is filled
+     */
+    public function hasVendorLink()
+    {
+        $latestRevision = $this->latestRevision()->first();
+        return $latestRevision && !empty($latestRevision->vendor_link);
+    }
+
+    /**
+     * Helper: Check if design link is filled
+     */
+    public function hasDesignLink()
+    {
+        $latestRevision = $this->latestRevision()->first();
+        return $latestRevision && !empty($latestRevision->design_link);
+    }
+
+    /**
+     * Auto-update evatek_status based on link input
+     * Harus dipanggil dari controller setelah update link
+     */
+    public function updateEvatekStatus()
+    {
+        $hasVendor = $this->hasVendorLink();
+        $hasDesign = $this->hasDesignLink();
+
+        if (!$hasVendor) {
+            $this->evatek_status = 'evatek-vendor';
+        } elseif (!$hasDesign) {
+            $this->evatek_status = 'evatek-desain';
+        } else {
+            $this->evatek_status = 'evatek-complete';
+        }
+
+        $this->save();
     }
 }
