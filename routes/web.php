@@ -65,6 +65,9 @@ Route::middleware('auth:vendor')->group(function () {
     Route::get('/vendor', [VendorEvatekController::class, 'index'])
         ->name('vendor.index');
 
+    Route::get('/vendor/notifications', [VendorEvatekController::class, 'notifications'])
+        ->name('vendor.notifications');
+
     Route::get('/vendor/profile', [VendorEvatekController::class, 'profile'])
         ->name('vendor.profile');
 

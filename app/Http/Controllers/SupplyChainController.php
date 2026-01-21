@@ -738,10 +738,17 @@ class SupplyChainController extends Controller
 
             $revision = ContractReviewRevision::findOrFail($validated['revision_id']);
 
-            $revision->update([
-                'vendor_link' => $validated['vendor_link'],
-                'sc_link' => $validated['sc_link'],
-            ]);
+            $updateData = [];
+            if ($request->has('vendor_link')) {
+                $updateData['vendor_link'] = $validated['vendor_link'];
+            }
+            if ($request->has('sc_link')) {
+                $updateData['sc_link'] = $validated['sc_link'];
+            }
+
+            if (!empty($updateData)) {
+                $revision->update($updateData);
+            }
 
             return response()->json(['success' => true]);
         } catch (\Exception $e) {

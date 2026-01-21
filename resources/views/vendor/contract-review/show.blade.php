@@ -279,10 +279,6 @@ function saveLink(row) {
     .then(r => {
         if (r.success) {
             row.querySelector(".link-status").innerText = "Saved";
-            
-            const logMessage = `✓ Vendor link saved for ${row.dataset.rev}`;
-            addLog(logMessage);
-            saveLogToDatabase(logMessage);
         }
     });
 }
