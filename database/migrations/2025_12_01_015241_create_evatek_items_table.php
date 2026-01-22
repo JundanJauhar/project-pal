@@ -13,14 +13,24 @@ return new class extends Migration {
             $table->unsignedBigInteger('procurement_id');
             $table->unsignedBigInteger('vendor_id')->nullable();
 
+            // ===== TAMBAHAN: PIC & Status Evatek =====
+            $table->enum('pic_evatek', ['EO', 'HC', 'MO', 'HO', 'SEWACO'])
+                ->nullable()
+                ->comment('EO=Engineering Officer, HC=Head of Construction, MO=Material Officer, HO=Head of Operations');
+
+            $table->enum('evatek_status', ['evatek-vendor', 'evatek-desain'])
+                ->nullable()
+                ->default(null)
+                ->comment('evatek-vendor=Waiting for vendor link, evatek-desain=Waiting for design link, null=Complete or Final');
+
             // Timeline & Process Information
             $table->date('start_date')->nullable();
             $table->date('target_date')->nullable();
 
             // Current status summary (always refers to last revision)
             $table->string('current_revision')->default('R0');
-            $table->enum('status', ['approve','not_approve','on_progress'])
-                  ->default('on_progress');
+            $table->enum('status', ['approve', 'not_approve', 'on_progress'])
+                ->default('on_progress');
             $table->date('current_date')->nullable();
 
             // Log activity
@@ -36,6 +46,8 @@ return new class extends Migration {
             $table->index('procurement_id');
             $table->index('vendor_id');
             $table->index('status');
+            $table->index('pic_evatek');
+            $table->index('evatek_status');
         });
     }
 

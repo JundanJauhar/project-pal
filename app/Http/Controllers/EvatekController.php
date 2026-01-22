@@ -10,13 +10,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\ActivityLogger;
 
-
-
 class EvatekController extends Controller
 {
     /**
      * Show Evatek review page for a selected evatek item
-     * ✅ PERBAIKAN: Gunakan $evatekId bukan $itemId
      */
     public function review($evatekId)
     {
@@ -45,7 +42,6 @@ class EvatekController extends Controller
             $revisions = collect([$revision]);
         }
 
-        // 🔧 FIX: gunakan $evatek->evatek_id, bukan $itemId
         ActivityLogger::log(
             module: 'Evatek',
             action: 'view_evatek_review',
@@ -56,7 +52,6 @@ class EvatekController extends Controller
             ]
         );
 
-        // Opsional: kalau kolom log boleh null, baris ini bisa dihapus
         if ($evatek->log === null) {
             $evatek->log = '';
         }
@@ -64,9 +59,9 @@ class EvatekController extends Controller
         return view('desain.review-evatek', compact('item', 'evatek', 'revisions'));
     }
 
-
-
-
+    /**
+     * Show daftar permintaan evatek
+     */
     public function daftarPermintaan($procurementId)
     {
         $evatekItems = EvatekItem::with([
@@ -112,20 +107,22 @@ class EvatekController extends Controller
         return view('desain.daftar-permintaan', compact('evatekItems', 'unreadEvatekIds'));
     }
 
-
-
-
     /**
      * Save vendor/design link for a revision
+     * ✅ AUTO-UPDATE evatek_status setelah link disimpan
      */
     public function saveLink(Request $request)
     {
         $revision = EvatekRevision::findOrFail($request->revision_id);
+        $evatek = EvatekItem::findOrFail($revision->evatek_id);
 
         $revision->update([
             'vendor_link' => $request->vendor_link,
             'design_link' => $request->design_link,
         ]);
+
+        // ✅ AUTO-UPDATE EVATEK STATUS
+        $this->updateEvatekStatus($evatek);
 
         ActivityLogger::log(
             module: 'Evatek',
@@ -135,15 +132,15 @@ class EvatekController extends Controller
                 'user_id' => Auth::id(),
                 'vendor_link' => $request->vendor_link,
                 'design_link' => $request->design_link,
+                'evatek_status' => $evatek->evatek_status,
             ]
         );
 
         return response()->json(['success' => true]);
     }
 
-
     /**
-     * ✅ NEW: Save activity log to database
+     * Save activity log to database
      */
     public function saveLog(Request $request)
     {
@@ -156,15 +153,14 @@ class EvatekController extends Controller
         return response()->json(['success' => true]);
     }
 
-
     /**
      * Approve revision
+     * ✅ UPDATE evatek_status setelah approve
      */
     public function approve(Request $request)
     {
         $revision = EvatekRevision::findOrFail($request->revision_id);
 
-        // Ensure evatek_id is set
         if (!$revision->evatek_id) {
             return response()->json(['success' => false, 'message' => 'Revision not linked to evatek item'], 400);
         }
@@ -174,7 +170,6 @@ class EvatekController extends Controller
             'approved_at' => now(),
         ]);
 
-        // Update summary on evatek_items
         $evatek = EvatekItem::findOrFail($revision->evatek_id);
         $evatek->update([
             'current_revision' => $revision->revision_code,
@@ -195,32 +190,21 @@ class EvatekController extends Controller
         // Ambil procurement terkait
         $procurement = $evatek->procurement;
 
-        // Ambil semua EVATEK milik procurement ini
-        $allEvatek = $procurement->evatekItems()->get();
-
-        // Kalau belum ada sama sekali, jangan apa-apa
-        if ($allEvatek->isNotEmpty()) {
-
-            // Semua item yang punya EVATEK di procurement ini
+        if ($procurement && $procurement->evatekItems()->count() > 0) {
+            $allEvatek = $procurement->evatekItems()->get();
             $allItemIds = $allEvatek->pluck('item_id')->unique();
-
-            // Item yang sudah punya minimal satu vendor approve
             $itemIdsWithApproved = $allEvatek
                 ->where('status', 'approve')
                 ->pluck('item_id')
                 ->unique();
 
-            // Cek apakah semua item sudah punya minimal satu vendor approve
             $missingItems = $allItemIds->diff($itemIdsWithApproved);
 
             if ($missingItems->isEmpty()) {
-                // Semua item sudah ada vendor approve → auto pindah checkpoint
                 $service = new \App\Services\CheckpointTransitionService($procurement);
                 $service->completeCurrentAndMoveNext("Semua item sudah punya vendor approve di Evatek");
             }
         }
-
-
 
         ActivityLogger::log(
             module: 'Evatek',
@@ -235,15 +219,14 @@ class EvatekController extends Controller
         return response()->json(['success' => true]);
     }
 
-
     /**
      * Reject revision
+     * ✅ UPDATE evatek_status setelah reject
      */
     public function reject(Request $request)
     {
         $revision = EvatekRevision::findOrFail($request->revision_id);
 
-        // Ensure evatek_id is set
         if (!$revision->evatek_id) {
             return response()->json(['success' => false, 'message' => 'Revision not linked to evatek item'], 400);
         }
@@ -253,7 +236,6 @@ class EvatekController extends Controller
             'not_approved_at' => now(),
         ]);
 
-        // Update summary
         $evatek = EvatekItem::findOrFail($revision->evatek_id);
         $evatek->update([
             'current_revision' => $revision->revision_code,
@@ -284,27 +266,27 @@ class EvatekController extends Controller
         return response()->json(['success' => true]);
     }
 
+    /**
+     * Request revision (Revise)
+     * ✅ RESET evatek_status ke null saat ada revisi (link dihapus, akan update otomatis)
+     */
     public function revise(Request $request)
     {
         $revision = EvatekRevision::findOrFail($request->revision_id);
 
-        // Ensure evatek_id is set
         if (!$revision->evatek_id) {
             return response()->json(['success' => false, 'message' => 'Revision not linked to evatek item'], 400);
         }
 
-        // Current becomes "revisi"
         $revision->update([
             'status' => 'revisi',
         ]);
 
         $evatek = EvatekItem::findOrFail($revision->evatek_id);
 
-        // Generate next revision code
         $num = intval(substr($revision->revision_code, 1)) + 1;
         $nextCode = "R{$num}";
 
-        // Create next revision row
         $nextRev = EvatekRevision::create([
             'evatek_id' => $evatek->evatek_id,
             'revision_code' => $nextCode,
@@ -312,11 +294,11 @@ class EvatekController extends Controller
             'date' => now()->toDateString(),
         ]);
 
-        // Update summary
         $evatek->update([
             'current_revision' => $nextCode,
             'status' => 'on_progress',
             'current_date' => now()->toDateString(),
+            'evatek_status' => null,  // ✅ Reset ke null (kosong)
         ]);
 
         // Notify Vendor
@@ -344,5 +326,72 @@ class EvatekController extends Controller
             'success' => true,
             'new_revision' => $nextRev,
         ]);
+    }
+
+    // ===== HELPER METHODS =====
+
+    /**
+     * ✅ HELPER: Auto-update evatek_status berdasarkan link input
+     * 
+     * Logic:
+     * - Default (awal) → NULL (tampil -)
+     * - Jika vendor_link kosong → 'evatek-vendor' (vendor belum input)
+     * - Jika design_link kosong → 'evatek-desain' (design belum input)
+     * - Jika kedua ada → NULL (tampil -)
+     * - Jika status sudah approve/not_approve → NULL (tampil -)
+     */
+    private function updateEvatekStatus(EvatekItem $evatek)
+    {
+        // Jika status sudah final (approve/not_approve), status evatek kosong
+        if ($evatek->status === 'approve' || $evatek->status === 'not_approve') {
+            $evatek->evatek_status = null;
+            $evatek->save();
+            return;
+        }
+
+        $latestRevision = $evatek->revisions()->latest('revision_id')->first();
+
+        if (!$latestRevision) {
+            $evatek->evatek_status = null;  // Default kosong
+            $evatek->save();
+            return;
+        }
+
+        $hasVendorLink = !empty($latestRevision->vendor_link);
+        $hasDesignLink = !empty($latestRevision->design_link);
+
+        // Jika kedua ada, status kosong (semua lengkap)
+        if ($hasVendorLink && $hasDesignLink) {
+            $evatek->evatek_status = null;
+        } elseif (!$hasVendorLink && $hasDesignLink) {
+            // Design sudah ada tapi vendor kosong
+            $evatek->evatek_status = 'evatek-vendor';
+        } elseif ($hasVendorLink && !$hasDesignLink) {
+            // Vendor sudah ada tapi design kosong
+            $evatek->evatek_status = 'evatek-desain';
+        } else {
+            // Kedua kosong → null (default)
+            $evatek->evatek_status = null;
+        }
+
+        $evatek->save();
+    }
+
+    /**
+     * ✅ HELPER: Check if vendor link exists
+     */
+    private function hasVendorLink(EvatekItem $evatek)
+    {
+        $latestRevision = $evatek->revisions()->latest('revision_id')->first();
+        return $latestRevision && !empty($latestRevision->vendor_link);
+    }
+
+    /**
+     * ✅ HELPER: Check if design link exists
+     */
+    private function hasDesignLink(EvatekItem $evatek)
+    {
+        $latestRevision = $evatek->revisions()->latest('revision_id')->first();
+        return $latestRevision && !empty($latestRevision->design_link);
     }
 }

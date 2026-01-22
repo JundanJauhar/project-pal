@@ -10,6 +10,7 @@ use App\Models\Item;
 use App\Models\Vendor;
 use App\Models\Notification;
 use App\Models\EvatekItem;
+use App\Models\EvatekRevision;
 use App\Models\ContractReview;
 use App\Models\ContractReviewRevision;
 use Illuminate\Http\Request;
@@ -191,6 +192,7 @@ class SupplyChainController extends Controller
             'item_id' => 'required|exists:items,item_id',
             'vendor_ids' => 'required|array|min:1',
             'vendor_ids.*' => 'required|exists:vendors,id_vendor',
+            'pic_evatek' => 'required|in:EO,HC,MO,HO,SEWACO',  // TAMBAHAN
             'target_date' => 'nullable|date|after_or_equal:today',
         ]);
 
@@ -225,6 +227,8 @@ class SupplyChainController extends Controller
                     'project_id' => $procurement->project_id,
                     'item_id' => $item->item_id,
                     'vendor_id' => $vendorId,
+                    'pic_evatek' => $validated['pic_evatek'],  // Simpan PIC
+                    'evatek_status' => null,                    // ✅ Default null (kosong/-)
                     'start_date' => now(),
                     'target_date' => $validated['target_date'] ?? $procurement->end_date,
                     'current_revision' => 'R0',
@@ -275,6 +279,7 @@ class SupplyChainController extends Controller
                 details: [
                     'procurement_id' => $procurementId,
                     'vendors' => $createdVendors,
+                    'pic_evatek' => $validated['pic_evatek'],  // TAMBAHAN: Log PIC
                     'user_id' => Auth::id(),
                 ]
             );
@@ -463,7 +468,14 @@ class SupplyChainController extends Controller
             $vendor = Vendor::findOrFail($id);
 
             $validated = $request->validate([
+                'vendor_code' => [
+                    'required',
+                    'string',
+                    'max:10',
+                    'regex:/^(AS|AD|AL)(-[0-9]{3})?$/'
+                ],
                 'name_vendor' => 'required|string|max:255',
+                'specialization' => 'required|in:jasa,material_lokal,material_impor',
                 'phone_number' => 'required|string|max:20',
                 'email' => 'required|email|max:255',
                 'address' => 'nullable|string|max:500',
@@ -471,7 +483,9 @@ class SupplyChainController extends Controller
             ]);
 
             $vendor->update([
+                'vendor_code' => strtoupper($validated['vendor_code']),
                 'name_vendor' => $validated['name_vendor'],
+                'specialization' => $validated['specialization'],
                 'phone_number' => $validated['phone_number'],
                 'email' => $validated['email'],
                 'address' => $validated['address'] ?? null,
@@ -535,7 +549,14 @@ class SupplyChainController extends Controller
     public function storeVendor(Request $request)
     {
         $validated = $request->validate([
+            'vendor_code' => [
+                'required',
+                'string',
+                'max:10',
+                'regex:/^(AS|AD|AL)(-[0-9]{3})?$/'
+            ],
             'name_vendor' => 'required|string|max:255|unique:vendors,name_vendor',
+            'specialization' => 'required|in:jasa,material_lokal,material_impor',
             'address' => 'nullable|string|max:500',
             'phone_number' => 'required|string|max:20',
             'email' => 'required|email|max:255|unique:vendors,email',
@@ -545,11 +566,13 @@ class SupplyChainController extends Controller
         DB::beginTransaction();
         try {
             $vendor = Vendor::create([
-                'name_vendor'  => $validated['name_vendor'],
-                'address'      => $validated['address'] ?? null,
+                'vendor_code' => strtoupper($validated['vendor_code']),
+                'name_vendor' => $validated['name_vendor'],
+                'specialization' => $validated['specialization'],
+                'address' => $validated['address'] ?? null,
                 'phone_number' => $validated['phone_number'],
-                'email'        => $validated['email'],
-                'is_importer'  => $request->has('is_importer'),
+                'email' => $validated['email'],
+                'is_importer' => $request->has('is_importer') ? 1 : 0,
             ]);
 
             ActivityLogger::log(
@@ -567,10 +590,10 @@ class SupplyChainController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error($e->getMessage());
-            return back()->with('error', 'Gagal menambahkan vendor.');
+            return back()->with('error', 'Gagal menambahkan vendor.')
+                ->withInput();
         }
     }
-
 
     public function updateMaterialArrival(Request $request, $procurementId)
     {

@@ -17,7 +17,9 @@ class Vendor extends Authenticatable
     public $incrementing = true;
     
     protected $fillable = [
+        'vendor_code',           // TAMBAHAN: AS, AD, AL
         'name_vendor',
+        'specialization',        // TAMBAHAN: jasa, material_lokal, material_impor
         'address',
         'phone_number',
         'email',
@@ -106,5 +108,51 @@ class Vendor extends Authenticatable
     public function evatekItems()
     {
         return $this->hasMany(EvatekItem::class, 'vendor_id', 'id_vendor');
+    }
+
+    // ===== TAMBAHAN RELASI & ACCESSOR =====
+
+    /**
+     * Relationship: Contract reviews dengan vendor ini
+     */
+    public function contractReviews()
+    {
+        return $this->hasMany(ContractReview::class, 'vendor_id', 'id_vendor');
+    }
+
+    /**
+     * Relationship: Material deliveries dari vendor ini
+     */
+    public function materialDeliveries()
+    {
+        return $this->hasMany(MaterialDelivery::class, 'vendor_id', 'id_vendor');
+    }
+
+    /**
+     * Accessor: Get specialization label
+     * Contoh: 'jasa' -> 'Jasa'
+     */
+    public function getSpecializationLabelAttribute()
+    {
+        $labels = [
+            'jasa' => 'Jasa',
+            'material_lokal' => 'Material Lokal',
+            'material_impor' => 'Material Impor',
+        ];
+        return $labels[$this->specialization] ?? 'Unknown';
+    }
+
+    /**
+     * Accessor: Get specialization badge class untuk styling
+     * Contoh: 'jasa' -> 'spec-jasa'
+     */
+    public function getSpecializationBadgeAttribute()
+    {
+        $badges = [
+            'jasa' => 'spec-jasa',
+            'material_lokal' => 'spec-material-lokal',
+            'material_impor' => 'spec-material-impor',
+        ];
+        return $badges[$this->specialization] ?? 'spec-jasa';
     }
 }

@@ -70,8 +70,9 @@ class InspectionController extends Controller
         $user = Auth::user();
 
         // checkpoint "Inspeksi Barang"
-        $inspectionCheckpointId = Checkpoint::where('point_name', 'Inspeksi Barang')
-            ->value('point_id') ?? 13;
+        $inspectionCheckpointId = Checkpoint::where('point_name', 'Kedatangan Material')
+            ->value('point_id');
+
 
         // =========================
         // ROLE QA
@@ -86,12 +87,12 @@ class InspectionController extends Controller
              * bukan dari status di procurement_progress.
              */
             $baseQuery = Procurement::with([
-                    'project',
-                    'department',
-                    'requestProcurements.items.inspectionReports',
-                    'requestProcurements.vendor',
-                    'procurementProgress',
-                ])
+                'project',
+                'department',
+                'requestProcurements.items.inspectionReports',
+                'requestProcurements.vendor',
+                'procurementProgress',
+            ])
                 ->whereHas('procurementProgress', function ($q) use ($inspectionCheckpointId) {
                     $q->where('checkpoint_id', $inspectionCheckpointId);
                 })
@@ -220,11 +221,11 @@ class InspectionController extends Controller
         // (tetap bisa pakai kartu global, tapi daftar yang ditampilkan = inspection reports)
         // =========================
         $allProcurements = Procurement::with([
-                'project',
-                'department',
-                'requestProcurements.items.inspectionReports',
-                'requestProcurements.vendor',
-            ])
+            'project',
+            'department',
+            'requestProcurements.items.inspectionReports',
+            'requestProcurements.vendor',
+        ])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -262,15 +263,15 @@ class InspectionController extends Controller
             ->orderBy('inspection_date', 'desc')
             ->paginate(20);
 
-            ActivityLogger::log(
-                module: 'Inspection',
-                action: 'view_inspection_dashboard_nonqa',
-                targetId: null,
-                details: [
-                    'user_id' => $user->user_id,
-                    'cards' => $cards,
-                ]
-            );
+        ActivityLogger::log(
+            module: 'Inspection',
+            action: 'view_inspection_dashboard_nonqa',
+            targetId: null,
+            details: [
+                'user_id' => $user->user_id,
+                'cards' => $cards,
+            ]
+        );
 
         return view('qa.inspections', array_merge($cards, [
             'inspections' => $inspections,

@@ -562,16 +562,23 @@
      * HARUS DIDEFINISIKAN PALING AWAL (sebelum event listeners lain)
      */
     document.addEventListener('input', function(e) {
+        // ✅ Hanya tangkap input dengan class currency-input
         if (!e.target.classList.contains('currency-input')) return;
 
+        // ✅ Bersihkan semua karakter non-digit
         const raw = e.target.value.replace(/\D/g, '');
-        e.target.value = raw ? new Intl.NumberFormat('id-ID').format(raw) : '';
 
-        // Cari hidden input terdekat
-        const wrapper = e.target.closest('.input-group');
-        if (!wrapper) return;
+        // ✅ Format display input dengan separator ribuan
+        e.target.value = raw ?
+            new Intl.NumberFormat('id-ID').format(raw) :
+            '';
 
-        const hidden = wrapper.querySelector('input[type="hidden"][name="nilai_harga"]');
+        // ✅ KUNCI: Ambil target hidden input dari data-attribute
+        const rawTargetId = e.target.dataset.rawTarget;
+        if (!rawTargetId) return;
+
+        // ✅ Update HANYA hidden input milik field ini
+        const hidden = document.getElementById(rawTargetId);
         if (hidden) hidden.value = raw;
     });
 
@@ -581,12 +588,27 @@
      * FORMAT CURRENCY SAAT MODAL DIBUKA (EDIT)
      * =========================================
      */
+    /**
+     * =========================================
+     * FORMAT CURRENCY SAAT MODAL DIBUKA (EDIT)
+     * =========================================
+     */
     document.addEventListener('shown.bs.modal', function(e) {
         const inputs = e.target.querySelectorAll('.currency-input');
 
         inputs.forEach(input => {
+            // ✅ Bersihkan format lama
             let value = input.value.replace(/\D/g, '');
+
+            // ✅ Format ulang dengan separator ribuan
             input.value = value ? new Intl.NumberFormat('id-ID').format(value) : '';
+
+            // ✅ Update hidden input
+            const rawTargetId = input.dataset.rawTarget;
+            if (rawTargetId) {
+                const hidden = document.getElementById(rawTargetId);
+                if (hidden) hidden.value = value;
+            }
         });
     });
 

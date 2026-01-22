@@ -244,9 +244,22 @@
                                 </li>
                                 @endforeach
                             </ul>
-                            <input type="text" name="nilai" class="form-control currency-input"
-                                value="{{ $kontrak->nilai }}">
-                            <input type="hidden" name="currency" id="currencyKontrakEdit{{ $kontrak->kontrak_id }}"
+                            {{-- DISPLAY --}}
+                            <input type="text"
+                                class="form-control currency-input"
+                                data-raw-target="nilaiKontrakRaw{{ $kontrak->kontrak_id }}"
+                                value="{{ number_format($kontrak->nilai ?? 0, 0, ',', '.') }}">
+
+                            {{-- RAW --}}
+                            <input type="hidden"
+                                name="nilai"
+                                id="nilaiKontrakRaw{{ $kontrak->kontrak_id }}"
+                                value="{{ $kontrak->nilai ?? '' }}">
+
+                            {{-- CURRENCY --}}
+                            <input type="hidden"
+                                name="currency"
+                                id="currencyKontrakEdit{{ $kontrak->kontrak_id }}"
                                 value="{{ $kontrak->currency }}">
                         </div>
                     </div>
@@ -391,8 +404,23 @@
                                 </li>
                                 @endforeach
                             </ul>
-                            <input type="text" name="nilai" class="form-control currency-input" placeholder="0">
-                            <input type="hidden" name="currency" id="currencyCreateNilaiKontrak" value="IDR">
+                            {{-- DISPLAY --}}
+                            <input type="text"
+                                class="form-control currency-input"
+                                data-raw-target="nilaiKontrakCreateRaw"
+                                placeholder="0">
+
+                            {{-- RAW --}}
+                            <input type="hidden"
+                                name="nilai"
+                                id="nilaiKontrakCreateRaw"
+                                value="">
+
+                            {{-- CURRENCY --}}
+                            <input type="hidden"
+                                name="currency"
+                                id="currencyCreateNilaiKontrak"
+                                value="IDR">
                         </div>
                     </div>
 
