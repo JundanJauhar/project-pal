@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Notifikasi - Vendor')
+@section('title', 'Notifikasi - Desain')
 
 @push('styles')
 <style>
@@ -23,10 +23,6 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         border-color: #ccc;
-    }
-    .notif-card.unread {
-        background-color: #f0f7ff; /* Light blue */
-        border-color: #0056b3;
     }
     .notif-icon-box {
         width: 50px;
@@ -75,6 +71,7 @@
     .btn-action:hover {
         background: #b71c1c;
         color: white;
+        border: none;
     }
     
     .empty-state {
@@ -102,16 +99,10 @@
     @if($notifications->count() > 0)
         @foreach($notifications as $notif)
             @php
-                $isRead = $notif->is_read ?? false;
-                $isStored = $notif->is_stored ?? false;
-                // Tasks are always "unread" style until done? Or specific style?
-                // User said: "notif yang belum di click ... warnanya beda".
-                // We'll treat tasks as separate urgency.
-                $cardClass = (!$isRead) ? 'notif-card unread' : 'notif-card';
-                $onclick = ($isStored && !$isRead) ? "markAsRead('{$notif->id}', this)" : "";
+                 $isRead = $notif->is_read ?? false;
+                 $isStored = $notif->is_stored ?? false;
             @endphp
-
-            <div class="{{ $cardClass }}" 
+            <div class="notif-card" 
                  style="border-left: 5px solid {{ $notif->color }}; cursor: pointer;"
                  onclick="handleCardClick('{{ $notif->link }}', '{{ $notif->id }}', {{ ($isStored && !$isRead) ? 'true' : 'false' }}, this)">
                 
@@ -121,8 +112,8 @@
                     </div>
                     <div class="notif-content">
                         <div class="notif-title">
-                            {{ $notif->title }} 
-                            @if(!$isRead) <span class="badge bg-danger rounded-pill ms-2" style="font-size: 10px;">Baru</span> @endif
+                            {{ $notif->title }}
+                            @if(!$isRead && $isStored) <span class="badge bg-danger rounded-pill ms-2" style="font-size: 10px;">Baru</span> @endif
                         </div>
                         <div class="notif-message">{{ $notif->message }}</div>
                         <div class="notif-time">
@@ -131,7 +122,6 @@
                     </div>
                 </div>
                 <div style="flex-shrink: 0;">
-                    {{-- Stop propagation to prevent double click if button clicked directly --}}
                     <a href="javascript:void(0);" onclick="event.stopPropagation(); handleCardClick('{{ $notif->link }}', '{{ $notif->id }}', {{ ($isStored && !$isRead) ? 'true' : 'false' }}, this.closest('.notif-card'));" class="btn-action" style="background: {{ $notif->color }};">
                         {{ $notif->action_label ?? 'Lihat Detail' }} <i class="bi bi-arrow-right ms-1"></i>
                     </a>
@@ -146,62 +136,42 @@
         </div>
     @endif
 </div>
-
 @push('scripts')
 <script>
     function handleCardClick(url, id, shouldMarkRead, element) {
-        // Prepare navigation function
+        // Prepare navigation
         const navigate = () => {
             if (url && url !== '#' && url !== '') {
                 window.location.href = url;
             }
         };
 
-        // If we need to mark as read, do it first (async), then navigate
+        // If stored notification, mark read first
         if (shouldMarkRead && id) {
-            markAsRead(id, element, navigate);
+            // Optimistic UI update
+            if(element) {
+                // Design notifications view currently doesn't have specific unread styling class but we can add it later if needed
+            }
+            
+            fetch(`{{ url('/notifications') }}/${id}/read`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Success
+            })
+            .catch(err => console.error(err))
+            .finally(() => {
+                navigate();
+            });
         } else {
-            // Just navigate immediately if no need to mark read (or already read)
             navigate();
         }
-    }
-
-    function markAsRead(id, element, callback) {
-        if(!id) {
-            if(callback) callback();
-            return;
-        }
-
-        // Virtual ID check (tasks)
-        if(id.toString().startsWith('task_')) {
-            if(callback) callback();
-            return;
-        }
-
-        // Optimistic UI Update
-        if(element) {
-            element.classList.remove('unread');
-            const badge = element.querySelector('.badge');
-            if(badge) badge.remove();
-        }
-        
-        fetch(`{{ url('/vendor/notifications') }}/${id}/read`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Success
-        })
-        .catch(err => console.error(err))
-        .finally(() => {
-            if(callback) callback();
-        });
     }
 </script>
 @endpush
 @endsection
-

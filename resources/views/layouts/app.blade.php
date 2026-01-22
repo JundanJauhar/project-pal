@@ -672,9 +672,16 @@
                         // Check for notification count
                         $vendorId = Auth::guard('vendor')->id();
                         $notifCount = 0;
-                        $currentReviewId = request()->route('id'); // Capture current viewing ID if any
                         
                         if($vendorId) {
+                            // 1. STORED NOTIFICATIONS (Events)
+                            $storedCount = \App\Models\VendorNotification::where('vendor_id', $vendorId)
+                                ->where('is_read', false)
+                                ->count();
+                            $notifCount += $storedCount;
+
+                            // 2. COMPUTED TASKS (Contract Review)
+                            // "Tasks" are always considered "Action Needed"
                             $reviews = \App\Models\ContractReview::where('vendor_id', $vendorId)
                                 ->with(['revisions' => function($q) {
                                     $q->orderBy('contract_review_revision_id', 'desc');
@@ -682,26 +689,27 @@
                                 ->get();
                                 
                             foreach($reviews as $rev) {
-                                // Exclude if currently viewing this contract
-                                if($currentReviewId && $currentReviewId == $rev->contract_review_id) continue;
-
                                 $latest = $rev->revisions->first();
                                 if(!$latest) continue;
                                 
-                                // Condition 1: Final Decisions (Approve, Not Approve) - Show only if recent (e.g., < 3 days)
-                                if(in_array($latest->result, ['approve', 'not_approve'])) {
-                                    $date = $latest->updated_at ?? $latest->created_at;
-                                    if(\Carbon\Carbon::parse($date)->diffInDays(now()) <= 3) {
-                                        $notifCount++;
-                                    }
-                                    continue;
-                                }
-                                
-                                // Condition 2: Action Needed (Pending/Revisi + No Link)
-                                // This is a "To Do" item, so we always show it until done.
+                                // Action Needed (Pending/Revisi + No Link)
                                 if((!$latest->result || $latest->result == 'pending' || $latest->result == 'revisi') && empty($latest->vendor_link)) {
                                     $notifCount++;
-                                    continue;
+                                }
+                            }
+                            
+                            // 3. COMPUTED TASKS (Evatek)
+                            $evatekItems = \App\Models\EvatekItem::where('vendor_id', $vendorId)
+                                ->with('latestRevision')
+                                ->get();
+
+                            foreach($evatekItems as $evk) {
+                                $latest = $evk->latestRevision;
+                                if(!$latest) continue;
+
+                                // Action Needed (Pending + No Link) OR Revisi + No Link
+                                if(($latest->status == 'pending' || $latest->status == 'revisi') && empty($latest->vendor_link)) {
+                                    $notifCount++;
                                 }
                             }
                         }
@@ -795,6 +803,8 @@
                             </a>
                         </li>
                         @endif
+
+                        
 
                         @if(Auth::user()->roles === 'supply_chain')
                         <li class="nav-item">
