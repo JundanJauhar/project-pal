@@ -236,12 +236,33 @@ class SupplyChainController extends Controller
                     'current_date' => null,
                 ]);
 
-                // ✅ Create initial revision R0
-                EvatekRevision::create([
-                    'evatek_id' => $evatek->evatek_id,
-                    'revision_code' => 'R0',
-                    'status' => 'pending',
-                    'date' => now()->toDateString(),
+                // Notify Desain Users
+                $desainUsers = \App\Models\User::where('roles', 'desain')->get();
+                $vendorName = \App\Models\Vendor::find($vendorId)->name_vendor ?? 'Vendor';
+                
+                foreach ($desainUsers as $user) {
+                    Notification::create([
+                        'user_id' => $user->user_id,
+                        'sender_id' => Auth::id(),
+                        'type' => 'info',
+                        'title' => 'Proses Evatek Dimulai',
+                        'message' => "Proses Evatek dimulai untuk item '{$item->item_name}' dengan vendor {$vendorName}. Silakan cek.",
+                        'action_url' => route('desain.review-evatek', $evatek->evatek_id),
+                        'reference_type' => 'App\Models\EvatekItem',
+                        'reference_id' => $evatek->evatek_id,
+                        'is_read' => false,
+                        'created_at' => now(),
+                    ]);
+                }
+
+                // Notify Vendor
+                \App\Models\VendorNotification::create([
+                    'vendor_id' => $vendorId,
+                    'type' => 'info',
+                    'title' => 'Evatek Baru',
+                    'message' => "Anda telah ditunjuk untuk proses Evatek item '{$item->item_name}'. Silakan unggah dokumen teknis.",
+                    'link' => route('vendor.evatek.review', $evatek->evatek_id),
+                    'created_at' => now(),
                 ]);
 
                 $createdVendors[] = $vendorId;

@@ -1,0 +1,4 @@
+$users = App\Models\User::all();
+foreach($users as $u) { echo "User: {$u->name} | Role: '{$u->roles}'\n"; }
+$items = App\Models\EvatekItem::where('status', 'on_progress')->with('latestRevision')->get();
+foreach($items as $i) { echo "EvatekID:{$i->evatek_id} | RevCode:{$i->latestRevision?->revision_code} | RevStatus:{$i->latestRevision?->status} | Link:" . ($i->latestRevision?->vendor_link ? 'YES' : 'NO') . "\n"; }

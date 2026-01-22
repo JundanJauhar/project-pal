@@ -52,10 +52,16 @@ class Project extends Model
     /**
      * Get the latest Evatek record for this project
      */
-    public function evatek(): HasOne
+    public function evatek(): HasOneThrough
     {
-        return $this->hasOne(Evatek::class, 'project_id', 'project_id')
-            ->latestOfMany('evatek_id');
+        return $this->hasOneThrough(
+            EvatekItem::class,
+            Procurement::class,
+            'project_id',
+            'procurement_id',
+            'project_id',
+            'procurement_id'
+        )->latestOfMany('evatek_id');
     }
 
     /**
@@ -84,9 +90,16 @@ class Project extends Model
     /**
      * Get evaluations for this project
      */
-    public function evaluations(): HasMany
+    public function evaluations(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
     {
-        return $this->hasMany(Evatek::class, 'project_id', 'project_id');
+        return $this->hasManyThrough(
+            EvatekItem::class,
+            Procurement::class,
+            'project_id',
+            'procurement_id',
+            'project_id',
+            'procurement_id'
+        );
     }
 
     /**

@@ -1,0 +1,3 @@
+echo "Total Pending: " . App\Models\EvatekItem::whereHas('latestRevision', function($q){ $q->where('status','pending'); })->count() . "\n";
+echo "Pending & NotNull Link: " . App\Models\EvatekItem::whereHas('latestRevision', function($q){ $q->where('status','pending')->whereNotNull('vendor_link'); })->count() . "\n";
+echo "Pending & Link != '': " . App\Models\EvatekItem::whereHas('latestRevision', function($q){ $q->where('status','pending')->where('vendor_link', '!=', ''); })->count() . "\n";

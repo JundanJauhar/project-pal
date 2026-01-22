@@ -45,16 +45,24 @@
 .link-status { font-size: 12px; color: #777; }
 
 /* buttons */
-.action-btn { border: none; font-size: 12px; font-weight: 700; border-radius: 14px; padding: 6px 14px; cursor: pointer; width: 100px; margin: 3px auto; color: white; }
+.action-btn { border: none; font-size: 12px; font-weight: 700; border-radius: 14px; padding: 6px 14px; cursor: pointer; width: 100px; margin: 3px auto; color: white; transition: all 0.3s ease; }
 .btn-upload { background: #000; }
-.btn-approve { background: #28a745; }
-.btn-reject { background: #d62828; }
-.btn-revisi { background: #ffcc00; }
+.btn-save { background: #007bff; } /* Blue for Save Status */
 
-/* ✅ Disabled state */
+/* Default state: Gray for decision buttons */
+.btn-approve, .btn-reject, .btn-revisi { background: #e0e0e0; color: #555; }
+
+/* Active states */
+.btn-approve.active { background: #28a745; color: white; }
+.btn-reject.active { background: #d62828; color: white; }
+.btn-revisi.active { background: #ffc107; color: white; }
+
+/* Disabled state */
 .action-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    background: #e0e0e0;
+    color: #999;
 }
 
 /* checkbox */
@@ -68,7 +76,7 @@
     cursor: pointer;
 }
 .rev-check.status-approve { background: #28a745; border-color:#28a745; }
-.rev-check.status-revisi { background:#ffcc00; border-color:#ffcc00; }
+.rev-check.status-revisi { background:#ffc107; border-color:#ffc107; }
 .rev-check.status-reject { background:#d62828; border-color:#d62828; }
 
 /* log */
@@ -139,7 +147,6 @@
                             <td><strong>{{ $rev->revision_code }}</strong></td>
                             <td>
                                 <input type="text" class="link-input vendor-link" value="{{ $rev->vendor_link }}">
-                                <button class="action-btn btn-upload save-link">Save</button>
                                 <div class="link-status"></div>
                             </td>
                             <td>
@@ -148,9 +155,25 @@
                                 <div class="link-status"></div>
                             </td>
                             <td>
-                                <button class="action-btn btn-approve approve-btn">Approve</button>
-                                <button class="action-btn btn-revisi revisi-btn">Revisi</button>
-                                <button class="action-btn btn-reject reject-btn">Not Approve</button>
+                                @if(in_array($rev->status, ['approve', 'not approve', 'revisi']))
+                                    <div class="d-flex flex-column align-items-center">
+                                        @if($rev->status == 'approve')
+                                            <span class="fw-bold text-success">Approved</span>
+                                        @elseif($rev->status == 'not approve')
+                                            <span class="fw-bold text-danger">Not Approved</span>
+                                        @elseif($rev->status == 'revisi')
+                                            <span class="fw-bold text-warning" style="color:#ffc107;">Revisi</span>
+                                        @endif
+                                        <span class="text-muted" style="font-size: 11px;">
+                                            {{ \Carbon\Carbon::parse($rev->updated_at)->format('d/m/Y H:i') }}
+                                        </span>
+                                    </div>
+                                @else
+                                    <button class="action-btn btn-approve approve-btn">Approve</button>
+                                    <button class="action-btn btn-revisi revisi-btn">Revisi</button>
+                                    <button class="action-btn btn-reject reject-btn">Not Approve</button>
+                                    <button class="action-btn btn-save save-status" style="display:none;">Save Status</button>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
@@ -163,13 +186,33 @@
     <div class="log-card">
         <div style="font-weight: bold; margin-bottom: 15px;">Activity Log</div>
         <textarea id="logText" class="log-textarea" readonly></textarea>
+        
+        {{-- ✅ Desain Message Input --}}
+        <div style="margin-top: 15px;">
+            <textarea id="desainMessageInput" 
+                      placeholder="Tulis pesan untuk vendor..." 
+                      style="width: 100%; height: 80px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px; resize: none;"></textarea>
+            <button onclick="sendDesainMessage()" 
+                    style="margin-top: 10px; background: #000; color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
+                Send Message
+            </button>
+        </div>
     </div>
 </div>
 
 {{-- ========================= JAVASCRIPT ========================= --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 const CSRF = "{{ csrf_token() }}";
 const EVATEK_ID = "{{ $evatek->evatek_id }}";
+
+document.addEventListener('DOMContentLoaded', function() {
+    const existingLog = {!! json_encode($evatek->log ?? '') !!};
+    if (existingLog) {
+        document.getElementById('logText').value = existingLog;
+    }
+    checkDisabledRevisions();
+});
 
 // ✅ Simpan disabled revisions di Set
 const disabledRevisions = new Set();
@@ -185,7 +228,6 @@ function addLog(message) {
 // ✅ Function untuk disable buttons secara permanent
 function disableRevisionPermanent(revisionCode) {
     disabledRevisions.add(revisionCode);
-    // Tombol sudah dihapus, tidak perlu disable lagi
 }
 
 // ✅ Check disabled revisions saat page load
@@ -195,20 +237,54 @@ function checkDisabledRevisions() {
         const rev = row.dataset.rev;
         const checkbox = row.querySelector('.rev-check');
         
-        // Cek apakah revisi ini sudah punya status (approve, reject, atau revisi)
         const hasStatusApprove = checkbox.classList.contains('status-approve');
         const hasStatusReject = checkbox.classList.contains('status-reject');
         const hasStatusRevisi = checkbox.classList.contains('status-revisi');
         
-        // Jika sudah ada status, hapus tombol decision
         if (hasStatusApprove || hasStatusReject || hasStatusRevisi) {
-            const decisionCell = row.querySelector("td:last-child");
-            if (decisionCell) {
-                decisionCell.innerHTML = "";
-            }
+            // Disable input link
+            const vendorLinkInput = row.querySelector(".vendor-link");
+            const designLinkInput = row.querySelector(".design-link");
+            if (vendorLinkInput) vendorLinkInput.disabled = true;
+            if (designLinkInput) designLinkInput.disabled = true;
+
+            // Hapus tombol Save di kolom link
+            const saveLinkButtons = row.querySelectorAll(".save-link");
+            saveLinkButtons.forEach(btn => btn.remove());
+
             disableRevisionPermanent(rev);
         }
     });
+}
+
+function sendDesainMessage() {
+    const messageInput = document.getElementById('desainMessageInput');
+    const message = messageInput.value.trim();
+    
+    if (!message) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Pesan Kosong',
+            text: 'Silakan tulis pesan terlebih dahulu.',
+        });
+        return;
+    }
+    
+    // Explicitly identify as Desain Team
+    const userName = "{{ auth()->user()->name ?? 'Desain Team' }}";
+    const logMessage = `[Desain - ${userName}]: ${message}`;
+    
+    addLog(logMessage);
+    saveLogToDatabase(logMessage);
+    
+    // Clear input
+    messageInput.value = '';
+    
+    // Optional: Show brief success feedback
+    const btn = document.querySelector('button[onclick="sendDesainMessage()"]');
+    const originalText = btn.innerText;
+    btn.innerText = 'Sent ✓';
+    setTimeout(() => { btn.innerText = originalText; }, 1000);
 }
 
 /* SAVE LINK */
@@ -244,7 +320,6 @@ function saveLink(row) {
     });
 }
 
-// ✅ Function untuk simpan log ke database
 function saveLogToDatabase(message) {
     const logText = document.getElementById('logText').value;
     
@@ -267,109 +342,154 @@ function saveLogToDatabase(message) {
     });
 }
 
-/* APPROVE */
+/* SELECTION LOGIC */
 document.addEventListener("click", function(e) {
-    if (e.target.classList.contains("approve-btn")) {
-        approve(e.target.closest("tr"));
+    if(e.target.classList.contains("approve-btn")) selectStatus(e.target.closest("tr"), e.target, 'approve');
+    if(e.target.classList.contains("reject-btn")) selectStatus(e.target.closest("tr"), e.target, 'reject');
+    if(e.target.classList.contains("revisi-btn")) selectStatus(e.target.closest("tr"), e.target, 'revisi');
+    
+    if (e.target.classList.contains("save-status")) {
+        saveSelectedStatus(e.target.closest("tr"));
     }
 });
 
-function approve(row) {
+function selectStatus(row, btn, status) {
+    row.querySelectorAll('.action-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    const checkbox = row.querySelector(".rev-check");
+    checkbox.classList.remove("status-approve", "status-reject", "status-revisi");
+    
+    if(status === 'approve') checkbox.classList.add("status-approve");
+    if(status === 'reject') checkbox.classList.add("status-reject");
+    if(status === 'revisi') checkbox.classList.add("status-revisi");
+    
+    row.dataset.selectedStatus = status;
+    row.querySelector(".save-status").style.display = "block";
+}
+
+function saveSelectedStatus(row) {
+    const selectedStatus = row.dataset.selectedStatus;
+    
+    // Validate Links
+    const vendorLink = row.querySelector('.vendor-link').value.trim();
+    // Assuming design link is key? Or optional? Usually Vendor Link is required for review.
+    // If we are revising, maybe we don't need design link? but let's check basic requirement.
+    // For Evatek, maybe we need Design Link ONLY if we are uploading?
+    // Let's assume validation is: Vendor Link must be present (uploaded by vendor).
+    // Design Link is optional but recommended if we are sending comments back?
+    
+    if (!vendorLink) {
+         Swal.fire({
+            icon: 'warning',
+            title: 'Data Belum Lengkap',
+            text: 'Vendor Link belum tersedia.',
+        });
+        return;
+    }
+
+    if (!selectedStatus) return;
+
+    let statusText = "";
+    let confirmColor = "#3085d6";
+
+    if (selectedStatus === "approve") {
+        statusText = "Approve / Setujui";
+        confirmColor = "#28a745";
+    } else if (selectedStatus === "reject") {
+        statusText = "Not Approve / Tolak";
+        confirmColor = "#d62828";
+    } else if (selectedStatus === "revisi") {
+        statusText = "Revisi";
+        confirmColor = "#ffc107";
+    }
+
+    Swal.fire({
+        title: 'Apakah Anda yakin?',
+        text: `Anda akan menyimpan status: ${statusText}`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: confirmColor,
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Simpan!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Menyimpan...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            if (selectedStatus === "approve") submitApprove(row);
+            else if (selectedStatus === "reject") submitReject(row);
+            else if (selectedStatus === "revisi") submitRevisi(row);
+        }
+    });
+
+}
+
+function submitApprove(row) {
     fetch("{{ route('desain.evatek.approve') }}", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": CSRF
-        },
+        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": CSRF },
         body: JSON.stringify({ revision_id: row.dataset.revisionId })
     })
     .then(res => res.json())
     .then(res => {
         if (res.success) {
-            row.querySelector(".rev-check").classList.add("status-approve");
             updateStatus(row.dataset.rev, "Approve");
-            
             const logMessage = `✓ ${row.dataset.rev} APPROVED`;
             addLog(logMessage);
             saveLogToDatabase(logMessage);
-            
             disableRevisionPermanent(row.dataset.rev);
+            finalizeRow(row, 'Approved', 'text-success');
+             Swal.fire('Berhasil!', 'Status Approved berhasil disimpan.', 'success');
         }
     });
 }
 
-/* REJECT */
-document.addEventListener("click", function(e) {
-    if (e.target.classList.contains("reject-btn")) {
-        rejectRev(e.target.closest("tr"));
-    }
-});
-
-function rejectRev(row) {
+function submitReject(row) {
     fetch("{{ route('desain.evatek.reject') }}", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": CSRF
-        },
+        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": CSRF },
         body: JSON.stringify({ revision_id: row.dataset.revisionId })
     })
     .then(res => res.json())
     .then(res => {
         if (res.success) {
-            row.querySelector(".rev-check").classList.add("status-reject");
-            updateStatus(row.dataset.rev, "Rejected");
-            
+             updateStatus(row.dataset.rev, "Rejected");
             const logMessage = `✗ ${row.dataset.rev} REJECTED`;
-            addLog(logMessage);
+             addLog(logMessage);
             saveLogToDatabase(logMessage);
-            
             disableRevisionPermanent(row.dataset.rev);
+            finalizeRow(row, 'Not Approved', 'text-danger');
+             Swal.fire('Berhasil!', 'Status Not Approved berhasil disimpan.', 'success');
         }
     });
 }
 
-/* REVISI */
-document.addEventListener("click", function(e) {
-    if (e.target.classList.contains("revisi-btn")) {
-        revisi(e.target.closest("tr"));
-    }
-});
-
-function revisi(row) {
+function submitRevisi(row) {
     fetch("{{ route('desain.evatek.revisi') }}", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": CSRF
-        },
+        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": CSRF },
         body: JSON.stringify({ revision_id: row.dataset.revisionId })
     })
     .then(r => r.json())
     .then(r => {
         if (!r.success) return;
-
         let next = r.new_revision;
-
-        // ✅ Ubah checkbox menjadi kuning untuk revisi
-        const checkbox = row.querySelector(".rev-check");
-        checkbox.classList.remove("status-approve", "status-reject");
-        checkbox.classList.add("status-revisi");
-
-        // ✅ Hapus semua tombol decision dari baris ini
-        const decisionCell = row.querySelector("td:last-child");
-        decisionCell.innerHTML = "";
-
-        // ✅ Simpan revisi ini ke disabled set
+        
         disableRevisionPermanent(row.dataset.rev);
-
+        finalizeRow(row, 'Revisi', 'text-warning');
+        
+        // Add new Row
         let html = `
         <tr data-revision-id="${next.revision_id}" data-rev="${next.revision_code}">
             <td><input type="checkbox" class="rev-check"></td>
             <td><strong>${next.revision_code}</strong></td>
             <td>
                 <input type="text" class="link-input vendor-link">
-                <button class="action-btn btn-upload save-link">Save</button>
                 <div class="link-status"></div>
             </td>
             <td>
@@ -381,38 +501,52 @@ function revisi(row) {
                 <button class="action-btn btn-approve approve-btn">Approve</button>
                 <button class="action-btn btn-revisi revisi-btn">Revisi</button>
                 <button class="action-btn btn-reject reject-btn">Not Approve</button>
+                <button class="action-btn btn-save save-status" style="display:none;">Save Status</button>
             </td>
         </tr>`;
-
-        document.getElementById("revisionBody").insertAdjacentHTML("beforeend", html);
-
-        updateStatus(next.revision_code, "On Progress");
+        document.getElementById("revisionBody").insertAdjacentHTML("afterbegin", html);
         
+        updateStatus(next.revision_code, "On Progress");
         const logMessage = `⟳ ${row.dataset.rev} REVISI → ${next.revision_code} created`;
         addLog(logMessage);
         saveLogToDatabase(logMessage);
+        
+         Swal.fire('Berhasil!', 'Revisi berhasil dibuat.', 'success');
     });
 }
 
-/* UPDATE STATUS CARD */
+function finalizeRow(row, text, textClass) {
+    const actionCell = row.querySelector("td:last-child");
+    const dateStr = new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':');
+    // Color logic adjustment if needed
+    let colorStyle = "";
+    if(textClass === 'text-warning') colorStyle = "color:#ffc107;";
+    
+    actionCell.innerHTML = `
+        <div class="d-flex flex-column align-items-center">
+            <span class="fw-bold ${textClass}" style="${colorStyle}">${text}</span>
+            <span class="text-muted" style="font-size: 11px;">${dateStr}</span>
+        </div>
+    `;
+    
+    // Disable inputs
+     const vendorLinkInput = row.querySelector(".vendor-link");
+    const designLinkInput = row.querySelector(".design-link");
+    if (vendorLinkInput) vendorLinkInput.disabled = true;
+    if (designLinkInput) designLinkInput.disabled = true;
+
+    // Remove buttons
+    const saveLinkButtons = row.querySelectorAll(".save-link");
+    saveLinkButtons.forEach(btn => btn.remove());
+}
+
 function updateStatus(revCode, status) {
     document.getElementById("statusRevision").innerText = revCode;
     document.getElementById("statusDivision").innerText = status;
     document.getElementById("statusDate").innerText = new Date().toLocaleDateString('id-ID');
 }
 
-// ✅ Load existing log dan check disabled revisions saat page load
-document.addEventListener('DOMContentLoaded', function() {
-    const existingLog = {!! json_encode($evatek->log ?? '') !!};
-    if (existingLog) {
-        document.getElementById('logText').value = existingLog;
-    }
-    checkDisabledRevisions();
-});
-
-// ✅ Function untuk back dengan refresh halaman sebelumnya
 function goBackWithRefresh() {
-    // Simpan referrer untuk reload
     if (document.referrer) {
         window.location.href = document.referrer;
     } else {

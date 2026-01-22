@@ -292,6 +292,9 @@ class VendorEvatekController extends Controller
     /**
      * Save vendor link only (vendor can only update their own link)
      */
+    /**
+     * Save vendor link only (vendor can only update their own link)
+     */
     public function saveVendorLink(Request $request)
     {
         $vendor = Auth::guard('vendor')->user();
@@ -316,6 +319,23 @@ class VendorEvatekController extends Controller
         // Update only vendor_link, not design_link
         $revision->vendor_link = $validated['vendor_link'];
         $revision->save();
+
+        // NOTIFY DESAIN USERS
+        $desainUsers = \App\Models\User::where('roles', 'desain')->get();
+        foreach ($desainUsers as $user) {
+            \App\Models\Notification::create([
+                'user_id' => $user->user_id,
+                'sender_id' => null, // System or can mapped if pivot exists
+                'type' => 'info',
+                'title' => 'Dokumen Evatek Diupload',
+                'message' => "Vendor {$vendor->name_vendor} mengupload dokumen untuk item '{$evatek->item->item_name}'.",
+                'action_url' => route('desain.review-evatek', $evatek->evatek_id),
+                'reference_type' => 'App\Models\EvatekItem',
+                'reference_id' => $evatek->evatek_id,
+                'is_read' => false,
+                'created_at' => now(),
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -483,13 +503,48 @@ class VendorEvatekController extends Controller
             abort(403, 'Vendor not authenticated');
         }
 
+        $notifications = collect();
+
+        // 1. STORED NOTIFICATIONS (Events: Approved, Rejected, etc.)
+        $storedNotifs = \App\Models\VendorNotification::where('vendor_id', $vendor->id_vendor)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        foreach($storedNotifs as $sn) {
+            $notifications->push((object)[
+                'id' => $sn->id,
+                'is_stored' => true, // Flag to identify DB record
+                'is_read' => $sn->is_read,
+                'type' => $sn->type, // success, danger, warning, info
+                'icon' => match($sn->type) {
+                    'success' => 'bi-check-circle-fill',
+                    'danger' => 'bi-x-circle-fill',
+                    'warning' => 'bi-exclamation-triangle-fill',
+                    'action' => 'bi-upload',
+                    default => 'bi-info-circle-fill'
+                },
+                'color' => match($sn->type) {
+                    'success' => '#28a745',
+                    'danger' => '#dc3545',
+                    'warning' => '#ffc107',
+                    'action' => '#d32f2f',
+                    default => '#17a2b8'
+                },
+                'title' => $sn->title,
+                'message' => $sn->message,
+                'link' => $sn->link,
+                'date' => $sn->created_at,
+                'action_label' => 'Lihat Detail'
+            ]);
+        }
+
+        // 2. COMPUTED TASKS (Contract Review Pending)
+        // Only show if Action is Needed.
         $reviews = ContractReview::where('vendor_id', $vendor->id_vendor)
             ->with(['procurement.project', 'revisions' => function($q) {
                 $q->orderBy('contract_review_revision_id', 'desc');
             }])
             ->get();
-
-        $notifications = collect();
 
         foreach ($reviews as $review) {
             $latest = $review->revisions->first();
@@ -499,69 +554,57 @@ class VendorEvatekController extends Controller
             $projName = $review->procurement->project->project_name ?? 'Project';
             $revCode = $latest->revision_code;
             $link = route('vendor.contract-review.review', $review->contract_review_id);
-            $date = $latest->updated_at ?? $latest->created_at;
+            
+            // Pending Action Only
+            if ((!$latest->result || $latest->result == 'pending' || $latest->result == 'revisi') && empty($latest->vendor_link)) {
+                $isRevisi = ($latest->result == 'revisi') || ($previous && $previous->result == 'revisi');
+                $title = $isRevisi ? 'Revisi Kontrak Diperlukan' : 'Butuh Upload Kontrak';
+                $msg = "Silakan upload dokumen review kontrak untuk {$projName} ({$revCode}).";
 
-            // STATUS: APPROVED
-            if ($latest->result == 'approve') {
                 $notifications->push((object)[
-                    'type' => 'success',
-                    'icon' => 'bi-check-circle-fill',
-                    'color' => '#28a745', // Green
-                    'title' => 'Kontrak Disetujui',
-                    'message' => "Review kontrak untuk {$projName} ({$revCode}) telah DISETUJUI.",
+                    'id' => 'task_cr_' . $review->contract_review_id, // Virtual ID
+                    'is_stored' => false,
+                    'is_read' => false, // Tasks are always unread until done
+                    'type' => 'action',
+                    'icon' => 'bi-upload',
+                    'color' => '#d32f2f',
+                    'title' => $title,
+                    'message' => $msg,
                     'link' => $link,
-                    'date' => $date,
-                    'action_label' => 'Lihat Detail'
+                    'date' => $latest->created_at,
+                    'action_label' => 'Upload Dokumen'
                 ]);
             }
-            // STATUS: NOT APPROVED
-            elseif ($latest->result == 'not_approve') {
-                $notifications->push((object)[
-                    'type' => 'danger',
-                    'icon' => 'bi-x-circle-fill',
-                    'color' => '#dc3545', // Red
-                    'title' => 'Kontrak Ditolak',
-                    'message' => "Review kontrak untuk {$projName} ({$revCode}) DITOLAK.",
-                    'link' => $link,
-                    'date' => $date,
-                    'action_label' => 'Lihat Detail'
-                ]);
-            }
-            // STATUS: REVISI (Explicit result)
-            // Note: Usually a new revision is created immediately, but if logic allows sticking on 'revisi':
-            elseif ($latest->result == 'revisi') {
-                $notifications->push((object)[
-                    'type' => 'warning',
-                    'icon' => 'bi-exclamation-triangle-fill',
-                    'color' => '#ffc107', // Yellow
-                    'title' => 'Perlu Revisi',
-                    'message' => "Review kontrak untuk {$projName} ({$revCode}) meminta REVISI.",
-                    'link' => $link,
-                    'date' => $date,
-                    'action_label' => 'Perbaiki Sekarang'
-                ]);
-            }
-            // STATUS: PENDING (Potential Action Needed)
-            elseif (!$latest->result || $latest->result == 'pending') {
-                // If vendor link is EMPTY -> ACTION NEEDED
-                if (empty($latest->vendor_link)) {
-                    $isRevisi = ($previous && $previous->result == 'revisi');
-                    $title = $isRevisi ? 'Revisi Diperlukan' : 'Butuh Upload Link';
-                    $msg = $isRevisi 
-                        ? "Permintaan revisi baru ({$revCode}) untuk {$projName}. Silakan upload dokumen perbaikan."
-                        : "Silakan upload dokumen review kontrak untuk {$projName} ({$revCode}).";
+        }
 
-                    $notifications->push((object)[
-                        'type' => 'action',
-                        'icon' => 'bi-upload',
-                        'color' => '#d32f2f', // Red for action
-                        'title' => $title,
-                        'message' => $msg,
-                        'link' => $link,
-                        'date' => $latest->created_at, // Use created_at for pending items
-                        'action_label' => 'Upload Dokumen'
-                    ]);
-                }
+        // 3. COMPUTED TASKS (Evatek Pending)
+        $evatekItems = EvatekItem::where('vendor_id', $vendor->id_vendor)
+            ->with(['item', 'procurement.project', 'latestRevision'])
+            ->get();
+
+        foreach ($evatekItems as $evatek) {
+            $latest = $evatek->latestRevision;
+            if (!$latest) continue;
+
+            $itemName = $evatek->item->item_name ?? 'Item';
+            $revCode = $latest->revision_code;
+            $link = route('vendor.evatek.review', $evatek->evatek_id);
+            
+            // Pending Action Only
+            if (($latest->status == 'pending' || $latest->status == 'revisi') && empty($latest->vendor_link)) {
+                 $notifications->push((object)[
+                    'id' => 'task_ev_' . $evatek->evatek_id, // Virtual ID
+                    'is_stored' => false,
+                    'is_read' => false,
+                    'type' => 'action',
+                    'icon' => 'bi-cloud-upload-fill',
+                    'color' => '#0d6efd',
+                    'title' => 'Permintaan Dokumen Evatek',
+                    'message' => "Silakan upload dokumen Evatek untuk item {$itemName} ({$revCode}).",
+                    'link' => $link,
+                    'date' => $latest->created_at, // or updated_at
+                    'action_label' => 'Upload Dokumen'
+                ]);
             }
         }
 
@@ -569,5 +612,22 @@ class VendorEvatekController extends Controller
         $notifications = $notifications->sortByDesc('date');
 
         return view('vendor.notifications', compact('notifications'));
+    }
+
+    public function markAsRead($id)
+    {
+        $vendor = Auth::guard('vendor')->user();
+        if(!$vendor) abort(403);
+
+        $notif = \App\Models\VendorNotification::where('vendor_id', $vendor->id_vendor)
+            ->where('id', $id)
+            ->firstOrFail();
+            
+        $notif->update([
+            'is_read' => true,
+            'read_at' => now()
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

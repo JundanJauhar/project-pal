@@ -26,7 +26,7 @@ class EvatekController extends Controller
         $item = $evatek->item;
 
         $revisions = EvatekRevision::where('evatek_id', $evatek->evatek_id)
-            ->orderBy('revision_id', 'ASC')
+            ->orderBy('revision_id', 'DESC')
             ->get();
 
         if ($revisions->isEmpty()) {
@@ -74,7 +74,37 @@ class EvatekController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        return view('desain.daftar-permintaan', compact('evatekItems'));
+        // Get unread notifications for current user related to these items
+        $unreadEvatekIds = \App\Models\Notification::where('user_id', Auth::id())
+            ->where('is_read', false)
+            ->where(function($q) use ($evatekItems) {
+                // Check by reference (preferred)
+                $q->where('reference_type', 'App\Models\EvatekItem')
+                  ->whereIn('reference_id', $evatekItems->pluck('evatek_id'));
+                
+                // fallback for older notifs: check action_url
+                $q->orWhere(function($subq) use ($evatekItems) {
+                     foreach ($evatekItems as $item) {
+                        $subq->orWhere('action_url', 'LIKE', '%/evatek/item/' . $item->evatek_id . '%');
+                     }
+                });
+            })
+            ->get()
+            ->map(function ($notif) {
+                if ($notif->reference_id && $notif->reference_type === 'App\Models\EvatekItem') {
+                    return $notif->reference_id;
+                }
+                // Extract from URL if reference not set
+                if (preg_match('/\/evatek\/item\/(\d+)/', $notif->action_url ?? '', $matches)) {
+                    return (int)$matches[1];
+                }
+                return null;
+            })
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        return view('desain.daftar-permintaan', compact('evatekItems', 'unreadEvatekIds'));
     }
 
     /**
@@ -147,9 +177,17 @@ class EvatekController extends Controller
             'current_date' => now()->toDateString(),
         ]);
 
-        // ✅ UPDATE EVATEK STATUS
-        $this->updateEvatekStatus($evatek);
+        // Notify Vendor
+        \App\Models\VendorNotification::create([
+            'vendor_id' => $evatek->vendor_id,
+            'type' => 'success',
+            'title' => 'Evatek Disetujui',
+            'message' => "Evatek untuk item '{$evatek->item->item_name}' ({$revision->revision_code}) telah DISETUJUI.",
+            'link' => route('vendor.evatek.review', $evatek->evatek_id),
+            'created_at' => now(),
+        ]);
 
+        // Ambil procurement terkait
         $procurement = $evatek->procurement;
 
         if ($procurement && $procurement->evatekItems()->count() > 0) {
@@ -205,8 +243,15 @@ class EvatekController extends Controller
             'current_date' => now()->toDateString(),
         ]);
 
-        // ✅ UPDATE EVATEK STATUS
-        $this->updateEvatekStatus($evatek);
+        // Notify Vendor
+        \App\Models\VendorNotification::create([
+            'vendor_id' => $evatek->vendor_id,
+            'type' => 'danger',
+            'title' => 'Evatek Ditolak',
+            'message' => "Evatek untuk item '{$evatek->item->item_name}' ({$revision->revision_code}) DITOLAK.",
+            'link' => route('vendor.evatek.review', $evatek->evatek_id),
+            'created_at' => now(),
+        ]);
 
         ActivityLogger::log(
             module: 'Evatek',
@@ -254,6 +299,16 @@ class EvatekController extends Controller
             'status' => 'on_progress',
             'current_date' => now()->toDateString(),
             'evatek_status' => null,  // ✅ Reset ke null (kosong)
+        ]);
+
+        // Notify Vendor
+        \App\Models\VendorNotification::create([
+            'vendor_id' => $evatek->vendor_id,
+            'type' => 'warning',
+            'title' => 'Revisi Diperlukan',
+            'message' => "Evatek untuk item '{$evatek->item->item_name}' ({$revision->revision_code}) meminta REVISI. Silakan cek revisi baru {$nextCode}.",
+            'link' => route('vendor.evatek.review', $evatek->evatek_id),
+            'created_at' => now(),
         ]);
 
         ActivityLogger::log(

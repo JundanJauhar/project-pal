@@ -67,6 +67,9 @@ Route::middleware('auth:vendor')->group(function () {
 
     Route::get('/vendor/notifications', [VendorEvatekController::class, 'notifications'])
         ->name('vendor.notifications');
+        
+    Route::post('/vendor/notifications/{id}/read', [VendorEvatekController::class, 'markAsRead'])
+        ->name('vendor.notifications.read');
 
     Route::get('/vendor/profile', [VendorEvatekController::class, 'profile'])
         ->name('vendor.profile');
@@ -519,6 +522,10 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
         // Dashboard
         Route::get('/dashboard', [DesainController::class, 'dashboard'])
             ->name('dashboard');
+
+        // Notifikasi
+        Route::get('/notifications', [DesainController::class, 'notifications'])
+            ->name('notifications');
 
         // List Project
         Route::get('/list-project', [DesainListProjectController::class, 'list'])
