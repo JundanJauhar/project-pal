@@ -92,6 +92,9 @@
 <div class="container notif-container mt-4">
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div class="d-flex align-items-center">
+            <button class="btn btn-outline-secondary btn-sm me-3" onclick="history.back()">
+                <i class="bi bi-arrow-left"></i> Back
+            </button>
             <h2 class="fw-bold mb-0">Notifikasi</h2>
         </div>
         <div>

@@ -243,9 +243,9 @@ function checkDisabledRevisions() {
         
         if (hasStatusApprove || hasStatusReject || hasStatusRevisi) {
             // Disable input link
-            const vendorLinkInput = row.querySelector(".vendor-link");
+            // const vendorLinkInput = row.querySelector(".vendor-link");
             const designLinkInput = row.querySelector(".design-link");
-            if (vendorLinkInput) vendorLinkInput.disabled = true;
+            // if (vendorLinkInput) vendorLinkInput.disabled = true;
             if (designLinkInput) designLinkInput.disabled = true;
 
             // Hapus tombol Save di kolom link
@@ -379,6 +379,8 @@ function saveSelectedStatus(row) {
     // Let's assume validation is: Vendor Link must be present (uploaded by vendor).
     // Design Link is optional but recommended if we are sending comments back?
     
+    // Validation removed as per request: direct approve allowed without link
+    /* 
     if (!vendorLink) {
          Swal.fire({
             icon: 'warning',
@@ -387,6 +389,7 @@ function saveSelectedStatus(row) {
         });
         return;
     }
+    */
 
     if (!selectedStatus) return;
 

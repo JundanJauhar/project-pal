@@ -457,6 +457,23 @@ class VendorEvatekController extends Controller
         
         $revision->save();
 
+        // NOTIFY SUPPLY CHAIN USERS
+        $scmUsers = \App\Models\User::where('roles', 'supply_chain')->get();
+        foreach ($scmUsers as $user) {
+            \App\Models\Notification::create([
+                'user_id' => $user->user_id,
+                'sender_id' => null, 
+                'type' => 'info', 
+                'title' => 'Link Kontrak dari Vendor',
+                'message' => "Vendor {$vendor->name_vendor} telah mengupload dokumen kontrak untuk {$revision->revision_code}. Silakan cek dan respons.",
+                'action_url' => route('supply-chain.contract-review.show', $revision->contract_review_id),
+                'reference_type' => 'App\Models\ContractReview',
+                'reference_id' => $revision->contract_review_id,
+                'is_read' => false,
+                'created_at' => now(),
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Link berhasil disimpan'

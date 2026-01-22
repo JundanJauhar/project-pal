@@ -236,6 +236,7 @@ class ProcurementController extends Controller
             ->get();
 
         $negotiations = Negotiation::where('procurement_id', $procurement->procurement_id)
+            ->with('vendor')
             ->orderBy('created_at', 'desc')
             ->get();
 

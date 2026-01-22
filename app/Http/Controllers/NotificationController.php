@@ -53,8 +53,12 @@ class NotificationController extends Controller
                 'link' => (!empty($notif->action_url) && $notif->action_url !== '#') ? $notif->action_url : (
                     ($notif->reference_type === 'App\Models\EvatekItem' && $notif->reference_id)
                         ? route('desain.review-evatek', $notif->reference_id)
-                        : '#'
-                ), // Assuming action_url exists or use existing logic
+                        : (
+                            ($notif->reference_type === 'App\Models\ContractReview' && $notif->reference_id)
+                                ? route('supply-chain.contract-review.show', $notif->reference_id)
+                                : '#'
+                        )
+                ),
                 'date' => $notif->created_at,
                 'action_label' => 'Lihat Detail'
             ]);
@@ -105,6 +109,43 @@ class NotificationController extends Controller
                     'date' => $latest->updated_at ?? $latest->created_at,
                     'action_label' => 'Mulai Review'
                 ]);
+            }
+        }
+
+        // 3. CONTRACT REVIEW TASKS (Only for Supply Chain users)
+        $isScm = ($user->roles === 'supply_chain') || (method_exists($user, 'hasRole') && $user->hasRole('supply_chain'));
+        
+        if ($isScm) {
+            $reviews = \App\Models\ContractReview::where('status', '!=', 'completed')
+                ->with(['procurement.project', 'vendor', 'revisions'])
+                ->get();
+            
+            foreach ($reviews as $review) {
+                // Get latest revision (sort by ID desc)
+                $latest = $review->revisions->sortByDesc('contract_review_revision_id')->first();
+                
+                if (!$latest) continue;
+
+                // Condition: Vendor has uploaded link, SCM hasn't approved/rejected yet ('pending' or 'revisi')
+                if (!empty($latest->vendor_link) && in_array($latest->result, ['pending', 'revisi'])) {
+                    
+                    $projName = $review->procurement->project->project_name ?? 'Project';
+                    $vendorName = $review->vendor->name_vendor ?? 'Vendor';
+                    
+                    $notifications->push((object)[
+                        'id' => 'task_cr_scm_' . $review->contract_review_id,
+                        'is_stored' => false,
+                        'is_read' => false, 
+                        'type' => 'action',
+                        'icon' => 'bi-file-earmark-text',
+                        'color' => '#fd7e14', // Orange
+                        'title' => 'Review Kontrak Diperlukan',
+                        'message' => "Vendor {$vendorName} telah mengupload dokumen kontrak {$projName} ({$latest->revision_code}). Silakan review.",
+                        'link' => route('supply-chain.contract-review.show', $review->contract_review_id),
+                        'date' => $latest->updated_at ?? $latest->created_at,
+                        'action_label' => 'Review Kontrak'
+                    ]);
+                }
             }
         }
 

@@ -77,7 +77,7 @@
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             @if($neg->hps)
                             {{ number_format($neg->hps,0,',','.') }} {{ $neg->currency_hps }}
-                            @else
+                            @else 
                             -
                             @endif
                         </td>
