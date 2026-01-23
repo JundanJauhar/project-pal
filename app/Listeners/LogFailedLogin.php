@@ -18,9 +18,11 @@ class LogFailedLogin
             targetId: null,
             details: [
                 'email' => $event->credentials['email'] ?? null,
+                'status' => 'failed',
                 'ip'    => request()->ip(),
                 'ua'    => request()->userAgent(),
-            ]
+            ],
+            actorUserId: null  // Failed login = no authenticated user
         );
     }
 }

@@ -667,6 +667,63 @@
                 </a>
                 
                 <div class="ms-auto d-flex align-items-center me-4 gap-3">
+                    {{-- Notification Bell --}}
+                    @php
+                        // Check for notification count
+                        $vendorId = Auth::guard('vendor')->id();
+                        $notifCount = 0;
+                        
+                        if($vendorId) {
+                            // 1. STORED NOTIFICATIONS (Events)
+                            $storedCount = \App\Models\VendorNotification::where('vendor_id', $vendorId)
+                                ->where('is_read', false)
+                                ->count();
+                            $notifCount += $storedCount;
+
+                            // 2. COMPUTED TASKS (Contract Review)
+                            // "Tasks" are always considered "Action Needed"
+                            $reviews = \App\Models\ContractReview::where('vendor_id', $vendorId)
+                                ->with(['revisions' => function($q) {
+                                    $q->orderBy('contract_review_revision_id', 'desc');
+                                }])
+                                ->get();
+                                
+                            foreach($reviews as $rev) {
+                                $latest = $rev->revisions->first();
+                                if(!$latest) continue;
+                                
+                                // Action Needed (Pending/Revisi + No Link)
+                                if((!$latest->result || $latest->result == 'pending' || $latest->result == 'revisi') && empty($latest->vendor_link)) {
+                                    $notifCount++;
+                                }
+                            }
+                            
+                            // 3. COMPUTED TASKS (Evatek)
+                            $evatekItems = \App\Models\EvatekItem::where('vendor_id', $vendorId)
+                                ->with('latestRevision')
+                                ->get();
+
+                            foreach($evatekItems as $evk) {
+                                $latest = $evk->latestRevision;
+                                if(!$latest) continue;
+
+                                // Action Needed (Pending + No Link) OR Revisi + No Link
+                                if(($latest->status == 'pending' || $latest->status == 'revisi') && empty($latest->vendor_link)) {
+                                    $notifCount++;
+                                }
+                            }
+                        }
+                    @endphp
+                    <a href="{{ route('vendor.notifications') }}" class="text-dark position-relative me-2" style="font-size: 20px; text-decoration: none;">
+                        <i class="bi bi-bell"></i>
+                        @if($notifCount > 0)
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px; padding: 3px 6px; min-width: 18px;">
+                                {{ $notifCount }}
+                                <span class="visually-hidden">unread messages</span>
+                            </span>
+                        @endif
+                    </a>
+
                     {{-- Nama Vendor --}}
                     <span class="text-dark fw-semibold" style="font-size: 15px;">
                         {{ Auth::guard('vendor')->user()->name_vendor ?? 'Vendor' }}
@@ -746,6 +803,8 @@
                             </a>
                         </li>
                         @endif
+
+                        
 
                         @if(Auth::user()->roles === 'supply_chain')
                         <li class="nav-item">

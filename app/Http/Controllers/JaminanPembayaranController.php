@@ -23,19 +23,18 @@ class JaminanPembayaranController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $validated = $request->validate([
-            'procurement_id'       => 'required|exists:procurement,procurement_id',
-            'vendor_id'            => 'required|exists:vendors,id_vendor',
-            'advance_guarantee'    => 'nullable|boolean',
-            'performance_bond'     => 'nullable|boolean',
-            'warranty_bond'        => 'nullable|boolean',
-            'target_terbit'        => 'nullable|date',
-            'realisasi_terbit'     => 'nullable|date|after_or_equal:target_terbit',
-            'expiry_date'          => 'nullable|date|after:target_terbit',
+        $validated = $request->validateWithBag('jaminan', [
+            'procurement_id'    => 'required|exists:procurement,procurement_id',
+            'vendor_id'         => 'required|exists:vendors,id_vendor',
+            'advance_guarantee' => 'nullable|boolean',
+            'performance_bond'  => 'nullable|boolean',
+            'warranty_bond'     => 'nullable|boolean',
+            'target_terbit'     => 'nullable|date',
+            'realisasi_terbit'  => 'nullable|date',
+            'expiry_date'       => 'nullable|date|after:target_terbit',
         ], [
             'procurement_id.required' => 'Pilih procurement terlebih dahulu',
             'vendor_id.required'      => 'Pilih vendor terlebih dahulu',
-            'realisasi_terbit.after_or_equal' => 'Tanggal realisasi harus setelah atau sama dengan target terbit',
             'expiry_date.after'       => 'Expiry date harus setelah target terbit',
         ]);
 
@@ -93,12 +92,12 @@ class JaminanPembayaranController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $validated = $request->validate([
+        $validated = $request->validateWithBag('jaminan', [
             'advance_guarantee' => 'nullable|boolean',
             'performance_bond'  => 'nullable|boolean',
             'warranty_bond'     => 'nullable|boolean',
             'target_terbit'     => 'nullable|date',
-            'realisasi_terbit'  => 'nullable|date|after_or_equal:target_terbit',
+            'realisasi_terbit'  => 'nullable|date',
             'expiry_date'       => 'nullable|date|after:target_terbit',
         ]);
 

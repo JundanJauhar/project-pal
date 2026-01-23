@@ -55,6 +55,8 @@
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
+        position: relative;
+        cursor: help;
     }
 
     .timeline-step small {
@@ -383,11 +385,14 @@
         </div>
     </div>
 
-    {{-- Timeline dengan Logic Correct dan Dynamic Icons --}}
+    {{-- Timeline dengan Logic Correct dan Dynamic Icons + TOOLTIP --}}
     <div class="timeline-container">
         @forelse($checkpoints as $checkpoint)
         @php
         $status = 'not-started'; // Default
+        $tooltipText = $checkpoint->point_name; // Default tooltip hanya nama
+        $completedAt = null;
+        $startedAt = null;
 
         // Check if this checkpoint is completed
         $completedCheckpoint = $procurement->procurementProgress
@@ -397,6 +402,11 @@
 
         if ($completedCheckpoint) {
         $status = 'completed';
+        // Format tanggal selesai checkpoint
+        if ($completedCheckpoint->end_date) {
+        $completedAt = $completedCheckpoint->end_date->format('d/m/Y H:i');
+        $tooltipText = $checkpoint->point_name . " - Selesai: " . $completedAt;
+        }
         } else {
         // Check if this is the current (active) checkpoint
         $currentCheckpoint = $procurement->procurementProgress
@@ -406,18 +416,25 @@
 
         if ($currentCheckpoint) {
         $status = 'active';
+        // Format tanggal dimulai checkpoint
+        if ($currentCheckpoint->start_date) {
+        $startedAt = $currentCheckpoint->start_date->format('d/m/Y H:i');
+        $tooltipText = $checkpoint->point_name . " - Dimulai: " . $startedAt;
+        }
         }
         }
 
         // Get appropriate icon for this checkpoint
         $iconClass = \App\Services\CheckpointIconService::getIconClass($checkpoint->point_sequence);
         @endphp
-        <div class="timeline-step {{ $status }}" title="{{ $checkpoint->point_name }}">
+
+        <div class="timeline-step {{ $status }}" title="{{ $tooltipText }}">
             <div class="timeline-icon">
                 <i class="bi {{ $iconClass }}"></i>
             </div>
             <small>{{ $checkpoint->point_name }}</small>
         </div>
+
         @empty
         <div class="text-center">Tidak ada checkpoint yang tersedia</div>
         @endforelse
@@ -459,6 +476,13 @@
     </div>
     @endforelse
 
+    @php
+    $hasPembayaran = isset($pembayarans) && $pembayarans->count() > 0;
+    $hasNonSkbdnPayment = $hasPembayaran
+    && $pembayarans->contains(fn ($p) => $p->payment_type !== 'SKBDN');
+    @endphp
+
+
     {{-- ================= Inquiry & Quotation ================= --}}
     @includeWhen(
     auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
@@ -467,64 +491,62 @@
 
     {{-- ================= Evatek ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 3,
     'procurements.partials.evatek',
     compact('procurement','evatekItems','vendors','inquiryQuotations','currentCheckpointSequence'))
 
     {{-- ================= Negotiation ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 4,
     'procurements.partials.negotiation',
     compact('procurement','negotiations','vendors','currentCheckpointSequence'))
 
     {{-- ================= Pengadaan OC ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 5,
     'procurements.partials.pengadaan_oc',
     compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
 
     {{-- ================= Review Kontrak ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
     'procurements.partials.contract_review',
     compact('procurement', 'contractReviews', 'pengadaanOcVendors', 'currentCheckpointSequence'))
 
     {{-- ================= Pengesahan Kontrak ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
     'procurements.partials.pengesahan_kontrak',
     compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
 
     {{-- ================= Kontrak ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
     'procurements.partials.kontrak',
     compact('procurement', 'kontraks', 'vendors', 'currentCheckpointSequence'))
 
     {{-- ================= Pembayaran ================= --}}
     @includeWhen(
-        auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 7,
-        'procurements.partials.pembayaran',
-        compact('procurement','pembayarans','currentCheckpointSequence')
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 7,
+    'procurements.partials.pembayaran',
+    compact('procurement','pembayarans','currentCheckpointSequence')
     )
 
     {{-- ================= Jaminan Pembayaran ================= --}}
     @includeWhen(
-        auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 7,
-        'procurements.partials.jaminanpembayaran',
-        compact('procurement','jaminans','currentCheckpointSequence')
+    auth()->user()->roles === 'supply_chain'
+    && $currentCheckpointSequence >= 7
+    && $hasNonSkbdnPayment,
+    'procurements.partials.jaminanpembayaran',
+    compact('procurement','jaminans','currentCheckpointSequence','pembayarans')
     )
 
     {{-- ================= Material Delivery ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 8,
     'procurements.partials.material_delivery',
     compact('procurement', 'materialDeliveries')
     )
-
-
-
-
 
 </div>
 </div>
@@ -532,27 +554,86 @@
 
 @push('scripts')
 <script>
+    /**
+     * ===============================
+     * GLOBAL CURRENCY FORMATTER
+     * ===============================
+     * Format angka otomatis saat user mengetik
+     * HARUS DIDEFINISIKAN PALING AWAL (sebelum event listeners lain)
+     */
+    document.addEventListener('input', function(e) {
+        // ✅ Hanya tangkap input dengan class currency-input
+        if (!e.target.classList.contains('currency-input')) return;
+
+        // ✅ Bersihkan semua karakter non-digit
+        const raw = e.target.value.replace(/\D/g, '');
+
+        // ✅ Format display input dengan separator ribuan
+        e.target.value = raw ?
+            new Intl.NumberFormat('id-ID').format(raw) :
+            '';
+
+        // ✅ KUNCI: Ambil target hidden input dari data-attribute
+        const rawTargetId = e.target.dataset.rawTarget;
+        if (!rawTargetId) return;
+
+        // ✅ Update HANYA hidden input milik field ini
+        const hidden = document.getElementById(rawTargetId);
+        if (hidden) hidden.value = raw;
+    });
+
+
+    /**
+     * =========================================
+     * FORMAT CURRENCY SAAT MODAL DIBUKA (EDIT)
+     * =========================================
+     */
+    /**
+     * =========================================
+     * FORMAT CURRENCY SAAT MODAL DIBUKA (EDIT)
+     * =========================================
+     */
+    document.addEventListener('shown.bs.modal', function(e) {
+        const inputs = e.target.querySelectorAll('.currency-input');
+
+        inputs.forEach(input => {
+            // ✅ Bersihkan format lama
+            let value = input.value.replace(/\D/g, '');
+
+            // ✅ Format ulang dengan separator ribuan
+            input.value = value ? new Intl.NumberFormat('id-ID').format(value) : '';
+
+            // ✅ Update hidden input
+            const rawTargetId = input.dataset.rawTarget;
+            if (rawTargetId) {
+                const hidden = document.getElementById(rawTargetId);
+                if (hidden) hidden.value = value;
+            }
+        });
+    });
+
+
+    /**
+     * ===============================
+     * INQUIRY & QUOTATION
+     * ===============================
+     */
     function selectCurrencyEdit(cur, id) {
         document.getElementById('currencyEdit' + id).value = cur;
         document.getElementById('dropdownCurrency' + id).innerText = cur;
     }
-
-    document.addEventListener('input', function(e) {
-        if (e.target.classList.contains('currency-input')) {
-            let value = e.target.value.replace(/\D/g, '');
-            if (!value) {
-                e.target.value = '';
-                return;
-            }
-            e.target.value = new Intl.NumberFormat('id-ID').format(value);
-        }
-    });
 
     function selectCurrency(cur) {
         document.getElementById('currencyInput').value = cur;
         document.getElementById('dropdownCurrency').innerText = cur;
     }
 
+
+    /**
+     * ===============================
+     * NEGOTIATION
+     * ===============================
+     */
     function selectCurrencyEditNegotiation(type, cur, id) {
         document.getElementById(`currencyEdit${type}${id}`).value = cur;
         document.getElementById(`dropdownCurrency${type}${id}`).innerText = cur;
@@ -563,13 +644,12 @@
         document.getElementById(`dropdownCurrency${type}Create`).innerText = cur;
     }
 
-    document.addEventListener('input', function(e) {
-        if (e.target.classList.contains('currency-input')) {
-            let value = e.target.value.replace(/\D/g, '');
-            e.target.value = value ? new Intl.NumberFormat('id-ID').format(value) : '';
-        }
-    });
 
+    /**
+     * ===============================
+     * PENGADAAN OC
+     * ===============================
+     */
     function selectCurrencyEditPO(cur, id) {
         document.getElementById('currencyEditPO' + id).value = cur;
         document.getElementById('dropdownCurrencyEdit' + id).innerText = cur;
@@ -580,55 +660,122 @@
         document.getElementById('dropdownCurrencyCreatePO').innerText = cur;
     }
 
+
+    /**
+     * ===============================
+     * PENGESAHAN KONTRAK
+     * ===============================
+     */
+    function selectCurrencyEditPK(cur, id) {
+        document.getElementById('currencyEditPK' + id).value = cur;
+        document.getElementById('dropdownCurrencyEdit' + id).innerText = cur;
+    }
+
+    function selectCurrencyCreatePK(cur) {
+        document.getElementById('currencyCreatePK').value = cur;
+        document.getElementById('dropdownCurrencyCreatePKDisplay').innerText = cur;
+    }
+
+
+    /**
+     * ===============================
+     * KONTRAK
+     * ===============================
+     */
+    function selectCurrencyKontrak(cur, id) {
+        document.getElementById('currencyKontrakEdit' + id).value = cur;
+        document.getElementById('dropdownCurrencyKontrak' + id).innerText = cur;
+    }
+
+    function selectCurrencyCreateKontrak(cur) {
+        document.getElementById('currencyCreateNilaiKontrak').value = cur;
+        document.getElementById('dropdownCurrencyKontrakCreate').innerText = cur;
+    }
+
+
+    /**
+     * ===============================
+     * DOM CONTENT LOADED
+     * ===============================
+     * Semua event listeners yang memerlukan DOM elements
+     */
     document.addEventListener('DOMContentLoaded', function() {
-        const vendorSelect = document.getElementById('vendorSelectPO');
-        const nilaiDisplay = document.getElementById('nilaiPODisplay');
-        const nilaiHidden = document.getElementById('nilaiPO');
-        const currencyDisplay = document.getElementById('currencyCreatePODisplay');
-        const currencyInput = document.getElementById('currencyCreatePO');
 
-        if (vendorSelect) {
-            vendorSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const negotiationsData = selectedOption.getAttribute('data-negotiations');
+        /* ============================================
+         * AUTO POPULATE NILAI PO (Pengadaan OC)
+         * ============================================ */
+        const vendorSelectPO = document.getElementById('vendorSelectPO');
+        if (vendorSelectPO) {
+            const nilaiDisplay = document.getElementById('nilaiPODisplay');
+            const nilaiHidden = document.getElementById('nilaiPO');
+            const currencyDisplay = document.getElementById('currencyCreatePODisplay');
+            const currencyHidden = document.getElementById('currencyCreatePO');
 
-                if (negotiationsData) {
-                    try {
-                        const negotiations = JSON.parse(atob(negotiationsData));
+            vendorSelectPO.addEventListener('change', function() {
+                const selected = this.options[this.selectedIndex];
+                const harga = selected.dataset.harga;
+                const currency = selected.dataset.currency || 'IDR';
 
-                        if (negotiations.length > 0) {
-                            const latestNegotiation = negotiations[negotiations.length - 1];
-
-                            if (latestNegotiation.harga_final) {
-                                nilaiDisplay.value = new Intl.NumberFormat('id-ID').format(latestNegotiation.harga_final);
-                                nilaiHidden.value = latestNegotiation.harga_final;
-                                currencyDisplay.innerText = latestNegotiation.currency_harga_final || 'IDR';
-                                currencyInput.value = latestNegotiation.currency_harga_final || 'IDR';
-                            } else {
-                                nilaiDisplay.value = '';
-                                nilaiHidden.value = '';
-                                currencyDisplay.innerText = 'IDR';
-                                currencyInput.value = 'IDR';
-                            }
-                        } else {
-                            nilaiDisplay.value = '';
-                            nilaiHidden.value = '';
-                            currencyDisplay.innerText = 'IDR';
-                            currencyInput.value = 'IDR';
-                        }
-                    } catch (e) {
-                        console.error('Error parsing negotiations data:', e);
-                        nilaiDisplay.value = '';
-                        nilaiHidden.value = '';
-                    }
+                if (harga) {
+                    nilaiDisplay.value = Number(harga).toLocaleString('id-ID');
+                    nilaiHidden.value = harga;
                 } else {
                     nilaiDisplay.value = '';
                     nilaiHidden.value = '';
-                    currencyDisplay.innerText = 'IDR';
-                    currencyInput.value = 'IDR';
                 }
+
+                currencyDisplay.innerText = currency;
+                currencyHidden.value = currency;
             });
         }
-    });
+
+
+        /* ============================================
+         * AUTO POPULATE NILAI PK (Pengesahan Kontrak)
+         * ============================================ */
+        const vendorSelectPK = document.getElementById('vendorSelectPK');
+        if (vendorSelectPK) {
+            const nilaiDisplay = document.getElementById('nilaiPKDisplay');
+            const nilaiHidden = document.getElementById('nilaiPK');
+            const currencyDisplay = document.getElementById('currencyCreatePKDisplay');
+            const currencyHidden = document.getElementById('currencyCreatePK');
+
+            vendorSelectPK.addEventListener('change', function() {
+                const selected = this.options[this.selectedIndex];
+                const harga = selected.dataset.harga;
+                const currency = selected.dataset.currency || 'IDR';
+
+                if (harga) {
+                    nilaiDisplay.value = Number(harga).toLocaleString('id-ID');
+                    nilaiHidden.value = harga;
+                } else {
+                    nilaiDisplay.value = '';
+                    nilaiHidden.value = '';
+                }
+
+                currencyDisplay.innerText = currency;
+                currencyHidden.value = currency;
+            });
+        }
+
+
+        /* ============================================
+         * MAP PEMBAYARAN → JAMINAN PEMBAYARAN
+         * ============================================ */
+        @if(isset($pembayarans) && $pembayarans->count() > 0)
+        const paymentMap = {!! $pembayarans->mapWithKeys(fn($p) => [$p->vendor_id => $p->payment_type])->toJson() !!};
+
+        const vendorJaminanSelect = document.getElementById('vendorJaminanSelect');
+        const paymentTypeDisplay = document.getElementById('paymentTypeDisplay');
+
+        if (vendorJaminanSelect && paymentTypeDisplay) {
+            vendorJaminanSelect.addEventListener('change', function() {
+                const vendorId = this.value;
+                paymentTypeDisplay.value = paymentMap[vendorId] || '-';
+            });
+        }
+        @endif
+
+    }); // END DOMContentLoaded
 </script>
 @endpush

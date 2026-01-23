@@ -40,7 +40,8 @@ class PengesahanKontrakController extends Controller
 
             return redirect()
                 ->route('procurements.show', $procurement->procurement_id)
-                ->with('success', 'Pengadaan OC berhasil disimpan.');
+                ->with('success', 'Pengesahan Kontrak berhasil disimpan.')
+                ->withFragment('pengesahan-kontrak');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error storing PengesahanKontrak: ' . $e->getMessage());
@@ -81,7 +82,8 @@ class PengesahanKontrakController extends Controller
             DB::commit();
 
             return redirect()->route('procurements.show', $pk->procurement_id)
-                ->with('success', 'Pengesahan kontrak berhasil diperbarui.');
+                ->with('success', 'Pengesahan kontrak berhasil diperbarui.')
+                ->withFragment('pengesahan-kontrak');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating PengesahanKontrak: ' . $e->getMessage());
@@ -101,7 +103,8 @@ class PengesahanKontrakController extends Controller
             $pk->delete();
 
             return redirect()->route('procurements.show', $procId)
-                ->with('success', 'Pengesahan kontrak berhasil dihapus.');
+                ->with('success', 'Pengesahan kontrak berhasil dihapus.')
+                ->withFragment('pengesahan-kontrak');
         } catch (\Exception $e) {
             Log::error('Error deleting PengesahanKontrak: ' . $e->getMessage());
             return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());

@@ -1,0 +1,3 @@
+echo "Total Revisions: " . App\Models\EvatekRevision::count() . "\n";
+$ev = App\Models\EvatekItem::find(1);
+echo "Item 1: Status={$ev->status}, CurRev={$ev->current_revision}\n";

@@ -130,11 +130,7 @@ class CheckpointTransitionService
                 break;
 
             case 10: // 10 → 11 (Verifikasi Dokumen → Pembayaran)
-                $this->validateCheckpoint10To11();
-                break;
-
-            case 11: // 11 → COMPLETION (Pembayaran → selesai)
-                $this->validateCheckpoint11ToCompletion();
+                $this->validateCheckpoint10ToCompletion();
                 break;
         }
     }
@@ -160,8 +156,25 @@ class CheckpointTransitionService
     /** 3 → 4: Evatek → Negotiation */
     protected function validateCheckpoint3To4(): void
     {
-        // ✅ Tidak ada validasi - biarkan proses lanjut tanpa pengecekan approve
-        // Validasi dinonaktifkan agar proses bisa selesai terlebih dahulu
+        $allEvatek = $this->procurement->evatekItems()->get();
+
+        if ($allEvatek->isEmpty()) {
+            $this->errors[] = 'Belum ada EVATEK untuk procurement ini.';
+            return;
+        }
+
+        $allItemIds = $allEvatek->pluck('item_id')->unique();
+
+        $itemIdsWithApproved = $allEvatek
+            ->where('status', 'approve')
+            ->pluck('item_id')
+            ->unique();
+
+        $missingItems = $allItemIds->diff($itemIdsWithApproved);
+
+        if ($missingItems->isNotEmpty()) {
+            $this->errors[] = 'Setiap item harus memiliki minimal satu vendor EVATEK yang approve.';
+        }
     }
 
     /** 4 → 5: Negotiation → Usulan Pengadaan / OC */
@@ -205,10 +218,6 @@ class CheckpointTransitionService
     /** 8 → 9: Pengiriman Material → Kedatangan Material */
     protected function validateCheckpoint8To9(): void
     {
-        if (empty($this->data['delivery_note'])) {
-            // Bisa diganti sesuai field yang kamu pakai di tabel pengiriman material
-            $this->errors[] = 'Data pengiriman material belum lengkap (delivery note kosong)';
-        }
     }
 
     /** 9 → 10: Kedatangan Material → Verifikasi Dokumen (QA inspeksi) */
@@ -220,31 +229,10 @@ class CheckpointTransitionService
     }
 
     /** 10 → 11: Verifikasi Dokumen → Pembayaran */
-    protected function validateCheckpoint10To11(): void
+    protected function validateCheckpoint10ToCompletion(): void
     {
         if (empty($this->data['verification_notes'])) {
             $this->errors[] = 'Catatan verifikasi dokumen wajib diisi';
-        }
-    }
-
-    /** 11 → COMPLETION: Pembayaran final oleh Treasury */
-    protected function validateCheckpoint11ToCompletion(): void
-    {
-        if (!Auth::user() || Auth::user()->roles !== 'treasury') {
-            $this->errors[] = 'Hanya Treasury yang dapat memproses pembayaran final';
-        }
-
-        if (empty($this->data['payment_date'])) {
-            $this->errors[] = 'Tanggal pembayaran final wajib diisi';
-        }
-
-        $payment = $this->procurement->paymentSchedules()
-            ->where('payment_type', 'final')
-            ->where('status', 'paid')
-            ->first();
-
-        if (!$payment) {
-            $this->errors[] = 'Pembayaran final belum dikonfirmasi di sistem';
         }
     }
 
@@ -317,10 +305,6 @@ class CheckpointTransitionService
             case 10:
                 // setelah Verifikasi Dokumen selesai
                 break;
-
-            case 11:
-                // setelah Pembayaran final selesai
-                break;
         }
     }
 
@@ -370,13 +354,13 @@ class CheckpointTransitionService
                 $this->notifyDivision(4, 'Verifikasi Dokumen Selesai', 'Procurement siap diproses pembayaran final');
                 break;
 
-            case 11: // selesai Pembayaran final
-                $this->notifyCheckpoint11Complete();
+            case 10: // selesai Pembayaran final
+                $this->notifyCheckpoint10Complete();
                 break;
         }
     }
 
-    protected function notifyCheckpoint11Complete(): void
+    protected function notifyCheckpoint10Complete(): void
     {
         // Info ke Accounting bahwa pembayaran final sudah dilakukan
         $this->notifyDivision(3, 'Pembayaran Final', 'Pembayaran final untuk procurement telah diproses');

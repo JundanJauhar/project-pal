@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Project extends Model
 {
+    use HasFactory;
     protected $table = 'projects';
     protected $primaryKey = 'project_id';
 
@@ -18,7 +20,6 @@ class Project extends Model
         'project_name',
         'description',
         'owner_division_id',
-        'priority',
         'start_date',
         'end_date',
         'status_project',
@@ -51,10 +52,16 @@ class Project extends Model
     /**
      * Get the latest Evatek record for this project
      */
-    public function evatek(): HasOne
+    public function evatek(): HasOneThrough
     {
-        return $this->hasOne(Evatek::class, 'project_id', 'project_id')
-            ->latestOfMany('evatek_id');
+        return $this->hasOneThrough(
+            EvatekItem::class,
+            Procurement::class,
+            'project_id',
+            'procurement_id',
+            'project_id',
+            'procurement_id'
+        )->latestOfMany('evatek_id');
     }
 
     /**
@@ -83,9 +90,16 @@ class Project extends Model
     /**
      * Get evaluations for this project
      */
-    public function evaluations(): HasMany
+    public function evaluations(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
     {
-        return $this->hasMany(Evatek::class, 'project_id', 'project_id');
+        return $this->hasManyThrough(
+            EvatekItem::class,
+            Procurement::class,
+            'project_id',
+            'procurement_id',
+            'project_id',
+            'procurement_id'
+        );
     }
 
     /**
@@ -102,5 +116,13 @@ class Project extends Model
     public function requests(): HasMany
     {
         return $this->hasMany(RequestProcurement::class, 'project_id', 'project_id');
+    }
+
+    /**
+     * Get payment schedules for this project
+     */
+    public function paymentSchedules(): HasMany
+    {
+        return $this->hasMany(PaymentSchedule::class, 'project_id', 'project_id');
     }
 }

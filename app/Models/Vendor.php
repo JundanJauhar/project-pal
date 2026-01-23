@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -9,14 +10,16 @@ use Illuminate\Support\Facades\Hash;
 
 class Vendor extends Authenticatable
 {
+    use HasFactory;
     protected $table = 'vendors';
     protected $primaryKey = 'id_vendor';
-    protected $keyType = 'string';
-    public $incrementing = false;
-
+    protected $keyType = 'int';
+    public $incrementing = true;
+    
     protected $fillable = [
-        'id_vendor',
+        'vendor_code',           // TAMBAHAN: AS, AD, AL
         'name_vendor',
+        'specialization',        // TAMBAHAN: jasa, material_lokal, material_impor
         'address',
         'phone_number',
         'email',
@@ -45,7 +48,7 @@ class Vendor extends Authenticatable
             if (empty($vendor->user_vendor)) {
                 $vendor->user_vendor = self::generateEmailVendor($vendor->name_vendor);
             }
-            
+
             if (empty($vendor->password)) {
                 $vendor->password = Hash::make('password'); // default password
             }
@@ -60,13 +63,13 @@ class Vendor extends Authenticatable
     {
         // Hapus "PT", "CV", "UD", "Tbk" dll dari nama
         $name = preg_replace('/^(PT|CV|UD|Tbk)\.?\s*/i', '', $vendorName);
-        
+
         // Hapus semua spasi dan karakter special, lowercase
         $cleanName = strtolower(preg_replace('/[^A-Za-z0-9]/', '', $name));
-        
+
         // Format email login dengan @vendor.com
         $baseEmail = $cleanName . '@vendor.com';
-        
+
         // Pastikan unique dengan menambah angka jika sudah ada
         $email = $baseEmail;
         $counter = 1;
@@ -74,7 +77,7 @@ class Vendor extends Authenticatable
             $email = str_replace('@vendor.com', $counter . '@vendor.com', $baseEmail);
             $counter++;
         }
-        
+
         return $email;
     }
 
@@ -105,5 +108,51 @@ class Vendor extends Authenticatable
     public function evatekItems()
     {
         return $this->hasMany(EvatekItem::class, 'vendor_id', 'id_vendor');
+    }
+
+    // ===== TAMBAHAN RELASI & ACCESSOR =====
+
+    /**
+     * Relationship: Contract reviews dengan vendor ini
+     */
+    public function contractReviews()
+    {
+        return $this->hasMany(ContractReview::class, 'vendor_id', 'id_vendor');
+    }
+
+    /**
+     * Relationship: Material deliveries dari vendor ini
+     */
+    public function materialDeliveries()
+    {
+        return $this->hasMany(MaterialDelivery::class, 'vendor_id', 'id_vendor');
+    }
+
+    /**
+     * Accessor: Get specialization label
+     * Contoh: 'jasa' -> 'Jasa'
+     */
+    public function getSpecializationLabelAttribute()
+    {
+        $labels = [
+            'jasa' => 'Jasa',
+            'material_lokal' => 'Material Lokal',
+            'material_impor' => 'Material Impor',
+        ];
+        return $labels[$this->specialization] ?? 'Unknown';
+    }
+
+    /**
+     * Accessor: Get specialization badge class untuk styling
+     * Contoh: 'jasa' -> 'spec-jasa'
+     */
+    public function getSpecializationBadgeAttribute()
+    {
+        $badges = [
+            'jasa' => 'spec-jasa',
+            'material_lokal' => 'spec-material-lokal',
+            'material_impor' => 'spec-material-impor',
+        ];
+        return $badges[$this->specialization] ?? 'spec-jasa';
     }
 }

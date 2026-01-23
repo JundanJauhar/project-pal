@@ -63,6 +63,7 @@ return [
                 PDO::ATTR_PERSISTENT => true,
                 PDO::ATTR_EMULATE_PREPARES => true,
             ]) : [],
+            'timezone' => '+07:00',
         ],
 
         'mariadb' => [

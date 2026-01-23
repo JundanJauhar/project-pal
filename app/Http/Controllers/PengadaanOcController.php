@@ -50,7 +50,8 @@ class PengadaanOcController extends Controller
 
             return redirect()
                 ->route('procurements.show', $procurement->procurement_id)
-                ->with('success', 'Pengadaan OC berhasil disimpan.');
+                ->with('success', 'Pengadaan OC berhasil disimpan.')
+                ->withFragment('pengadaan-oc');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error storing PengadaanOc: ' . $e->getMessage());
@@ -92,7 +93,8 @@ class PengadaanOcController extends Controller
             DB::commit();
 
             return redirect()->route('procurements.show', $po->procurement_id)
-                ->with('success', 'Pengadaan OC berhasil diperbarui.');
+                ->with('success', 'Pengadaan OC berhasil diperbarui.')
+                ->withFragment('pengadaan-oc');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating PengadaanOc: ' . $e->getMessage());
@@ -112,7 +114,8 @@ class PengadaanOcController extends Controller
             $po->delete();
 
             return redirect()->route('procurements.show', $procId)
-                ->with('success', 'Pengadaan OC berhasil dihapus.');
+                ->with('success', 'Pengadaan OC berhasil dihapus.')
+                ->withFragment('pengadaan-oc');
         } catch (\Exception $e) {
             Log::error('Error deleting PengadaanOc: ' . $e->getMessage());
             return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());

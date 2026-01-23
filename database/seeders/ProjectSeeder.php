@@ -20,44 +20,6 @@ class ProjectSeeder extends Seeder
      */
     public function run(): void
     {
-        /**
-         * ============================
-         * CREATE SAMPLE VENDORS
-         * ============================
-         */
-        $vendors = [
-            [
-                'id_vendor' => 1,
-                'name_vendor' => 'PT Krakatau Steel',
-                'address' => 'Jl. Industri No. 1, Cilegon, Banten',
-                'phone_number' => '021-12345678',
-                'email' => 'sales@krakatausteel.com',
-                'is_importer' => false,
-            ],
-            [
-                'id_vendor' => 2,
-                'name_vendor' => 'PT Pindad',
-                'address' => 'Jl. Gatot Subroto, Bandung',
-                'phone_number' => '022-87654321',
-                'email' => 'procurement@pindad.com',
-                'is_importer' => false,
-            ],
-            [
-                'id_vendor' => 3,
-                'name_vendor' => 'PT Dirgantara Indonesia',
-                'address' => 'Jl. Pajajaran No. 154, Bandung',
-                'phone_number' => '022-98765432',
-                'email' => 'sales@indonesian-aerospace.com',
-                'is_importer' => true,
-            ],
-        ];
-
-        foreach ($vendors as $vendor) {
-            Vendor::updateOrCreate(
-                ['id_vendor' => $vendor['id_vendor']],
-                $vendor
-            );
-        }
 
         /**
          * ============================

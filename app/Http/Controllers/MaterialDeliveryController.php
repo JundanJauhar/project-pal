@@ -20,6 +20,8 @@ class MaterialDeliveryController extends Controller
         $validated = $request->validate([
             'procurement_id' => 'required|exists:procurement,procurement_id',
             'incoterms' => 'nullable|string|max:50',
+            'imo_number' => 'nullable|string|regex:/^[0-9]{7}$/',
+            'container_number' => 'nullable|string|max:50|regex:/^[A-Z0-9]+$/',
             'etd' => 'nullable|date',
             'eta_sby_port' => 'nullable|date|after_or_equal:etd',
             'eta_pal' => 'nullable|date|after_or_equal:eta_sby_port',
@@ -36,24 +38,25 @@ class MaterialDeliveryController extends Controller
 
             $procurement = Procurement::findOrFail($procurementId);
 
-            MaterialDelivery::updateOrCreate(
-                ['procurement_id' => $procurementId],
-                [
-                    'incoterms' => $validated['incoterms'] ?? null,
-                    'etd' => $validated['etd'] ?? null,
-                    'eta_sby_port' => $validated['eta_sby_port'] ?? null,
-                    'eta_pal' => $validated['eta_pal'] ?? null,
-                    'atd' => $validated['atd'] ?? null,
-                    'ata_sby_port' => $validated['ata_sby_port'] ?? null,
-                    'remark' => $validated['remark'] ?? null,
-                ]
-            );
+            MaterialDelivery::create([
+                'procurement_id' => $procurementId,
+                'incoterms' => $validated['incoterms'] ?? null,
+                'imo_number' => $validated['imo_number'] ?? null,
+                'container_number' => $validated['container_number'] ?? null,
+                'etd' => $validated['etd'] ?? null,
+                'eta_sby_port' => $validated['eta_sby_port'] ?? null,
+                'eta_pal' => $validated['eta_pal'] ?? null,
+                'atd' => $validated['atd'] ?? null,
+                'ata_sby_port' => $validated['ata_sby_port'] ?? null,
+                'remark' => $validated['remark'] ?? null,
+            ]);
 
             DB::commit();
 
             return redirect()
-                ->route('procurements.show', $procurement->$procurementId)
-                ->with('success', 'Pengiriman Material berhasil disimpan');
+                ->route('procurements.show', $procurementId)
+                ->with('success', 'Pengiriman Material berhasil disimpan')
+                ->withFragment('material-delivery');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error storing material delivery: ' . $e->getMessage());
@@ -74,6 +77,8 @@ class MaterialDeliveryController extends Controller
 
         $validated = $request->validate([
             'incoterms' => 'nullable|string|max:50',
+            'imo_number' => 'nullable|string|regex:/^[0-9]{7}$/',
+            'container_number' => 'nullable|string|max:50|regex:/^[A-Z0-9]+$/',
             'etd' => 'nullable|date',
             'eta_sby_port' => 'nullable|date|after_or_equal:etd',
             'eta_pal' => 'nullable|date|after_or_equal:eta_sby_port',
@@ -81,6 +86,8 @@ class MaterialDeliveryController extends Controller
             'ata_sby_port' => 'nullable|date|after_or_equal:atd',
             'remark' => 'nullable|string|max:1000',
         ], [
+            'imo_number.regex' => 'IMO Number harus 7 digit angka',
+            'container_number.regex' => 'Container Number harus berupa huruf kapital dan angka',
             'eta_sby_port.after_or_equal' => 'ETA SBY Port harus setelah atau sama dengan ETD',
             'eta_pal.after_or_equal' => 'ETA PAL harus setelah atau sama dengan ETA SBY Port',
             'ata_sby_port.after_or_equal' => 'ATA SBY Port harus setelah atau sama dengan ATD',
@@ -97,7 +104,8 @@ class MaterialDeliveryController extends Controller
             DB::commit();
 
             return redirect()->route('procurements.show', $procurementId)
-                ->with('success', 'Pengiriman Material berhasil diperbarui');
+                ->with('success', 'Pengiriman Material berhasil diperbarui')
+                ->withFragment('material-delivery');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating material delivery: ' . $e->getMessage());
@@ -122,7 +130,8 @@ class MaterialDeliveryController extends Controller
             $delivery->delete();
 
             return redirect()->route('procurements.show', $procurementId)
-                ->with('success', 'Pengiriman Material berhasil dihapus');
+                ->with('success', 'Pengiriman Material berhasil dihapus')
+                ->withFragment('material-delivery');
         } catch (\Exception $e) {
             Log::error('Error deleting material delivery: ' . $e->getMessage());
 

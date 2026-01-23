@@ -17,6 +17,8 @@ class MaterialDelivery extends Model
     protected $fillable = [
         'procurement_id',
         'incoterms',
+        'imo_number',
+        'container_number',
         'etd',
         'eta_sby_port',
         'eta_pal',

@@ -101,7 +101,6 @@ class SekdirController extends Controller
         $user = Auth::user();
         $checkpoints = Checkpoint::all();
         $projects = Project::all();
-        $priority = Project::select('priority')->distinct()->get();
 
         // Get ALL procurements with checkpoint data
         $allProcurements = Procurement::with([
@@ -129,7 +128,7 @@ class SekdirController extends Controller
         ->orderBy('created_at', 'desc')
         ->paginate(10);
 
-        return view('sekdir.dashboard', compact('stats', 'procurements', 'checkpoints', 'projects', 'priority'));
+        return view('sekdir.dashboard', compact('stats', 'procurements', 'checkpoints', 'projects'));
     }
 
     /**

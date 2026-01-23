@@ -22,14 +22,9 @@ class InquiryQuotationController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // sebelum validasi
-        if ($request->filled('nilai_harga')) {
-            $raw = preg_replace('/\D/', '', $request->nilai_harga); // hapus semua non digit
-            $request->merge([
-                'nilai_harga' => $raw   // ganti jadi angka murni
-            ]);
-        }
-
+        // CATATAN: Blade sudah mengirim nilai RAW (tanpa format)
+        // JavaScript menyimpan raw value ke hidden input
+        // Jadi nilai di sini sudah bersih!
 
         $validated = $request->validate([
             'procurement_id' => 'required|exists:procurement,procurement_id',
@@ -61,7 +56,6 @@ class InquiryQuotationController extends Controller
                 throw new \Exception('Invalid procurement reference.');
             }
 
-
             // Set default currency
             if (empty($validated['currency'])) {
                 $validated['currency'] = 'IDR';
@@ -86,7 +80,8 @@ class InquiryQuotationController extends Controller
             DB::commit();
 
             return redirect()->route('procurements.show', $procurement->procurement_id)
-                ->with('success', "Inquiry & Quotation untuk vendor {$vendor->name_vendor} berhasil disimpan");
+                ->with('success', "Inquiry & Quotation untuk vendor {$vendor->name_vendor} berhasil disimpan")
+                ->withFragment('inquiry');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error storing inquiry quotation: ' . $e->getMessage());
@@ -104,14 +99,9 @@ class InquiryQuotationController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        // sebelum validasi
-        if ($request->filled('nilai_harga')) {
-            $raw = preg_replace('/\D/', '', $request->nilai_harga); // hapus semua non digit
-            $request->merge([
-                'nilai_harga' => $raw   // ganti jadi angka murni
-            ]);
-        }
-
+        // CATATAN: Blade sudah mengirim nilai RAW (tanpa format)
+        // JavaScript menyimpan raw value ke hidden input
+        // Controller TIDAK PERLU membersihkan lagi!
 
         $validated = $request->validate([
             'tanggal_inquiry' => 'required|date',
@@ -135,7 +125,8 @@ class InquiryQuotationController extends Controller
 
             return redirect()
                 ->back()
-                ->with('success', 'Inquiry & Quotation berhasil diperbarui');
+                ->with('success', 'Inquiry & Quotation berhasil diperbarui')
+                ->withFragment('inquiry');
         } catch (\Exception $e) {
             Log::error('Error updating inquiry quotation: ' . $e->getMessage());
 
@@ -164,7 +155,8 @@ class InquiryQuotationController extends Controller
             $inquiryQuotation->delete();
 
             return redirect()->route('procurements.show', $procurementId)
-                ->with('success', 'Inquiry & Quotation berhasil dihapus');
+                ->with('success', 'Inquiry & Quotation berhasil dihapus')
+                ->withFragment('inquiry');
         } catch (\Exception $e) {
             Log::error('Error deleting inquiry quotation: ' . $e->getMessage());
 

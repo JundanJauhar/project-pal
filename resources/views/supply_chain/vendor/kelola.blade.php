@@ -130,15 +130,6 @@
         display: none;
     }
 
-    /* Filter selects */
-    .filter-select {
-        background: #fff;
-        border: 1px solid #ddd;
-        padding: 6px 10px;
-        border-radius: 8px;
-        font-size: 14px;
-    }
-
     /* Tambah Vendor Button */
     .btn-tambah-vendor {
         background: #003d82;
@@ -185,43 +176,63 @@
     .vendor-table tbody td {
         padding: 14px 6px;
         border-bottom: 1px solid #DFDFDF;
-        font-size: 15px;
+        font-size: 14px;
         color: #333;
-        text-align: center;
     }
 
     .vendor-table tbody tr:hover {
         background: #EFEFEF;
     }
 
-    /* Status Badges */
-    .vendor-status {
-        padding: 5px 10px;
-        border-radius: 5px;
+    /* Status Badge */
+    .badge {
+        padding: 4px 8px;
+        border-radius: 4px;
         font-size: 12px;
-        font-weight: bold;
+        font-weight: 600;
         display: inline-block;
     }
 
-    .status-active {
-        background-color: #28AC00;
+    .bg-success {
+        background: #28AC00;
         color: white;
     }
 
-    .status-inactive {
-        background-color: #BD0000;
+    .bg-secondary {
+        background: #999;
         color: white;
     }
 
-    .status-pending {
-        background-color: #FFBB00;
-        color: black;
+    /* Specialization Badge */
+    .spec-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .spec-jasa {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .spec-material-lokal {
+        background: #f3e5f5;
+        color: #7b1fa2;
+    }
+
+    .spec-material-impor {
+        background: #e0f2f1;
+        color: #00796b;
     }
 
     /* Action Buttons */
     .btn-group {
         display: inline-flex;
         gap: 6px;
+        flex-wrap: wrap;
     }
 
     .btn-sm {
@@ -233,28 +244,26 @@
         align-items: center;
         gap: 4px;
         transition: all 0.2s;
+        border: none;
+        cursor: pointer;
     }
 
     .btn-primary {
         background: #ECAD02;
         color: white;
-        border: 1px solid #ECAD02;
     }
 
     .btn-primary:hover {
         background: #A77A00;
-        border-color: #A77A00;
     }
 
     .btn-info {
         background: #003d82;
         color: white;
-        border: 1px solid #003d82;
     }
 
     .btn-info:hover {
         background: #002e5c;
-        border-color: #002e5c;
     }
 
     /* Empty State */
@@ -323,28 +332,15 @@
         </div>
     </div>
 
-    {{-- Vendor Aktif --}}
+    {{-- Vendor Lokal --}}
     <div class="vendor-card green">
         <div class="vendor-card-inner">
             <div>
-                <h6>Vendor Aktif</h6>
-                <h3>{{ $vendors->where('legal_status', 'approved')->count() }}</h3>
+                <h6>Vendor Lokal</h6>
+                <h3>{{ $vendors->where('is_importer', false)->count() }}</h3>
             </div>
             <div class="vendor-card-icon">
-                <i class="bi bi-check-circle"></i>
-            </div>
-        </div>
-    </div>
-
-    {{-- Menunggu Verifikasi --}}
-    <div class="vendor-card yellow">
-        <div class="vendor-card-inner">
-            <div>
-                <h6>Menunggu Verifikasi</h6>
-                <h3>{{ $vendors->where('legal_status', 'pending')->count() }}</h3>
-            </div>
-            <div class="vendor-card-icon">
-                <i class="bi bi-clock-history"></i>
+                <i class="bi bi-geo-alt"></i>
             </div>
         </div>
     </div>
@@ -384,8 +380,8 @@
             @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
             <div class="tambah" style="min-width: 120px;">
                 <a href="{{ route('supply-chain.vendor.form') }}"
-                   class="btn-tambah-vendor"
-                   wire:navigate>
+                    class="btn-tambah-vendor"
+                    wire:navigate>
                     <i class="bi bi-plus-circle"></i> Tambah
                 </a>
             </div>
@@ -397,12 +393,12 @@
         <table class="vendor-table">
             <thead>
                 <tr>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;" >No</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">No</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode</th>
                     <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Vendor</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Spesialisasi</th>
                     <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Alamat</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kontak</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Email</th>
-                    <!-- <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status Legal</th> -->
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Importer</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                 </tr>
@@ -412,11 +408,29 @@
                 @forelse($vendors as $vendor)
                 <tr>
                     <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">{{ $row++ }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">
+                        <strong>{{ $vendor->vendor_code ?? '-' }}</strong>
+                    </td>
                     <td style="padding: 12px 8px; text-align: left; color: #000;">{{ $vendor->name_vendor }}</td>
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">
+                        @php
+                        $specMap = [
+                        'jasa' => 'Jasa',
+                        'material_lokal' => 'Material Lokal',
+                        'material_impor' => 'Material Impor'
+                        ];
+                        $specClass = [
+                        'jasa' => 'spec-jasa',
+                        'material_lokal' => 'spec-material-lokal',
+                        'material_impor' => 'spec-material-impor'
+                        ];
+                        @endphp
+                        <span class="spec-badge {{ $specClass[$vendor->specialization] ?? 'spec-jasa' }}">
+                            {{ $specMap[$vendor->specialization] ?? '-' }}
+                        </span>
+                    </td>
                     <td style="padding: 12px 8px; text-align: left; color: #000;">{{ Str::limit($vendor->address ?? '-', 30) }}</td>
-                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $vendor->phone_number ?? '-' }} </td>
-                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $vendor->email ?? '-' }} </td>
-                    <!-- <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $vendor->legal_status ?? '-' }} </td> -->
+                    <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $vendor->phone_number ?? '-' }}</td>
                     <td style="padding: 12px 8px; text-align: center; color: #000;">
                         @if($vendor->is_importer)
                         <span class="badge bg-success">
@@ -429,14 +443,14 @@
                     <td style="padding: 12px 8px; text-align: center;">
                         <div class="btn-group">
                             <a href="{{ route('supply-chain.vendor.form', ['id' => $vendor->id_vendor]) }}"
-                               class="btn-sm btn-primary"
-                               wire:navigate>
-                                <i></i> Edit
+                                class="btn-sm btn-primary"
+                                wire:navigate>
+                                <i class="bi bi-pencil"></i> Edit
                             </a>
                             <a href="{{ route('supply-chain.vendor.detail', ['id' => $vendor->id_vendor]) }}"
-                               class="btn-sm btn-info"
-                               wire:navigate>
-                                <i></i> Detail
+                                class="btn-sm btn-info"
+                                wire:navigate>
+                                <i class="bi bi-info-circle"></i> Detail
                             </a>
                         </div>
                     </td>
@@ -459,20 +473,20 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearch');
-    const tableBody = document.getElementById('vendorTableBody');
-    let searchTimeout;
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearch');
+        const tableBody = document.getElementById('vendorTableBody');
+        let searchTimeout;
 
-    function performSearch() {
-        const searchValue = searchInput.value.trim();
+        function performSearch() {
+            const searchValue = searchInput.value.trim();
 
-        // Tampilkan/sembunyikan tombol X
-        clearBtn.style.display = searchValue ? 'block' : 'none';
+            // Tampilkan/sembunyikan tombol X
+            clearBtn.style.display = searchValue ? 'block' : 'none';
 
-        // Tampilkan loading
-        tableBody.innerHTML = `
+            // Tampilkan loading
+            tableBody.innerHTML = `
             <tr>
                 <td colspan="9" class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
@@ -483,27 +497,27 @@ document.addEventListener('DOMContentLoaded', function() {
             </tr>
         `;
 
-        // Fetch data dengan AJAX
-        fetch('{{ route("supply-chain.vendor.kelola") }}?search=' + encodeURIComponent(searchValue), {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const newTableBody = doc.querySelector('#vendorTableBody');
+            // Fetch data dengan AJAX
+            fetch('{{ route("supply-chain.vendor.kelola") }}?search=' + encodeURIComponent(searchValue), {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newTableBody = doc.querySelector('#vendorTableBody');
 
-            if (newTableBody) {
-                tableBody.innerHTML = newTableBody.innerHTML;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            tableBody.innerHTML = `
+                    if (newTableBody) {
+                        tableBody.innerHTML = newTableBody.innerHTML;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    tableBody.innerHTML = `
                 <tr>
                     <td colspan="9" class="text-center py-5 text-danger">
                         <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
@@ -511,44 +525,44 @@ document.addEventListener('DOMContentLoaded', function() {
                     </td>
                 </tr>
             `;
-        });
-    }
-
-    // Search saat mengetik (debounced)
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(performSearch, 500);
-    });
-
-    // Search saat tekan Enter
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            clearTimeout(searchTimeout);
-            performSearch();
+                });
         }
-    });
 
-    // Clear search
-    clearBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        searchInput.value = '';
-        searchInput.focus();
-        clearBtn.style.display = 'none';
-        performSearch();
-    });
+        // Search saat mengetik (debounced)
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 500);
+        });
 
-    // Clear dengan ESC
-    searchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && this.value) {
+        // Search saat tekan Enter
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(searchTimeout);
+                performSearch();
+            }
+        });
+
+        // Clear search
+        clearBtn.addEventListener('click', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             searchInput.value = '';
+            searchInput.focus();
             clearBtn.style.display = 'none';
             performSearch();
-        }
+        });
+
+        // Clear dengan ESC
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && this.value) {
+                e.preventDefault();
+                searchInput.value = '';
+                clearBtn.style.display = 'none';
+                performSearch();
+            }
+        });
     });
-});
 </script>
 @endpush
 

@@ -153,6 +153,9 @@
                     <a href="{{ route('desain.review-evatek', $evatek->evatek_id) }}"
                         style="text-decoration: none; color: #000; font-weight: 600;">
                         {{ $evatek->item->item_name ?? 'N/A' }}
+                        @if(isset($unreadEvatekIds) && in_array($evatek->evatek_id, $unreadEvatekIds))
+                            <span class="badge bg-danger ms-2" style="font-size: 10px;">Baru</span>
+                        @endif
                     </a>
                 </td>
 

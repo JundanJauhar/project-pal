@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             CheckpointSeeder::class,
             UserSeeder::class,
             ProjectSeeder::class,
+            VendorSeeder::class,
         ]);
     }
 }

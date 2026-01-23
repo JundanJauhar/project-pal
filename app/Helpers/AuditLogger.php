@@ -14,9 +14,10 @@ class AuditLogger
      * @param string|null $table
      * @param int|string|null $targetId
      * @param array|null $details
+     * @param int|null $actorUserId Override actor user ID (null for unauthenticated)
      * @return \App\Models\UMS\AuditLog
      */
-    public static function log($action, $table = null, $targetId = null, $details = null)
+    public static function log($action, $table = null, $targetId = null, $details = null, $actorUserId = 'auto')
     {
         // normalize details to array
         $payload = is_array($details) ? $details : ( $details ? (array) $details : [] );
@@ -29,9 +30,13 @@ class AuditLogger
             $payload['ua'] = request()->userAgent();
         }
 
+        // determine actor user ID
+        // 'auto' = use Auth::id(), null = explicit null, int = explicit user ID
+        $userId = $actorUserId === 'auto' ? Auth::id() : $actorUserId;
+
         // create audit record
         $log = AuditLog::create([
-            'actor_user_id' => Auth::id(),
+            'actor_user_id' => $userId,
             'action'        => $action,
             'target_table'  => $table,
             'target_id'     => $targetId,

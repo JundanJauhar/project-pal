@@ -183,11 +183,18 @@
 
     .grafana-container {
         position: relative;
-        height: 600px;
-        margin-top: 15px;
+        height: 650px;
+        margin-top: 24px;
+        border-radius: 10px;
         overflow: hidden;
-        border-radius: 8px;
-        background: #f5f5f5;
+        background: #0b0f14;
+        box-shadow: 0 8px 18px rgba(0,0,0,.25);
+    }
+
+    .grafana-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 12px;
     }
 
     .grafana-fallback {
@@ -266,7 +273,7 @@
     <!-- Form Section -->
     <div class="search row mb-4">
         <div class="col-12">
-            <div class="card card-custom">
+            <div class="card card-custom">         
                 <div class="card-body">
                     <form id="filter-form" class="row g-3 align-items-end">
                         <div class="col-md-4">
@@ -289,48 +296,91 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <select class="form-select" name="priority">
-                                <option value="">Semua Prioritas</option>
-                                @foreach($priority as $priorityOption)
-                                <option value="{{ $priorityOption->priority }}">{{ $priorityOption->priority }}</option>
-                                @endforeach
-                            </select>
-                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Grafana Chart -->
-    <!-- Grafana Chart -->
-    <div class="grafana-container">
-        <iframe
-            id="grafanaChart"
-            src="http://localhost:3000/d-solo/prb58hz/pal-visualisasi?orgId=1&panelId=1&theme=dark&refresh=5s"
-            width="100%"
-            height="100%"
-            frameborder="0"
-            style="border: none; display: block;"
-            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-            referrerpolicy="no-referrer-when-downgrade"
-            title="Grafana Dashboard">
-        </iframe>
+    {{-- ===================== --}}
+{{-- EXECUTIVE DASHBOARDS --}}
+{{-- ===================== --}}
+
+    <div class="row">
+
+        {{-- 1. Executive Procurement Overview --}}
+        <div class="col-12">
+            <div class="grafana-title">Executive Procurement Overview</div>
+            <div class="grafana-container">
+                <iframe
+                    src="http://localhost:3000/d/ad56wzw/executive-procurement-overview?orgId=1&theme=dark&kiosk"
+                    width="100%"
+                    height="100%"
+                    frameborder="0"
+                    style="border:none;">
+                </iframe>
+            </div>
+        </div>
+
+        {{-- 2. Procurement Lifecycle & Bottleneck --}}
+        <div class="col-12">
+            <div class="grafana-title mt-4">Procurement Lifecycle & Bottleneck</div>
+            <div class="grafana-container">
+                <iframe
+                    src="http://localhost:3000/d/adqkrmk/procurement-lifecycle-and-bottleneck?orgId=1&theme=dark&kiosk"
+                    width="100%"
+                    height="100%"
+                    frameborder="0"
+                    style="border:none;">
+                </iframe>
+            </div>
+        </div>
+
+        {{-- 3. Project & Budget Performance --}}
+        <div class="col-12">
+            <div class="grafana-title mt-4">Project & Budget Performance</div>
+            <div class="grafana-container">
+                <iframe
+                    src="http://localhost:3000/d/adr4zqx/project-and-budget-performance?orgId=1&theme=dark&kiosk"
+                    width="100%"
+                    height="100%"
+                    frameborder="0"
+                    style="border:none;">
+                </iframe>
+            </div>
+        </div>
+
+        {{-- 4. Risk, Compliance & Delay Monitoring --}}
+        <div class="col-12">
+            <div class="grafana-title mt-4">Risk, Compliance & Delay Monitoring</div>
+            <div class="grafana-container">
+                <iframe
+                    src="http://localhost:3000/d/adsf9dg/risk-compliance-and-delay-monitoring?orgId=1&theme=dark&kiosk"
+                    width="100%"
+                    height="100%"
+                    frameborder="0"
+                    style="border:none;">
+                </iframe>
+            </div>
+        </div>
+
+        {{-- 5. Vendor & Contract Performance --}}
+        <div class="col-12">
+            <div class="grafana-title mt-4">Vendor & Contract Performance</div>
+            <div class="grafana-container">
+                <iframe
+                    src="http://localhost:3000/d/adkzcch/vendor-and-contract-performance?orgId=1&theme=dark&kiosk"
+                    width="100%"
+                    height="100%"
+                    frameborder="0"
+                    style="border:none;">
+                </iframe>
+            </div>
+        </div>
+
     </div>
-    <div class="grafana-container">
-        <iframe
-            id="grafanaChart"
-            src="http://localhost:3000/d-solo/prb58hz/pal-visualisasi?orgId=1&from=1702024747377&to=1765183147377&timezone=browser&theme=dark&panelId=panel-2&__feature.dashboardSceneSolo=true"
-            width="100%"
-            height="100%"
-            frameborder="0"
-            style="border: none; display: block;"
-            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-            referrerpolicy="no-referrer-when-downgrade"
-            title="Grafana Dashboard">
-        </iframe>
-    </div>
+
+
 
     <!-- Table Section -->
     <div class="dashboard-table-wrapper">

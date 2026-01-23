@@ -17,6 +17,13 @@ class KontrakController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        if ($request->filled('nilai')) {
+            $request->merge([
+                'nilai' => preg_replace('/\D/', '', $request->nilai)
+            ]);
+        }
+
+
         $validated = $request->validate([
             'procurement_id' => 'required|exists:procurement,procurement_id',
             'no_po' => 'nullable|string|max:255',
@@ -45,11 +52,12 @@ class KontrakController extends Controller
             DB::commit();
 
             return redirect()->route('procurements.show', $procurement->procurement_id)
-                ->with('success', 'Kontrak berhasil dibuat.');
+                ->with('success', 'Kontrak berhasil dibuat.')
+                ->withFragment('kontrak');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error storing Kontrak: '.$e->getMessage());
-            return back()->with('error', 'Gagal menyimpan kontrak: '.$e->getMessage())->withInput();
+            Log::error('Error storing Kontrak: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menyimpan kontrak: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -58,6 +66,13 @@ class KontrakController extends Controller
         if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
             abort(403, 'Unauthorized action.');
         }
+
+        if ($request->filled('nilai')) {
+            $request->merge([
+                'nilai' => preg_replace('/\D/', '', $request->nilai)
+            ]);
+        }
+
 
         $validated = $request->validate([
             'no_po' => 'nullable|string|max:255',
@@ -84,11 +99,12 @@ class KontrakController extends Controller
             DB::commit();
 
             return redirect()->route('procurements.show', $kontrak->procurement_id)
-                ->with('success', 'Kontrak berhasil diperbarui.');
+                ->with('success', 'Kontrak berhasil diperbarui.')
+                ->withFragment('kontrak');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error updating Kontrak: '.$e->getMessage());
-            return back()->with('error', 'Gagal memperbarui kontrak: '.$e->getMessage())->withInput();
+            Log::error('Error updating Kontrak: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memperbarui kontrak: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -104,10 +120,11 @@ class KontrakController extends Controller
             $kontrak->delete();
 
             return redirect()->route('procurements.show', $procId)
-                ->with('success', 'Kontrak berhasil dihapus.');
+                ->with('success', 'Kontrak berhasil dihapus.')
+                ->withFragment('kontrak');
         } catch (\Exception $e) {
-            Log::error('Error deleting Kontrak: '.$e->getMessage());
-            return back()->with('error', 'Gagal menghapus kontrak: '.$e->getMessage());
+            Log::error('Error deleting Kontrak: ' . $e->getMessage());
+            return back()->with('error', 'Gagal menghapus kontrak: ' . $e->getMessage());
         }
     }
 

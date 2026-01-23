@@ -418,7 +418,6 @@
                     <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Alamat</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kontak</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Email</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status Legal</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Importer</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                     </tr>
@@ -440,9 +439,6 @@
                         </td>
                         <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
                             {{ $vendor->email ?? '-' }}
-                        </td>
-                        <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
-                            {{ $vendor->legal_status ?? '-' }}
                         </td>
                         <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
                             @if($vendor->is_importer)

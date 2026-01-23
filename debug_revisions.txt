@@ -1,0 +1,7 @@
+$curr = App\Models\EvatekItem::with('revisions')->where('status', 'like', 'On_progress')->orWhere('status', 'like', 'on_progress')->get();
+foreach($curr as $ev) {
+  echo "Item {$ev->evatek_id} ({$ev->status}):\n";
+  foreach($ev->revisions as $rev) {
+     echo "  - {$rev->revision_code}: [{$rev->status}] Link: " . ($rev->vendor_link ? $rev->vendor_link : 'NULL') . "\n";
+  }
+}
