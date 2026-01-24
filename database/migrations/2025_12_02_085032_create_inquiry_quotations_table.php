@@ -24,6 +24,7 @@
                 
                 $table->decimal('nilai_harga', 15, 2)->nullable();
                 $table->string('currency', 10)->default('IDR');
+                $table->text('link')->nullable();
                 $table->longText('notes')->nullable();
                 $table->timestamps();
                 

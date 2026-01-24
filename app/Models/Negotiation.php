@@ -26,6 +26,7 @@ class Negotiation extends Model
         'tanggal_kirim',
         'tanggal_terima',
         'lead_time',
+        'link',
         'notes',
     ];
 

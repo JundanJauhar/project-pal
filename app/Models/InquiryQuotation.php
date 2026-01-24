@@ -22,6 +22,7 @@ class InquiryQuotation extends Model
         'lead_time',
         'nilai_harga',
         'currency',
+        'link',
         'notes',
     ];
 

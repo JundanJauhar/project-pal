@@ -41,6 +41,7 @@
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Lead Time</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Deviasi vs HPS</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Deviasi vs Budget</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Link</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Note</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                     </tr>
@@ -76,7 +77,7 @@
                         {{-- HPS --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             @if($neg->hps)
-                            {{ number_format($neg->hps,0,',','.') }} {{ $neg->currency_hps }}
+                            {{ $neg->currency_hps }} {{ number_format($neg->hps,0,',','.') }}
                             @else
                             -
                             @endif
@@ -85,7 +86,7 @@
                         {{-- Budget --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             @if($neg->budget)
-                            {{ number_format($neg->budget,0,',','.') }} {{ $neg->currency_budget }}
+                            {{ $neg->currency_budget }} {{ number_format($neg->budget,0,',','.') }}
                             @else
                             -
                             @endif
@@ -94,7 +95,7 @@
                         {{-- Harga Final --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             @if($neg->harga_final)
-                            {{ number_format($neg->harga_final,0,',','.') }} {{ $neg->currency_harga_final }}
+                            {{ $neg->currency_harga_final }} {{ number_format($neg->harga_final,0,',','.') }}
                             @else
                             -
                             @endif
@@ -149,6 +150,15 @@
                                 @endif
                         </td>
 
+                        {{-- Link --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            @if($neg->link)
+                            <a href="{{ $neg->link }}" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600;">Link</a>
+                            @else
+                            <span style="color: #999;">-</span>
+                            @endif
+                        </td>
+
                         {{-- Note --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $neg->notes ?? '-' }}</td>
 
@@ -167,7 +177,7 @@
                     {{-- ✅ EMPTY STATE DENGAN CREATE BUTTON (HANYA SAAT CHECKPOINT 4 & TIDAK ADA NEGOTIATION) --}}
                     @if($negotiationCount == 0 && $currentCheckpointSequence == 4)
                     <tr>
-                        <td colspan="11" class="text-center text-muted" style="padding: 12px 8px;">
+                        <td colspan="12" class="text-center text-muted" style="padding: 12px 8px;">
                             Belum ada Negotiation
                         </td>
                         <td class="text-center">
@@ -183,7 +193,7 @@
                     {{-- ✅ ROW CREATE (HANYA SAAT CHECKPOINT 4 & ADA NEGOTIATION) --}}
                     @if($negotiationCount > 0 && $currentCheckpointSequence == 4)
                     <tr>
-                        <td colspan="11"></td>
+                        <td colspan="12"></td>
                         <td class="text-center">
                             <button class="btn btn-sm btn-action-create"
                                 data-bs-toggle="modal"
@@ -346,8 +356,15 @@
                             value="{{ $neg->lead_time }}">
                     </div>
 
+                    {{-- Link --}}
+                    <div class="col-6">
+                        <label class="form-label">Link</label>
+                        <input type="url" name="link" class="form-control"
+                            value="{{ $neg->link }}">
+                    </div>
+
                     {{-- Note --}}
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <label class="form-label">Note</label>
                         <textarea name="notes" class="form-control">{{ $neg->notes }}</textarea>
                     </div>
@@ -511,8 +528,14 @@
                         <input type="text" name="lead_time" class="form-control" placeholder="ex: 2 minggu">
                     </div>
 
+                    {{-- Link --}}
+                    <div class="col-6">
+                        <label class="form-label">Link</label>
+                        <input type="url" name="link" class="form-control">
+                    </div>
+
                     {{-- Note --}}
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <label class="form-label">Note</label>
                         <textarea name="notes" class="form-control" rows="3"></textarea>
                     </div>

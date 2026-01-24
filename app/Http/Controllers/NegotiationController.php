@@ -48,6 +48,7 @@ class NegotiationController extends Controller
             'tanggal_kirim' => 'nullable|date',
             'tanggal_terima' => 'nullable|date|after_or_equal:tanggal_kirim',
             'lead_time' => 'nullable|string|max:100',
+            'link' => 'nullable|url|max:255',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -77,6 +78,7 @@ class NegotiationController extends Controller
                 'tanggal_kirim' => $validated['tanggal_kirim'] ?? null,
                 'tanggal_terima' => $validated['tanggal_terima'] ?? null,
                 'lead_time' => $validated['lead_time'] ?? null,
+                'link' => $validated['link'] ?? null,
                 'notes' => $validated['notes'] ?? null,
             ]);
 
@@ -127,6 +129,7 @@ class NegotiationController extends Controller
             'tanggal_kirim' => 'nullable|date',
             'tanggal_terima' => 'nullable|date|after_or_equal:tanggal_kirim',
             'lead_time' => 'nullable|string|max:100',
+            'link' => 'nullable|url|max:255',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -146,6 +149,7 @@ class NegotiationController extends Controller
                 'tanggal_kirim' => $validated['tanggal_kirim'] ?? null,
                 'tanggal_terima' => $validated['tanggal_terima'] ?? null,
                 'lead_time' => $validated['lead_time'] ?? null,
+                'link' => $validated['link'] ?? null,
                 'notes' => $validated['notes'] ?? null,
             ]);
 
