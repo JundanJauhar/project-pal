@@ -72,7 +72,7 @@
 
                             {{-- Nilai Pembayaran --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                {{ number_format($pay->payment_value,0,',','.') }} {{ $pay->currency }}
+                                {{ $pay->currency }} {{ number_format($pay->payment_value,0,',','.') }}
                             </td>
 
                             {{-- No Memo --}}

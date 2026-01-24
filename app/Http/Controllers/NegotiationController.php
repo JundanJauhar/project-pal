@@ -7,6 +7,7 @@ use App\Models\Procurement;
 use App\Models\Vendor;
 use App\Models\PengadaanOC;
 use App\Models\PengesahanKontrak;
+use App\Models\Kontrak;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -163,6 +164,13 @@ class NegotiationController extends Controller
                 ]);
 
             PengesahanKontrak::where('procurement_id', $neg->procurement_id)
+                ->where('vendor_id', $neg->vendor_id)
+                ->update([
+                    'nilai' => $neg->harga_final,
+                    'currency' => $neg->currency_harga_final,
+                ]);
+
+            Kontrak::where('procurement_id', $neg->procurement_id)
                 ->where('vendor_id', $neg->vendor_id)
                 ->update([
                     'nilai' => $neg->harga_final,

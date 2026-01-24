@@ -42,6 +42,7 @@
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Incoterms</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">COO</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Warranty</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Link</th>
                         <th style="padding: 12px 8px; text-align: center; color: #000;">Aksi</th>
                     </tr>
                 </thead>
@@ -88,7 +89,7 @@
                         {{-- Nilai --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             @if($kontrak->nilai)
-                            {{ number_format($kontrak->nilai,0,',','.') }} {{ $kontrak->currency }}
+                            {{ $kontrak->currency }} {{ number_format($kontrak->nilai,0,',','.') }}
                             @else
                             -
                             @endif
@@ -106,6 +107,15 @@
                         {{-- Warranty --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $kontrak->warranty ?? '-' }}</td>
 
+                        {{-- Link --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            @if($kontrak->link)
+                            <a href="{{ $kontrak->link }}" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600;">Link</a>
+                            @else
+                            <span style="color: #999;">-</span>
+                            @endif
+                        </td>
+
                         {{-- Aksi --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             <button class="btn btn-sm btn-action-edit"
@@ -118,10 +128,10 @@
                     @endforeach
                     @endif
 
-                    {{-- ✅ EMPTY STATE DENGAN CREATE BUTTON (HANYA SAAT CHECKPOINT 7 & TIDAK ADA KONTRAK) --}}
+                    {{-- ✅ EMPTY STATE DENGAN CREATE BUTTON (HANYA SAAT CHECKPOINT 6 & TIDAK ADA KONTRAK) --}}
                     @if($kontrakCount == 0 && $currentCheckpointSequence == 6)
                     <tr>
-                        <td colspan="11" class="text-center text-muted" style="padding: 12px 8px;">
+                        <td colspan="12" class="text-center text-muted" style="padding: 12px 8px;">
                             Belum ada Kontrak
                         </td>
                         <td class="text-center">
@@ -134,10 +144,10 @@
                     </tr>
                     @endif
 
-                    {{-- ✅ ROW CREATE (HANYA SAAT CHECKPOINT 7 & ADA KONTRAK) --}}
+                    {{-- ✅ ROW CREATE (HANYA SAAT CHECKPOINT 6 & ADA KONTRAK) --}}
                     @if($kontrakCount > 0 && $currentCheckpointSequence == 6)
                     <tr>
-                        <td colspan="11"></td>
+                        <td colspan="12"></td>
                         <td class="text-center">
                             <button class="btn btn-sm btn-action-create"
                                 data-bs-toggle="modal"
@@ -290,6 +300,13 @@
                         <label class="form-label">Warranty</label>
                         <input type="text" name="warranty" class="form-control"
                             value="{{ $kontrak->warranty }}">
+                    </div>
+
+                    {{-- Link --}}
+                    <div class="col-6">
+                        <label class="form-label">Link</label>
+                        <input type="url" name="link" class="form-control"
+                            value="{{ $kontrak->link }}">
                     </div>
 
                     {{-- Remarks --}}
@@ -446,6 +463,12 @@
                     <div class="col-md-6">
                         <label class="form-label">Warranty</label>
                         <input type="text" name="warranty" class="form-control">
+                    </div>
+
+                    {{-- Link --}}
+                    <div class="col-6">
+                        <label class="form-label">Link</label>
+                        <input type="url" name="link" class="form-control">
                     </div>
 
                     {{-- Remarks --}}
