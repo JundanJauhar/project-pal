@@ -201,7 +201,7 @@
 
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label for="end_date" class="form-label">Tanggal Target <span class="text-danger">*</span></label>
+                            <label for="end_date" class="form-label">Tanggal Digunakan <span class="text-danger">*</span></label>
                             <input type="date"
                                 class="form-control @error('end_date') is-invalid @enderror"
                                 id="end_date"

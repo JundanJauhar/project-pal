@@ -1,7 +1,7 @@
 <div id="evatek">
     <h5 class="section-title">Evatek</h5>
 
-    {{-- Alert Error (LUAR TABLE) --}}
+    {{-- Alert Error --}}
     @if ($errors->any())
     <div class="alert alert-danger">
         <ul>
@@ -27,6 +27,7 @@
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Revision</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Evatek Status</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Link SC Design</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                     </tr>
                 </thead>
@@ -86,7 +87,7 @@
                             {{-- PIC Evatek --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">
                                 @if($evatek->pic_evatek)
-                                    <span style="padding: 4px 12px; border-radius: 4px; font-weight: 600;">
+                                    <span style="padding: 4px 8px; border-radius: 4px; background: #E3F2FD; color: #1976D2; font-weight: 600; font-size: 12px;">
                                         {{ $evatek->pic_evatek }}
                                     </span>
                                 @else
@@ -106,7 +107,7 @@
 
                             {{-- Revision --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                <span style="padding: 4px 12px; border-radius: 4px; font-weight: 600;">
+                                <span style="padding: 4px 12px; border-radius: 4px; background: #F5F5F5; font-weight: 600;">
                                     {{ $evatek->current_revision }}
                                 </span>
                             </td>
@@ -139,6 +140,19 @@
                                     <span style="color: {{ $evatekStatusConfig['text'] }}; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 13px; display: inline-block;">
                                         ● {{ $evatekStatusConfig['label'] }}
                                     </span>
+                                @else
+                                    <span style="color: #999;">-</span>
+                                @endif
+                            </td>
+
+                            {{-- Link SC Design --}}
+                            <td style="padding: 12px 8px; text-align: center; color: #000;">
+                                @if($evatek->sc_design_link)
+                                    <a href="{{ $evatek->sc_design_link }}" 
+                                       target="_blank" 
+                                       style="color: #0066cc; text-decoration: underline; font-weight: 600;">
+                                        <i class="bi bi-link-45deg"></i> Link
+                                    </a>
                                 @else
                                     <span style="color: #999;">-</span>
                                 @endif
@@ -195,6 +209,9 @@
                             {{-- Evatek Status --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
 
+                            {{-- Link SC Design --}}
+                            <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
+
                             {{-- Aksi --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">
                                 <button type="button"
@@ -211,7 +228,7 @@
                     {{-- ✅ EMPTY STATE --}}
                     @if($totalItems == 0)
                     <tr>
-                        <td colspan="10" class="text-center text-muted" style="padding: 12px 8px;">
+                        <td colspan="11" class="text-center text-muted" style="padding: 12px 8px;">
                             Tidak ada item untuk dimasukkan ke Evatek
                         </td>
                     </tr>
@@ -304,6 +321,17 @@
                             <small style="color: #666;">
                                 Vendor berasal dari Inquiry & Quotation yang sudah dibuat
                             </small>
+                        </div>
+
+                        {{-- SC Design Link --}}
+                        <div class="mb-3">
+                            <label class="form-label" style="font-weight: 600; font-size: 14px;">Link SC Design</label>
+                            <input type="url"
+                                name="sc_design_link"
+                                class="form-control"
+                                placeholder="https://example.com/design"
+                                style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                            <small style="color: #666;">Opsional - URL dokumen desain dari divisi SC</small>
                         </div>
                     </div>
 

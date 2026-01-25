@@ -37,6 +37,7 @@ class KontrakController extends Controller
             'incoterms' => 'nullable|string|max:255',
             'coo' => 'nullable|string|max:255',
             'warranty' => 'nullable|string|max:255',
+            'link' => 'nullable|url|max:255',
             'remarks' => 'nullable|string',
         ]);
 
@@ -86,6 +87,7 @@ class KontrakController extends Controller
             'incoterms' => 'nullable|string|max:255',
             'coo' => 'nullable|string|max:255',
             'warranty' => 'nullable|string|max:255',
+            'link' => 'nullable|url|max:255',
             'remarks' => 'nullable|string',
         ]);
 

@@ -26,6 +26,14 @@ class Division extends Model
     }
 
     /**
+     * Get roles in this division
+     */
+    public function roles(): HasMany
+    {
+        return $this->hasMany(Role::class, 'division_id', 'division_id');
+    }
+
+    /**
      * Get projects owned by this division
      */
     public function projects(): HasMany

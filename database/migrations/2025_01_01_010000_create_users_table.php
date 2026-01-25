@@ -18,6 +18,7 @@ return new class extends Migration
     $table->string('password', 255);
     $table->enum('roles', ['admin', 'user', 'supply_chain', 'treasury', 'accounting', 'qa', 'sekretaris', 'desain', 'superadmin', 'vendor'])->default('user');
     $table->unsignedBigInteger('division_id')->nullable();
+    $table->unsignedBigInteger('role_id')->nullable();
     $table->enum('status', ['active', 'inactive'])->default('active');
     $table->rememberToken();
     $table->timestamps();
@@ -27,6 +28,11 @@ return new class extends Migration
         ->references('division_id')
         ->on('divisions')
         ->nullOnDelete();
+
+    $table->foreign('role_id')
+                ->references('role_id')
+                ->on('roles')
+                ->nullOnDelete();
 });
 
     }
