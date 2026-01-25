@@ -260,6 +260,52 @@ class ProcurementController extends Controller
         // Check if any Pengadaan OC exists (tidak perlu tgl_acc)
         $hasPengadaanOcCompleted = $pengadaanOcs->count() > 0;
 
+        if ($currentCheckpointSequence == 6) {
+
+            $pkExists = PengesahanKontrak::where(
+                'procurement_id',
+                $procurement->procurement_id
+            )->exists();
+
+            if (!$pkExists) {
+
+                $pengadaanOc = $pengadaanOcs->first();
+
+                if ($pengadaanOc) {
+                    PengesahanKontrak::create([
+                        'procurement_id' => $procurement->procurement_id,
+                        'vendor_id'      => $pengadaanOc->vendor_id,
+                        'currency'       => $pengadaanOc->currency ?? 'IDR',
+                        'nilai'          => $pengadaanOc->nilai,
+                    ]);
+                }
+            }
+        }
+
+        if ($currentCheckpointSequence == 6) {
+
+            $kontrakExists = Kontrak::where(
+                'procurement_id',
+                $procurement->procurement_id
+            )->exists();
+
+            if (!$kontrakExists) {
+
+                // Ambil Pengadaan OC (single source of truth)
+                $pengadaanOc = $pengadaanOcs->first();
+
+                if ($pengadaanOc) {
+                    Kontrak::create([
+                        'procurement_id' => $procurement->procurement_id,
+                        'vendor_id'      => $pengadaanOc->vendor_id,
+                        'currency'       => $pengadaanOc->currency ?? 'IDR',
+                        'nilai'          => $pengadaanOc->nilai,
+                        // item_id DISENGAJA NULL (diisi dari modal)
+                    ]);
+                }
+            }
+        }
+
         // Get vendors from all Pengadaan OC for contract review
         $pengadaanOcVendorIds = $pengadaanOcs->pluck('vendor_id')->unique()->toArray();
         $pengadaanOcVendors = Vendor::whereIn('id_vendor', $pengadaanOcVendorIds)

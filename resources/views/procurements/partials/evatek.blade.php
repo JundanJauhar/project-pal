@@ -148,11 +148,7 @@
                             {{-- Link SC Design --}}
                             <td style="padding: 12px 8px; text-align: center; color: #000;">
                                 @if($evatek->sc_design_link)
-                                    <a href="{{ $evatek->sc_design_link }}" 
-                                       target="_blank" 
-                                       style="color: #0066cc; text-decoration: underline; font-weight: 600;">
-                                        <i class="bi bi-link-45deg"></i> Link
-                                    </a>
+                                    <a href="{{ $evatek->sc_design_link }}" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600;">Link</a>
                                 @else
                                     <span style="color: #999;">-</span>
                                 @endif
