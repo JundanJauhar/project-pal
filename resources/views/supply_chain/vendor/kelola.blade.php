@@ -377,7 +377,7 @@
             </div>
 
             {{-- Tambah Vendor --}}
-            @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
+            @if(Auth::user()->division->name === 'Supply Chain')
             <div class="tambah" style="min-width: 120px;">
                 <a href="{{ route('supply-chain.vendor.form') }}"
                     class="btn-tambah-vendor"
