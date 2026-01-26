@@ -140,19 +140,45 @@
             gap: 12px;
         }
 
-        .captcha-box img {
-            height: 40px;
-            border-radius: 6px;
-            border: 1px solid #999;
+        .captcha-image-wrapper {
+            height: 44px;
+            min-width: 120px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 8px;
+        }
+
+        .captcha-row .captcha-image-wrapper,
+        .captcha-row .form-control {
+            margin-top: 5px;
+            margin-bottom: 5px;
+            height: 48px;               /* samakan tinggi visual */
+        }
+        .captcha-image-wrapper img {
+            height: 28px;
+            width: auto;
             cursor: pointer;
         }
 
+        .captcha-image-wrapper:hover {
+            border-color: #003d82;
+        }
         .captcha-note {
             font-size: 12px;
             color: #555;
             margin-top: 4px;
         }
 
+        .captcha-error {
+            font-size: 12px;
+            color: #dc3545;
+            margin-top: 4px;
+            min-height: 16px;
+        }
     </style>
 </head>
 
@@ -210,44 +236,52 @@
                         @error('password')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <div class="text-end mt-2">
-                            <a href="#" class="forgot-password">Forgot Password</a>
-                        </div>
                     </div>
 
                     <!-- CAPTCHA -->
                     <div class="mb-3">
                         <label class="form-label">Captcha</label>
 
-                        <div class="captcha-box">
-                            <img id="captchaImage"`
-                            
-                            src="{{ route('captcha.generate') }}"
-                                 alt="captcha"
-                                 onclick="refreshCaptcha()">
+                        <div class="d-flex align-items-stretch gap-2 captcha-row">
+                            <!-- Captcha Image -->
+                            <div class="captcha-image-wrapper">
+                                <img id="captchaImage"
+                                    src="{{ route('captcha.generate') }}"
+                                    alt="captcha"
+                                    onclick="refreshCaptcha()">
+                            </div>
 
-                            <input type="text" name="captcha"
-                                class="form-control @error('captcha') is-invalid @enderror"
-                                placeholder="Masukkan captcha"
-                                required>
+                            <!-- Input -->
+                            <div class="flex-grow-1">
+                                <input type="text" name="captcha"
+                                    class="form-control @error('captcha') is-invalid @enderror"
+                                    placeholder="Masukkan captcha"
+                                    oninput="this.value = this.value.toUpperCase()"
+                                    required>
 
-                            @error('captcha')
-                                <div class="invalid-feedback d-block">
-                                    {{ $message }}
+                                <div class="captcha-error">
+                                    @error('captcha')
+                                        {{ $message }}
+                                    @enderror
                                 </div>
-                            @enderror
+                            </div>
+                        </div>
+</div>
+
+
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <!-- Remember Me (Kiri) -->
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                            <label class="form-check-label" for="remember">
+                                Remember Me
+                            </label>
                         </div>
 
-                        <div class="captcha-note">
-                            Klik gambar untuk memperbarui captcha
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                        <label class="form-check-label" for="remember">
-                            Remember Me
-                        </label>
+                        <!-- Forgot Password (Kanan) -->
+                        <a href="#" class="forgot-password">
+                            Forgot Password
+                        </a>
                     </div>
 
                     <button type="submit" class="btn btn-login">
