@@ -15,33 +15,51 @@ use App\Helpers\ActivityLogger;
 class DashboardController extends Controller
 {
     /**
-     * Display dashboard overview
+     * Display dashboard overview (READ-ONLY & GLOBAL)
+     * 
+     * Prinsip Dashboard:
+     * - GLOBAL: semua procurement dapat dilihat oleh semua user
+     * - READ-ONLY: tidak ada action create/edit/delete di dashboard
+     * - NO AUTHORIZATION: tidak ada pembatasan division atau role
+     * - ROLE ONLY UNTUK: aksi (create/edit/approve), bukan visibility
+     * 
+     * Flow:
+     * 1. Load ALL procurement (tanpa filter divisi/role)
+     * 2. Vendor user → filter by vendor_id (untuk kenyamanan, bukan security)
+     * 3. Hitung statistik global
+     * 4. Tampilkan data dengan eager loading untuk performa
      */
     public function index()
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
+        $user->loadAuthContext();
+
         $checkpoints = Checkpoint::all();
         $projects = Project::all();
         $priority = Procurement::select('priority')->distinct()->get();
 
-        // Get ALL procurements with checkpoint data, filtered by vendor if applicable
+        // === GLOBAL PROCUREMENT QUERY (NO AUTHORIZATION FILTER) ===
+        // Semua user bisa lihat semua procurement
         $allProcurementsQuery = Procurement::with([
             'project',
-            'department', 
+            'department',
             'requestProcurements.vendor',
             'procurementProgress.checkpoint'
         ]);
 
-        // Filter by vendor_id if user has vendor_id
-        if ($user->vendor_id) {
-            $allProcurementsQuery->whereHas('requestProcurements', function($query) use ($user) {
+        // === OPTIONAL VENDOR FILTER (UX convenience, bukan security) ===
+        // Jika user adalah vendor, tampilkan hanya procurement-nya untuk kenyamanan
+        // Tapi ini bukan pembatasan keamanan (user bisa lihat semua jika mau)
+        if ($user->hasRole('vendor')) {
+            $allProcurementsQuery->whereHas('requestProcurements', function ($query) use ($user) {
                 $query->where('vendor_id', $user->vendor_id);
             });
         }
 
         $allProcurements = $allProcurementsQuery->get();
 
-        // Calculate statistics based on status_procurement column
+        // === CALCULATE STATISTICS (GLOBAL, NO FILTER) ===
         $stats = [
             'total_pengadaan' => $allProcurements->count(),
             'sedang_proses' => $allProcurements->where('status_procurement', 'in_progress')->count(),
@@ -49,10 +67,10 @@ class DashboardController extends Controller
             'ditolak' => $allProcurements->where('status_procurement', 'cancelled')->count(),
         ];
 
-        // Get recent procurements based on user role (paginated)
-        $procurements = $this->getProcurementsByRole($user);
+        // Get recent procurements for display (paginated)
+        $procurements = $this->getProcurementsForDisplay($user);
 
-        // Get unread notifications (jika ada)
+        // Get unread notifications
         $notifications = [];
         if (class_exists('App\Models\Notification')) {
             $notifications = Notification::where('user_id', $user->id)
@@ -66,20 +84,25 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get procurements based on user role
+     * Get procurements untuk display (READ-ONLY)
+     * 
+     * Logic:
+     * - Semua user lihat semua procurement
+     * - Vendor user: optional filter untuk kenyamanan (bukan security)
+     * - NO role-based filtering
      */
-    private function getProcurementsByRole($user)
+    private function getProcurementsForDisplay($user)
     {
         $query = Procurement::with([
             'project',
-            'department', 
+            'department',
             'requestProcurements.vendor',
             'procurementProgress.checkpoint'
         ]);
 
-        // Filter by vendor_id if user has vendor_id
-        if ($user->vendor_id) {
-            $query->whereHas('requestProcurements', function($q) use ($user) {
+        // === OPTIONAL VENDOR FILTER (UX convenience only) ===
+        if ($user->hasRole('vendor')) {
+            $query->whereHas('requestProcurements', function ($q) use ($user) {
                 $q->where('vendor_id', $user->vendor_id);
             });
         }
@@ -89,165 +112,218 @@ class DashboardController extends Controller
     }
 
     /**
-     * Search procurements with filters
+     * Search procurements (READ-ONLY & GLOBAL)
+     * 
+     * Prinsip:
+     * - Semua user bisa search semua procurement
+     * - Filter: keyword, priority, project, checkpoint (business filter, bukan authorization)
+     * - Vendor filter: optional convenience untuk vendor user
+     * - NO division/role-based query filtering
      */
-public function search(Request $request)
-{
-    $user = Auth::user();
-    
-    $query = Procurement::with([
-        'project',
-        'department',
-        'requestProcurements.vendor',
-        'procurementProgress.checkpoint'
-    ]);
+    public function search(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
 
-    // Filter by vendor_id if user has vendor_id
-    if ($user->vendor_id) {
-        $query->whereHas('requestProcurements', function($q) use ($user) {
-            $q->where('vendor_id', $user->vendor_id);
+        $query = Procurement::with([
+            'project',
+            'department',
+            'requestProcurements.vendor',
+            'procurementProgress.checkpoint'
+        ]);
+
+        // === OPTIONAL VENDOR FILTER (UX convenience only) ===
+        if ($user->hasRole('vendor')) {
+            $query->whereHas('requestProcurements', function ($q) use ($user) {
+                $q->where('vendor_id', $user->vendor_id);
+            });
+        }
+
+        // === FILTER PENCARIAN (Business logic, tidak ada authorization) ===
+
+        // Search by keyword
+        if ($request->filled('q')) {
+            $searchTerm = $request->q;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name_procurement', 'like', "%$searchTerm%")
+                  ->orWhere('code_procurement', 'like', "%$searchTerm%");
+            });
+        }
+
+        // Filter by priority
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->priority);
+        }
+
+        // Filter by project
+        if ($request->filled('project')) {
+            $query->whereHas('project', function ($q) use ($request) {
+                $q->where('project_code', $request->project);
+            });
+        }
+
+        // Load all matching records
+        $allProcurements = $query->orderBy('created_at', 'desc')->get();
+
+        // Filter by checkpoint (setelah load, karena pakai accessor)
+        if ($request->filled('checkpoint')) {
+            $checkpointFilter = $request->checkpoint;
+
+            $allProcurements = $allProcurements->filter(function ($p) use ($checkpointFilter) {
+                if ($checkpointFilter === 'completed') {
+                    return $p->status_procurement === 'completed';
+                }
+
+                if ($checkpointFilter === 'cancelled') {
+                    return $p->status_procurement === 'cancelled';
+                }
+
+                return $p->status_procurement === 'in_progress'
+                    && ($p->current_checkpoint === $checkpointFilter);
+            });
+        }
+
+        // === PAGINATION MANUAL ===
+        $page = $request->get('page', 1);
+        $perPage = 10;
+        $total = $allProcurements->count();
+        $lastPage = $total > 0 ? ceil($total / $perPage) : 1;
+
+        $procurements = $allProcurements
+            ->slice(($page - 1) * $perPage, $perPage)
+            ->values();
+
+        // Log activity (info saja, tanpa security context)
+        ActivityLogger::log(
+            module: 'Dashboard',
+            action: 'search_procurement',
+            targetId: null,
+            details: [
+                'search' => $request->q ?? null,
+                'priority' => $request->priority ?? null,
+                'project' => $request->project ?? null,
+                'checkpoint' => $request->checkpoint ?? null,
+                'page' => $page,
+                'user_id' => $user->id,
+                'has_vendor_filter' => $user->hasRole('vendor')
+            ]
+        );
+
+        // Format response
+        $data = $procurements->map(function ($p) {
+            return [
+                'procurement_id' => $p->procurement_id,
+                'project_code' => $p->project->project_code ?? '-',
+                'code_procurement' => $p->code_procurement,
+                'name_procurement' => $p->name_procurement,
+                'department_name' => $p->department->department_name ?? '-',
+                'start_date' => optional($p->start_date)->format('d/m/Y'),
+                'end_date' => optional($p->end_date)->format('d/m/Y'),
+                'vendor_name' => $p->requestProcurements->first()?->vendor?->name_vendor ?? '-',
+                'priority' => $p->priority,
+                'status_procurement' => $p->status_procurement,
+                'current_checkpoint' => $p->current_checkpoint,
+            ];
         });
+
+        return response()->json([
+            'data' => $data,
+            'pagination' => [
+                'current_page' => (int)$page,
+                'last_page' => $lastPage,
+                'per_page' => $perPage,
+                'total' => $total,
+                'has_more' => $page < $lastPage,
+            ]
+        ]);
     }
-
-    // Filter search
-    if ($request->filled('q')) {
-        $searchTerm = $request->q;
-        $query->where(function ($q) use ($searchTerm) {
-            $q->where('name_procurement', 'like', "%$searchTerm%")
-              ->orWhere('code_procurement', 'like', "%$searchTerm%");
-        });
-    }
-
-    // Filter priority
-    if ($request->filled('priority')) {
-        $query->where('priority', $request->priority);
-    }
-
-    // Filter project
-    if ($request->filled('project')) {
-        $query->whereHas('project', function ($q) use ($request) {
-            $q->where('project_code', $request->project);
-        });
-    }
-
-    // Load data
-    $allProcurements = $query->orderBy('created_at', 'desc')->get();
-
-    // Filter checkpoint AFTER loading (karena pakai accessor)
-    if ($request->filled('checkpoint')) {
-        $checkpointFilter = $request->checkpoint;
-
-        $allProcurements = $allProcurements->filter(function ($p) use ($checkpointFilter) {
-
-            // status completed
-            if ($checkpointFilter === 'completed') {
-                return $p->status_procurement === 'completed';
-            }
-
-            // status cancelled
-            if ($checkpointFilter === 'cancelled') {
-                return $p->status_procurement === 'cancelled';
-            }
-
-            // filter berdasarkan accessor current_checkpoint
-            return $p->status_procurement === 'in_progress'
-                && ($p->current_checkpoint === $checkpointFilter);
-        });
-    }
-
-    // Manual pagination
-    $page = $request->get('page', 1);
-    $perPage = 10;
-    $total = $allProcurements->count();
-    $lastPage = $total > 0 ? ceil($total / $perPage) : 1;
-
-    $procurements = $allProcurements
-        ->slice(($page - 1) * $perPage, $perPage)
-        ->values();
-
-    // Log activity
-    ActivityLogger::log(
-        module: 'Dashboard',
-        action: 'search_procurement',
-        targetId: null,
-        details: [
-            'search' => $request->q ?? null,
-            'priority' => $request->priority ?? null,
-            'project' => $request->project ?? null,
-            'checkpoint' => $request->checkpoint ?? null,
-            'page' => $request->get('page', 1)
-        ]
-    );
-
-    // Format JSON response
-    $data = $procurements->map(function ($p) {
-
-        return [
-            'procurement_id'   => $p->procurement_id,
-            'project_code'     => $p->project->project_code ?? '-',
-            'code_procurement' => $p->code_procurement,
-            'name_procurement' => $p->name_procurement,
-            'department_name'  => $p->department->department_name ?? '-',
-            'start_date'       => optional($p->start_date)->format('d/m/Y'),
-            'end_date'         => optional($p->end_date)->format('d/m/Y'),
-            'vendor_name'      => $p->requestProcurements->first()?->vendor?->name_vendor ?? '-',
-            'priority'         => $p->priority,
-            'status_procurement' => $p->status_procurement,
-            'current_checkpoint' => $p->current_checkpoint, // ← FIX UTAMA
-        ];
-    });
-
-    return response()->json([
-        'data' => $data,
-        'pagination' => [
-            'current_page' => (int)$page,
-            'last_page'    => $lastPage,
-            'per_page'     => $perPage,
-            'total'        => $total,
-            'has_more'     => $page < $lastPage,
-        ]
-    ]);
-}
-
 
     /**
-     * Get dashboard data for specific department
+     * Get dashboard data untuk department tertentu (READ-ONLY & GLOBAL)
+     * 
+     * Prinsip:
+     * - Semua user bisa lihat procurement dari department mana saja
+     * - Department filter = UI categorization, bukan authorization
+     * - NO division-based access control
      */
     public function departmentDashboard($departmentId)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
+        $user->loadAuthContext();
 
-        $procurements = Procurement::where('department_procurement', $departmentId)
+        $query = Procurement::where('department_id', $departmentId)
             ->with([
                 'project',
-                'department', 
+                'department',
                 'requestProcurements.vendor',
                 'procurementProgress.checkpoint'
-            ])
-            ->orderBy('created_at', 'desc')
+            ]);
+
+        // === OPTIONAL VENDOR FILTER (UX convenience only) ===
+        if ($user->hasRole('vendor')) {
+            $query->whereHas('requestProcurements', function ($q) use ($user) {
+                $q->where('vendor_id', $user->vendor_id);
+            });
+        }
+
+        $procurements = $query->orderBy('created_at', 'desc')
             ->paginate(10);
 
         return view('dashboard.department', compact('procurements'));
     }
 
     /**
-     * Get procurement statistics by status
+     * Get procurement statistics by status (READ-ONLY & GLOBAL)
+     * 
+     * Prinsip:
+     * - Menampilkan statistik GLOBAL untuk semua procurement
+     * - Semua user lihat angka yang sama
+     * - NO division filtering
      */
     public function getStatistics()
     {
-        $allProcurements = Procurement::with(['procurementProgress.checkpoint'])->get();
-        
-        // Calculate using status_procurement column
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        // === GLOBAL QUERY (NO FILTER) ===
+        $query = Procurement::with(['procurementProgress.checkpoint']);
+
+        // === OPTIONAL VENDOR FILTER (UX convenience only) ===
+        if ($user->hasRole('vendor')) {
+            $query->whereHas('requestProcurements', function ($q) use ($user) {
+                $q->where('vendor_id', $user->vendor_id);
+            });
+        }
+
+        $allProcurements = $query->get();
+
+        // Status statistics
         $statusStats = [
-            ['status' => 'in_progress', 'label' => 'Sedang Proses', 'count' => $allProcurements->where('status_procurement', 'in_progress')->count()],
-            ['status' => 'completed', 'label' => 'Selesai', 'count' => $allProcurements->where('status_procurement', 'completed')->count()],
-            ['status' => 'cancelled', 'label' => 'Dibatalkan', 'count' => $allProcurements->where('status_procurement', 'cancelled')->count()],
+            [
+                'status' => 'in_progress',
+                'label' => 'Sedang Proses',
+                'count' => $allProcurements->where('status_procurement', 'in_progress')->count()
+            ],
+            [
+                'status' => 'completed',
+                'label' => 'Selesai',
+                'count' => $allProcurements->where('status_procurement', 'completed')->count()
+            ],
+            [
+                'status' => 'cancelled',
+                'label' => 'Dibatalkan',
+                'count' => $allProcurements->where('status_procurement', 'cancelled')->count()
+            ],
         ];
 
+        // Priority statistics (GLOBAL)
         $priorityStats = Procurement::selectRaw('priority, COUNT(*) as count')
             ->groupBy('priority')
             ->get()
-            ->map(function($item) {
+            ->map(function ($item) {
                 return [
                     'priority' => $item->priority,
                     'label' => ucfirst($item->priority),
@@ -262,27 +338,29 @@ public function search(Request $request)
     }
 
     /**
-     * Get procurement timeline progress
+     * Get procurement timeline progress (READ-ONLY)
+     * 
+     * Prinsip:
+     * - Semua user bisa lihat timeline dari procurement mana saja
+     * - NO authorization check untuk divisi/role
      */
     public function getProcurementTimeline($procurementId)
     {
-        $procurement = Procurement::findOrFail($procurementId);
-        
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        // === NO AUTHORIZATION CHECK - Semua user bisa lihat ===
+        $procurement = Procurement::with(['procurementProgress.checkpoint'])
+            ->where('procurement_id', $procurementId)
+            ->firstOrFail();
+
+        // Get timeline progress
         $progress = $procurement->procurementProgress()
             ->with(['checkpoint', 'user'])
             ->orderBy('checkpoint_id')
             ->get()
-            ->map(function($p) use ($procurementId) {
-
-                ActivityLogger::log(
-                    module: 'Dashboard',
-                    action: 'view_procurement_timeline',
-                    targetId: $procurementId,
-                    details: [
-                        'user_id' => Auth::id()
-                    ]
-                );
-
+            ->map(function ($p) {
                 return [
                     'checkpoint_name' => $p->checkpoint->point_name ?? '-',
                     'checkpoint_sequence' => $p->checkpoint->point_sequence ?? 0,
@@ -293,6 +371,16 @@ public function search(Request $request)
                     'user_name' => $p->user->name ?? '-',
                 ];
             });
+
+        // Log activity (info only, bukan security check)
+        ActivityLogger::log(
+            module: 'Dashboard',
+            action: 'view_procurement_timeline',
+            targetId: $procurementId,
+            details: [
+                'user_id' => $user->id,
+            ]
+        );
 
         $service = new CheckpointTransitionService($procurement);
         $currentCheckpoint = $service->getCurrentCheckpoint();
@@ -310,29 +398,52 @@ public function search(Request $request)
     }
 
     /**
-     * Get procurements by project
+     * Get procurements by project (READ-ONLY & GLOBAL)
+     * 
+     * Prinsip:
+     * - Semua user bisa lihat procurement dari project mana saja
+     * - NO division-based filtering
      */
     public function byProject($projectCode)
     {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
         $project = Project::where('project_code', $projectCode)->firstOrFail();
-        
-        $procurements = Procurement::where('project_id', $project->project_id)
+
+        $query = Procurement::where('project_id', $project->project_id)
             ->with([
-                'department', 
+                'department',
                 'requestProcurements.vendor',
                 'procurementProgress.checkpoint'
-            ])
-            ->orderBy('created_at', 'desc')
+            ]);
+
+        // === OPTIONAL VENDOR FILTER (UX convenience only) ===
+        if ($user->hasRole('vendor')) {
+            $query->whereHas('requestProcurements', function ($q) use ($user) {
+                $q->where('vendor_id', $user->vendor_id);
+            });
+        }
+
+        $procurements = $query->orderBy('created_at', 'desc')
             ->paginate(15);
+
+        // Count stats (GLOBAL)
+        $statsQuery = Procurement::where('project_id', $project->project_id);
+        
+        // Apply vendor filter untuk stats juga (consistency)
+        if ($user->hasRole('vendor')) {
+            $statsQuery->whereHas('requestProcurements', function ($q) use ($user) {
+                $q->where('vendor_id', $user->vendor_id);
+            });
+        }
 
         $stats = [
             'total' => $procurements->total(),
-            'in_progress' => Procurement::where('project_id', $project->project_id)
-                ->where('status_procurement', 'in_progress')->count(),
-            'completed' => Procurement::where('project_id', $project->project_id)
-                ->where('status_procurement', 'completed')->count(),
-            'cancelled' => Procurement::where('project_id', $project->project_id)
-                ->where('status_procurement', 'cancelled')->count(),
+            'in_progress' => (clone $statsQuery)->where('status_procurement', 'in_progress')->count(),
+            'completed' => (clone $statsQuery)->where('status_procurement', 'completed')->count(),
+            'cancelled' => (clone $statsQuery)->where('status_procurement', 'cancelled')->count(),
         ];
 
         ActivityLogger::log(
@@ -341,7 +452,7 @@ public function search(Request $request)
             targetId: $project->project_id,
             details: [
                 'project_code' => $projectCode,
-                'user_id' => Auth::id()
+                'user_id' => $user->id,
             ]
         );
 
@@ -349,21 +460,37 @@ public function search(Request $request)
     }
 
     /**
-     * Get checkpoint distribution (untuk analytics/dashboard charts)
+     * Get checkpoint distribution untuk analytics charts (READ-ONLY & GLOBAL)
+     * 
+     * Prinsip:
+     * - Menampilkan distribusi GLOBAL
+     * - Semua user lihat data yang sama
      */
     public function getCheckpointDistribution()
     {
-        $procurements = Procurement::where('status_procurement', 'in_progress')
-            ->with(['procurementProgress.checkpoint'])
-            ->get();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        $query = Procurement::where('status_procurement', 'in_progress')
+            ->with(['procurementProgress.checkpoint']);
+
+        // === OPTIONAL VENDOR FILTER (UX convenience only) ===
+        if ($user->hasRole('vendor')) {
+            $query->whereHas('requestProcurements', function ($q) use ($user) {
+                $q->where('vendor_id', $user->vendor_id);
+            });
+        }
+
+        $procurements = $query->get();
 
         $distribution = [];
-        
+
         foreach ($procurements as $proc) {
             $service = new CheckpointTransitionService($proc);
             $currentCheckpoint = $service->getCurrentCheckpoint();
             $checkpointName = $currentCheckpoint ? $currentCheckpoint->point_name : '-';
-            
+
             if ($checkpointName !== '-') {
                 if (!isset($distribution[$checkpointName])) {
                     $distribution[$checkpointName] = 0;
@@ -372,7 +499,7 @@ public function search(Request $request)
             }
         }
 
-        $result = collect($distribution)->map(function($count, $checkpoint) {
+        $result = collect($distribution)->map(function ($count, $checkpoint) {
             return [
                 'checkpoint' => $checkpoint,
                 'count' => $count

@@ -5,96 +5,119 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\Role;
 
 class UserSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // ---------------------------
-        //  SUPER ADMIN
-        // ---------------------------
-        User::updateOrCreate(
+        /*
+        |--------------------------------------------------------------------------
+        | SUPER ADMIN (PEGANG SEMUA ROLE)
+        |--------------------------------------------------------------------------
+        */
+        $superAdmin = User::updateOrCreate(
             ['email' => 'superadmin@pal.com'],
             [
                 'name'        => 'Super Admin',
-                'email'       => 'superadmin@pal.com',
-                'password'    => Hash::make('SuperAdmin123!'), // ganti sesuai preferensi Anda
+                'password'    => Hash::make('SuperAdmin123!'),
                 'division_id' => null,
-                'roles'       => 'superadmin',
                 'status'      => 'active',
             ]
         );
 
-        // ---------------------------
-        //  USER BIASA / ROLE DIVISI
-        // ---------------------------
+        // attach semua role ke super admin
+        $superAdmin->roles()->sync(
+            Role::pluck('role_id')->toArray()
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | USER LAIN (MULTI ROLE SESUAI DIVISI)
+        |--------------------------------------------------------------------------
+        */
         $users = [
             [
-                'name' => 'User Division',
-                'email' => 'user@pal.com',
-                'password' => Hash::make('password'),
-                'division_id' => 1,
-                'roles' => 'user',
-                'status' => 'active',
+                'user' => [
+                    'name'        => 'User Division',
+                    'email'       => 'user@pal.com',
+                    'division_id' => 1,
+                ],
+                'roles' => ['requester'],
             ],
             [
-                'name' => 'Supply Chain Manager',
-                'email' => 'supplychain@pal.com',
-                'password' => Hash::make('password'),
-                'division_id' => 2,
-                'roles' => 'supply_chain',
-                'status' => 'active',
+                'user' => [
+                    'name'        => 'Supply Chain',
+                    'email'       => 'supplychain@pal.com',
+                    'division_id' => 2,
+                ],
+                'roles' => [
+                    'inquiry',
+                    'evatek',
+                    'negotiation',
+                    'pengadaan',
+                    'contract',
+                    'delivery',
+                ],
             ],
             [
-                'name' => 'Treasury Staff',
-                'email' => 'treasury@pal.com',
-                'password' => Hash::make('password'),
-                'division_id' => 3,
-                'roles' => 'treasury',
-                'status' => 'active',
+                'user' => [
+                    'name'        => 'Treasury',
+                    'email'       => 'treasury@pal.com',
+                    'division_id' => 3,
+                ],
+                'roles' => ['treasury', 'pembayaran'],
             ],
             [
-                'name' => 'Accounting Staff',
-                'email' => 'accounting@pal.com',
-                'password' => Hash::make('password'),
-                'division_id' => 4,
-                'roles' => 'accounting',
-                'status' => 'active',
+                'user' => [
+                    'name'        => 'Accounting',
+                    'email'       => 'accounting@pal.com',
+                    'division_id' => 4,
+                ],
+                'roles' => ['accounting'],
             ],
             [
-                'name' => 'Quality Assurance',
-                'email' => 'qa@pal.com',
-                'password' => Hash::make('password'),
-                'division_id' => 5,
-                'roles' => 'qa',
-                'status' => 'active',
+                'user' => [
+                    'name'        => 'Quality Assurance',
+                    'email'       => 'qa@pal.com',
+                    'division_id' => 5,
+                ],
+                'roles' => ['qa_inspector', 'qa_approver'],
             ],
             [
-                'name' => 'Sekretaris Direksi',
-                'email' => 'sekretaris@pal.com',
-                'password' => Hash::make('password'),
-                'division_id' => 6,
-                'roles' => 'sekretaris',
-                'status' => 'active',
+                'user' => [
+                    'name'        => 'Sekretaris Direksi',
+                    'email'       => 'sekretaris@pal.com',
+                    'division_id' => 6,
+                ],
+                'roles' => ['sekdir'],
             ],
             [
-                'name' => 'Desain Staff',
-                'email' => 'desain@pal.com',
-                'password' => Hash::make('password'),
-                'division_id' => 7,
-                'roles' => 'desain',
-                'status' => 'active',
+                'user' => [
+                    'name'        => 'Desain',
+                    'email'       => 'desain@pal.com',
+                    'division_id' => 7,
+                ],
+                'roles' => ['designer', 'evatek'],
             ],
         ];
 
-        foreach ($users as $userData) {
-            User::updateOrCreate(
-                ['email' => $userData['email']],
-                $userData
+        foreach ($users as $data) {
+            $user = User::updateOrCreate(
+                ['email' => $data['user']['email']],
+                [
+                    'name'        => $data['user']['name'],
+                    'division_id' => $data['user']['division_id'],
+                    'password'    => Hash::make('password'),
+                    'status'      => 'active',
+                ]
             );
+
+            $roleIds = Role::whereIn('role_code', $data['roles'])
+                ->pluck('role_id')
+                ->toArray();
+
+            $user->roles()->sync($roleIds);
         }
     }
 }

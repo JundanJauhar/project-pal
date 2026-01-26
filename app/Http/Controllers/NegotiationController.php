@@ -12,14 +12,50 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Checkpoint;
+use App\Services\CheckpointTransitionService;
+use App\Helpers\ActivityLogger;
 
 class NegotiationController extends Controller
 {
 
     public function store(Request $request, $procurementId)
     {
-        if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
-            abort(403, 'Unauthorized action.');
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        // === STEP 1: Check ROLE ===
+        if (!$user->hasRole('negotiation')) {
+            abort(403, 'Anda tidak punya role negotiation.');
+        }
+
+        // === STEP 2: Load PROCUREMENT ===
+        $procurement = Procurement::findOrFail($procurementId);
+
+        // === STEP 3: Get CURRENT CHECKPOINT ===
+        $currentCheckpoint = $procurement->procurementProgress()
+            ->with('checkpoint')
+            ->where('status', 'in_progress')
+            ->first();
+
+        if (!$currentCheckpoint) {
+            abort(400, 'Procurement tidak sedang di tahap apapun.');
+        }
+
+        // === STEP 4: Check CHECKPOINT DIVISION ===
+        if ($currentCheckpoint->checkpoint->responsible_division !== $user->division_id) {
+            abort(403, 'Procurement sedang ditangani divisi lain.');
+        }
+
+        // === STEP 5: Check CHECKPOINT NAME ===
+        if ($currentCheckpoint->checkpoint->point_name !== 'Negotiation') {
+            abort(403, 'Procurement tidak sedang di tahap Negotiation.');
+        }
+
+        // === CONSISTENCY CHECK: URL parameter vs request body ===
+        if ((int)$procurementId !== (int)$request->input('procurement_id')) {
+            abort(400, 'Invalid procurement reference.');
         }
 
         // CATATAN: Blade sudah mengirim nilai RAW (tanpa format)
@@ -56,14 +92,10 @@ class NegotiationController extends Controller
         try {
             DB::beginTransaction();
 
-            if ((int)$validated['procurement_id'] !== (int)$procurementId) {
-                throw new \Exception('Invalid procurement reference.');
-            }
-
             $procurement = Procurement::findOrFail($procurementId);
             $vendor = Vendor::findOrFail($validated['vendor_id']);
 
-            Negotiation::create([
+            $negotiation = Negotiation::create([
                 'procurement_id' => $procurementId,
                 'vendor_id' => $validated['vendor_id'],
 
@@ -85,13 +117,30 @@ class NegotiationController extends Controller
 
             DB::commit();
 
+            ActivityLogger::log(
+                module: 'Negotiation',
+                action: 'create_negotiation',
+                targetId: $negotiation->negotiation_id,
+                details: [
+                    'procurement_id' => $procurement->procurement_id,
+                    'checkpoint_id' => $currentCheckpoint->checkpoint_id,
+                    'user_id' => $user->id,
+                    'division_id' => $user->division_id,
+                ]
+            );
+
             return redirect()
                 ->route('procurements.show', $procurementId)
                 ->with('success', "Negotiation untuk vendor {$vendor->name_vendor} berhasil disimpan")
                 ->withFragment('negotiation');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error storing negotiation: ' . $e->getMessage());
+            Log::error('Error storing negotiation', [
+                'user_id' => $user->id,
+                'procurement_id' => $procurementId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
             return back()
                 ->withInput()
@@ -101,8 +150,37 @@ class NegotiationController extends Controller
 
     public function update(Request $request, $negotiationId)
     {
-        if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
-            abort(403);
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        // === STEP 1: Check ROLE ===
+        if (!$user->hasRole('negotiation')) {
+            abort(403, 'Anda tidak punya role negotiation.');
+        }
+
+        // === STEP 2: Load NEGOTIATION + PROCUREMENT ===
+        $neg = Negotiation::with('procurement')->findOrFail($negotiationId);
+        $procurement = $neg->procurement;
+
+        // === STEP 3: Get CURRENT CHECKPOINT ===
+        $currentCheckpoint = $procurement->procurementProgress()
+            ->with('checkpoint')
+            ->where('status', 'in_progress')
+            ->first();
+
+        if (!$currentCheckpoint) {
+            abort(400, 'Procurement tidak sedang di tahap apapun.');
+        }
+
+        // === STEP 4: Check CHECKPOINT DIVISION ===
+        if ($currentCheckpoint->checkpoint->responsible_division !== $user->division_id) {
+            abort(403, 'Procurement sedang ditangani divisi lain.');
+        }
+
+        // === STEP 5: Check CHECKPOINT NAME ===
+        if ($currentCheckpoint->checkpoint->point_name !== 'Negotiation') {
+            abort(403, 'Procurement tidak sedang di tahap Negotiation.');
         }
 
         // CATATAN: Blade sudah mengirim nilai RAW (tanpa format)
@@ -136,8 +214,6 @@ class NegotiationController extends Controller
 
         try {
             DB::beginTransaction();
-
-            $neg = Negotiation::findOrFail($negotiationId);
 
             $neg->update([
                 'vendor_id' => $validated['vendor_id'],
@@ -179,6 +255,18 @@ class NegotiationController extends Controller
 
             DB::commit();
 
+            ActivityLogger::log(
+                module: 'Negotiation',
+                action: 'update_negotiation',
+                targetId: $neg->negotiation_id,
+                details: [
+                    'procurement_id' => $procurement->procurement_id,
+                    'checkpoint_id' => $currentCheckpoint->checkpoint_id,
+                    'user_id' => $user->id,
+                    'division_id' => $user->division_id,
+                ]
+            );
+
             return redirect()
                 ->route('procurements.show', $neg->procurement_id)
                 ->with('success', 'Negotiation & nilai terkait berhasil disinkronisasi')
@@ -193,24 +281,127 @@ class NegotiationController extends Controller
     }
 
 
+    /**
+     * Get Negotiations for Procurement (AJAX - READ ONLY)
+     * GET /negotiation/procurement/{procurementId}
+     * 
+     * READ-ONLY endpoint - No authorization check needed
+     * Tampilkan semua negotiation untuk procurement tersebut
+     */
+    public function getByProcurement($procurementId)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        try {
+            $procurement = Procurement::findOrFail($procurementId);
+
+            $negotiations = Negotiation::where('procurement_id', $procurementId)
+                ->with(['vendor'])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($neg) {
+                    return [
+                        'negotiation_id' => $neg->negotiation_id,
+                        'vendor_id' => $neg->vendor_id,
+                        'vendor_name' => $neg->vendor->name_vendor ?? '-',
+                        'hps' => $neg->hps ? 'Rp ' . number_format($neg->hps, 0, ',', '.') : '-',
+                        'currency_hps' => $neg->currency_hps,
+                        'budget' => $neg->budget ? 'Rp ' . number_format($neg->budget, 0, ',', '.') : '-',
+                        'currency_budget' => $neg->currency_budget,
+                        'harga_final' => $neg->harga_final ? 'Rp ' . number_format($neg->harga_final, 0, ',', '.') : '-',
+                        'currency_harga_final' => $neg->currency_harga_final,
+                        'tanggal_kirim' => $neg->tanggal_kirim ? $neg->tanggal_kirim->format('d/m/Y') : '-',
+                        'tanggal_terima' => $neg->tanggal_terima ? $neg->tanggal_terima->format('d/m/Y') : '-',
+                        'lead_time' => $neg->lead_time ?? '-',
+                        'link' => $neg->link ?? '-',
+                        'notes' => $neg->notes ?? '-',
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $negotiations,
+                'count' => $negotiations->count()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting negotiations', [
+                'user_id' => $user->id,
+                'procurement_id' => $procurementId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function delete($negotiationId)
     {
-        if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
-            abort(403, 'Unauthorized action.');
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        // === STEP 1: Check ROLE ===
+        if (!$user->hasRole('negotiation')) {
+            abort(403, 'Anda tidak punya role negotiation.');
+        }
+
+        // === STEP 2: Load NEGOTIATION + PROCUREMENT ===
+        $neg = Negotiation::with(['procurement', 'vendor'])->findOrFail($negotiationId);
+        $procurement = $neg->procurement;
+
+        // === STEP 3: Get CURRENT CHECKPOINT ===
+        $currentCheckpoint = $procurement->procurementProgress()
+            ->with('checkpoint')
+            ->where('status', 'in_progress')
+            ->first();
+
+        if (!$currentCheckpoint) {
+            abort(400, 'Procurement tidak sedang di tahap apapun.');
+        }
+
+        // === STEP 4: Check CHECKPOINT DIVISION ===
+        if ($currentCheckpoint->checkpoint->responsible_division !== $user->division_id) {
+            abort(403, 'Procurement sedang ditangani divisi lain.');
+        }
+
+        // === STEP 5: Check CHECKPOINT NAME ===
+        if ($currentCheckpoint->checkpoint->point_name !== 'Negotiation') {
+            abort(403, 'Procurement tidak sedang di tahap Negotiation.');
         }
 
         try {
-            $neg = Negotiation::findOrFail($negotiationId);
             $procurementId = $neg->procurement_id;
+            $vendorName = $neg->vendor->name_vendor ?? 'Unknown';
 
             $neg->delete();
+
+            ActivityLogger::log(
+                module: 'Negotiation',
+                action: 'delete_negotiation',
+                targetId: $negotiationId,
+                details: [
+                    'procurement_id' => $procurementId,
+                    'vendor_name' => $vendorName,
+                    'user_id' => $user->id,
+                    'division_id' => $user->division_id,
+                ]
+            );
 
             return redirect()
                 ->route('procurements.show', $procurementId)
                 ->with('success', 'Negotiation berhasil dihapus')
                 ->withFragment('negotiation');
         } catch (\Exception $e) {
-            Log::error('Error deleting negotiation: ' . $e->getMessage());
+            Log::error('Error deleting negotiation', [
+                'user_id' => $user->id,
+                'negotiation_id' => $negotiationId,
+                'error' => $e->getMessage(),
+            ]);
 
             return back()
                 ->with('error', 'Gagal menghapus Negotiation: ' . $e->getMessage());

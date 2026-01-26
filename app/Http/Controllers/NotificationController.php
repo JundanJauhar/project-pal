@@ -62,7 +62,7 @@ class NotificationController extends Controller
 
         // 2. EVATEK TASKS (Only for Desain users)
         // Check if user has role 'desain' or is in design division
-        if ($user->hasRole('desain') || (isset($user->division) && stripos($user->division->name, 'desain') !== false)) {
+        if ((isset($user->division) && stripos($user->division->name, 'desain') !== false)) {
             
             // Find Evatek Items with Pending Revisions that have Vendor Link
             // Pending means: status 'pending' (waiting for design review)

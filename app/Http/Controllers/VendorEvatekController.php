@@ -321,7 +321,9 @@ class VendorEvatekController extends Controller
         $revision->save();
 
         // NOTIFY DESAIN USERS
-        $desainUsers = \App\Models\User::where('roles', 'desain')->get();
+        $desainUsers = \App\Models\User::whereHas('roles', function ($q) {
+            $q->where('role_code', 'desain');
+        })->get();
         foreach ($desainUsers as $user) {
             \App\Models\Notification::create([
                 'user_id' => $user->user_id,

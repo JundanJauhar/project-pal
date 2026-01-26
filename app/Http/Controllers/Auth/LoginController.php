@@ -100,11 +100,11 @@ class LoginController extends Controller
             $request->session()->regenerate();
             Session::forget('captcha');
 
-            if (Auth::user()->roles === 'superadmin') {
+            if (Auth::user()->hasRole('superadmin')) {
                 return redirect()->route('ums.users.index');
             }
 
-            if (in_array(Auth::user()->roles, ['sekretaris'])) {
+            if (Auth::user()->hasRole('sekretaris')) {
                 return redirect()->route('sekdir.dashboard');
             }
 

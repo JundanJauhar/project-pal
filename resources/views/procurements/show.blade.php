@@ -477,73 +477,103 @@
     @endforelse
 
     @php
+    $user = auth()->user();
+    $division = $user->division?->division_name;
+    @endphp
+
+    @php
     $hasPembayaran = isset($pembayarans) && $pembayarans->count() > 0;
     $hasNonSkbdnPayment = $hasPembayaran
     && $pembayarans->contains(fn ($p) => $p->payment_type !== 'SKBDN');
     @endphp
 
-
     {{-- ================= Inquiry & Quotation ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 2,
+    $division === 'Supply Chain'
+    && $user->hasRole('inquiry')
+    && $currentCheckpointSequence >= 2,
     'procurements.partials.inquiry_quotation',
-    compact('procurement','inquiryQuotations','vendors','currentStageIndex','currentCheckpointSequence'))
+    compact('procurement','inquiryQuotations','vendors','currentStageIndex','currentCheckpointSequence')
+    )
 
     {{-- ================= Evatek ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 3,
+    $division === 'Supply Chain'
+    && $user->hasRole('evatek')
+    && $currentCheckpointSequence >= 3,
     'procurements.partials.evatek',
-    compact('procurement','evatekItems','vendors','inquiryQuotations','currentCheckpointSequence'))
+    compact('procurement','evatekItems','vendors','inquiryQuotations','currentCheckpointSequence')
+    )
 
     {{-- ================= Negotiation ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 4,
+    $division === 'Supply Chain'
+    && $user->hasRole('negotiation')
+    && $currentCheckpointSequence >= 4,
     'procurements.partials.negotiation',
-    compact('procurement','negotiations','vendors','currentCheckpointSequence'))
+    compact('procurement','negotiations','vendors','currentCheckpointSequence')
+    )
 
     {{-- ================= Pengadaan OC ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 5,
+    $division === 'Supply Chain'
+    && $user->hasRole('pengadaan')
+    && $currentCheckpointSequence >= 5,
     'procurements.partials.pengadaan_oc',
-    compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
+    compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence')
+    )
 
     {{-- ================= Review Kontrak ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
+    $division === 'Supply Chain'
+    && $user->hasRole('contract')
+    && $currentCheckpointSequence >= 6,
     'procurements.partials.contract_review',
-    compact('procurement', 'contractReviews', 'pengadaanOcVendors', 'currentCheckpointSequence'))
+    compact('procurement', 'contractReviews', 'pengadaanOcVendors', 'currentCheckpointSequence')
+    )
 
     {{-- ================= Pengesahan Kontrak ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
+    $division === 'Supply Chain'
+    && $user->hasRole('contract')
+    && $currentCheckpointSequence >= 6,
     'procurements.partials.pengesahan_kontrak',
-    compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence'))
+    compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence')
+    )
 
     {{-- ================= Kontrak ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 6,
+    $division === 'Supply Chain'
+    && $user->hasRole('contract')
+    && $currentCheckpointSequence >= 6,
     'procurements.partials.kontrak',
-    compact('procurement', 'kontraks', 'vendors', 'currentCheckpointSequence'))
+    compact('procurement', 'kontraks', 'vendors', 'currentCheckpointSequence')
+    )
 
     {{-- ================= Pembayaran ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 7,
+    $division === 'Supply Chain'
+    && $user->hasRole('pembayaran')
+    && $currentCheckpointSequence >= 7,
     'procurements.partials.pembayaran',
     compact('procurement','pembayarans','currentCheckpointSequence')
     )
 
     {{-- ================= Jaminan Pembayaran ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain'
+    $division === 'Supply Chain'
+    && $user->hasRole('pembayaran')
     && $currentCheckpointSequence >= 7
-    && $hasNonSkbdnPayment,
+    && isset($pembayarans) && $pembayarans->count() > 0,
     'procurements.partials.jaminanpembayaran',
     compact('procurement','jaminans','currentCheckpointSequence','pembayarans')
     )
 
     {{-- ================= Material Delivery ================= --}}
     @includeWhen(
-    auth()->user()->roles === 'supply_chain' && $currentCheckpointSequence >= 8,
+    $division === 'Supply Chain'
+    && $user->hasRole('delivery')
+    && $currentCheckpointSequence >= 8,
     'procurements.partials.material_delivery',
     compact('procurement', 'materialDeliveries')
     )

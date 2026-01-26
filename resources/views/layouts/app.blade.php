@@ -645,234 +645,250 @@
 
         .nav-center {
             display: flex;
-            gap: 40px; /* membuat sejajar & rapi seperti Figma */
+            gap: 40px;
+            /* membuat sejajar & rapi seperti Figma */
         }
+
         .ums-container {
             background: #ffffff;
         }
-
     </style>
     @stack('styles')
 </head>
 
 <body>
-<!-- Navbar -->
-@if(!isset($hideNavbar) || !$hideNavbar)
+    <!-- Navbar -->
+    @if(!isset($hideNavbar) || !$hideNavbar)
     @if(Auth::guard('vendor')->check())
-        {{-- Navbar khusus Vendor: Logo + Nama Vendor + Logout --}}
-        <nav class="navbar navbar-expand-lg navbar-light navbar-custom">
-            <div class="container-fluid">
-                <a class="navbar-brand d-flex align-items-center ms-4" href="{{ route('vendor.index') }}" wire:navigate>
-                    <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo">
-                </a>
-                
-                <div class="ms-auto d-flex align-items-center me-4 gap-3">
-                    {{-- Notification Bell --}}
-                    @php
-                        // Check for notification count
-                        $vendorId = Auth::guard('vendor')->id();
-                        $notifCount = 0;
-                        
-                        if($vendorId) {
-                            // 1. STORED NOTIFICATIONS (Events)
-                            $storedCount = \App\Models\VendorNotification::where('vendor_id', $vendorId)
-                                ->where('is_read', false)
-                                ->count();
-                            $notifCount += $storedCount;
+    {{-- Navbar khusus Vendor: Logo + Nama Vendor + Logout --}}
+    <nav class="navbar navbar-expand-lg navbar-light navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center ms-4" href="{{ route('vendor.index') }}" wire:navigate>
+                <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo">
+            </a>
 
-                            // 2. COMPUTED TASKS (Contract Review)
-                            // "Tasks" are always considered "Action Needed"
-                            $reviews = \App\Models\ContractReview::where('vendor_id', $vendorId)
-                                ->with(['revisions' => function($q) {
-                                    $q->orderBy('contract_review_revision_id', 'desc');
-                                }])
-                                ->get();
-                                
-                            foreach($reviews as $rev) {
-                                $latest = $rev->revisions->first();
-                                if(!$latest) continue;
-                                
-                                // Action Needed (Pending/Revisi + No Link)
-                                if((!$latest->result || $latest->result == 'pending' || $latest->result == 'revisi') && empty($latest->vendor_link)) {
-                                    $notifCount++;
-                                }
-                            }
-                            
-                            // 3. COMPUTED TASKS (Evatek)
-                            $evatekItems = \App\Models\EvatekItem::where('vendor_id', $vendorId)
-                                ->with('latestRevision')
-                                ->get();
+            <div class="ms-auto d-flex align-items-center me-4 gap-3">
+                {{-- Notification Bell --}}
+                @php
+                // Check for notification count
+                $vendorId = Auth::guard('vendor')->id();
+                $notifCount = 0;
 
-                            foreach($evatekItems as $evk) {
-                                $latest = $evk->latestRevision;
-                                if(!$latest) continue;
+                if($vendorId) {
+                // 1. STORED NOTIFICATIONS (Events)
+                $storedCount = \App\Models\VendorNotification::where('vendor_id', $vendorId)
+                ->where('is_read', false)
+                ->count();
+                $notifCount += $storedCount;
 
-                                // Action Needed (Pending + No Link) OR Revisi + No Link
-                                if(($latest->status == 'pending' || $latest->status == 'revisi') && empty($latest->vendor_link)) {
-                                    $notifCount++;
-                                }
-                            }
-                        }
-                    @endphp
-                    <a href="{{ route('vendor.notifications') }}" class="text-dark position-relative me-2" style="font-size: 20px; text-decoration: none;">
-                        <i class="bi bi-bell"></i>
-                        @if($notifCount > 0)
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px; padding: 3px 6px; min-width: 18px;">
-                                {{ $notifCount }}
-                                <span class="visually-hidden">unread messages</span>
-                            </span>
-                        @endif
-                    </a>
+                // 2. COMPUTED TASKS (Contract Review)
+                // "Tasks" are always considered "Action Needed"
+                $reviews = \App\Models\ContractReview::where('vendor_id', $vendorId)
+                ->with(['revisions' => function($q) {
+                $q->orderBy('contract_review_revision_id', 'desc');
+                }])
+                ->get();
 
-                    {{-- Nama Vendor --}}
-                    <span class="text-dark fw-semibold" style="font-size: 15px;">
-                        {{ Auth::guard('vendor')->user()->name_vendor ?? 'Vendor' }}
+                foreach($reviews as $rev) {
+                $latest = $rev->revisions->first();
+                if(!$latest) continue;
+
+                // Action Needed (Pending/Revisi + No Link)
+                if((!$latest->result || $latest->result == 'pending' || $latest->result == 'revisi') && empty($latest->vendor_link)) {
+                $notifCount++;
+                }
+                }
+
+                // 3. COMPUTED TASKS (Evatek)
+                $evatekItems = \App\Models\EvatekItem::where('vendor_id', $vendorId)
+                ->with('latestRevision')
+                ->get();
+
+                foreach($evatekItems as $evk) {
+                $latest = $evk->latestRevision;
+                if(!$latest) continue;
+
+                // Action Needed (Pending + No Link) OR Revisi + No Link
+                if(($latest->status == 'pending' || $latest->status == 'revisi') && empty($latest->vendor_link)) {
+                $notifCount++;
+                }
+                }
+                }
+                @endphp
+                <a href="{{ route('vendor.notifications') }}" class="text-dark position-relative me-2" style="font-size: 20px; text-decoration: none;">
+                    <i class="bi bi-bell"></i>
+                    @if($notifCount > 0)
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px; padding: 3px 6px; min-width: 18px;">
+                        {{ $notifCount }}
+                        <span class="visually-hidden">unread messages</span>
                     </span>
-                    
-                    {{-- Logout Button --}}
-                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-2">
-                            <i class="bi bi-box-arrow-right"></i>
-                            <span>Logout</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </nav>
-    @elseif(Auth::check())
-        {{-- Navbar untuk Internal Users (Dashboard, Projects, dll) --}}
-        <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
-            <div class="container-fluid">
-                <a class="navbar-brand d-flex align-items-center ms-4" href="{{ route('dashboard') }}" wire:navigate>
-                    <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo">
+                    @endif
                 </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                {{-- Nama Vendor --}}
+                <span class="text-dark fw-semibold" style="font-size: 15px;">
+                    {{ Auth::guard('vendor')->user()->name_vendor ?? 'Vendor' }}
+                </span>
 
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    {{-- nav items placed to the left of user menu --}}
-                    <ul class="navbar-nav nav-center ms-auto me-3 padding align-items-center">
-                        <li class="nav-item">
-                            @if(in_array(Auth::user()->roles, ['sekretaris_direktur', 'sekretaris']))
-                            <a class="nav-link {{ request()->routeIs('sekdir.dashboard*') ? 'active' : '' }}" href="{{ route('sekdir.dashboard') }}" wire:navigate>
-                                Dashboard
-                            </a>
-                            @else
-                            <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}" href="{{ route('dashboard') }}" wire:navigate>
-                                Dashboard
-                            </a>
-                            @endif
-                        </li>
-
-                        @if(Auth::user()->roles === 'user')
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('user.*') ? 'active' : '' }}" href="{{ route('user.list') }}" wire:navigate>
-                                Pengadaan
-                            </a>
-                        </li>
-                        @endif
-
-                        @if(Auth::user()->roles === 'sekretaris')
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('sekdir.approval*') ? 'active' : '' }}"
-                                href="{{ route('sekdir.approval') }}"
-                                wire:navigate>
-                                Department
-                            </a>
-                        </li>
-                        @endif
-
-
-                        @if(in_array(Auth::user()->roles, ['sekretaris_direksi']))
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}" href="{{ route('projects.index') }}" wire:navigate>
-                                Projects
-                            </a>
-                        </li>
-                        @endif
-
-                        @if(in_array(Auth::user()->roles, ['desain', 'supply_chain']))
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('desain.list-project*') ? 'active' : '' }}" 
-                            href="{{ route('desain.list-project') }}" 
-                            wire:navigate>
-                                Projects
-                            </a>
-                        </li>
-                        @endif
-
-                        
-
-                        @if(Auth::user()->roles === 'supply_chain')
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('supply-chain.dashboard*') ? 'active' : '' }}" href="{{ route('supply-chain.dashboard') }}" wire:navigate>
-                                Department
-                            </a>
-                        </li>
-                        @endif
-
-                        @if(Auth::user()->roles === 'supply_chain')
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('supply-chain.vendor.kelola*') ? 'active' : '' }}" href="{{ route('supply-chain.vendor.kelola') }}" wire:navigate>
-                                Kelola Vendor
-                            </a>
-                        </li>
-                        @endif
-
-                        @if(in_array(Auth::user()->roles, ['treasury', 'accounting']))
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('payments*') ? 'active' : '' }}" href="{{ route('payments.index') }}">
-                                Payments
-                            </a>
-                        </li>
-                        @endif
-
-                        @if(Auth::user()->roles === 'qa')
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('inspections.index') ? 'active' : '' }}" href="{{ route('inspections.index') }}">
-                                Department
-                            </a>
-                        </li>
-                        @endif
-                    </ul>
-
-                    {{-- right side notifications + user --}}
-                    <ul class="navbar-nav align-items-center me-5">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link d-flex align-items-center text-dark profile-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                <span class="ms-2">{{ Auth::user()->name }}</span>
-                                <i class="bi bi-person-circle ms-3" style="font-size:22px; color: #000000;"></i>
-                                <span class="notif-dot" id="notif-dot"></span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center justify-content-between" href="{{ route('notifications.index') }}" wire:navigate>
-                                        <span><i class="bi bi-bell-fill me-2"></i> Notifikasi</span>
-                                        <span class="badge rounded-pill bg-danger" id="notif-count-dd" style="display:none;">0</span>
-                                    </a>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li>
-                                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="bi bi-box-arrow-right"></i> Logout
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
+                {{-- Logout Button --}}
+                <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
             </div>
-        </nav>
+        </div>
+    </nav>
+    @elseif(Auth::check())
+
+    @php
+    $division = Auth::user()->division?->division_name;
+    @endphp
+    {{-- Navbar untuk Internal Users (Dashboard, Projects, dll) --}}
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center ms-4" href="{{ route('dashboard') }}" wire:navigate>
+                <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo">
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav nav-center ms-auto me-3 padding align-items-center">
+
+                    {{-- DASHBOARD --}}
+                    <li class="nav-item">
+                        @if($division === 'Sekretaris Direksi')
+                        <a class="nav-link {{ request()->routeIs('sekdir.dashboard*') ? 'active' : '' }}"
+                            href="{{ route('sekdir.dashboard') }}" wire:navigate>
+                            Dashboard
+                        </a>
+                        @else
+                        <a class="nav-link {{ request()->routeIs('dashboard*') ? 'active' : '' }}"
+                            href="{{ route('dashboard') }}" wire:navigate>
+                            Dashboard
+                        </a>
+                        @endif
+                    </li>
+
+                    {{-- USER DIVISION --}}
+                    @if($division === 'User Division')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('user.*') ? 'active' : '' }}"
+                            href="{{ route('user.list') }}" wire:navigate>
+                            Pengadaan
+                        </a>
+                    </li>
+                    @endif
+
+                    {{-- SEKRETARIS DIREKSI --}}
+                    @if($division === 'Sekretaris Direksi')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('sekdir.approval*') ? 'active' : '' }}"
+                            href="{{ route('sekdir.approval') }}" wire:navigate>
+                            Department
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('projects*') ? 'active' : '' }}"
+                            href="{{ route('projects.index') }}" wire:navigate>
+                            Projects
+                        </a>
+                    </li>
+                    @endif
+
+                    {{-- DESAIN & SUPPLY CHAIN --}}
+                    @if(in_array($division, ['Desain', 'Supply Chain']))
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('desain.list-project*') ? 'active' : '' }}"
+                            href="{{ route('desain.list-project') }}" wire:navigate>
+                            Projects
+                        </a>
+                    </li>
+                    @endif
+
+                    {{-- SUPPLY CHAIN --}}
+                    @if($division === 'Supply Chain')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('supply-chain.dashboard*') ? 'active' : '' }}"
+                            href="{{ route('supply-chain.dashboard') }}" wire:navigate>
+                            Department
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('supply-chain.vendor.kelola*') ? 'active' : '' }}"
+                            href="{{ route('supply-chain.vendor.kelola') }}" wire:navigate>
+                            Kelola Vendor
+                        </a>
+                    </li>
+                    @endif
+
+                    {{-- TREASURY & ACCOUNTING --}}
+                    @if(in_array($division, ['Treasury', 'Accounting']))
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('payments*') ? 'active' : '' }}"
+                            href="{{ route('payments.index') }}" wire:navigate>
+                            Payments
+                        </a>
+                    </li>
+                    @endif
+
+                    {{-- QUALITY ASSURANCE --}}
+                    @if($division === 'Quality Assurance')
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('inspections.index') ? 'active' : '' }}"
+                            href="{{ route('inspections.index') }}">
+                            Department
+                        </a>
+                    </li>
+                    @endif
+
+                </ul>
+
+                {{-- USER MENU --}}
+                <ul class="navbar-nav align-items-center me-5">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link d-flex align-items-center text-dark profile-toggle" href="#"
+                            data-bs-toggle="dropdown">
+                            <span class="ms-2">{{ Auth::user()->name }}</span>
+                            <i class="bi bi-person-circle ms-3" style="font-size:22px; color:#000"></i>
+                            <span class="notif-dot" id="notif-dot"></span>
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center justify-content-between"
+                                    href="{{ route('notifications.index') }}" wire:navigate>
+                                    <span><i class="bi bi-bell-fill me-2"></i> Notifikasi</span>
+                                    <span class="badge rounded-pill bg-danger" id="notif-count-dd"
+                                        style="display:none;">0</span>
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
     @endif
-@endif
+    @endif
 
     <div class="container-fluid">
         <div class="row justify-content-center">
