@@ -29,6 +29,10 @@
             class="sc-btn-primary">
             <i class="bi bi-arrow-clockwise"></i> Reset
         </button>
+
+        <a href="{{ route('procurements.create') }}" class="sc-btn-primary" style="text-decoration: none; margin-left: 10px;">
+            <i class="bi bi-plus-circle"></i> Tambah
+        </a>
     </div>
 </form>
 
