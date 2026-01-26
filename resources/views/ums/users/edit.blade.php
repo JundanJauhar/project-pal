@@ -31,19 +31,19 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Nama Lengkap</label>
                         <input type="text"
-                               name="name"
-                               class="form-control"
-                               value="{{ old('name', $user->name) }}"
-                               required>
+                            name="name"
+                            class="form-control"
+                            value="{{ old('name', $user->name) }}"
+                            required>
                     </div>
 
                     <div>
                         <label class="form-label fw-semibold">Email</label>
                         <input type="email"
-                               name="email"
-                               class="form-control"
-                               value="{{ old('email', $user->email) }}"
-                               required>
+                            name="email"
+                            class="form-control"
+                            value="{{ old('email', $user->email) }}"
+                            required>
                     </div>
                 </div>
             </div>
@@ -59,10 +59,10 @@
                         <select name="division_id" class="form-select">
                             <option value="">— Tidak ada divisi —</option>
                             @foreach($divisions as $d)
-                                <option value="{{ $d->division_id }}"
-                                    @selected($user->division_id == $d->division_id)>
-                                    {{ $d->division_name }}
-                                </option>
+                            <option value="{{ $d->division_id }}"
+                                @selected($user->division_id == $d->division_id)>
+                                {{ $d->division_name }}
+                            </option>
                             @endforeach
                         </select>
                     </div>
@@ -71,10 +71,10 @@
                     <div>
                         <label class="form-label fw-semibold">Department</label>
                         <input type="text"
-                               name="department"
-                               class="form-control"
-                               placeholder="Contoh: Accounting, Procurement"
-                               value="{{ old('department', $user->department) }}">
+                            name="department"
+                            class="form-control"
+                            placeholder="Contoh: Accounting, Procurement"
+                            value="{{ old('department', $user->department) }}">
                     </div>
                 </div>
             </div>
@@ -93,10 +93,10 @@
                         <label class="form-label fw-semibold">Role</label>
                         <select name="roles" class="form-select" required>
                             @foreach($roles as $r)
-                                <option value="{{ $r }}"
-                                    @selected($user->roles === $r)>
-                                    {{ ucfirst(str_replace('_',' ', $r)) }}
-                                </option>
+                            <option value="{{ $r }}"
+                                @selected($user->roles->contains('role_code', $r))>
+                                {{ ucfirst(str_replace('_',' ', $r)) }}
+                            </option>
                             @endforeach
                         </select>
                         <small class="text-muted">
@@ -109,7 +109,7 @@
                             Update User
                         </button>
                         <a href="{{ route('ums.users.index') }}"
-                           class="btn btn-outline-secondary">
+                            class="btn btn-outline-secondary">
                             Kembali
                         </a>
                     </div>

@@ -50,6 +50,11 @@ class RoleSeeder extends Seeder
             'Vendor' => [
                 ['role_code' => 'vendor', 'role_name' => 'Vendor User', 'description' => 'Akses vendor'],
             ],
+
+            'Sistem' => [
+                ['role_code' => 'superadmin', 'role_name' => 'Super Admin', 'description' => 'Akses Super Admin'],
+                ['role_code' => 'admin', 'role_name' => 'Admin', 'description' => 'Akses Admin Sistem'],
+            ],
         ];
 
         foreach ($roles as $divisionName => $items) {

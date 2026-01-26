@@ -5,162 +5,199 @@
 @section('content')
 
 <style>
-/* ================= CARD ================= */
-.page-card {
-    border-radius: 14px;
-    padding: 26px 28px;
-}
+    /* ================= CARD ================= */
+    .page-card {
+        border-radius: 14px;
+        padding: 26px 28px;
+    }
 
-/* ================= HEADER ================= */
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 18px;
-}
+    /* ================= HEADER ================= */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+    }
 
-.page-title {
-    font-size: 26px;
-    font-weight: 800;
-}
+    .page-title {
+        font-size: 26px;
+        font-weight: 800;
+    }
 
-.page-title span {
-    font-size: 16px;
-    color: #777;
-    margin-left: 6px;
-}
+    .page-title span {
+        font-size: 16px;
+        color: #777;
+        margin-left: 6px;
+    }
 
-/* ================= FILTER ================= */
-.filter-bar {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
+    /* ================= FILTER ================= */
+    .filter-bar {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
 
-.filter-bar input,
-.filter-bar select {
-    height: 32px;
-    border-radius: 6px;
-    border: 1px solid #bdbdbd;
-    padding: 0 12px;
-    font-size: 13px;
-    background: #f0f0f0;
-}
+    .filter-bar input,
+    .filter-bar select {
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid #bdbdbd;
+        padding: 0 12px;
+        font-size: 13px;
+        background: #f0f0f0;
+    }
 
-.filter-bar input {
-    width: 190px;
-    background: #fff;
-}
+    .filter-bar input {
+        width: 190px;
+        background: #fff;
+    }
 
-.add-btn {
-    background: #003d82;
-    color: #fff;
-    padding: 7px 14px;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 13px;
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    text-decoration: none;
-}
+    .add-btn {
+        background: #003d82;
+        color: #fff;
+        padding: 7px 14px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 13px;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        text-decoration: none;
+    }
 
-/* ================= TABLE WRAP ================= */
-.table-wrapper {
-    overflow-x: auto;
-    margin-top: 16px;
-}
+    /* ================= TABLE WRAP ================= */
+    .table-wrapper {
+        overflow-x: auto;
+        margin-top: 16px;
+    }
 
-/* ================= TABLE ================= */
-.user-table {
-    width: 100%;
-    min-width: 1200px;
-    border-collapse: collapse;
-}
+    /* ================= TABLE ================= */
+    .user-table {
+        width: 100%;
+        min-width: 1200px;
+        border-collapse: collapse;
+    }
 
-/* HEADER */
-.user-table thead th {
-    font-size: 13px;
-    font-weight: 700;
-    padding: 12px 8px;
-    text-align: center;
-    border-bottom: 2px solid #000;
-}
+    /* HEADER */
+    .user-table thead th {
+        font-size: 13px;
+        font-weight: 700;
+        padding: 12px 8px;
+        text-align: center;
+        border-bottom: 2px solid #000;
+    }
 
-/* ✅ BARIS TABEL PUTIH */
-.user-table tbody tr {
-    background: #ffffff;
-    border-bottom: 1px solid #e0e0e0;
-}
+    /* ✅ BARIS TABEL PUTIH */
+    .user-table tbody tr {
+        background: #ffffff;
+        border-bottom: 1px solid #e0e0e0;
+    }
 
-.user-table tbody td {
-    padding: 14px 8px;
-    font-size: 13px;
-    text-align: center;
-    vertical-align: middle;
-}
+    .user-table tbody td {
+        padding: 14px 8px;
+        font-size: 13px;
+        text-align: center;
+        vertical-align: middle;
+    }
 
-/* ALIGN LEFT */
-.col-name,
-.col-division {
-    text-align: left;
-}
+    /* ALIGN LEFT */
+    .col-name,
+    .col-division {
+        text-align: left;
+    }
 
-.user-name {
-    font-weight: 700;
-}
+    .user-name {
+        font-weight: 700;
+    }
 
-.email-muted,
-.sub-muted {
-    font-size: 11px;
-    color: #777;
-}
+    .email-muted,
+    .sub-muted {
+        font-size: 11px;
+        color: #777;
+    }
 
-/* ================= ROLE BADGE ================= */
-.role-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-}
+    /* ================= ROLE BADGE ================= */
+    .role-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+    }
 
-.role-superadmin   { background:#CCCCCC; }
-.role-admin        { background:#D5E5FF; }
-.role-sekretaris   { background:#FEEFC6; }
-.role-treasury     { background:#FFD5D5; }
-.role-accounting   { background:#FFDDBB; }
-.role-supply_chain { background:#EEE0FF; }
-.role-desain       { background:#DFFFD6; }
-.role-qa           { background:#D2FFFA; }
-.role-user         { background:#F0F0F0; }
+    .role-superadmin {
+        background: #CCCCCC;
+    }
 
-/* ================= STATUS ================= */
-.status-active {
-    color: #1a9e37;
-    font-weight: 700;
-}
+    .role-admin {
+        background: #D5E5FF;
+    }
 
-.status-inactive {
-    color: #d93025;
-    font-weight: 700;
-}
+    .role-sekretaris {
+        background: #FEEFC6;
+    }
 
-/* ================= ACTION ================= */
-.col-action {
-    text-align: right;
-    white-space: nowrap;
-}
+    .role-treasury {
+        background: #FFD5D5;
+    }
 
-.action-icon {
-    font-size: 16px;
-    margin-left: 10px;
-    cursor: pointer;
-}
+    .role-accounting {
+        background: #FFDDBB;
+    }
 
-.action-edit     { color: #DABA61; }
-.action-active   { color: #2E7D32; }
-.action-inactive { color: #C62828; }
-.action-delete   { color: #CF5A5A; }
+    .role-supply_chain {
+        background: #EEE0FF;
+    }
+
+    .role-desain {
+        background: #DFFFD6;
+    }
+
+    .role-qa {
+        background: #D2FFFA;
+    }
+
+    .role-user {
+        background: #F0F0F0;
+    }
+
+    /* ================= STATUS ================= */
+    .status-active {
+        color: #1a9e37;
+        font-weight: 700;
+    }
+
+    .status-inactive {
+        color: #d93025;
+        font-weight: 700;
+    }
+
+    /* ================= ACTION ================= */
+    .col-action {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .action-icon {
+        font-size: 16px;
+        margin-left: 10px;
+        cursor: pointer;
+    }
+
+    .action-edit {
+        color: #DABA61;
+    }
+
+    .action-active {
+        color: #2E7D32;
+    }
+
+    .action-inactive {
+        color: #C62828;
+    }
+
+    .action-delete {
+        color: #CF5A5A;
+    }
 </style>
 
 <div class="page-card">
@@ -176,14 +213,14 @@
             <select id="filterDivision">
                 <option value="">All Divisi</option>
                 @foreach($users->pluck('division.division_name')->unique()->filter() as $d)
-                    <option value="{{ strtolower($d) }}">{{ $d }}</option>
+                <option value="{{ strtolower($d) }}">{{ $d }}</option>
                 @endforeach
             </select>
 
             <select id="filterRole">
                 <option value="">All Roles</option>
-                @foreach($users->pluck('roles')->unique() as $r)
-                    <option value="{{ strtolower($r) }}">{{ ucfirst($r) }}</option>
+                @foreach($users->pluck('roles')->flatten()->pluck('role_code')->unique() as $r)
+                <option value="{{ strtolower($r) }}">{{ ucfirst(str_replace('_', ' ', $r)) }}</option>
                 @endforeach
             </select>
 
@@ -215,12 +252,12 @@
             </thead>
 
             <tbody>
-            @foreach($users as $u)
+                @foreach($users as $u)
                 <tr class="user-row"
                     data-name="{{ strtolower($u->name) }}"
                     data-email="{{ strtolower($u->email) }}"
                     data-division="{{ strtolower($u->division->division_name ?? '') }}"
-                    data-role="{{ strtolower($u->roles) }}"
+                    data-role="{{ strtolower($u->roles->pluck('role_code')->implode(',')) }}"
                     data-status="{{ strtolower($u->status) }}">
 
                     <td class="col-name">
@@ -234,9 +271,15 @@
                     </td>
 
                     <td>
-                        <span class="role-badge role-{{ strtolower($u->roles) }}">
-                            {{ ucfirst($u->roles) }}
+                        @if($u->roles->isNotEmpty())
+                        @foreach($u->roles as $role)
+                        <span class="role-badge role-{{ strtolower($role->role_code) }}">
+                            {{ ucfirst(str_replace('_', ' ', $role->role_code)) }}
                         </span>
+                        @endforeach
+                        @else
+                        <span class="role-badge role-none">No Role</span>
+                        @endif
                     </td>
 
                     <td>
@@ -255,22 +298,22 @@
                         </a>
 
                         <form method="POST"
-                              action="{{ route('ums.users.toggleStatus', $u->user_id) }}"
-                              style="display:inline">
+                            action="{{ route('ums.users.toggleStatus', $u->user_id) }}"
+                            style="display:inline">
                             @csrf
                             <button type="submit" style="border:none;background:none;">
                                 @if($u->status === 'active')
-                                    <i class="bi bi-x-circle action-icon action-inactive"></i>
+                                <i class="bi bi-x-circle action-icon action-inactive"></i>
                                 @else
-                                    <i class="bi bi-check-circle action-icon action-active"></i>
+                                <i class="bi bi-check-circle action-icon action-active"></i>
                                 @endif
                             </button>
                         </form>
 
                         <form method="POST"
-                              action="{{ route('ums.users.destroy', $u->user_id) }}"
-                              style="display:inline"
-                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?')">
+                            action="{{ route('ums.users.destroy', $u->user_id) }}"
+                            style="display:inline"
+                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" style="border:none;background:none;">
@@ -279,42 +322,42 @@
                         </form>
                     </td>
                 </tr>
-            @endforeach
+                @endforeach
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const search  = document.getElementById('searchInput');
-    const divisi  = document.getElementById('filterDivision');
-    const role    = document.getElementById('filterRole');
-    const status  = document.getElementById('filterStatus');
-    const rows    = document.querySelectorAll('.user-row');
+    document.addEventListener('DOMContentLoaded', () => {
+        const search = document.getElementById('searchInput');
+        const divisi = document.getElementById('filterDivision');
+        const role = document.getElementById('filterRole');
+        const status = document.getElementById('filterStatus');
+        const rows = document.querySelectorAll('.user-row');
 
-    function filterTable() {
-        const s = search.value.toLowerCase();
+        function filterTable() {
+            const s = search.value.toLowerCase();
 
-        rows.forEach(row => {
-            const matchText =
-                row.dataset.name.includes(s) ||
-                row.dataset.email.includes(s);
+            rows.forEach(row => {
+                const matchText =
+                    row.dataset.name.includes(s) ||
+                    row.dataset.email.includes(s);
 
-            const matchDiv    = !divisi.value || row.dataset.division === divisi.value;
-            const matchRole   = !role.value   || row.dataset.role === role.value;
-            const matchStatus = !status.value || row.dataset.status === status.value;
+                const matchDiv = !divisi.value || row.dataset.division === divisi.value;
+                const matchRole = !role.value || row.dataset.role === role.value;
+                const matchStatus = !status.value || row.dataset.status === status.value;
 
-            row.style.display =
-                (matchText && matchDiv && matchRole && matchStatus) ? '' : 'none';
+                row.style.display =
+                    (matchText && matchDiv && matchRole && matchStatus) ? '' : 'none';
+            });
+        }
+
+        [search, divisi, role, status].forEach(el => {
+            el.addEventListener('input', filterTable);
+            el.addEventListener('change', filterTable);
         });
-    }
-
-    [search, divisi, role, status].forEach(el => {
-        el.addEventListener('input', filterTable);
-        el.addEventListener('change', filterTable);
     });
-});
 </script>
 
 @endsection

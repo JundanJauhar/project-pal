@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -100,11 +101,16 @@ class LoginController extends Controller
             $request->session()->regenerate();
             Session::forget('captcha');
 
-            if (Auth::user()->hasRole('superadmin')) {
+            $user = Auth::user()->loadAuthContext();
+            if ($user && $user->hasRole('superadmin')) {
                 return redirect()->route('ums.users.index');
             }
 
-            if (Auth::user()->hasRole('sekretaris')) {
+            if ($user && $user->hasRole('admin')) {
+                return redirect()->route('ums.users.index');
+            }
+
+            if ($user && $user->hasRole('sekretaris')) {
                 return redirect()->route('sekdir.dashboard');
             }
 

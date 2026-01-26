@@ -11,25 +11,6 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        /*
-        |--------------------------------------------------------------------------
-        | SUPER ADMIN (PEGANG SEMUA ROLE)
-        |--------------------------------------------------------------------------
-        */
-        $superAdmin = User::updateOrCreate(
-            ['email' => 'superadmin@pal.com'],
-            [
-                'name'        => 'Super Admin',
-                'password'    => Hash::make('SuperAdmin123!'),
-                'division_id' => null,
-                'status'      => 'active',
-            ]
-        );
-
-        // attach semua role ke super admin
-        $superAdmin->roles()->sync(
-            Role::pluck('role_id')->toArray()
-        );
 
         /*
         |--------------------------------------------------------------------------
@@ -41,6 +22,7 @@ class UserSeeder extends Seeder
                 'user' => [
                     'name'        => 'User Division',
                     'email'       => 'user@pal.com',
+                    'password' => Hash::make('password'),
                     'division_id' => 1,
                 ],
                 'roles' => ['requester'],
@@ -49,6 +31,7 @@ class UserSeeder extends Seeder
                 'user' => [
                     'name'        => 'Supply Chain',
                     'email'       => 'supplychain@pal.com',
+                    'password' => Hash::make('password'),
                     'division_id' => 2,
                 ],
                 'roles' => [
@@ -64,6 +47,7 @@ class UserSeeder extends Seeder
                 'user' => [
                     'name'        => 'Treasury',
                     'email'       => 'treasury@pal.com',
+                    'password' => Hash::make('password'),
                     'division_id' => 3,
                 ],
                 'roles' => ['treasury', 'pembayaran'],
@@ -72,6 +56,7 @@ class UserSeeder extends Seeder
                 'user' => [
                     'name'        => 'Accounting',
                     'email'       => 'accounting@pal.com',
+                    'password' => Hash::make('password'),
                     'division_id' => 4,
                 ],
                 'roles' => ['accounting'],
@@ -80,6 +65,7 @@ class UserSeeder extends Seeder
                 'user' => [
                     'name'        => 'Quality Assurance',
                     'email'       => 'qa@pal.com',
+                    'password' => Hash::make('password'),
                     'division_id' => 5,
                 ],
                 'roles' => ['qa_inspector', 'qa_approver'],
@@ -88,6 +74,7 @@ class UserSeeder extends Seeder
                 'user' => [
                     'name'        => 'Sekretaris Direksi',
                     'email'       => 'sekretaris@pal.com',
+                    'password' => Hash::make('password'),
                     'division_id' => 6,
                 ],
                 'roles' => ['sekdir'],
@@ -96,9 +83,28 @@ class UserSeeder extends Seeder
                 'user' => [
                     'name'        => 'Desain',
                     'email'       => 'desain@pal.com',
+                    'password' => Hash::make('password'),
                     'division_id' => 7,
                 ],
                 'roles' => ['designer', 'evatek'],
+            ],
+            [
+                'user' => [
+                    'name'        => 'Admin Sistem',
+                    'email'       => 'admin@pal.com',
+                    'password' => Hash::make('password'),
+                    'division_id' => 9, // Sistem division
+                ],
+                'roles' => ['admin'],
+            ],
+            [
+                'user' => [
+                    'name'        => 'Sistem',
+                    'email'       => 'sistem@pal.com',
+                    'password' => Hash::make('password'),
+                    'division_id' => 9,
+                ],
+                'roles' => ['superadmin'],
             ],
         ];
 

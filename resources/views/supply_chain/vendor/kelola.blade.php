@@ -376,8 +376,6 @@
                 <i class="bi bi-search"></i>
             </div>
 
-            {{-- Tambah Vendor --}}
-            @if(Auth::user()->division->name === 'Supply Chain')
             <div class="tambah" style="min-width: 120px;">
                 <a href="{{ route('supply-chain.vendor.form') }}"
                     class="btn-tambah-vendor"
@@ -385,7 +383,6 @@
                     <i class="bi bi-plus-circle"></i> Tambah
                 </a>
             </div>
-            @endif
         </div>
     </div>
 
