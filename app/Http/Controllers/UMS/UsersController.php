@@ -86,7 +86,7 @@ class UsersController extends Controller
     public function store(Request $request)
     {
         // ❌ hanya superadmin boleh membuat user
-        if (Auth::user()->roles !== 'superadmin') {
+        if (!Auth::user()->hasRole('superadmin')) {
             abort(403, 'Tidak memiliki izin.');
         }
 
@@ -156,7 +156,7 @@ class UsersController extends Controller
         $user = User::findOrFail($user_id);
 
         // ❌ Proteksi superadmin
-        if ($user->roles === 'superadmin' && Auth::user()->roles !== 'superadmin') {
+        if ($user->roles === 'superadmin' && !Auth::user()->hasRole('superadmin')) {
             abort(403, 'Tidak memiliki izin.');
         }
 

@@ -202,7 +202,7 @@
         <h3>{{ $pendingAccountingCount ?? 0 }}</h3>
     </div>
 
-    @if(Auth::user()->roles !== 'accounting')
+    @if(!Auth::user()->hasRole('accounting'))
     {{-- Perlu Dibayar Treasury (hidden untuk accounting) --}}
     <div class="payment-card blue">
         <h6>Perlu Dibayar Treasury</h6>
@@ -210,7 +210,7 @@
     </div>
     @endif
 
-    @if(Auth::user()->roles !== 'treasury')
+    @if(!Auth::user()->hasRole('treasury'))
     {{-- Sudah Diverifikasi Accounting (hidden untuk treasury) --}}
     <div class="payment-card cyan">
         <h6>Sudah Diverifikasi Accounting</h6>

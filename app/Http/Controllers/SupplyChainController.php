@@ -78,7 +78,7 @@ class SupplyChainController extends Controller
      */
     public function inputItem($projectId)
     {
-        if (Auth::user()->roles !== 'supply_chain') {
+        if (Auth::user()->division->name !== 'Supply Chain') {
             abort(403, 'Unauthorized action.');
         }
 
@@ -157,7 +157,7 @@ class SupplyChainController extends Controller
         // authorization by procurement → project (additional check if needed)
         if (
             Auth::user()->department_id !== $procurement->project->department_id
-            && Auth::user()->roles !== 'admin'
+            && Auth::user()->division->name !== 'Supply Chain'
         ) {
             abort(403);
         }
@@ -239,7 +239,7 @@ class SupplyChainController extends Controller
 
             if (
                 Auth::user()->department_id !== $procurement->project->department_id
-                && Auth::user()->roles !== 'admin'
+                && Auth::user()->division->name !== 'Supply Chain'
             ) {
                 abort(403);
             }
