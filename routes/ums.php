@@ -8,6 +8,8 @@ use App\Http\Controllers\UMS\ActivityLogController;
 use App\Http\Controllers\UMS\SessionMonitoringController;
 use App\Http\Controllers\UMS\SystemSettingController;
 use App\Http\Controllers\UMS\AdminScopeController;
+use App\Http\Controllers\UMS\DivisionManagementController;
+use App\Http\Controllers\UMS\DashboardController; 
 
 Route::prefix('ums')
     ->middleware(['auth'])
@@ -16,13 +18,20 @@ Route::prefix('ums')
 
         /*
         |--------------------------------------------------------------------------
-        | DEFAULT UMS DASHBOARD
+        | HEALTH CHECK (OPTIONAL)
         |--------------------------------------------------------------------------
         */
-        Route::get('/', function () {
-            return redirect()->route('ums.users.index');
-        })->name('dashboard');
+        Route::get('divisions-test', function () {
+            return 'UMS ROUTE FILE ACTIVE';
+        })->name('health');
 
+        /*
+        |--------------------------------------------------------------------------
+        | DEFAULT UMS DASHBOARD (FIXED)
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/', [DashboardController::class, 'index'])
+            ->name('dashboard');
 
         /*
         |--------------------------------------------------------------------------
@@ -46,6 +55,27 @@ Route::prefix('ums')
             [UsersController::class, 'toggleStatus']
         )->name('users.toggleStatus');
 
+        /*
+        |--------------------------------------------------------------------------
+        | AJAX - ROLES BY DIVISION
+        |--------------------------------------------------------------------------
+        */
+        Route::get(
+            'divisions/{division}/roles',
+            [UsersController::class, 'getRolesByDivision']
+        )->name('divisions.roles');
+
+        /*
+        |--------------------------------------------------------------------------
+        | DIVISION MANAGEMENT
+        |--------------------------------------------------------------------------
+        */
+        Route::prefix('divisions')->name('divisions.')->group(function () {
+            Route::get('/', [DivisionManagementController::class, 'index'])->name('index');
+            Route::post('/', [DivisionManagementController::class, 'store'])->name('store');
+            Route::put('/{id}', [DivisionManagementController::class, 'update'])->name('update');
+            Route::delete('/{id}', [DivisionManagementController::class, 'destroy'])->name('destroy');
+        });
 
         /*
         |--------------------------------------------------------------------------
@@ -57,18 +87,15 @@ Route::prefix('ums')
             [SessionMonitoringController::class, 'index']
         )->name('sessions.index');
 
-        // Force logout SINGLE session
         Route::post(
             'sessions/{sessionId}/force-logout',
             [SessionMonitoringController::class, 'forceLogoutSession']
         )->name('sessions.forceLogoutSession');
 
-        // Force logout ALL sessions by user (emergency)
         Route::post(
             'sessions/force-logout-user/{userId}',
             [SessionMonitoringController::class, 'forceLogoutByUser']
         )->name('sessions.forceLogoutUser');
-
 
         /*
         |--------------------------------------------------------------------------
@@ -84,7 +111,6 @@ Route::prefix('ums')
             'settings',
             [SystemSettingController::class, 'update']
         )->name('settings.update');
-
 
         /*
         |--------------------------------------------------------------------------
@@ -102,7 +128,6 @@ Route::prefix('ums')
                 'destroy' => 'admin_scopes.destroy',
             ]);
 
-
         /*
         |--------------------------------------------------------------------------
         | AUDIT LOGS
@@ -117,7 +142,6 @@ Route::prefix('ums')
             'audit-logs/{id}',
             [AuditLogController::class, 'show']
         )->name('audit_logs.show');
-
 
         /*
         |--------------------------------------------------------------------------

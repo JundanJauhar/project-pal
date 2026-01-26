@@ -144,25 +144,25 @@
         <img src="{{ asset('images/logo-pal.png') }}" alt="PAL Indonesia">
     </div>
 
-    <a class="nav-link" href="#">
+    <a class="nav-link {{ request()->routeIs('ums.dashboard') ? 'active' : '' }}"
+    href="{{ route('ums.dashboard') }}">
         <i class="bi bi-speedometer2"></i> Dashboard
     </a>
+
 
     <div class="menu-section">
         <div class="menu-title">Access Control</div>
 
         <a class="nav-link {{ request()->is('ums/users*') ? 'active' : '' }}"
            href="{{ route('ums.users.index') }}">
-            <i class="bi bi-people"></i> User
+            <i class="bi bi-people"></i> User Management
         </a>
 
-        <a class="nav-link" href="#">
-            <i class="bi bi-person-badge"></i> Roles
+        <a class="nav-link {{ request()->is('ums/divisions*') ? 'active' : '' }}"
+        href="{{ route('ums.divisions.index') }}">
+            <i class="bi bi-diagram-3"></i> Divisi Management
         </a>
 
-        <a class="nav-link" href="#">
-            <i class="bi bi-shield-lock"></i> Permissions
-        </a>
     </div>
 
     <div class="menu-section">

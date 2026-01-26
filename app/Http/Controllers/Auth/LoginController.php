@@ -101,6 +101,18 @@ class LoginController extends Controller
             $request->session()->regenerate();
             Session::forget('captcha');
 
+            /**
+             * ==========================================================
+             * ✅ TAMBAHAN WAJIB: UPDATE LAST LOGIN
+             * ==========================================================
+             */
+            Auth::user()->update([
+                'last_login_at' => now(),
+            ]);
+            /**
+             * ==========================================================
+             */
+
             $user = Auth::user()->loadAuthContext();
             if ($user && $user->hasRole('superadmin')) {
                 return redirect()->route('ums.users.index');

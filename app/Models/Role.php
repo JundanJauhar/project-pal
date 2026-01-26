@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Role extends Model
 {
     protected $primaryKey = 'role_id';
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
         'division_id',

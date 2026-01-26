@@ -124,40 +124,40 @@
         font-weight: 600;
     }
 
-    .role-superadmin {
-        background: #CCCCCC;
+    /* ================= ROLE COLOR MAP ================= */
+    .role-requester { background:#f0f0f0; }
+    .role-inquiry { background:#d5e5ff; }
+    .role-evatek { background:#e0f7fa; }
+    .role-negotiation { background:#fff3cd; }
+    .role-pengadaan { background:#e6e6fa; }
+    .role-contract { background:#d1ecf1; }
+    .role-pembayaran { background:#ffd5d5; }
+    .role-delivery { background:#d4edda; }
+    .role-treasury { background:#f8d7da; }
+    .role-accounting { background:#ffddb3; }
+    .role-qa_inspector { background:#d2fffa; }
+    .role-qa_approver { background:#cce5ff; }
+    .role-sekdir { background:#feefc6; }
+    .role-designer { background:#dfffd6; }
+    .role-vendor { background:#e8eaf6; }
+    .role-superadmin { background:#cccccc; }
+    .role-admin { background:#d5e5ff; }
+
+    /* ================= ROLE GRID (3 PER BARIS) ================= */
+    .roles-grid {
+        display: grid;
+        grid-template-columns: repeat(3, max-content);
+        gap: 6px 6px;
+
+        /* CENTER GRID DI DALAM TD */
+        justify-content: center;
+        justify-items: center;
+        margin: 0 auto;
     }
 
-    .role-admin {
-        background: #D5E5FF;
-    }
-
-    .role-sekretaris {
-        background: #FEEFC6;
-    }
-
-    .role-treasury {
-        background: #FFD5D5;
-    }
-
-    .role-accounting {
-        background: #FFDDBB;
-    }
-
-    .role-supply_chain {
-        background: #EEE0FF;
-    }
-
-    .role-desain {
-        background: #DFFFD6;
-    }
-
-    .role-qa {
-        background: #D2FFFA;
-    }
-
-    .role-user {
-        background: #F0F0F0;
+    /* ================= ROLES COLUMN CENTER ================= */
+    .col-roles {
+        text-align: center;
     }
 
     /* ================= STATUS ================= */
@@ -183,21 +183,10 @@
         cursor: pointer;
     }
 
-    .action-edit {
-        color: #DABA61;
-    }
-
-    .action-active {
-        color: #2E7D32;
-    }
-
-    .action-inactive {
-        color: #C62828;
-    }
-
-    .action-delete {
-        color: #CF5A5A;
-    }
+    .action-edit { color: #DABA61; }
+    .action-active { color: #2E7D32; }
+    .action-inactive { color: #C62828; }
+    .action-delete { color: #CF5A5A; }
 </style>
 
 <div class="page-card">
@@ -213,14 +202,14 @@
             <select id="filterDivision">
                 <option value="">All Divisi</option>
                 @foreach($users->pluck('division.division_name')->unique()->filter() as $d)
-                <option value="{{ strtolower($d) }}">{{ $d }}</option>
+                    <option value="{{ strtolower($d) }}">{{ $d }}</option>
                 @endforeach
             </select>
 
             <select id="filterRole">
                 <option value="">All Roles</option>
                 @foreach($users->pluck('roles')->flatten()->pluck('role_code')->unique() as $r)
-                <option value="{{ strtolower($r) }}">{{ ucfirst(str_replace('_', ' ', $r)) }}</option>
+                    <option value="{{ strtolower($r) }}">{{ ucfirst(str_replace('_', ' ', $r)) }}</option>
                 @endforeach
             </select>
 
@@ -242,7 +231,7 @@
                 <tr>
                     <th>Nama</th>
                     <th>Divisi / Departement</th>
-                    <th>Roles</th>
+                    <th class="col-roles">Roles</th>
                     <th>Status</th>
                     <th>Last Login</th>
                     <th>Last Updated</th>
@@ -270,15 +259,17 @@
                         <div class="sub-muted">{{ $u->division->description ?? '-' }}</div>
                     </td>
 
-                    <td>
+                    <td class="col-roles">
                         @if($u->roles->isNotEmpty())
-                        @foreach($u->roles as $role)
-                        <span class="role-badge role-{{ strtolower($role->role_code) }}">
-                            {{ ucfirst(str_replace('_', ' ', $role->role_code)) }}
-                        </span>
-                        @endforeach
+                            <div class="roles-grid">
+                                @foreach($u->roles as $role)
+                                    <span class="role-badge role-{{ strtolower($role->role_code) }}">
+                                        {{ ucfirst(str_replace('_', ' ', $role->role_code)) }}
+                                    </span>
+                                @endforeach
+                            </div>
                         @else
-                        <span class="role-badge role-none">No Role</span>
+                            <span class="role-badge role-none">No Role</span>
                         @endif
                     </td>
 
@@ -288,7 +279,15 @@
                         </span>
                     </td>
 
-                    <td>-</td>
+                    {{-- ✅ PERBAIKAN: LAST LOGIN --}}
+                    <td>
+                        {{ $u->last_login_at
+                            ? \Carbon\Carbon::parse($u->last_login_at)->format('M d, Y H:i')
+                            : '-'
+                        }}
+                    </td>
+
+
                     <td>{{ $u->updated_at->format('M d, Y') }}</td>
                     <td>{{ $u->created_at->format('M d, Y') }}</td>
 
@@ -303,9 +302,9 @@
                             @csrf
                             <button type="submit" style="border:none;background:none;">
                                 @if($u->status === 'active')
-                                <i class="bi bi-x-circle action-icon action-inactive"></i>
+                                    <i class="bi bi-x-circle action-icon action-inactive"></i>
                                 @else
-                                <i class="bi bi-check-circle action-icon action-active"></i>
+                                    <i class="bi bi-check-circle action-icon action-active"></i>
                                 @endif
                             </button>
                         </form>
@@ -329,35 +328,35 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const search = document.getElementById('searchInput');
-        const divisi = document.getElementById('filterDivision');
-        const role = document.getElementById('filterRole');
-        const status = document.getElementById('filterStatus');
-        const rows = document.querySelectorAll('.user-row');
+document.addEventListener('DOMContentLoaded', () => {
+    const search = document.getElementById('searchInput');
+    const divisi = document.getElementById('filterDivision');
+    const role = document.getElementById('filterRole');
+    const status = document.getElementById('filterStatus');
+    const rows = document.querySelectorAll('.user-row');
 
-        function filterTable() {
-            const s = search.value.toLowerCase();
+    function filterTable() {
+        const s = search.value.toLowerCase();
 
-            rows.forEach(row => {
-                const matchText =
-                    row.dataset.name.includes(s) ||
-                    row.dataset.email.includes(s);
+        rows.forEach(row => {
+            const matchText =
+                row.dataset.name.includes(s) ||
+                row.dataset.email.includes(s);
 
-                const matchDiv = !divisi.value || row.dataset.division === divisi.value;
-                const matchRole = !role.value || row.dataset.role === role.value;
-                const matchStatus = !status.value || row.dataset.status === status.value;
+            const matchDiv = !divisi.value || row.dataset.division === divisi.value;
+            const matchRole = !role.value || row.dataset.role === role.value;
+            const matchStatus = !status.value || row.dataset.status === status.value;
 
-                row.style.display =
-                    (matchText && matchDiv && matchRole && matchStatus) ? '' : 'none';
-            });
-        }
-
-        [search, divisi, role, status].forEach(el => {
-            el.addEventListener('input', filterTable);
-            el.addEventListener('change', filterTable);
+            row.style.display =
+                (matchText && matchDiv && matchRole && matchStatus) ? '' : 'none';
         });
+    }
+
+    [search, divisi, role, status].forEach(el => {
+        el.addEventListener('input', filterTable);
+        el.addEventListener('change', filterTable);
     });
+});
 </script>
 
 @endsection
