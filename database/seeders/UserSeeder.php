@@ -40,6 +40,7 @@ class UserSeeder extends Seeder
                     'negotiation',
                     'pengadaan',
                     'contract',
+                    'pembayaran',
                     'delivery',
                 ],
             ],

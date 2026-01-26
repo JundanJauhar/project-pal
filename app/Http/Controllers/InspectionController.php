@@ -15,7 +15,7 @@ class InspectionController extends Controller
     /**
      * Classify procurement inspection status based on item results
      * 
-     * Hasil:
+     * Status:
      *  - 'butuh'  : belum ada item yang diinspeksi (BELUM DIINSPEKSI)
      *  - 'sedang' : sebagian sudah diinspeksi / hasil campuran
      *  - 'lolos'  : semua item LOLOS
@@ -68,9 +68,16 @@ class InspectionController extends Controller
     /**
      * Display inspection dashboard
      * 
-     * Authorization:
-     * - QA role → Lihat procurement di checkpoint "Kedatangan Material"
-     * - Non-QA → Lihat inspection reports (read-only)
+     * AUTHORIZATION:
+     * - QA role (qa_inspector) → Lihat SEMUA procurement di checkpoint "Kedatangan Material"
+     *   Lintas divisi (karena QA adalah quality gate global)
+     * - Non-QA → Lihat inspection reports (read-only, tidak ada filter divisi)
+     * 
+     * DESIGN RATIONALE:
+     * - Procurement adalah entitas lintas divisi
+     * - QA division adalah quality gate untuk semua procurement
+     * - Checkpoint "Kedatangan Material" adalah boundary utama
+     * - Inspection adalah event, bukan tahap checkpoint tambahan
      */
     public function index(Request $request)
     {
@@ -80,24 +87,24 @@ class InspectionController extends Controller
 
         $userDivision = $user->division?->division_name;
 
-        // === AUTHORIZATION CHECK: DIVISION + ROLE ===
-        // Hanya user dari QA division yang bisa akses fitur ini
-        if (
-            $userDivision !== 'Quality Assurance'
-            || !$user->hasRole('qa_inspector')
-        ) {
+        // === AUTHORIZATION CHECK: ROLE ===
+        // Hanya user dengan role qa_inspector yang bisa akses dashboard ini
+        if (!$user->hasRole('qa_inspector')) {
             // User bukan QA → tampilkan view alternatif (read-only)
             return $this->indexForNonQA($user);
         }
 
         // === ROLE: QA_INSPECTOR ===
-        // User dari Quality Assurance division dengan role qa_inspector
+        // User dengan role qa_inspector dapat mengakses semua procurement di checkpoint inspeksi
 
+        // Ambil checkpoint ID untuk "Kedatangan Material"
         $inspectionCheckpointId = Checkpoint::where('point_name', 'Kedatangan Material')
             ->value('point_id');
 
         // === BUILD BASE QUERY: Procurement di checkpoint inspeksi ===
-        $baseQuery = Procurement::with([
+        // NO DIVISION FILTER: Procurement adalah lintas divisi
+        // QA berhak inspeksi semua procurement yang sampai di checkpoint ini
+        $qaProcurements = Procurement::with([
             'project',
             'department',
             'requestProcurements.items.inspectionReports',
@@ -107,13 +114,7 @@ class InspectionController extends Controller
             ->whereHas('procurementProgress', function ($q) use ($inspectionCheckpointId) {
                 $q->where('checkpoint_id', $inspectionCheckpointId);
             })
-            ->orderBy('created_at', 'desc');
-
-        // === DIVISION BOUNDARY: Hanya procurement dari divisi sendiri ===
-        $qaProcurements = $baseQuery
-            ->whereHas('department', function ($q) use ($user) {
-                $q->where('division_id', $user->division_id);
-            })
+            ->orderBy('created_at', 'desc')
             ->get();
 
         // === CALCULATE CARDS: Status based on procurement classification ===
@@ -147,7 +148,7 @@ class InspectionController extends Controller
             targetId: null,
             details: [
                 'user_id' => $user->id,
-                'division_id' => $user->division_id,
+                'user_division' => $userDivision,
                 'filters' => [
                     'search' => $request->query('q', ''),
                     'priority' => $request->query('priority', ''),
@@ -165,32 +166,37 @@ class InspectionController extends Controller
     /**
      * View untuk non-QA user (read-only)
      * 
-     * Non-QA user hanya bisa lihat inspection reports,
-     * bukan QA dashboard. Akses limited ke divisi mereka.
+     * Non-QA user bisa lihat semua inspection reports yang sudah ada
+     * Ini adalah view READ-ONLY untuk keperluan informasi/tracking
+     * 
+     * DESIGN RATIONALE:
+     * - Inspection report adalah data historis, tidak sensitive
+     * - Tidak ada mutasi data (read-only)
+     * - Authorization check: hanya user dengan login yang bisa akses
+     * - Tidak perlu filter division/department (data sudah read-only)
      */
     private function indexForNonQA($user)
     {
-        // === DIVISION BOUNDARY: Hanya dari divisi sendiri ===
+        // === GET ALL PROCUREMENTS (untuk cards) ===
         $allProcurements = Procurement::with([
             'project',
             'department',
             'requestProcurements.items.inspectionReports',
             'requestProcurements.vendor',
         ])
-            ->whereHas('department', function ($q) use ($user) {
-                $q->where('division_id', $user->division_id);
-            })
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // === CALCULATE CARDS: Global stats untuk divisi ===
+        // === CALCULATE CARDS: Global stats ===
         $cards = $this->calculateInspectionCards($allProcurements);
 
         // === INSPECTION REPORTS: Read-only list ===
-        $inspections = InspectionReport::with(['item.requestProcurement.procurement.project', 'item.requestProcurement.procurement.department'])
-            ->whereHas('item.requestProcurement.procurement.department', function ($q) use ($user) {
-                $q->where('division_id', $user->division_id);
-            })
+        // Semua user yang login bisa lihat inspection reports
+        // Karena ini adalah data historis dan tidak ada mutasi
+        $inspections = InspectionReport::with([
+            'item.requestProcurement.procurement.project',
+            'item.requestProcurement.procurement.department'
+        ])
             ->orderBy('inspection_date', 'desc')
             ->paginate(20);
 
@@ -201,7 +207,7 @@ class InspectionController extends Controller
             targetId: null,
             details: [
                 'user_id' => $user->id,
-                'division_id' => $user->division_id,
+                'user_division' => $user->division?->division_name,
                 'report_count' => $inspections->total(),
             ]
         );

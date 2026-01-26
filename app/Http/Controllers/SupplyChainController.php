@@ -22,56 +22,6 @@ use App\Helpers\ActivityLogger;
 
 class SupplyChainController extends Controller
 {
-    /**
-     * Display Supply Chain dashboard
-     */
-    public function dashboard(Request $request)
-    {
-        $search = $request->input('search');
-        $statusFilter = $request->input('status');
-        $priorityFilter = $request->input('priority');
-        $checkpoints = Checkpoint::all();
-
-        $procurements = Procurement::with([
-            'project',
-            'department',
-            'requestProcurements',
-            'requestProcurements.vendor'
-        ])
-            ->when($search, function ($query, $search) {
-                return $query->where(function ($q) use ($search) {
-                    $q->where('code_procurement', 'LIKE', "%{$search}%")
-                        ->orWhere('name_procurement', 'LIKE', "%{$search}%")
-                        ->orWhereHas('department', function ($dept) use ($search) {
-                            $dept->where('department_name', 'LIKE', "%{$search}%");
-                        });
-                });
-            })
-            ->when($priorityFilter, function ($query, $priority) {
-                return $query->where('priority', $priority);
-            })
-            ->when($statusFilter, function ($query, $status) {
-                if ($status === 'belum_ada_vendor') {
-                    return $query->doesntHave('requestProcurements');
-                } else {
-                    return $query->whereHas('requestProcurements', function ($q) use ($status) {
-                        $q->where('request_status', $status);
-                    });
-                }
-            })
-            ->orderBy('start_date', 'desc')
-            ->paginate(10)
-            ->withQueryString();
-
-        ActivityLogger::log(
-            module: 'Supply Chain',
-            action: 'view_dashboard',
-            targetId: null,
-            details: ['filters' => $request->all(), 'user_id' => Auth::id()]
-        );
-
-        return view('supply_chain.dashboard', compact('procurements', 'checkpoints'));
-    }
 
     /**
      * Show form untuk input item baru

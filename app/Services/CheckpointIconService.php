@@ -28,8 +28,7 @@ class CheckpointIconService
             7 => 'bi-credit-card-fill',            // Pembayaran DP
             8 => 'bi-truck',                       // Pengiriman Material
             9 => 'bi-box-seam-fill',               // Kedatangan Material
-            10 => 'bi-file-earmark-check-fill',    // Verifikasi Dokumen
-            11 => 'bi-check-circle-fill',          // Pembayaran
+            10 => 'bi-buildings',                  // Inventory
         ];
 
         return $icons[$checkpointSequence] ?? 'bi-circle-fill';
@@ -89,14 +88,9 @@ class CheckpointIconService
                 'description' => 'Material arrival'
             ],
             10 => [
-                'name' => 'Verifikasi Dokumen',
-                'icon' => 'bi-file-earmark-check-fill',
-                'description' => 'Document verification'
-            ],
-            11 => [
-                'name' => 'Pembayaran',
-                'icon' => 'bi-check-circle-fill',
-                'description' => 'Final payment'
+                'name' => 'Inventory',
+                'icon' => 'bi-buildings',
+                'description' => 'Inventory management'
             ],
         ];
     }

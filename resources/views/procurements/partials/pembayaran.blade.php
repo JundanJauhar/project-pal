@@ -22,7 +22,7 @@
                     <tr>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">No</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status Pembayaran</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Jenis Pembayaran</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Persen</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Nilai Pembayaran</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">No Memo</th>
@@ -192,7 +192,7 @@
                         <input type="date" name="realization_date" class="form-control"
                             value="{{ $pay->realization_date?->format('Y-m-d') }}">
                     </div>
-                </div>
+                </input>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>
@@ -262,7 +262,7 @@
                         <label class="form-label">Realisasi</label>
                         <input type="date" name="realization_date" class="form-control">
                     </div>
-                </div>
+                </input>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>
