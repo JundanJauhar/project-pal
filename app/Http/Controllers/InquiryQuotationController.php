@@ -35,6 +35,7 @@ class InquiryQuotationController extends Controller
             'lead_time' => 'nullable|string|max:100',
             'nilai_harga' => 'nullable|numeric|min:0',
             'currency' => 'nullable|string|max:10',
+            'link' => 'nullable|url|max:255',
             'notes' => 'nullable|string|max:1000',
         ], [
             'procurement_id.required' => 'Pilih procurement terlebih dahulu',
@@ -73,6 +74,7 @@ class InquiryQuotationController extends Controller
                     'lead_time' => $validated['lead_time'] ?? null,
                     'nilai_harga' => $validated['nilai_harga'] ?? null,
                     'currency' => $validated['currency'],
+                    'link' => $validated['link'] ?? null,
                     'notes' => $validated['notes'] ?? null,
                 ]
             );
@@ -110,6 +112,7 @@ class InquiryQuotationController extends Controller
             'lead_time' => 'nullable|string|max:100',
             'nilai_harga' => 'nullable|numeric|min:0',
             'currency' => 'nullable|string|max:10',
+            'link' => 'nullable|url|max:255',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -187,6 +190,7 @@ class InquiryQuotationController extends Controller
                         'lead_time' => $iq->lead_time ?? '-',
                         'nilai_harga' => $iq->nilai_harga ? 'Rp ' . number_format($iq->nilai_harga, 0, ',', '.') : '-',
                         'currency' => $iq->currency,
+                        'link' => $iq->link ?? '-',
                         'notes' => $iq->notes ?? '-',
                     ];
                 });

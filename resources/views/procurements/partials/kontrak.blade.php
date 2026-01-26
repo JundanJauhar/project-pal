@@ -15,18 +15,18 @@
     <div class="dashboard-table-wrapper">
         <div class="table-responsive">
             {{-- Button Save Checkpoint (LUAR TABLE) --}}
-            <!-- <div class="btn-simpan-wrapper">
-                @if($currentCheckpointSequence == 7 && $kontraks->count() > 0)
+            <div class="btn-simpan-wrapper">
+                @if($currentCheckpointSequence == 6 && $pengesahanKontraks->count() > 0)
                 <form action="{{ route('checkpoint.transition', $procurement->procurement_id) }}" method="POST">
                     @csrf
-                    <input type="hidden" name="from_checkpoint" value="7">
+                    <input type="hidden" name="from_checkpoint" value="6">
                     <button class="btn btn-sm btn-action-simpan">
                         <i class="bi bi-box-arrow-down"></i> Simpan
                     </button>
                 </form>
                 @endif
-            </div> -->
-
+            </div>
+            
             {{-- TABLE --}}
             <table class="dashboard-table">
                 <thead>
@@ -42,16 +42,13 @@
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Incoterms</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">COO</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Warranty</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Link</th>
                         <th style="padding: 12px 8px; text-align: center; color: #000;">Aksi</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     @php
-                    /**
-                    * HITUNG KONDISI TERLEBIH DAHULU
-                    */
-
                     // Vendor yang VALID untuk Kontrak (dari Inquiry & Quotation)
                     $kontrakVendors = collect($inquiryQuotations ?? [])
                     ->map(fn ($iq) => $iq->vendor)
@@ -88,7 +85,7 @@
                         {{-- Nilai --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             @if($kontrak->nilai)
-                            {{ number_format($kontrak->nilai,0,',','.') }} {{ $kontrak->currency }}
+                            {{ $kontrak->currency }} {{ number_format($kontrak->nilai,0,',','.') }}
                             @else
                             -
                             @endif
@@ -106,6 +103,15 @@
                         {{-- Warranty --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $kontrak->warranty ?? '-' }}</td>
 
+                        {{-- Link --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            @if($kontrak->link)
+                            <a href="{{ $kontrak->link }}" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600;">Link</a>
+                            @else
+                            <span style="color: #999;">-</span>
+                            @endif
+                        </td>
+
                         {{-- Aksi --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             <button class="btn btn-sm btn-action-edit"
@@ -118,26 +124,10 @@
                     @endforeach
                     @endif
 
-                    {{-- ✅ EMPTY STATE DENGAN CREATE BUTTON (HANYA SAAT CHECKPOINT 7 & TIDAK ADA KONTRAK) --}}
-                    @if($kontrakCount == 0 && $currentCheckpointSequence == 6)
+                    {{-- ✅ ROW CREATE (SELALU TAMPIL SAAT CHECKPOINT 6) --}}
+                    @if($currentCheckpointSequence == 6)
                     <tr>
-                        <td colspan="11" class="text-center text-muted" style="padding: 12px 8px;">
-                            Belum ada Kontrak
-                        </td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-action-create"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalCreateKontrak">
-                                Create
-                            </button>
-                        </td>
-                    </tr>
-                    @endif
-
-                    {{-- ✅ ROW CREATE (HANYA SAAT CHECKPOINT 7 & ADA KONTRAK) --}}
-                    @if($kontrakCount > 0 && $currentCheckpointSequence == 6)
-                    <tr>
-                        <td colspan="11"></td>
+                        <td colspan="12"></td>
                         <td class="text-center">
                             <button class="btn btn-sm btn-action-create"
                                 data-bs-toggle="modal"
@@ -292,6 +282,13 @@
                             value="{{ $kontrak->warranty }}">
                     </div>
 
+                    {{-- Link --}}
+                    <div class="col-6">
+                        <label class="form-label">Link</label>
+                        <input type="url" name="link" class="form-control"
+                            value="{{ $kontrak->link }}">
+                    </div>
+
                     {{-- Remarks --}}
                     <div class="col-12">
                         <label class="form-label">Remarks</label>
@@ -333,6 +330,8 @@
                     ->filter()
                     ->unique('id_vendor')
                     ->values();
+
+                    $kontrakAuto = $kontraks->first();
                     @endphp
 
                     {{-- No PO --}}
@@ -343,21 +342,28 @@
 
                     {{-- Vendor --}}
                     <div class="col-md-6">
-                        <label class="form-label">Vendor *</label>
-                        <select name="vendor_id" class="form-select" required>
-                            <option value="" disabled selected>-- Pilih Vendor --</option>
-                            @if($kontrakVendors->count() > 0)
-                            @foreach($kontrakVendors as $vendor)
-                            <option value="{{ $vendor->id_vendor }}">
-                                {{ $vendor->name_vendor }}
-                            </option>
-                            @endforeach
-                            @else
-                            <option disabled>
-                                Tidak ada vendor dari Inquiry & Quotation
-                            </option>
-                            @endif
-                        </select>
+                        <label class="form-label">Vendor</label>
+                        @if($kontrakAuto)
+                            {{-- Mode UPDATE: Vendor readonly dari kontrak yang sudah ada --}}
+                            <input type="text" class="form-control" 
+                                value="{{ $kontrakAuto->vendor?->name_vendor ?? '-' }}" 
+                                disabled>
+                            <input type="hidden" name="vendor_id" value="{{ $kontrakAuto->vendor_id }}">
+                        @else
+                            {{-- Mode INSERT: Vendor bisa dipilih --}}
+                            <select name="vendor_id" class="form-select" required>
+                                <option value="" disabled selected>-- Pilih Vendor --</option>
+                                @if($kontrakVendors->count() > 0)
+                                @foreach($kontrakVendors as $vendor)
+                                <option value="{{ $vendor->id_vendor }}">
+                                    {{ $vendor->name_vendor }}
+                                </option>
+                                @endforeach
+                                @else
+                                <option disabled>Tidak ada vendor dari Inquiry & Quotation</option>
+                                @endif
+                            </select>
+                        @endif
                     </div>
 
                     {{-- Item --}}
@@ -391,36 +397,48 @@
                     <div class="col-md-6">
                         <label class="form-label">Nilai</label>
                         <div class="input-group">
-                            <button class="btn btn-outline-secondary dropdown-toggle" type="button"
-                                id="dropdownCurrencyKontrakCreate" data-bs-toggle="dropdown">
-                                IDR
-                            </button>
-                            <ul class="dropdown-menu">
-                                @foreach(['IDR','USD','EUR','SGD'] as $cur)
-                                <li>
-                                    <a class="dropdown-item" onclick="selectCurrencyCreateKontrak('{{ $cur }}')">
-                                        {{ $cur }}
-                                    </a>
-                                </li>
-                                @endforeach
-                            </ul>
-                            {{-- DISPLAY --}}
-                            <input type="text"
-                                class="form-control currency-input"
-                                data-raw-target="nilaiKontrakCreateRaw"
-                                placeholder="0">
+                            @if($kontrakAuto)
+                                {{-- Mode UPDATE: Nilai readonly dari kontrak yang sudah ada --}}
+                                <span class="input-group-text">{{ $kontrakAuto->currency ?? 'IDR' }}</span>
+                                <input type="text" class="form-control" 
+                                    value="{{ number_format($kontrakAuto->nilai ?? 0, 0, ',', '.') }}" 
+                                    disabled>
+                                {{-- Hidden input untuk memastikan nilai tidak dikirim --}}
+                                <input type="hidden" name="nilai" value="{{ $kontrakAuto->nilai }}">
+                                <input type="hidden" name="currency" value="{{ $kontrakAuto->currency }}">
+                            @else
+                                {{-- Mode INSERT: Nilai bisa diisi --}}
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                    id="dropdownCurrencyKontrakCreate" data-bs-toggle="dropdown">
+                                    IDR
+                                </button>
+                                <ul class="dropdown-menu">
+                                    @foreach(['IDR','USD','EUR','SGD'] as $cur)
+                                    <li>
+                                        <a class="dropdown-item" onclick="selectCurrencyCreateKontrak('{{ $cur }}')">
+                                            {{ $cur }}
+                                        </a>
+                                    </li>
+                                    @endforeach
+                                </ul>
+                                {{-- DISPLAY --}}
+                                <input type="text"
+                                    class="form-control currency-input"
+                                    data-raw-target="nilaiKontrakCreateRaw"
+                                    placeholder="0">
 
-                            {{-- RAW --}}
-                            <input type="hidden"
-                                name="nilai"
-                                id="nilaiKontrakCreateRaw"
-                                value="">
+                                {{-- RAW --}}
+                                <input type="hidden"
+                                    name="nilai"
+                                    id="nilaiKontrakCreateRaw"
+                                    value="">
 
-                            {{-- CURRENCY --}}
-                            <input type="hidden"
-                                name="currency"
-                                id="currencyCreateNilaiKontrak"
-                                value="IDR">
+                                {{-- CURRENCY --}}
+                                <input type="hidden"
+                                    name="currency"
+                                    id="currencyCreateNilaiKontrak"
+                                    value="IDR">
+                            @endif
                         </div>
                     </div>
 
@@ -446,6 +464,12 @@
                     <div class="col-md-6">
                         <label class="form-label">Warranty</label>
                         <input type="text" name="warranty" class="form-control">
+                    </div>
+
+                    {{-- Link --}}
+                    <div class="col-6">
+                        <label class="form-label">Link</label>
+                        <input type="url" name="link" class="form-control">
                     </div>
 
                     {{-- Remarks --}}

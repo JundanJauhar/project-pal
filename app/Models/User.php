@@ -43,6 +43,11 @@ class User extends Authenticatable
         return $this->belongsTo(Division::class, 'division_id', 'division_id');
     }
 
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class, 'role_id', 'role_id');
+    }
+
     public function procurementProgress(): HasMany
     {
         return $this->hasMany(ProcurementProgress::class, 'user_id', 'user_id');

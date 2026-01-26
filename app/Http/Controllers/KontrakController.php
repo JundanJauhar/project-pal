@@ -17,12 +17,20 @@ class KontrakController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $exists = Kontrak::where('procurement_id', $procurementId)->exists();
+
+        if ($exists) {
+            return redirect()
+                ->route('procurements.show', $procurementId)
+                ->with('warning', 'Kontrak sudah ada. Gunakan Edit untuk mengubah data.')
+                ->withFragment('kontrak');
+        }
+
         if ($request->filled('nilai')) {
             $request->merge([
                 'nilai' => preg_replace('/\D/', '', $request->nilai)
             ]);
         }
-
 
         $validated = $request->validate([
             'procurement_id' => 'required|exists:procurement,procurement_id',
@@ -37,6 +45,7 @@ class KontrakController extends Controller
             'incoterms' => 'nullable|string|max:255',
             'coo' => 'nullable|string|max:255',
             'warranty' => 'nullable|string|max:255',
+            'link' => 'nullable|url|max:255',
             'remarks' => 'nullable|string',
         ]);
 
@@ -44,7 +53,6 @@ class KontrakController extends Controller
             DB::beginTransaction();
 
             $procurement = Procurement::findOrFail($procurementId);
-
             $validated['currency'] = $validated['currency'] ?? 'IDR';
 
             Kontrak::create($validated);
@@ -73,7 +81,6 @@ class KontrakController extends Controller
             ]);
         }
 
-
         $validated = $request->validate([
             'no_po' => 'nullable|string|max:255',
             'item_id' => 'nullable|exists:items,item_id',
@@ -86,14 +93,16 @@ class KontrakController extends Controller
             'incoterms' => 'nullable|string|max:255',
             'coo' => 'nullable|string|max:255',
             'warranty' => 'nullable|string|max:255',
+            'link' => 'nullable|url|max:255',
             'remarks' => 'nullable|string',
         ]);
+
+        unset($validated['vendor_id'], $validated['currency'], $validated['nilai']);
 
         try {
             DB::beginTransaction();
 
             $kontrak = Kontrak::findOrFail($id);
-            $validated['currency'] = $validated['currency'] ?? 'IDR';
             $kontrak->update($validated);
 
             DB::commit();

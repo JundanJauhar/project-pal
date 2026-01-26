@@ -192,7 +192,8 @@ class SupplyChainController extends Controller
             'item_id' => 'required|exists:items,item_id',
             'vendor_ids' => 'required|array|min:1',
             'vendor_ids.*' => 'required|exists:vendors,id_vendor',
-            'pic_evatek' => 'required|in:EO,HC,MO,HO,SEWACO',  // TAMBAHAN
+            'pic_evatek' => 'required|in:EO,HC,MO,HO,SEWACO',
+            'sc_design_link' => 'nullable|url',  // ✅ TAMBAHAN
             'target_date' => 'nullable|date|after_or_equal:today',
         ]);
 
@@ -227,8 +228,9 @@ class SupplyChainController extends Controller
                     'project_id' => $procurement->project_id,
                     'item_id' => $item->item_id,
                     'vendor_id' => $vendorId,
-                    'pic_evatek' => $validated['pic_evatek'],  // Simpan PIC
-                    'evatek_status' => null,                    // ✅ Default null (kosong/-)
+                    'pic_evatek' => $validated['pic_evatek'],
+                    'sc_design_link' => $validated['sc_design_link'] ?? null,  // ✅ TAMBAHAN
+                    'evatek_status' => null,
                     'start_date' => now(),
                     'target_date' => $validated['target_date'] ?? $procurement->end_date,
                     'current_revision' => 'R0',
@@ -236,10 +238,18 @@ class SupplyChainController extends Controller
                     'current_date' => null,
                 ]);
 
-                // Notify Desain Users
+                // ✅ Create initial revision R0
+                EvatekRevision::create([
+                    'evatek_id' => $evatek->evatek_id,
+                    'revision_code' => 'R0',
+                    'status' => 'pending',
+                    'date' => now()->toDateString(),
+                ]);
+
+                // ✅ Notify Desain Users
                 $desainUsers = \App\Models\User::where('roles', 'desain')->get();
                 $vendorName = \App\Models\Vendor::find($vendorId)->name_vendor ?? 'Vendor';
-                
+
                 foreach ($desainUsers as $user) {
                     Notification::create([
                         'user_id' => $user->user_id,
@@ -255,7 +265,7 @@ class SupplyChainController extends Controller
                     ]);
                 }
 
-                // Notify Vendor
+                // ✅ Notify Vendor
                 \App\Models\VendorNotification::create([
                     'vendor_id' => $vendorId,
                     'type' => 'info',
@@ -279,7 +289,7 @@ class SupplyChainController extends Controller
                 details: [
                     'procurement_id' => $procurementId,
                     'vendors' => $createdVendors,
-                    'pic_evatek' => $validated['pic_evatek'],  // TAMBAHAN: Log PIC
+                    'pic_evatek' => $validated['pic_evatek'],
                     'user_id' => Auth::id(),
                 ]
             );

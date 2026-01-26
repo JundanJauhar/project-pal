@@ -73,7 +73,7 @@
                         {{-- Nilai --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             @if($po->nilai)
-                            {{ number_format($po->nilai, 0, ',', '.') }} {{ $po->currency }}
+                            {{ $po->currency }} {{ number_format($po->nilai, 0, ',', '.') }}
                             @else
                             -
                             @endif

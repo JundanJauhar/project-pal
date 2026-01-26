@@ -15,13 +15,14 @@ class EvatekItem extends Model
         'item_id',
         'procurement_id',
         'vendor_id',
-        'pic_evatek',           // TAMBAHAN: EO, HC, MO, HO, SEWACO
-        'evatek_status',        // TAMBAHAN: evatek-vendor, evatek-desain, evatek-complete
+        'pic_evatek',
+        'evatek_status',
         'start_date',
         'target_date',
         'current_revision',
         'status',
         'current_date',
+        'sc_design_link',
         'approved_at',
         'not_approved_at',
         'log',
@@ -35,49 +36,38 @@ class EvatekItem extends Model
         'not_approved_at' => 'datetime',
     ];
 
-    /** Item relationship */
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class, 'item_id', 'item_id');
     }
 
-    /** Project relationship */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id', 'project_id');
     }
 
-    /** Vendor relationship */
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class, 'vendor_id', 'id_vendor');
     }
 
-    /** Procurement relationship */
     public function procurement(): BelongsTo
     {
         return $this->belongsTo(Procurement::class, 'procurement_id', 'procurement_id');
     }
 
-    /** All revisions for this Evatek */
     public function revisions(): HasMany
     {
         return $this->hasMany(EvatekRevision::class, 'evatek_id', 'evatek_id')
             ->orderBy('revision_id', 'DESC');
     }
 
-    /** Get latest revision */
     public function latestRevision()
     {
         return $this->hasOne(EvatekRevision::class, 'evatek_id', 'evatek_id')
             ->latest('revision_id');
     }
 
-    // ===== TAMBAHAN: ACCESSOR & HELPER METHODS =====
-
-    /**
-     * Accessor: Get PIC label
-     */
     public function getPicLabelAttribute()
     {
         $labels = [
@@ -90,9 +80,6 @@ class EvatekItem extends Model
         return $labels[$this->pic_evatek] ?? '-';
     }
 
-    /**
-     * Accessor: Get Evatek Status Label & Color
-     */
     public function getEvatekStatusLabelAttribute()
     {
         $labels = [
@@ -113,28 +100,18 @@ class EvatekItem extends Model
         return $colors[$this->evatek_status] ?? '#999';
     }
 
-    /**
-     * Helper: Check if vendor link is filled
-     */
     public function hasVendorLink()
     {
         $latestRevision = $this->latestRevision()->first();
         return $latestRevision && !empty($latestRevision->vendor_link);
     }
 
-    /**
-     * Helper: Check if design link is filled
-     */
     public function hasDesignLink()
     {
         $latestRevision = $this->latestRevision()->first();
         return $latestRevision && !empty($latestRevision->design_link);
     }
 
-    /**
-     * Auto-update evatek_status based on link input
-     * Harus dipanggil dari controller setelah update link
-     */
     public function updateEvatekStatus()
     {
         $hasVendor = $this->hasVendorLink();

@@ -7,6 +7,7 @@ use App\Models\Procurement;
 use App\Models\Vendor;
 use App\Models\PengadaanOC;
 use App\Models\PengesahanKontrak;
+use App\Models\Kontrak;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -48,6 +49,7 @@ class NegotiationController extends Controller
             'tanggal_kirim' => 'nullable|date',
             'tanggal_terima' => 'nullable|date|after_or_equal:tanggal_kirim',
             'lead_time' => 'nullable|string|max:100',
+            'link' => 'nullable|url|max:255',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -77,6 +79,7 @@ class NegotiationController extends Controller
                 'tanggal_kirim' => $validated['tanggal_kirim'] ?? null,
                 'tanggal_terima' => $validated['tanggal_terima'] ?? null,
                 'lead_time' => $validated['lead_time'] ?? null,
+                'link' => $validated['link'] ?? null,
                 'notes' => $validated['notes'] ?? null,
             ]);
 
@@ -127,6 +130,7 @@ class NegotiationController extends Controller
             'tanggal_kirim' => 'nullable|date',
             'tanggal_terima' => 'nullable|date|after_or_equal:tanggal_kirim',
             'lead_time' => 'nullable|string|max:100',
+            'link' => 'nullable|url|max:255',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -146,6 +150,7 @@ class NegotiationController extends Controller
                 'tanggal_kirim' => $validated['tanggal_kirim'] ?? null,
                 'tanggal_terima' => $validated['tanggal_terima'] ?? null,
                 'lead_time' => $validated['lead_time'] ?? null,
+                'link' => $validated['link'] ?? null,
                 'notes' => $validated['notes'] ?? null,
             ]);
 
@@ -159,6 +164,13 @@ class NegotiationController extends Controller
                 ]);
 
             PengesahanKontrak::where('procurement_id', $neg->procurement_id)
+                ->where('vendor_id', $neg->vendor_id)
+                ->update([
+                    'nilai' => $neg->harga_final,
+                    'currency' => $neg->currency_harga_final,
+                ]);
+
+            Kontrak::where('procurement_id', $neg->procurement_id)
                 ->where('vendor_id', $neg->vendor_id)
                 ->update([
                     'nilai' => $neg->harga_final,

@@ -38,6 +38,7 @@
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Target Quotation</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Lead Time</th>
                         <th style="padding: 12px 8px; text-align: center; color: #000;">Nilai Harga</th>
+                        <th style="padding: 12px 8px; text-align: center; color: #000;">Link</th>
                         <th style="padding: 12px 8px; text-align: center; color: #000;">Aksi</th>
                     </tr>
                 </thead>
@@ -54,9 +55,16 @@
                         <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $iq->lead_time ?? '-' }}</td>
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             @if($iq->nilai_harga)
-                            {{ number_format($iq->nilai_harga, 0, ',', '.') }} {{ $iq->currency }}
+                            {{ $iq->currency }} {{ number_format($iq->nilai_harga, 0, ',', '.') }}
                             @else
                             -
+                            @endif
+                        </td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            @if($iq->link)
+                            <a href="{{ $iq->link }}" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600;">Link</a>
+                            @else
+                            <span style="color: #999;">-</span>
                             @endif
                         </td>
                         <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
@@ -72,7 +80,7 @@
                     @if($inquiryQuotations->count() == 0 && $currentCheckpointSequence == 2)
                     <tr>
                         <td>{{ $row }}</td>
-                        <td colspan="6" class="text-center text-muted">
+                        <td colspan="7" class="text-center text-muted">
                             Belum ada Inquiry & Quotation</td>
                         <td class="text-center">
                             <button class="btn btn-sm btn-action-create"
@@ -87,7 +95,7 @@
                     {{-- ================= ROW CREATE (HANYA SAAT CHECKPOINT 2) ================= --}}
                     @if($inquiryQuotations->count() > 0 && $currentCheckpointSequence == 2)
                     <tr>
-                        <td colspan="7"></td>
+                        <td colspan="8"></td>
                         <td class="text-center">
                             <button class="btn btn-sm btn-action-create"
                                 data-bs-toggle="modal"
@@ -199,6 +207,13 @@
                         </div>
                     </div>
 
+                    {{-- Link --}}
+                    <div class="col-12">
+                        <label class="form-label">Link</label>
+                        <input type="url" name="link" class="form-control"
+                            value="{{ $iq->link }}">
+                    </div>
+
                     {{-- Notes --}}
                     <div class="col-12">
                         <label class="form-label">Notes</label>
@@ -303,6 +318,12 @@
                                 id="currencyInput"
                                 value="IDR">
                         </div>
+                    </div>
+
+                    {{-- Link --}}
+                    <div class="col-12">
+                        <label class="form-label">Link</label>
+                        <input type="url" name="link" class="form-control">
                     </div>
 
                     {{-- Notes --}}
