@@ -110,7 +110,7 @@ class LoginController extends Controller
                 return redirect()->route('ums.users.index');
             }
 
-            if ($user && $user->hasRole('sekretaris')) {
+            if ($user && $user->hasRole('sekdir')) {
                 return redirect()->route('sekdir.dashboard');
             }
 
