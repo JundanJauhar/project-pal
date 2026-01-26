@@ -108,7 +108,7 @@ class VendorEvatekController extends Controller
         $item = $evatek->item;
 
         $revisions = EvatekRevision::where('evatek_id', $evatek->evatek_id)
-            ->orderBy('revision_id', 'ASC')
+            ->orderBy('revision_id', 'DESC')
             ->get();
 
         if ($revisions->isEmpty()) {
@@ -264,7 +264,7 @@ class VendorEvatekController extends Controller
 
         // Get all revisions
         $revisions = EvatekRevision::where('evatek_id', $evatek->evatek_id)
-            ->orderBy('revision_id', 'ASC')
+            ->orderBy('revision_id', 'DESC')
             ->get();
 
         // Create initial revision if none exists
@@ -466,7 +466,7 @@ class VendorEvatekController extends Controller
                 'type' => 'info', 
                 'title' => 'Link Kontrak dari Vendor',
                 'message' => "Vendor {$vendor->name_vendor} telah mengupload dokumen kontrak untuk {$revision->revision_code}. Silakan cek dan respons.",
-                'action_url' => route('supply-chain.contract-review.show', $revision->contract_review_id),
+                'action_url' => route('contract-review.show', $revision->contract_review_id),
                 'reference_type' => 'App\Models\ContractReview',
                 'reference_id' => $revision->contract_review_id,
                 'is_read' => false,
@@ -572,26 +572,61 @@ class VendorEvatekController extends Controller
             $revCode = $latest->revision_code;
             $link = route('vendor.contract-review.review', $review->contract_review_id);
             
-            // Pending Action Only
+            // LOGIC: Show notification for ALL states but customize appearance
+            // 1. Pending / Revisi (Action Needed)
             if ((!$latest->result || $latest->result == 'pending' || $latest->result == 'revisi') && empty($latest->vendor_link)) {
                 $isRevisi = ($latest->result == 'revisi') || ($previous && $previous->result == 'revisi');
                 $title = $isRevisi ? 'Revisi Kontrak Diperlukan' : 'Butuh Upload Kontrak';
                 $msg = "Silakan upload dokumen review kontrak untuk {$projName} ({$revCode}).";
-
-                $notifications->push((object)[
-                    'id' => 'task_cr_' . $review->contract_review_id, // Virtual ID
-                    'is_stored' => false,
-                    'is_read' => false, // Tasks are always unread until done
-                    'type' => 'action',
-                    'icon' => 'bi-upload',
-                    'color' => '#d32f2f',
-                    'title' => $title,
-                    'message' => $msg,
-                    'link' => $link,
-                    'date' => $latest->created_at,
-                    'action_label' => 'Upload Dokumen'
-                ]);
+                $type = 'action';
+                $color = '#d32f2f'; // Red
+                $icon = 'bi-upload';
+                $actionLabel = 'Upload Dokumen';
             }
+            // 2. Waiting (Vendor uploaded, waiting SCM)
+            elseif (!empty($latest->vendor_link) && in_array($latest->result, ['pending', 'revisi'])) {
+                $title = 'Menunggu Review SCM';
+                $msg = "Dokumen kontrak {$projName} ({$revCode}) sedang direview oleh Supply Chain.";
+                $type = 'info';
+                $color = '#17a2b8'; // Blue info
+                $icon = 'bi-hourglass-split';
+                $actionLabel = 'Lihat Status';
+            }
+            // 3. Approved
+            elseif ($latest->result == 'approve') {
+                $title = 'Kontrak Disetujui';
+                $msg = "Review kontrak {$projName} ({$revCode}) telah DISETUJUI.";
+                $type = 'success';
+                $color = '#28a745'; // Green
+                $icon = 'bi-check-circle-fill';
+                $actionLabel = 'Lihat Detail';
+            }
+            // 4. Rejected (Not Approved)
+            elseif ($latest->result == 'not_approve') {
+                $title = 'Kontrak Ditolak';
+                $msg = "Review kontrak {$projName} ({$revCode}) DITOLAK.";
+                $type = 'danger';
+                $color = '#dc3545'; // Red
+                $icon = 'bi-x-circle-fill';
+                $actionLabel = 'Lihat Detail';
+            } 
+            else {
+                continue; // Skip unknown states
+            }
+
+            $notifications->push((object)[
+                'id' => 'task_cr_' . $review->contract_review_id . '_' . $latest->revision_code, // Unique per revision
+                'is_stored' => false,
+                'is_read' => false, 
+                'type' => $type,
+                'icon' => $icon,
+                'color' => $color,
+                'title' => $title,
+                'message' => $msg,
+                'link' => $link,
+                'date' => $latest->updated_at ?? $latest->created_at,
+                'action_label' => $actionLabel
+            ]);
         }
 
         // 3. COMPUTED TASKS (Evatek Pending)

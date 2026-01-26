@@ -149,8 +149,8 @@
                             </td>
                             <td><strong>{{ $rev->revision_code }}</strong></td>
                             <td>
-                                <input type="link " class="link-input vendor-link" value="{{ $rev->vendor_link }}"  readonly>
-                                </td>
+                                <input type="text" class="link-input vendor-link" value="{{ $rev->vendor_link }}">
+                            </td>
                             <td>
                                 <input type="text" class="link-input sc-link" value="{{ $rev->sc_link }}" >
                                 <button class="action-btn btn-upload save-link">Save</button>
@@ -346,7 +346,8 @@ function saveLink(row) {
         },
         body: JSON.stringify({
             revision_id: row.dataset.revisionId,
-            sc_link: row.querySelector(".sc-link").value
+            sc_link: row.querySelector(".sc-link").value,
+            vendor_link: row.querySelector(".vendor-link").value
         })
     })
     .then(r => r.json())
@@ -595,7 +596,7 @@ function submitRevisi(row) {
             <td><input type="checkbox" class="rev-check"></td>
             <td><strong>${next.revision_code}</strong></td>
             <td>
-                <input type="text" class="link-input vendor-link" readonly>
+                <input type="text" class="link-input vendor-link">
                 <div class="link-status"></div>
             </td>
             <td>

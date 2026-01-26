@@ -346,6 +346,14 @@ class CheckpointTransitionService
                 $this->notifyDivision(7, 'Evatek dimulai', 'Procurement siap evaluasi teknis');
                 break;
 
+            case 3: // Evatek selesai
+                $vendors = $this->procurement->evatekItems()->with('vendor')->get()->pluck('vendor.name_vendor')->unique()->implode(', ');
+                $msg = "Evatek selesai untuk procurement '{$this->procurement->name_procurement}' (Vendor: {$vendors}). Silakan lanjutkan ke proses negotiation.";
+                $url = route('procurements.show', $this->procurement->procurement_id);
+                
+                $this->notifyDivision(2, 'Evatek Selesai', $msg, $url);
+                break;
+
             case 6: // selesai Pengesahan Kontrak → info ke Accounting soal DP
                 $this->notifyDivision(3, 'DP Payment Ready', 'Pembayaran DP siap diproses');
                 break;
@@ -372,7 +380,7 @@ class CheckpointTransitionService
         }
     }
 
-    protected function notifyDivision(int $divisionId, string $title, string $message): void
+    protected function notifyDivision(int $divisionId, string $title, string $message, ?string $actionUrl = null): void
     {
         $users = \App\Models\User::whereHas(
             'division',
@@ -389,6 +397,7 @@ class CheckpointTransitionService
                 'message'        => $message,
                 'reference_type' => 'App\Models\Procurement',
                 'reference_id'   => $this->procurement->procurement_id,
+                'action_url'     => $actionUrl,
             ]);
         }
     }

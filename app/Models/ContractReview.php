@@ -62,7 +62,7 @@ class ContractReview extends Model
     public function revisions()
     {
         return $this->hasMany(ContractReviewRevision::class, 'contract_review_id', 'contract_review_id')
-            ->orderBy('revision_code', 'desc');
+            ->orderBy('contract_review_revision_id', 'desc');
     }
 
     /**

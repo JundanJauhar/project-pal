@@ -56,7 +56,11 @@ class NotificationController extends Controller
                         : (
                             ($notif->reference_type === 'App\Models\ContractReview' && $notif->reference_id)
                                 ? route('supply-chain.contract-review.show', $notif->reference_id)
-                                : '#'
+                                : (
+                                    ($notif->reference_type === 'App\Models\Procurement' && $notif->reference_id)
+                                        ? route('procurements.show', $notif->reference_id)
+                                        : '#'
+                                )
                         )
                 ),
                 'date' => $notif->created_at,
@@ -126,26 +130,63 @@ class NotificationController extends Controller
                 
                 if (!$latest) continue;
 
-                // Condition: Vendor has uploaded link, SCM hasn't approved/rejected yet ('pending' or 'revisi')
+                $projName = $review->procurement->project->project_name ?? 'Project';
+                $vendorName = $review->vendor->name_vendor ?? 'Vendor';
+
+                // LOGIC: Show notification for ALL states but customize appearance
+                // 1. Action Needed (Vendor uploaded, SCM needs to review)
                 if (!empty($latest->vendor_link) && in_array($latest->result, ['pending', 'revisi'])) {
-                    
-                    $projName = $review->procurement->project->project_name ?? 'Project';
-                    $vendorName = $review->vendor->name_vendor ?? 'Vendor';
-                    
-                    $notifications->push((object)[
-                        'id' => 'task_cr_scm_' . $review->contract_review_id,
-                        'is_stored' => false,
-                        'is_read' => false, 
-                        'type' => 'action',
-                        'icon' => 'bi-file-earmark-text',
-                        'color' => '#fd7e14', // Orange
-                        'title' => 'Review Kontrak Diperlukan',
-                        'message' => "Vendor {$vendorName} telah mengupload dokumen kontrak {$projName} ({$latest->revision_code}). Silakan review.",
-                        'link' => route('supply-chain.contract-review.show', $review->contract_review_id),
-                        'date' => $latest->updated_at ?? $latest->created_at,
-                        'action_label' => 'Review Kontrak'
-                    ]);
+                    $title = 'Review Kontrak Diperlukan';
+                    $msg = "Vendor {$vendorName} telah mengupload dokumen kontrak {$projName} ({$latest->revision_code}). Silakan review.";
+                    $type = 'action';
+                    $color = '#fd7e14'; // Orange
+                    $icon = 'bi-file-earmark-text';
+                    $actionLabel = 'Review Kontrak';
                 }
+                // 2. Waiting (Vendor needs to upload)
+                elseif (empty($latest->vendor_link) && in_array($latest->result, ['pending', 'revisi'])) {
+                    $title = 'Menunggu Vendor';
+                    $msg = "Menunggu Vendor {$vendorName} mengupload dokumen kontrak {$projName} ({$latest->revision_code}).";
+                    $type = 'info';
+                    $color = '#6c757d'; // Gray
+                    $icon = 'bi-clock-history';
+                    $actionLabel = 'Lihat Detail';
+                }
+                // 3. Approved
+                elseif ($latest->result == 'approve') {
+                    $title = 'Kontrak Disetujui';
+                    $msg = "Review kontrak {$projName} ({$latest->revision_code}) dengan Vendor {$vendorName} telah DISETUJUI.";
+                    $type = 'success';
+                    $color = '#28a745'; // Green
+                    $icon = 'bi-check-circle-fill';
+                    $actionLabel = 'Lihat Detail';
+                }
+                // 4. Rejected
+                elseif ($latest->result == 'not_approve') {
+                    $title = 'Kontrak Ditolak';
+                    $msg = "Review kontrak {$projName} ({$latest->revision_code}) dengan Vendor {$vendorName} DITOLAK.";
+                    $type = 'danger';
+                    $color = '#dc3545'; // Red
+                    $icon = 'bi-x-circle-fill';
+                    $actionLabel = 'Lihat Detail';
+                }
+                else {
+                    continue;
+                }
+
+                $notifications->push((object)[
+                    'id' => 'task_cr_scm_' . $review->contract_review_id . '_' . $latest->revision_code,
+                    'is_stored' => false,
+                    'is_read' => false, 
+                    'type' => $type,
+                    'icon' => $icon,
+                    'color' => $color,
+                    'title' => $title,
+                    'message' => $msg,
+                    'link' => route('supply-chain.contract-review.show', $review->contract_review_id),
+                    'date' => $latest->updated_at ?? $latest->created_at,
+                    'action_label' => $actionLabel
+                ]);
             }
         }
 

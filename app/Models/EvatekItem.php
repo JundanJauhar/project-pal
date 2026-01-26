@@ -63,7 +63,7 @@ class EvatekItem extends Model
     public function revisions(): HasMany
     {
         return $this->hasMany(EvatekRevision::class, 'evatek_id', 'evatek_id')
-            ->orderBy('revision_id', 'ASC');
+            ->orderBy('revision_id', 'DESC');
     }
 
     /** Get latest revision */
