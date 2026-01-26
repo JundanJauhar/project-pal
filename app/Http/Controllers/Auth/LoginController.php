@@ -58,7 +58,7 @@ class LoginController extends Controller
         }
 
         // Captcha tidak cocok
-        if ($request->captcha !== $captcha['code']) {
+        if (strtoupper($request->captcha) !== $captcha['code']) {
             throw ValidationException::withMessages([
                 'captcha' => 'Captcha tidak sesuai.',
             ]);
