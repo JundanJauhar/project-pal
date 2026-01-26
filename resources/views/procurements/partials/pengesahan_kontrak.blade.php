@@ -14,18 +14,6 @@
 
     <div class="dashboard-table-wrapper">
         <div class="table-responsive">
-            {{-- Button Save Checkpoint (LUAR TABLE) --}}
-            <div class="btn-simpan-wrapper">
-                @if($currentCheckpointSequence == 6 && $pengesahanKontraks->count() > 0)
-                <form action="{{ route('checkpoint.transition', $procurement->procurement_id) }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="from_checkpoint" value="6">
-                    <button class="btn btn-sm btn-action-simpan">
-                        <i class="bi bi-box-arrow-down"></i> Simpan
-                    </button>
-                </form>
-                @endif
-            </div>
 
             {{-- TABLE --}}
             <table class="dashboard-table">
@@ -106,24 +94,8 @@
                     @endforeach
                     @endif
 
-                    {{-- ✅ EMPTY STATE DENGAN CREATE BUTTON (HANYA SAAT CHECKPOINT 6 & TIDAK ADA PK) --}}
-                    @if($pkCount == 0 && $currentCheckpointSequence == 6)
-                    <tr>
-                        <td colspan="8" class="text-center text-muted" style="padding: 12px 8px;">
-                            Belum ada Kontrak yang disahkan
-                        </td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-action-create"
-                                data-bs-toggle="modal"
-                                data-bs-target="#modalCreatePK">
-                                Create
-                            </button>
-                        </td>
-                    </tr>
-                    @endif
-
-                    {{-- ✅ ROW CREATE (HANYA SAAT CHECKPOINT 6 & ADA PK) --}}
-                    @if($pkCount > 0 && $currentCheckpointSequence == 6)
+                    {{-- ✅ ROW CREATE (SELALU TAMPIL SAAT CHECKPOINT 6) --}}
+                    @if($currentCheckpointSequence == 6)
                     <tr>
                         <td colspan="8"></td>
                         <td class="text-center">
@@ -275,9 +247,24 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <form method="POST" action="{{ route('pengesahan-kontrak.store', $procurement->procurement_id) }}">
+            @php
+            $pkAuto = $pengesahanKontraks->first();
+            $isUpdate = $pkAuto ? true : false;
+            @endphp
+
+            <form method="POST" 
+                action="{{ $isUpdate 
+                    ? route('pengesahan-kontrak.update', $pkAuto->pengesahan_id) 
+                    : route('pengesahan-kontrak.store', $procurement->procurement_id) }}">
                 @csrf
-                <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
+
+                @if($isUpdate)
+                    @method('PATCH')
+                @endif
+
+                @if(!$isUpdate)
+                    <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
+                @endif
 
                 <div class="modal-body row g-3">
                     @php
@@ -290,40 +277,54 @@
 
                     {{-- Vendor --}}
                     <div class="col-md-6">
-                        <label class="form-label">Vendor *</label>
-                        <select name="vendor_id" id="vendorSelectPK" class="form-select" required>
-                            <option value="" disabled selected>-- Pilih Vendor --</option>
-                            @if($pkVendors->count() > 0)
-                            @foreach($pkVendors as $vendor)
-                            @php
-                            $neg = $negotiations->firstWhere('vendor_id', $vendor->id_vendor);
-                            @endphp
-                            <option value="{{ $vendor->id_vendor }}"
-                                data-harga="{{ $neg?->harga_final }}"
-                                data-currency="{{ $neg?->currency_harga_final ?? 'IDR' }}">
-                                {{ $vendor->name_vendor }}
-                            </option>
-                            @endforeach
-                            @else
-                            <option disabled>
-                                Tidak ada vendor dari Inquiry & Quotation
-                            </option>
-                            @endif
-                        </select>
-                        <small style="color:#666;">Vendor berasal dari Inquiry & Quotation</small>
+                        <label class="form-label">Vendor</label>
+                        @if($pkAuto)
+                            {{-- Mode UPDATE: Vendor sudah ada, tampilkan readonly --}}
+                            <input type="text" class="form-control" 
+                                value="{{ $pkAuto->vendor?->name_vendor ?? '-' }}" 
+                                disabled>
+                            <input type="hidden" name="vendor_id" value="{{ $pkAuto->vendor_id }}">
+                        @else
+                            {{-- Mode INSERT: Vendor bisa dipilih --}}
+                            <select name="vendor_id" id="vendorSelectPK" class="form-select" required>
+                                <option value="" disabled selected>-- Pilih Vendor --</option>
+                                @if($pkVendors->count() > 0)
+                                @foreach($pkVendors as $vendor)
+                                @php
+                                $neg = $negotiations->firstWhere('vendor_id', $vendor->id_vendor);
+                                @endphp
+                                <option value="{{ $vendor->id_vendor }}"
+                                    data-harga="{{ $neg?->harga_final }}"
+                                    data-currency="{{ $neg?->currency_harga_final ?? 'IDR' }}">
+                                    {{ $vendor->name_vendor }}
+                                </option>
+                                @endforeach
+                                @else
+                                <option disabled>Tidak ada vendor dari Inquiry & Quotation</option>
+                                @endif
+                            </select>
+                            <small style="color:#666;">Vendor berasal dari Inquiry & Quotation</small>
+                        @endif
                     </div>
 
-                    {{-- Nilai (Display Only) --}}
+                    {{-- Nilai --}}
                     <div class="col-md-6">
                         <label class="form-label">Nilai</label>
                         <div class="input-group">
-                            <span class="input-group-text" id="currencyCreatePKDisplay">
-                                IDR
-                            </span>
-                            <input type="text" class="form-control" placeholder="0" disabled id="nilaiPKDisplay">
+                            @if($pkAuto)
+                                {{-- Mode UPDATE: Nilai readonly dari PK yang sudah ada --}}
+                                <span class="input-group-text">{{ $pkAuto->currency ?? 'IDR' }}</span>
+                                <input type="text" class="form-control" 
+                                    value="{{ number_format($pkAuto->nilai ?? 0, 0, ',', '.') }}" 
+                                    disabled>
+                            @else
+                                {{-- Mode INSERT: Nilai ditampilkan dari vendor yang dipilih --}}
+                                <span class="input-group-text" id="currencyCreatePKDisplay">IDR</span>
+                                <input type="text" class="form-control" placeholder="0" disabled id="nilaiPKDisplay">
+                                <input type="hidden" name="nilai" id="nilaiPK" value="">
+                                <input type="hidden" name="currency" id="currencyCreatePK" value="IDR">
+                            @endif
                         </div>
-                        <input type="hidden" name="nilai" id="nilaiPK" value="">
-                        <input type="hidden" name="currency" id="currencyCreatePK" value="IDR">
                     </div>
 
                     {{-- Kadep → Kadiv --}}

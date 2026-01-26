@@ -21,6 +21,7 @@ class DivisionSeeder extends Seeder
             ['division_name' => 'Sekretaris Direksi', 'description' => 'Sekretaris Direksi - Approval Kontrak'],
             ['division_name' => 'Desain', 'description' => 'Desain Division - HPS dan Evatek'],
             ['division_name' => 'Vendor', 'description' => 'Vendor - Proses Evatek'],
+            ['division_name' => 'Sistem', 'description' => 'PENGUASA SISTEM - Super Admin' ],
         ];
 
         foreach ($divisions as $division) {

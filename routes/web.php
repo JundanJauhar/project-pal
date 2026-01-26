@@ -55,6 +55,7 @@ Route::post('/logout', [LoginController::class, 'logout'])
 
 //Capthca
 Route::get('/captcha', [CaptchaController::class, 'generate'])
+    ->middleware('throttle:30,1')
     ->name('captcha.generate');
 /*
 |--------------------------------------------------------------------------

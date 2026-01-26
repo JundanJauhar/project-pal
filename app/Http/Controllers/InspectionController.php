@@ -13,8 +13,8 @@ use App\Helpers\ActivityLogger;
 class InspectionController extends Controller
 {
     /**
-     * Klasifikasi status inspeksi per pengadaan (berdasarkan semua item-nya).
-     *
+     * Classify procurement inspection status based on item results
+     * 
      * Hasil:
      *  - 'butuh'  : belum ada item yang diinspeksi (BELUM DIINSPEKSI)
      *  - 'sedang' : sebagian sudah diinspeksi / hasil campuran
@@ -26,7 +26,7 @@ class InspectionController extends Controller
         $items = $proc->requestProcurements->flatMap->items;
         $totalItems = $items->count();
 
-        // Tidak ada item sama sekali → treat sebagai BUTUH inspeksi
+        // Tidak ada item sama sekali
         if ($totalItems === 0) {
             return 'butuh';
         }
@@ -61,178 +61,173 @@ class InspectionController extends Controller
             return 'gagal';
         }
 
-        // Campuran passed/failed → anggap masih proses
+        // Campuran passed/failed
         return 'sedang';
     }
 
+    /**
+     * Display inspection dashboard
+     * 
+     * Authorization:
+     * - QA role → Lihat procurement di checkpoint "Kedatangan Material"
+     * - Non-QA → Lihat inspection reports (read-only)
+     */
     public function index(Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
+        $user->loadAuthContext();
 
-        // checkpoint "Inspeksi Barang"
+        $userDivision = $user->division?->division_name;
+
+        // === AUTHORIZATION CHECK: DIVISION + ROLE ===
+        // Hanya user dari QA division yang bisa akses fitur ini
+        if (
+            $userDivision !== 'Quality Assurance'
+            || !$user->hasRole('qa_inspector')
+        ) {
+            // User bukan QA → tampilkan view alternatif (read-only)
+            return $this->indexForNonQA($user);
+        }
+
+        // === ROLE: QA_INSPECTOR ===
+        // User dari Quality Assurance division dengan role qa_inspector
+
         $inspectionCheckpointId = Checkpoint::where('point_name', 'Kedatangan Material')
             ->value('point_id');
 
+        // === BUILD BASE QUERY: Procurement di checkpoint inspeksi ===
+        $baseQuery = Procurement::with([
+            'project',
+            'department',
+            'requestProcurements.items.inspectionReports',
+            'requestProcurements.vendor',
+            'procurementProgress',
+        ])
+            ->whereHas('procurementProgress', function ($q) use ($inspectionCheckpointId) {
+                $q->where('checkpoint_id', $inspectionCheckpointId);
+            })
+            ->orderBy('created_at', 'desc');
 
-        // =========================
-        // ROLE QA
-        // =========================
-        if ($user->roles === 'qa') {
-            /**
-             * Base query:
-             * Ambil SEMUA pengadaan yang punya progress di checkpoint "Inspeksi Barang",
-             * tanpa membatasi status progress (completed / in_progress / not_started / blocked).
-             *
-             * Status kartu & kolom "Status Inspeksi" ditentukan dari hasil inspeksi item,
-             * bukan dari status di procurement_progress.
-             */
-            $baseQuery = Procurement::with([
-                'project',
-                'department',
-                'requestProcurements.items.inspectionReports',
-                'requestProcurements.vendor',
-                'procurementProgress',
-            ])
-                ->whereHas('procurementProgress', function ($q) use ($inspectionCheckpointId) {
-                    $q->where('checkpoint_id', $inspectionCheckpointId);
-                })
-                ->orderBy('created_at', 'desc');
+        // === DIVISION BOUNDARY: Hanya procurement dari divisi sendiri ===
+        $qaProcurements = $baseQuery
+            ->whereHas('department', function ($q) use ($user) {
+                $q->where('division_id', $user->division_id);
+            })
+            ->get();
 
-            // Ambil semua pengadaan di checkpoint ini (belum pakai filter search / priority / result)
-            $qaProcurements = $baseQuery->get();
+        // === CALCULATE CARDS: Status based on procurement classification ===
+        $cards = $this->calculateInspectionCards($qaProcurements);
 
-            // Hitung kartu berdasarkan STATUS PENGADAAN, bukan jumlah item
-            $totalProcurements = $qaProcurements->count();
-            $countButuh = 0;
-            $countSedang = 0;
-            $countLolos = 0;
-            $countGagal = 0;
+        // === FILTER COLLECTION: Search, priority, result ===
+        $collection = $this->filterProcurements($qaProcurements, $request);
 
-            foreach ($qaProcurements as $proc) {
-                $status = $this->classifyProcurementStatus($proc);
+        // === MANUAL PAGINATION ===
+        $page = (int)$request->query('page', 1);
+        $perPage = 20;
+        $offset = ($page - 1) * $perPage;
 
-                switch ($status) {
-                    case 'butuh':
-                        $countButuh++;
-                        break;
-                    case 'sedang':
-                        $countSedang++;
-                        break;
-                    case 'lolos':
-                        $countLolos++;
-                        break;
-                    case 'gagal':
-                        $countGagal++;
-                        break;
-                }
-            }
+        $paged = $collection->slice($offset, $perPage)->values();
 
-            $cards = [
-                'total'  => $totalProcurements,
-                'butuh'  => $countButuh,
-                'sedang' => $countSedang,
-                'lolos'  => $countLolos,
-                'gagal'  => $countGagal,
-            ];
+        $procurements = new LengthAwarePaginator(
+            $paged,
+            $collection->count(),
+            $perPage,
+            $page,
+            [
+                'path' => url()->current(),
+                'query' => $request->query(),
+            ]
+        );
 
-            // ====== LIST TABEL (koleksi yang bisa difilter) ======
-            $collection = $qaProcurements;
+        // === ACTIVITY LOGGING ===
+        ActivityLogger::log(
+            module: 'Inspection',
+            action: 'view_inspection_dashboard_qa',
+            targetId: null,
+            details: [
+                'user_id' => $user->id,
+                'division_id' => $user->division_id,
+                'filters' => [
+                    'search' => $request->query('q', ''),
+                    'priority' => $request->query('priority', ''),
+                    'result' => $request->query('result', ''),
+                ],
+                'cards' => $cards,
+            ]
+        );
 
-            // Search (kode / nama pengadaan / project) – server-side
-            $q = trim($request->query('q', ''));
-            if ($q !== '') {
-                $collection = $collection->filter(function ($proc) use ($q) {
-                    $qLower = mb_strtolower($q);
+        return view('qa.inspections', array_merge($cards, [
+            'procurements' => $procurements,
+        ]));
+    }
 
-                    $codeMatch = mb_stripos($proc->code_procurement, $qLower) !== false;
-                    $nameMatch = mb_stripos($proc->name_procurement, $qLower) !== false;
-                    $projectMatch = mb_stripos(optional($proc->project)->project_name ?? '', $qLower) !== false;
-                    $projectCodeMatch = mb_stripos(optional($proc->project)->project_code ?? '', $qLower) !== false;
-
-                    return $codeMatch || $nameMatch || $projectMatch || $projectCodeMatch;
-                })->values();
-            }
-
-            // Filter PRIORITAS
-            $priority = $request->query('priority', '');
-            if ($priority !== '') {
-                $priorityLower = mb_strtolower($priority);
-                $collection = $collection->filter(function ($proc) use ($priorityLower) {
-                    return mb_strtolower($proc->priority ?? '') === $priorityLower;
-                })->values();
-            }
-
-            // Filter STATUS INSPEKSI (passed|failed|in_progress|not_inspected)
-            $resultFilter = $request->query('result', '');
-            if ($resultFilter !== '') {
-                $collection = $collection->filter(function ($proc) use ($resultFilter) {
-                    $status = $this->classifyProcurementStatus($proc);
-
-                    return match ($resultFilter) {
-                        'not_inspected' => $status === 'butuh',
-                        'in_progress'   => $status === 'sedang',
-                        'passed'        => $status === 'lolos',
-                        'failed'        => $status === 'gagal',
-                        default         => true,
-                    };
-                })->values();
-            }
-
-            // Paginate collection secara manual
-            $page    = (int) $request->query('page', 1);
-            $perPage = 20;
-            $offset  = ($page - 1) * $perPage;
-
-            $paged = $collection->slice($offset, $perPage)->values();
-
-            $procurements = new LengthAwarePaginator(
-                $paged,
-                $collection->count(),
-                $perPage,
-                $page,
-                [
-                    'path'  => url()->current(),
-                    'query' => $request->query(),
-                ]
-            );
-
-            ActivityLogger::log(
-                module: 'Inspection',
-                action: 'view_inspection_dashboard_qa',
-                targetId: null,
-                details: [
-                    'user_id' => $user->user_id,
-                    'filters' => [
-                        'search' => $request->query('q', ''),
-                        'priority' => $request->query('priority', ''),
-                        'result' => $request->query('result', ''),
-                    ],
-                    'cards' => $cards,
-                ]
-            );
-
-            return view('qa.inspections', array_merge($cards, [
-                'procurements' => $procurements,
-            ]));
-        }
-
-        // =========================
-        // ROLE SELAIN QA
-        // (tetap bisa pakai kartu global, tapi daftar yang ditampilkan = inspection reports)
-        // =========================
+    /**
+     * View untuk non-QA user (read-only)
+     * 
+     * Non-QA user hanya bisa lihat inspection reports,
+     * bukan QA dashboard. Akses limited ke divisi mereka.
+     */
+    private function indexForNonQA($user)
+    {
+        // === DIVISION BOUNDARY: Hanya dari divisi sendiri ===
         $allProcurements = Procurement::with([
             'project',
             'department',
             'requestProcurements.items.inspectionReports',
             'requestProcurements.vendor',
         ])
+            ->whereHas('department', function ($q) use ($user) {
+                $q->where('division_id', $user->division_id);
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $totalProcurements = $allProcurements->count();
-        $countButuh = $countSedang = $countLolos = $countGagal = 0;
+        // === CALCULATE CARDS: Global stats untuk divisi ===
+        $cards = $this->calculateInspectionCards($allProcurements);
 
-        foreach ($allProcurements as $proc) {
+        // === INSPECTION REPORTS: Read-only list ===
+        $inspections = InspectionReport::with(['item.requestProcurement.procurement.project', 'item.requestProcurement.procurement.department'])
+            ->whereHas('item.requestProcurement.procurement.department', function ($q) use ($user) {
+                $q->where('division_id', $user->division_id);
+            })
+            ->orderBy('inspection_date', 'desc')
+            ->paginate(20);
+
+        // === ACTIVITY LOGGING ===
+        ActivityLogger::log(
+            module: 'Inspection',
+            action: 'view_inspection_reports_nonqa',
+            targetId: null,
+            details: [
+                'user_id' => $user->id,
+                'division_id' => $user->division_id,
+                'report_count' => $inspections->total(),
+            ]
+        );
+
+        return view('qa.inspections', array_merge($cards, [
+            'inspections' => $inspections,
+        ]));
+    }
+
+    /**
+     * Calculate inspection status cards
+     * 
+     * Menghitung jumlah procurement berdasarkan status inspeksi:
+     * - butuh: belum inspeksi
+     * - sedang: partial inspeksi
+     * - lolos: semua lolos
+     * - gagal: semua gagal
+     */
+    private function calculateInspectionCards($procurements)
+    {
+        $countButuh = 0;
+        $countSedang = 0;
+        $countLolos = 0;
+        $countGagal = 0;
+
+        foreach ($procurements as $proc) {
             $status = $this->classifyProcurementStatus($proc);
 
             switch ($status) {
@@ -251,35 +246,69 @@ class InspectionController extends Controller
             }
         }
 
-        $cards = [
-            'total'  => $totalProcurements,
-            'butuh'  => $countButuh,
+        return [
+            'total' => $procurements->count(),
+            'butuh' => $countButuh,
             'sedang' => $countSedang,
-            'lolos'  => $countLolos,
-            'gagal'  => $countGagal,
+            'lolos' => $countLolos,
+            'gagal' => $countGagal,
         ];
-
-        $inspections = InspectionReport::with(['project', 'project.department', 'item'])
-            ->orderBy('inspection_date', 'desc')
-            ->paginate(20);
-
-        ActivityLogger::log(
-            module: 'Inspection',
-            action: 'view_inspection_dashboard_nonqa',
-            targetId: null,
-            details: [
-                'user_id' => $user->user_id,
-                'cards' => $cards,
-            ]
-        );
-
-        return view('qa.inspections', array_merge($cards, [
-            'inspections' => $inspections,
-        ]));
     }
 
+    /**
+     * Filter procurement collection berdasarkan search, priority, result
+     */
+    private function filterProcurements($collection, Request $request)
+    {
+        // Filter: search by code/name/project
+        $q = trim($request->query('q', ''));
+        if ($q !== '') {
+            $collection = $collection->filter(function ($proc) use ($q) {
+                $qLower = mb_strtolower($q);
+
+                $codeMatch = mb_stripos($proc->code_procurement, $qLower) !== false;
+                $nameMatch = mb_stripos($proc->name_procurement, $qLower) !== false;
+                $projectMatch = mb_stripos(optional($proc->project)->project_name ?? '', $qLower) !== false;
+                $projectCodeMatch = mb_stripos(optional($proc->project)->project_code ?? '', $qLower) !== false;
+
+                return $codeMatch || $nameMatch || $projectMatch || $projectCodeMatch;
+            })->values();
+        }
+
+        // Filter: priority
+        $priority = $request->query('priority', '');
+        if ($priority !== '') {
+            $priorityLower = mb_strtolower($priority);
+            $collection = $collection->filter(function ($proc) use ($priorityLower) {
+                return mb_strtolower($proc->priority ?? '') === $priorityLower;
+            })->values();
+        }
+
+        // Filter: inspection result status
+        $resultFilter = $request->query('result', '');
+        if ($resultFilter !== '') {
+            $collection = $collection->filter(function ($proc) use ($resultFilter) {
+                $status = $this->classifyProcurementStatus($proc);
+
+                return match ($resultFilter) {
+                    'not_inspected' => $status === 'butuh',
+                    'in_progress' => $status === 'sedang',
+                    'passed' => $status === 'lolos',
+                    'failed' => $status === 'gagal',
+                    default => true,
+                };
+            })->values();
+        }
+
+        return $collection;
+    }
+
+    /**
+     * Show inspection detail (404 untuk sekarang)
+     * TODO: Implementasi detail page jika diperlukan
+     */
     public function show($id)
     {
-        abort(404);
+        abort(404, 'Endpoint not implemented');
     }
 }

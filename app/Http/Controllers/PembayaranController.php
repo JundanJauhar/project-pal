@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Checkpoint;
+use App\Helpers\ActivityLogger;
 
 class PembayaranController extends Controller
 {
@@ -18,9 +20,36 @@ class PembayaranController extends Controller
      */
     public function store(Request $request, $procurementId)
     {
-        // Authorization check
-        if (Auth::user()->roles !== 'supply_chain' && Auth::user()->roles !== 'admin') {
-            abort(403, 'Unauthorized action.');
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        // === STEP 1: Check ROLE ===
+        if (!$user->hasRole('pembayaran')) {
+            abort(403, 'Anda tidak punya role pembayaran.');
+        }
+
+        // === STEP 2: Load PROCUREMENT ===
+        $procurement = Procurement::findOrFail($procurementId);
+
+        // === STEP 3: Get CURRENT CHECKPOINT ===
+        $currentCheckpoint = $procurement->procurementProgress()
+            ->with('checkpoint')
+            ->where('status', 'in_progress')
+            ->first();
+
+        if (!$currentCheckpoint) {
+            abort(400, 'Procurement tidak sedang di tahap apapun.');
+        }
+
+        // === STEP 4: Check CHECKPOINT DIVISION ===
+        if ($currentCheckpoint->checkpoint->responsible_division !== $user->division_id) {
+            abort(403, 'Procurement sedang ditangani divisi lain.');
+        }
+
+        // === STEP 5: Check CHECKPOINT NAME ===
+        if ($currentCheckpoint->checkpoint->point_name !== 'Pembayaran DP') {
+            abort(403, 'Procurement tidak sedang di tahap Pembayaran DP.');
         }
 
         // Pre-processing percentage
@@ -77,7 +106,7 @@ class PembayaranController extends Controller
                 );
             }
 
-            Pembayaran::create([
+            $pembayaran = Pembayaran::create([
                 'procurement_id'   => $validated['procurement_id'],
                 'vendor_id'        => $kontrak->vendor_id,
                 'payment_type'     => $validated['payment_type'],
@@ -92,13 +121,30 @@ class PembayaranController extends Controller
 
             DB::commit();
 
+            ActivityLogger::log(
+                module: 'Pembayaran',
+                action: 'create_pembayaran',
+                targetId: $pembayaran->id,
+                details: [
+                    'procurement_id' => $procurement->procurement_id,
+                    'checkpoint_id' => $currentCheckpoint->checkpoint_id,
+                    'user_id' => $user->id,
+                    'division_id' => $user->division_id,
+                ]
+            );
+
             return redirect()
                 ->route('procurements.show', $procurement->procurement_id)
                 ->with('success', 'Pembayaran berhasil disimpan')
                 ->withFragment('pembayaran');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error storing pembayaran: ' . $e->getMessage());
+            Log::error('Error storing pembayaran', [
+                'user_id' => $user->id,
+                'procurement_id' => $procurementId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
             return redirect()->back()
                 ->with('error', 'Gagal menyimpan Pembayaran: ' . $e->getMessage())
@@ -111,9 +157,37 @@ class PembayaranController extends Controller
      */
     public function update(Request $request, $pembayaranId)
     {
-        // Authorization check
-        if (Auth::user()->roles !== 'supply_chain' && Auth::user()->roles !== 'admin') {
-            abort(403, 'Unauthorized action.');
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        // === STEP 1: Check ROLE ===
+        if (!$user->hasRole('pembayaran')) {
+            abort(403, 'Anda tidak punya role pembayaran.');
+        }
+
+        // === STEP 2: Load PEMBAYARAN + PROCUREMENT ===
+        $pembayaran = Pembayaran::with('procurement')->findOrFail($pembayaranId);
+        $procurement = $pembayaran->procurement;
+
+        // === STEP 3: Get CURRENT CHECKPOINT ===
+        $currentCheckpoint = $procurement->procurementProgress()
+            ->with('checkpoint')
+            ->where('status', 'in_progress')
+            ->first();
+
+        if (!$currentCheckpoint) {
+            abort(400, 'Procurement tidak sedang di tahap apapun.');
+        }
+
+        // === STEP 4: Check CHECKPOINT DIVISION ===
+        if ($currentCheckpoint->checkpoint->responsible_division !== $user->division_id) {
+            abort(403, 'Procurement sedang ditangani divisi lain.');
+        }
+
+        // === STEP 5: Check CHECKPOINT NAME ===
+        if ($currentCheckpoint->checkpoint->point_name !== 'Pembayaran DP') {
+            abort(403, 'Procurement tidak sedang di tahap Pembayaran DP.');
         }
 
         if ($request->filled('percentage')) {
@@ -161,11 +235,27 @@ class PembayaranController extends Controller
 
             $pembayaran->update($validated);
 
+            ActivityLogger::log(
+                module: 'Pembayaran',
+                action: 'update_pembayaran',
+                targetId: $pembayaran->id,
+                details: [
+                    'procurement_id' => $procurement->procurement_id,
+                    'checkpoint_id' => $currentCheckpoint->checkpoint_id,
+                    'user_id' => $user->id,
+                    'division_id' => $user->division_id,
+                ]
+            );
+
             return redirect()
                 ->back()
                 ->with('success', 'Pembayaran berhasil diperbarui');
         } catch (\Exception $e) {
-            Log::error('Error updating pembayaran: ' . $e->getMessage());
+            Log::error('Error updating pembayaran', [
+                'user_id' => $user->id,
+                'pembayaran_id' => $pembayaranId,
+                'error' => $e->getMessage(),
+            ]);
 
             return redirect()->back()
                 ->with('error', 'Gagal memperbarui Pembayaran: ' . $e->getMessage());
@@ -175,23 +265,65 @@ class PembayaranController extends Controller
 
     public function delete($pembayaranId)
     {
-        // Authorization check
-        if (Auth::user()->roles !== 'supply_chain' && Auth::user()->roles !== 'admin') {
-            abort(403, 'Unauthorized action.');
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        // === STEP 1: Check ROLE ===
+        if (!$user->hasRole('pembayaran')) {
+            abort(403, 'Anda tidak punya role pembayaran.');
+        }
+
+        // === STEP 2: Load PEMBAYARAN + PROCUREMENT ===
+        $pembayaran = Pembayaran::with(['procurement'])->findOrFail($pembayaranId);
+        $procurement = $pembayaran->procurement;
+
+        // === STEP 3: Get CURRENT CHECKPOINT ===
+        $currentCheckpoint = $procurement->procurementProgress()
+            ->with('checkpoint')
+            ->where('status', 'in_progress')
+            ->first();
+
+        if (!$currentCheckpoint) {
+            abort(400, 'Procurement tidak sedang di tahap apapun.');
+        }
+
+        // === STEP 4: Check CHECKPOINT DIVISION ===
+        if ($currentCheckpoint->checkpoint->responsible_division !== $user->division_id) {
+            abort(403, 'Procurement sedang ditangani divisi lain.');
+        }
+
+        // === STEP 5: Check CHECKPOINT NAME ===
+        if ($currentCheckpoint->checkpoint->point_name !== 'Pembayaran DP') {
+            abort(403, 'Procurement tidak sedang di tahap Pembayaran DP.');
         }
 
         try {
-            $pembayaran = Pembayaran::findOrFail($pembayaranId);
             $procurementId = $pembayaran->procurement_id;
 
             $pembayaran->delete();
+
+            ActivityLogger::log(
+                module: 'Pembayaran',
+                action: 'delete_pembayaran',
+                targetId: $pembayaranId,
+                details: [
+                    'procurement_id' => $procurementId,
+                    'user_id' => $user->id,
+                    'division_id' => $user->division_id,
+                ]
+            );
 
             return redirect()
                 ->route('procurements.show', $procurementId)
                 ->with('success', 'Pembayaran berhasil dihapus')
                 ->withFragment('pembayaran');
         } catch (\Exception $e) {
-            Log::error('Error deleting pembayaran: ' . $e->getMessage());
+            Log::error('Error deleting pembayaran', [
+                'user_id' => $user->id,
+                'pembayaran_id' => $pembayaranId,
+                'error' => $e->getMessage(),
+            ]);
 
             return redirect()->back()
                 ->with('error', 'Gagal menghapus Pembayaran: ' . $e->getMessage());
@@ -200,36 +332,48 @@ class PembayaranController extends Controller
 
     public function getByProcurement($procurementId)
     {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
         try {
+            $procurement = Procurement::findOrFail($procurementId);
+
             $pembayarans = Pembayaran::where('procurement_id', $procurementId)
                 ->with(['vendor'])
                 ->orderBy('created_at', 'asc')
                 ->get()
                 ->map(function ($p) {
                     return [
-                        'id'            => $p->id,
-                        'vendor'        => $p->vendor->name_vendor ?? '-',
-                        'payment_type'  => $p->payment_type,
-                        'percentage'    => $p->percentage,
+                        'id' => $p->id,
+                        'vendor' => $p->vendor->name_vendor ?? '-',
+                        'payment_type' => $p->payment_type,
+                        'percentage' => $p->percentage,
                         'payment_value' => number_format($p->payment_value, 0, ',', '.'),
-                        'currency'      => $p->currency,
-                        'no_memo'       => $p->no_memo ?? '-',
-                        'link'          => $p->link ?? '-',
-                        'target_date'   => $p->target_date?->format('d/m/Y') ?? '-',
-                        'realization'   => $p->realization_date?->format('d/m/Y') ?? '-',
+                        'currency' => $p->currency,
+                        'no_memo' => $p->no_memo ?? '-',
+                        'link' => $p->link ?? '-',
+                        'target_date' => $p->target_date?->format('d/m/Y') ?? '-',
+                        'realization' => $p->realization_date?->format('d/m/Y') ?? '-',
                     ];
                 });
 
             return response()->json([
                 'success' => true,
-                'data'    => $pembayarans,
-                'count'   => $pembayarans->count()
+                'data' => $pembayarans,
+                'count' => $pembayarans->count()
             ]);
         } catch (\Exception $e) {
-            Log::error('Error getting pembayaran: ' . $e->getMessage());
+            Log::error('Error getting pembayaran', [
+                'user_id' => $user->id,
+                'procurement_id' => $procurementId,
+                'error' => $e->getMessage(),
+            ]);
 
-            return redirect()->back()
-                ->with('error', 'Gagal menghapus Pembayaran: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
