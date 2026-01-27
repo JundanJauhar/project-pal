@@ -182,8 +182,8 @@
     }
 
     /* =========================
-   GRAFANA SLIDER (REFINED)
-========================= */
+    GRAFANA SLIDER (REFINED)
+    ========================= */
 
     .grafana-slider-card {
         position: relative;
@@ -191,7 +191,7 @@
         border-radius: 18px;
         padding: 26px 26px 30px;
         box-shadow: 0 12px 26px rgba(0,0,0,.18);
-        margin: 60px 0; 
+        margin: 15px 0px;
     }
 
     .grafana-slider-title {
@@ -218,7 +218,7 @@
     /* CARD LEBIH TINGGI */
     .grafana-slide iframe {
         width: 100%;
-        height: 760px;           
+        height:1350px;
         border: none;
         background: #0b0f14;
         border-radius: 12px;
@@ -258,7 +258,7 @@
 
     <div class="grafana-slider-card">
     <div class="grafana-slider-title" id="grafanaTitle">
-     Executive Procurement Overview
+     Gambaran Umum Pengadaan
     </div>
 
     <button class="grafana-nav left" onclick="slideGrafana(-1)">
@@ -271,23 +271,23 @@
     <div class="grafana-slider-wrapper">
         <div class="grafana-slider-track" id="grafanaSlider">
 
-            <div class="grafana-slide" data-title="Executive Procurement Overview">
+            <div class="grafana-slide" data-title="Gambaran Umum Pengadaan">
                 <iframe src="http://localhost:3000/d/ad56wzw/executive-procurement-overview?orgId=1&theme=dark&kiosk"></iframe>
             </div>
 
-            <div class="grafana-slide" data-title="Procurement Lifecycle & Bottleneck">
+            <div class="grafana-slide" data-title="Siklus Pengadaan dan Hambatan">
                 <iframe src="http://localhost:3000/d/adqkrmk/procurement-lifecycle-and-bottleneck?orgId=1&theme=dark&kiosk"></iframe>
             </div>
 
-            <div class="grafana-slide" data-title="Project & Budget Performance">
+            <div class="grafana-slide" data-title="Kinerja Proyek dan Anggaran">
                 <iframe src="http://localhost:3000/d/adr4zqx/project-and-budget-performance?orgId=1&theme=dark&kiosk"></iframe>
             </div>
 
-            <div class="grafana-slide" data-title="Risk, Compliance & Delay Monitoring">
+            <div class="grafana-slide" data-title="Pemantauan Risiko, Kepatuhan dan Keterlambatan">
                 <iframe src="http://localhost:3000/d/adsf9dg/risk-compliance-and-delay-monitoring?orgId=1&theme=dark&kiosk"></iframe>
             </div>
 
-            <div class="grafana-slide" data-title="Vendor & Contract Performance">
+            <div class="grafana-slide" data-title="Kinerja Vendor dan Kontrak">
                 <iframe src="http://localhost:3000/d/adkzcch/vendor-and-contract-performance?orgId=1&theme=dark&kiosk"></iframe>
             </div>
 
