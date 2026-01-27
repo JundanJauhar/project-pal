@@ -351,7 +351,7 @@ class SupplyChainController extends Controller
             details: ['search' => $search, 'user_id' => Auth::id()]
         );
 
-        return view('supply_chain.vendor.kelola', compact('vendors', 'procurements'));
+        return view('supply-chain.vendor.kelola', compact('vendors', 'procurements'));
     }
 
     /**
@@ -388,7 +388,7 @@ class SupplyChainController extends Controller
             details: ['user_id' => Auth::id()]
         );
 
-        return view('supply_chain.vendor.pilih', compact('vendors', 'stats', 'procurement'))
+        return view('supply-chain.vendor.pilih', compact('vendors', 'stats', 'procurement'))
             ->with('hideNavbar', true);
     }
 
@@ -462,7 +462,7 @@ class SupplyChainController extends Controller
             details: ['user_id' => Auth::id()]
         );
 
-        return view('supply_chain.vendor.form', compact('vendor'))
+        return view('supply-chain.vendor.form', compact('vendor'))
             ->with('hideNavbar', true);
     }
 
@@ -546,7 +546,7 @@ class SupplyChainController extends Controller
             details: ['user_id' => Auth::id()]
         );
 
-        return view('supply_chain.vendor.detail', compact('vendor'))
+        return view('supply-chain.vendor.detail', compact('vendor'))
             ->with('hideNavbar', true);
     }
 
@@ -835,7 +835,7 @@ class SupplyChainController extends Controller
             details: ['user_id' => Auth::id()]
         );
 
-        return view('supply_chain.contract_review.show', compact('contractReview', 'procurement', 'revisions'));
+        return view('supply-chain.contract_review.show', compact('contractReview', 'procurement', 'revisions'));
     }
 
 
