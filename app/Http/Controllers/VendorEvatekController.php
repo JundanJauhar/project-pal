@@ -323,22 +323,36 @@ class VendorEvatekController extends Controller
         // NOTIFY DESAIN USERS
         $desainUsers = \App\Models\User::whereHas('roles', function ($q) {
             $q->where('role_code', 'desain');
-        })->get();
+        })
+            ->orWhereHas('division', function ($q) {
+                $q->where('name', 'LIKE', '%desain%');
+            })
+            ->get();
         foreach ($desainUsers as $user) {
-            \App\Models\Notification::create([
-                'user_id' => $user->user_id,
-                'sender_id' => null, 
-                'type' => 'info',
-                'title' => 'Dokumen Evatek Diupload',
-                'message' => "Vendor {$vendor->name_vendor} mengupload dokumen untuk item '{$evatek->item->item_name}'.",
-                'action_url' => route('desain.review-evatek', $evatek->evatek_id),
-                'reference_type' => 'App\Models\EvatekItem',
-                'reference_id' => $evatek->evatek_id,
-                'is_read' => false,
-                'created_at' => now(),
-            ]);
+            // Check if similar unread notification already exists
+            $exists = \App\Models\Notification::where('user_id', $user->user_id)
+                ->where('reference_type', 'App\Models\EvatekItem')
+                ->where('reference_id', $evatek->evatek_id)
+                ->where('title', 'Dokumen Evatek Diupload')
+                ->where('is_read', false)
+                ->exists();
+
+            if (!$exists) {
+                \App\Models\Notification::create([
+                    'user_id' => $user->user_id,
+                    'sender_id' => null,
+                    'type' => 'info',
+                    'title' => 'Dokumen Evatek Diupload',
+                    'message' => "Vendor {$vendor->name_vendor} mengupload dokumen untuk item '{$evatek->item->item_name}'.",
+                    'action_url' => route('desain.review-evatek', $evatek->evatek_id),
+                    'reference_type' => 'App\Models\EvatekItem',
+                    'reference_id' => $evatek->evatek_id,
+                    'is_read' => false,
+                    'created_at' => now(),
+                ]);
+            }
         }
-        */
+
 
         return response()->json([
             'success' => true,
@@ -531,6 +545,30 @@ class VendorEvatekController extends Controller
             ->get();
 
         foreach ($storedNotifs as $sn) {
+            $category = 'inbox';
+
+            // Check if this is an Action Item (Revisi/Evatek Baru)
+            if (in_array($sn->title, ['Revisi Diperlukan', 'Evatek Baru'])) {
+                $category = 'vendor'; // Default to action needed
+
+                // EXTRACT ID to check current status
+                // Try to parse ID from link: /vendor/evatek/{id}/review
+                if (preg_match('/\/vendor\/evatek\/(\d+)\/review/', $sn->link, $matches)) {
+                    $evatekId = $matches[1];
+                    // Check if action already taken
+                    $evatekItem = EvatekItem::find($evatekId);
+                    if ($evatekItem) {
+                        $latest = $evatekItem->latestRevision;
+                        // If vendor link exists, action is DONE. Remove from 'vendor' category.
+                        if ($latest && !empty($latest->vendor_link)) {
+                            $category = 'inbox'; // Move to history/inbox
+                        }
+                    }
+                }
+            } elseif ($sn->title === 'Menunggu Review Desain') {
+                $category = 'division';
+            }
+
             $notifications->push((object)[
                 'id' => $sn->id,
                 'is_stored' => true, // Flag to identify DB record
@@ -556,7 +594,7 @@ class VendorEvatekController extends Controller
                 'link' => $sn->link,
                 'date' => $sn->created_at,
                 'action_label' => 'Lihat Detail',
-                'category' => 'inbox'
+                'category' => $category
             ]);
         }
 
