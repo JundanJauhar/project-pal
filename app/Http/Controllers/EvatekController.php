@@ -8,6 +8,7 @@ use App\Models\EvatekRevision;
 use App\Models\Procurement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Helpers\ActivityLogger;
 
 class EvatekController extends Controller
@@ -77,16 +78,16 @@ class EvatekController extends Controller
         // Get unread notifications for current user related to these items
         $unreadEvatekIds = \App\Models\Notification::where('user_id', Auth::id())
             ->where('is_read', false)
-            ->where(function($q) use ($evatekItems) {
+            ->where(function ($q) use ($evatekItems) {
                 // Check by reference (preferred)
                 $q->where('reference_type', 'App\Models\EvatekItem')
-                  ->whereIn('reference_id', $evatekItems->pluck('evatek_id'));
-                
+                    ->whereIn('reference_id', $evatekItems->pluck('evatek_id'));
+
                 // fallback for older notifs: check action_url
-                $q->orWhere(function($subq) use ($evatekItems) {
-                     foreach ($evatekItems as $item) {
+                $q->orWhere(function ($subq) use ($evatekItems) {
+                    foreach ($evatekItems as $item) {
                         $subq->orWhere('action_url', 'LIKE', '%/evatek/item/' . $item->evatek_id . '%');
-                     }
+                    }
                 });
             })
             ->get()
@@ -113,30 +114,60 @@ class EvatekController extends Controller
      */
     public function saveLink(Request $request)
     {
-        $revision = EvatekRevision::findOrFail($request->revision_id);
-        $evatek = EvatekItem::findOrFail($revision->evatek_id);
+        \Log::info("DEBUG SAVELINK: ", $request->all());
 
-        $revision->update([
-            'vendor_link' => $request->vendor_link,
-            'design_link' => $request->design_link,
-        ]);
+        try {
+            if (!$request->revision_id) {
+                return response()->json(['success' => false, 'message' => 'Revision ID missing']);
+            }
 
-        // ✅ AUTO-UPDATE EVATEK STATUS
-        $this->updateEvatekStatus($evatek);
+            $revision = EvatekRevision::findOrFail($request->revision_id);
+            $evatek = EvatekItem::findOrFail($revision->evatek_id);
 
-        ActivityLogger::log(
-            module: 'Evatek',
-            action: 'save_revision_links',
-            targetId: $revision->revision_id,
-            details: [
-                'user_id' => Auth::id(),
-                'vendor_link' => $request->vendor_link,
-                'design_link' => $request->design_link,
-                'evatek_status' => $evatek->evatek_status,
-            ]
-        );
+            // Perform update using Query Builder to ensure persistence
+            $updateData = [];
+            if ($request->has('vendor_link')) {
+                $updateData['vendor_link'] = $request->vendor_link;
+            }
+            if ($request->has('design_link')) {
+                $updateData['design_link'] = $request->design_link;
+            }
 
-        return response()->json(['success' => true]);
+            if (!empty($updateData)) {
+                $updateData['updated_at'] = now();
+                \Illuminate\Support\Facades\DB::table('evatek_revisions')
+                    ->where('revision_id', $request->revision_id)
+                    ->update($updateData);
+
+                // Reload model to get fresh data for logger/status
+                $revision = $revision->fresh();
+            }
+
+            // ✅ AUTO-UPDATE EVATEK STATUS
+            $this->updateEvatekStatus($evatek);
+
+            try {
+                ActivityLogger::log(
+                    module: 'Evatek',
+                    action: 'save_revision_links',
+                    targetId: $revision->revision_id,
+                    details: [
+                        'user_id' => Auth::id(),
+                        'vendor_link' => $request->vendor_link,
+                        'design_link' => $request->design_link,
+                        'evatek_status' => $evatek->evatek_status,
+                    ]
+                );
+            } catch (\Exception $e) {
+                // Ignore logger error to prevent blocking main action
+                \Log::error("ActivityLogger failed: " . $e->getMessage());
+            }
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            \Log::error("Save Evatek Link Error: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -177,7 +208,7 @@ class EvatekController extends Controller
             'current_date' => now()->toDateString(),
         ]);
 
-        // Notify Vendor
+        // ✅ Notify Vendor (Keep per-item for Vendor visibility)
         \App\Models\VendorNotification::create([
             'vendor_id' => $evatek->vendor_id,
             'type' => 'success',
@@ -186,6 +217,9 @@ class EvatekController extends Controller
             'link' => route('vendor.evatek.review', $evatek->evatek_id),
             'created_at' => now(),
         ]);
+
+        // NOTE: Per-item notifications for Desain and SC are removed to reduce noise.
+        // Notifications are now sent only when ALL items in the procurement are complete.
 
         // Ambil procurement terkait
         $procurement = $evatek->procurement;
@@ -203,6 +237,44 @@ class EvatekController extends Controller
             if ($missingItems->isEmpty()) {
                 $service = new \App\Services\CheckpointTransitionService($procurement);
                 $service->completeCurrentAndMoveNext("Semua item sudah punya vendor approve di Evatek");
+
+                // ✅ Notify Desain Division (All Items Complete)
+                $desainDiv = \App\Models\Division::where('division_name', 'LIKE', '%Desain%')->first();
+                if ($desainDiv) {
+                    $desainUsers = \App\Models\User::where('division_id', $desainDiv->division_id)->get();
+                    foreach ($desainUsers as $user) {
+                        \App\Models\Notification::create([
+                            'user_id' => $user->user_id,
+                            'type' => 'success',
+                            'title' => 'Evatek Selesai',
+                            'message' => "Seluruh item pada pengadaan '{$procurement->procurement_name}' telah selesai Evatek.",
+                            'action_url' => route('desain.review-evatek', $evatek->evatek_id), // Or list view
+                            'reference_type' => 'App\Models\Procurement', // Changed to Procurement as it wraps all
+                            'reference_id' => $procurement->procurement_id,
+                            'is_read' => false,
+                        ]);
+                    }
+                }
+
+                // ✅ Notify SC: Ready for Negotiation (All Items Complete)
+                $scmDivAll = \App\Models\Division::where('division_name', 'LIKE', '%Supply%')->first();
+                if ($scmDivAll) {
+                    $scmUsersAll = \App\Models\User::where('division_id', $scmDivAll->division_id)->get();
+                    foreach ($scmUsersAll as $user) {
+                        $n = \App\Models\Notification::create([
+                            'user_id' => $user->user_id,
+                            'type' => 'action',
+                            'title' => 'Siap Negosiasi',
+                            'message' => "Seluruh item pada pengadaan '{$procurement->procurement_name}' telah selesai Evatek. Segera lakukan Negosiasi.",
+                            'action_url' => route('procurements.show', $procurement->procurement_id) . '#negotiation',
+                            'reference_type' => 'App\Models\Procurement',
+                            'reference_id' => $procurement->procurement_id,
+                            'is_read' => false,
+                        ]);
+                        $n->created_at = now()->addSeconds(5);
+                        $n->save();
+                    }
+                }
             }
         }
 

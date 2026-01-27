@@ -20,11 +20,13 @@ class Notification extends Model
         'reference_id',
         'action_url',
         'is_read',
+        'is_starred',
         'read_at',
     ];
 
     protected $casts = [
         'is_read' => 'boolean',
+        'is_starred' => 'boolean',
         'read_at' => 'datetime',
     ];
 

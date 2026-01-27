@@ -195,6 +195,7 @@
                 <th style="padding: 12px 8px; text-align: left;">Item</th>
                 <th style="padding: 12px 8px; text-align: left;">Project / Procurement</th>
                 <th style="padding: 12px 8px; text-align: center;">Status Evatek</th>
+                <th style="padding: 12px 8px; text-align: center;">Posisi</th>
                 <th style="padding: 12px 8px; text-align: left;">Catatan</th>
                 <th style="padding: 12px 8px; text-align: center;">Dibuat</th>
                 <th style="padding: 12px 8px; text-align: center;">Aksi</th>
@@ -246,6 +247,17 @@
                     @endif
                 </td>
 
+                {{-- Posisi --}}
+                <td style="padding: 12px 8px; text-align: center;">
+                    @if(in_array($status, ['approve', 'not approve']))
+                        <span class="text-muted">-</span>
+                    @elseif(empty(trim($latestRevision->vendor_link ?? '')))
+                        <span class="badge bg-warning text-dark">Evatek Vendor</span>
+                    @else
+                        <span class="badge bg-info text-dark">Evatek Divisi</span>
+                    @endif
+                </td>
+
                 {{-- Catatan Evaluasi --}}
                 <td style="padding: 12px 8px; text-align: left; font-size: 13px;">
                     {{ $ev->evaluation_note ?? '-' }}
@@ -266,7 +278,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="5" class="text-center py-5">
+                <td colspan="6" class="text-center py-5">
                     Belum ada item yang sedang dievaluasi (Evatek) untuk saat ini.
                 </td>
             </tr>

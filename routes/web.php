@@ -70,6 +70,9 @@ Route::middleware('auth:vendor')->group(function () {
         
     Route::post('/vendor/notifications/{id}/read', [VendorEvatekController::class, 'markAsRead'])
         ->name('vendor.notifications.read');
+    
+    Route::post('/vendor/notifications/{id}/toggle-star', [VendorEvatekController::class, 'toggleStar'])
+        ->name('vendor.notifications.toggle-star');
 
     Route::get('/vendor/profile', [VendorEvatekController::class, 'profile'])
         ->name('vendor.profile');
@@ -147,6 +150,7 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::post('/notifications/{id}/toggle-star', [NotificationController::class, 'toggleStar'])->name('notifications.toggle-star');
 
     /*
     |--------------------------------------------------------------------------

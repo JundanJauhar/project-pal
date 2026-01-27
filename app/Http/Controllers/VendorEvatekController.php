@@ -19,14 +19,14 @@ class VendorEvatekController extends Controller
     {
         // Get vendor yang login menggunakan guard 'vendor'
         $vendor = Auth::guard('vendor')->user();
-        
+
         if (!$vendor) {
             abort(403, 'Vendor not authenticated');
         }
 
         // Ambil evatek items HANYA untuk vendor ini berdasarkan id_vendor
         $evatekItems = EvatekItem::where('vendor_id', $vendor->id_vendor)
-            ->with(['item', 'procurement', 'project','latestRevision'])
+            ->with(['item', 'procurement', 'project', 'latestRevision'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -42,25 +42,25 @@ class VendorEvatekController extends Controller
             ->get();
 
         // Statistics untuk vendor ini
-           $stats = [
+        $stats = [
             'total_evatek' => EvatekItem::where('vendor_id', $vendor->id_vendor)->count(),
             'pending' => EvatekItem::where('vendor_id', $vendor->id_vendor)
-                ->whereHas('latestRevision', function($q) {
+                ->whereHas('latestRevision', function ($q) {
                     $q->where('status', 'pending');
                 })
                 ->count(),
             'approved' => EvatekItem::where('vendor_id', $vendor->id_vendor)
-                ->whereHas('latestRevision', function($q) {
+                ->whereHas('latestRevision', function ($q) {
                     $q->where('status', 'approve');
                 })
                 ->count(),
             'rejected' => EvatekItem::where('vendor_id', $vendor->id_vendor)
-                ->whereHas('latestRevision', function($q) {
+                ->whereHas('latestRevision', function ($q) {
                     $q->where('status', 'not approve');
                 })
                 ->count(),
             'revisi' => EvatekItem::where('vendor_id', $vendor->id_vendor)
-                ->whereHas('latestRevision', function($q) {
+                ->whereHas('latestRevision', function ($q) {
                     $q->where('status', 'revisi');
                 })
                 ->count(),
@@ -76,17 +76,17 @@ class VendorEvatekController extends Controller
                 ->where('status', 'waiting_feedback')
                 ->count(),
             'approved' => ContractReview::where('vendor_id', $vendor->id_vendor)
-                ->whereHas('revisions', function($q) {
+                ->whereHas('revisions', function ($q) {
                     $q->where('result', 'approve');
                 })
                 ->count(),
             'revisi' => ContractReview::where('vendor_id', $vendor->id_vendor)
-                ->whereHas('revisions', function($q) {
+                ->whereHas('revisions', function ($q) {
                     $q->where('result', 'revisi');
                 })
                 ->count(),
             'rejected' => ContractReview::where('vendor_id', $vendor->id_vendor)
-                ->whereHas('revisions', function($q) {
+                ->whereHas('revisions', function ($q) {
                     $q->where('result', 'not_approve');
                 })
                 ->count(),
@@ -95,7 +95,7 @@ class VendorEvatekController extends Controller
 
         return view('vendor.index', compact('vendor', 'evatekItems', 'contractReviews', 'stats', 'contractStats'));
     }
-    
+
 
     public function review($evatekId)
     {
@@ -139,7 +139,7 @@ class VendorEvatekController extends Controller
     {
         // Get vendor yang login menggunakan guard 'vendor'
         $vendor = Auth::guard('vendor')->user();
-        
+
         if (!$vendor) {
             abort(403, 'Vendor not found');
         }
@@ -243,7 +243,7 @@ class VendorEvatekController extends Controller
     public function reviewEvatek($evatekId)
     {
         $vendor = Auth::guard('vendor')->user();
-        
+
         if (!$vendor) {
             abort(403, 'Vendor not authenticated');
         }
@@ -298,7 +298,7 @@ class VendorEvatekController extends Controller
     public function saveVendorLink(Request $request)
     {
         $vendor = Auth::guard('vendor')->user();
-        
+
         if (!$vendor) {
             return response()->json(['success' => false, 'message' => 'Vendor not authenticated'], 403);
         }
@@ -309,7 +309,7 @@ class VendorEvatekController extends Controller
         ]);
 
         $revision = EvatekRevision::findOrFail($validated['revision_id']);
-        
+
         // Verify this revision belongs to vendor's evatek
         $evatek = EvatekItem::findOrFail($revision->evatek_id);
         if ($evatek->vendor_id != $vendor->id_vendor) {
@@ -321,11 +321,15 @@ class VendorEvatekController extends Controller
         $revision->save();
 
         // NOTIFY DESAIN USERS
+        // NOTIFY DESAIN USERS
+        // We rely on Virtual Tasks in NotificationController to show actionable status.
+        // Disabled DB storage to prevent clutter as per user request.
+        /*
         $desainUsers = \App\Models\User::where('roles', 'desain')->get();
         foreach ($desainUsers as $user) {
             \App\Models\Notification::create([
                 'user_id' => $user->user_id,
-                'sender_id' => null, // System or can mapped if pivot exists
+                'sender_id' => null, 
                 'type' => 'info',
                 'title' => 'Dokumen Evatek Diupload',
                 'message' => "Vendor {$vendor->name_vendor} mengupload dokumen untuk item '{$evatek->item->item_name}'.",
@@ -336,6 +340,7 @@ class VendorEvatekController extends Controller
                 'created_at' => now(),
             ]);
         }
+        */
 
         return response()->json([
             'success' => true,
@@ -350,7 +355,7 @@ class VendorEvatekController extends Controller
     public function saveLog(Request $request)
     {
         $vendor = Auth::guard('vendor')->user();
-        
+
         if (!$vendor) {
             return response()->json(['success' => false, 'message' => 'Vendor not authenticated'], 403);
         }
@@ -361,7 +366,7 @@ class VendorEvatekController extends Controller
         ]);
 
         $evatek = EvatekItem::findOrFail($validated['evatek_id']);
-        
+
         // Verify this evatek belongs to vendor
         if ($evatek->vendor_id != $vendor->id_vendor) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
@@ -382,7 +387,7 @@ class VendorEvatekController extends Controller
     public function reviewContract($contractReviewId)
     {
         $vendor = Auth::guard('vendor')->user();
-        
+
         if (!$vendor) {
             abort(403, 'Vendor not authenticated');
         }
@@ -392,7 +397,7 @@ class VendorEvatekController extends Controller
             'procurement.project',
             'procurement.requestProcurements.items',
             'project',
-            'revisions' => function($query) {
+            'revisions' => function ($query) {
                 $query->orderBy('revision_code', 'desc');
             }
         ])->findOrFail($contractReviewId);
@@ -431,7 +436,7 @@ class VendorEvatekController extends Controller
     public function saveContractLink(Request $request)
     {
         $vendor = Auth::guard('vendor')->user();
-        
+
         if (!$vendor) {
             return response()->json(['success' => false, 'message' => 'Vendor not authenticated'], 403);
         }
@@ -442,19 +447,19 @@ class VendorEvatekController extends Controller
         ]);
 
         $revision = \App\Models\ContractReviewRevision::with('contractReview')->findOrFail($validated['revision_id']);
-        
+
         // Verify this contract review belongs to vendor
         if ($revision->contractReview->vendor_id != $vendor->id_vendor) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
         $revision->vendor_link = $validated['vendor_link'];
-        
+
         // Set tanggal feedback vendor saat pertama kali vendor save link
         if (!$revision->date_vendor_feedback && $validated['vendor_link']) {
             $revision->date_vendor_feedback = now()->toDateString();
         }
-        
+
         $revision->save();
 
         // NOTIFY SUPPLY CHAIN USERS
@@ -462,8 +467,8 @@ class VendorEvatekController extends Controller
         foreach ($scmUsers as $user) {
             \App\Models\Notification::create([
                 'user_id' => $user->user_id,
-                'sender_id' => null, 
-                'type' => 'info', 
+                'sender_id' => null,
+                'type' => 'info',
                 'title' => 'Link Kontrak dari Vendor',
                 'message' => "Vendor {$vendor->name_vendor} telah mengupload dokumen kontrak untuk {$revision->revision_code}. Silakan cek dan respons.",
                 'action_url' => route('contract-review.show', $revision->contract_review_id),
@@ -486,7 +491,7 @@ class VendorEvatekController extends Controller
     public function saveContractLog(Request $request)
     {
         $vendor = Auth::guard('vendor')->user();
-        
+
         if (!$vendor) {
             return response()->json(['success' => false, 'message' => 'Vendor not authenticated'], 403);
         }
@@ -497,7 +502,7 @@ class VendorEvatekController extends Controller
         ]);
 
         $contractReview = ContractReview::findOrFail($validated['contract_review_id']);
-        
+
         // Verify this contract review belongs to vendor
         if ($contractReview->vendor_id != $vendor->id_vendor) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
@@ -515,7 +520,7 @@ class VendorEvatekController extends Controller
     public function notifications()
     {
         $vendor = Auth::guard('vendor')->user();
-        
+
         if (!$vendor) {
             abort(403, 'Vendor not authenticated');
         }
@@ -526,21 +531,22 @@ class VendorEvatekController extends Controller
         $storedNotifs = \App\Models\VendorNotification::where('vendor_id', $vendor->id_vendor)
             ->orderBy('created_at', 'desc')
             ->get();
-        
-        foreach($storedNotifs as $sn) {
+
+        foreach ($storedNotifs as $sn) {
             $notifications->push((object)[
                 'id' => $sn->id,
                 'is_stored' => true, // Flag to identify DB record
                 'is_read' => $sn->is_read,
+                'is_starred' => $sn->is_starred ?? false,
                 'type' => $sn->type, // success, danger, warning, info
-                'icon' => match($sn->type) {
+                'icon' => match ($sn->type) {
                     'success' => 'bi-check-circle-fill',
                     'danger' => 'bi-x-circle-fill',
                     'warning' => 'bi-exclamation-triangle-fill',
                     'action' => 'bi-upload',
                     default => 'bi-info-circle-fill'
                 },
-                'color' => match($sn->type) {
+                'color' => match ($sn->type) {
                     'success' => '#28a745',
                     'danger' => '#dc3545',
                     'warning' => '#ffc107',
@@ -551,14 +557,15 @@ class VendorEvatekController extends Controller
                 'message' => $sn->message,
                 'link' => $sn->link,
                 'date' => $sn->created_at,
-                'action_label' => 'Lihat Detail'
+                'action_label' => 'Lihat Detail',
+                'category' => 'inbox'
             ]);
         }
 
         // 2. COMPUTED TASKS (Contract Review Pending)
         // Only show if Action is Needed.
         $reviews = ContractReview::where('vendor_id', $vendor->id_vendor)
-            ->with(['procurement.project', 'revisions' => function($q) {
+            ->with(['procurement.project', 'revisions' => function ($q) {
                 $q->orderBy('contract_review_revision_id', 'desc');
             }])
             ->get();
@@ -571,8 +578,10 @@ class VendorEvatekController extends Controller
             $projName = $review->procurement->project->project_name ?? 'Project';
             $revCode = $latest->revision_code;
             $link = route('vendor.contract-review.review', $review->contract_review_id);
-            
+
             // LOGIC: Show notification for ALL states but customize appearance
+            $category = 'inbox'; // Default
+
             // 1. Pending / Revisi (Action Needed)
             if ((!$latest->result || $latest->result == 'pending' || $latest->result == 'revisi') && empty($latest->vendor_link)) {
                 $isRevisi = ($latest->result == 'revisi') || ($previous && $previous->result == 'revisi');
@@ -582,6 +591,7 @@ class VendorEvatekController extends Controller
                 $color = '#d32f2f'; // Red
                 $icon = 'bi-upload';
                 $actionLabel = 'Upload Dokumen';
+                $category = 'vendor';
             }
             // 2. Waiting (Vendor uploaded, waiting SCM)
             elseif (!empty($latest->vendor_link) && in_array($latest->result, ['pending', 'revisi'])) {
@@ -591,6 +601,7 @@ class VendorEvatekController extends Controller
                 $color = '#17a2b8'; // Blue info
                 $icon = 'bi-hourglass-split';
                 $actionLabel = 'Lihat Status';
+                $category = 'division';
             }
             // 3. Approved
             elseif ($latest->result == 'approve') {
@@ -609,15 +620,14 @@ class VendorEvatekController extends Controller
                 $color = '#dc3545'; // Red
                 $icon = 'bi-x-circle-fill';
                 $actionLabel = 'Lihat Detail';
-            } 
-            else {
+            } else {
                 continue; // Skip unknown states
             }
 
             $notifications->push((object)[
                 'id' => 'task_cr_' . $review->contract_review_id . '_' . $latest->revision_code, // Unique per revision
                 'is_stored' => false,
-                'is_read' => false, 
+                'is_read' => false,
                 'type' => $type,
                 'icon' => $icon,
                 'color' => $color,
@@ -625,7 +635,8 @@ class VendorEvatekController extends Controller
                 'message' => $msg,
                 'link' => $link,
                 'date' => $latest->updated_at ?? $latest->created_at,
-                'action_label' => $actionLabel
+                'action_label' => $actionLabel,
+                'category' => $category
             ]);
         }
 
@@ -641,10 +652,13 @@ class VendorEvatekController extends Controller
             $itemName = $evatek->item->item_name ?? 'Item';
             $revCode = $latest->revision_code;
             $link = route('vendor.evatek.review', $evatek->evatek_id);
-            
+
             // Pending Action Only
             if (($latest->status == 'pending' || $latest->status == 'revisi') && empty($latest->vendor_link)) {
-                 $notifications->push((object)[
+                // User Request: Skip "Permintaan Dokumen" for R0 because "Evatek Baru" DB notification already exists.
+                if ($revCode === 'R0') continue;
+
+                $notifications->push((object)[
                     'id' => 'task_ev_' . $evatek->evatek_id, // Virtual ID
                     'is_stored' => false,
                     'is_read' => false,
@@ -655,7 +669,25 @@ class VendorEvatekController extends Controller
                     'message' => "Silakan upload dokumen Evatek untuk item {$itemName} ({$revCode}).",
                     'link' => $link,
                     'date' => $latest->created_at, // or updated_at
-                    'action_label' => 'Upload Dokumen'
+                    'action_label' => 'Upload Dokumen',
+                    'category' => 'vendor'
+                ]);
+            }
+            // Waiting for Division (Vendor has uploaded)
+            elseif (($latest->status == 'pending' || $latest->status == 'revisi') && !empty($latest->vendor_link)) {
+                $notifications->push((object)[
+                    'id' => 'task_ev_wait_' . $evatek->evatek_id, // Virtual ID
+                    'is_stored' => false,
+                    'is_read' => false,
+                    'type' => 'info',
+                    'icon' => 'bi-hourglass-split',
+                    'color' => '#17a2b8', // Info Blue
+                    'title' => 'Menunggu Review Desain',
+                    'message' => "Dokumen Evatek untuk item {$itemName} ({$revCode}) sedang direview oleh tim Desain.",
+                    'link' => $link,
+                    'date' => $latest->updated_at ?? $latest->created_at,
+                    'action_label' => 'Lihat Status',
+                    'category' => 'division'
                 ]);
             }
         }
@@ -669,17 +701,35 @@ class VendorEvatekController extends Controller
     public function markAsRead($id)
     {
         $vendor = Auth::guard('vendor')->user();
-        if(!$vendor) abort(403);
+        if (!$vendor) abort(403);
 
         $notif = \App\Models\VendorNotification::where('vendor_id', $vendor->id_vendor)
             ->where('id', $id)
             ->firstOrFail();
-            
+
         $notif->update([
             'is_read' => true,
             'read_at' => now()
         ]);
 
         return response()->json(['success' => true]);
+    }
+    public function toggleStar($id)
+    {
+        $vendor = Auth::guard('vendor')->user();
+        if (!$vendor) abort(403);
+
+        $notif = \App\Models\VendorNotification::where('vendor_id', $vendor->id_vendor)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        $notif->update([
+            'is_starred' => !$notif->is_starred
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'is_starred' => $notif->is_starred
+        ]);
     }
 }

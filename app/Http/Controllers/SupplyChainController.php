@@ -90,7 +90,11 @@ class SupplyChainController extends Controller
         $vendors = Vendor::orderBy('name_vendor', 'asc')
             ->get();
 
-        return view('supply_chain.input-item', compact('project', 'procurements', 'vendors'));
+        if ($procurements->isNotEmpty()) {
+            return redirect()->route('procurements.show', $procurements->first()->procurement_id);
+        }
+
+        return redirect()->route('procurements.index')->with('error', 'Tidak ada procurement untuk project ini.');
     }
 
     /**

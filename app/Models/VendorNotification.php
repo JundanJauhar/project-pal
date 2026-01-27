@@ -18,11 +18,13 @@ class VendorNotification extends Model
         'message',
         'link',
         'is_read',
+        'is_starred',
         'read_at',
     ];
 
     protected $casts = [
         'is_read' => 'boolean',
+        'is_starred' => 'boolean',
         'read_at' => 'datetime',
     ];
 
