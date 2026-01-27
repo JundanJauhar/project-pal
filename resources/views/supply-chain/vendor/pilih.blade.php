@@ -397,11 +397,11 @@
                 </div>
 
                 {{-- Tambah Vendor --}}
-                @if(in_array(Auth::user()->roles, ['user', 'supply_chain']))
+                @if(Auth::user()->division->name === 'Supply Chain')
                 <div class="tambah" style="min-width: 150px;">
                     <a href="{{ route('supply-chain.vendor.form', ['redirect' => 'pilih']) }}"
-                       class="btn-tambah-vendor"
-                       wire:navigate>
+                        class="btn-tambah-vendor"
+                        wire:navigate>
                         <i class="bi bi-plus-circle"></i> Tambah Vendor
                     </a>
                 </div>
@@ -413,13 +413,13 @@
             <table class="vendor-table">
                 <thead>
                     <tr>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">ID Vendor</th>
-                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Vendor</th>
-                    <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Alamat</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kontak</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Email</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Importer</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">ID Vendor</th>
+                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Nama Vendor</th>
+                        <th style="padding: 12px 8px; text-align: left; font-weight: 600; color: #000;">Alamat</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kontak</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Email</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Importer</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="vendorTableBody">
@@ -462,8 +462,8 @@
                                     </button>
                                 </form>
                                 <a href="{{ route('supply-chain.vendor.detail', ['id' => $vendor->id_vendor]) }}"
-                                   class="btn-sm btn-info"
-                                   wire:navigate>
+                                    class="btn-sm btn-info"
+                                    wire:navigate>
                                     <i class="bi bi-eye"></i> Detail
                                 </a>
                             </div>
@@ -490,20 +490,20 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearch');
-    const tableBody = document.getElementById('vendorTableBody');
-    let searchTimeout;
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearch');
+        const tableBody = document.getElementById('vendorTableBody');
+        let searchTimeout;
 
-    function performSearch() {
-        const searchValue = searchInput.value.trim();
+        function performSearch() {
+            const searchValue = searchInput.value.trim();
 
-        // Tampilkan/sembunyikan tombol X
-        clearBtn.style.display = searchValue ? 'block' : 'none';
+            // Tampilkan/sembunyikan tombol X
+            clearBtn.style.display = searchValue ? 'block' : 'none';
 
-        // Tampilkan loading
-        tableBody.innerHTML = `
+            // Tampilkan loading
+            tableBody.innerHTML = `
             <tr>
                 <td colspan="9" class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
@@ -514,27 +514,27 @@ document.addEventListener('DOMContentLoaded', function() {
             </tr>
         `;
 
-        // Fetch data dengan AJAX
-        fetch('{{ route("supply-chain.vendor.pilih", $procurement->procurement_id) }}?search=' + encodeURIComponent(searchValue), {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const newTableBody = doc.querySelector('#vendorTableBody');
+            // Fetch data dengan AJAX
+            fetch('{{ route("supply-chain.vendor.pilih", $procurement->procurement_id) }}?search=' + encodeURIComponent(searchValue), {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newTableBody = doc.querySelector('#vendorTableBody');
 
-            if (newTableBody) {
-                tableBody.innerHTML = newTableBody.innerHTML;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            tableBody.innerHTML = `
+                    if (newTableBody) {
+                        tableBody.innerHTML = newTableBody.innerHTML;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    tableBody.innerHTML = `
                 <tr>
                     <td colspan="9" class="text-center py-5 text-danger">
                         <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
@@ -542,43 +542,43 @@ document.addEventListener('DOMContentLoaded', function() {
                     </td>
                 </tr>
             `;
-        });
-    }
-
-    // Search saat mengetik (debounced)
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(performSearch, 500);
-    });
-
-    // Search saat tekan Enter
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            clearTimeout(searchTimeout);
-            performSearch();
+                });
         }
-    });
 
-    // Clear search
-    clearBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        searchInput.value = '';
-        searchInput.focus();
-        clearBtn.style.display = 'none';
-        performSearch();
-    });
+        // Search saat mengetik (debounced)
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 500);
+        });
 
-    // Clear dengan ESC
-    searchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && this.value) {
+        // Search saat tekan Enter
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(searchTimeout);
+                performSearch();
+            }
+        });
+
+        // Clear search
+        clearBtn.addEventListener('click', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             searchInput.value = '';
+            searchInput.focus();
             clearBtn.style.display = 'none';
             performSearch();
-        }
+        });
+
+        // Clear dengan ESC
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && this.value) {
+                e.preventDefault();
+                searchInput.value = '';
+                clearBtn.style.display = 'none';
+                performSearch();
+            }
+        });
     });
-});
 </script>
 @endpush

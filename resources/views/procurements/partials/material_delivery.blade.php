@@ -212,7 +212,10 @@
                     {{-- Incoterms --}}
                     <div class="col-md-6">
                         <label class="form-label">Incoterms</label>
-                        <input type="text" name="incoterms" class="form-control">
+                        <input type="text"
+                            name="incoterms"
+                            class="form-control"
+                            value="{{ $procurement->contract->incoterms ?? '' }}">
                     </div>
 
                     {{-- IMO Number --}}

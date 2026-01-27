@@ -11,7 +11,7 @@ class StoreUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Auth::user()->roles === 'superadmin';
+        return Auth::user()->hasRole('superadmin');
     }
 
     public function rules(): array

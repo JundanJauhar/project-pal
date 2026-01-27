@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -58,7 +59,7 @@ class LoginController extends Controller
         }
 
         // Captcha tidak cocok
-        if ($request->captcha !== $captcha['code']) {
+        if (strtoupper($request->captcha) !== $captcha['code']) {
             throw ValidationException::withMessages([
                 'captcha' => 'Captcha tidak sesuai.',
             ]);
@@ -100,11 +101,28 @@ class LoginController extends Controller
             $request->session()->regenerate();
             Session::forget('captcha');
 
-            if (Auth::user()->roles === 'superadmin') {
+            /**
+             * ==========================================================
+             * ✅ TAMBAHAN WAJIB: UPDATE LAST LOGIN
+             * ==========================================================
+             */
+            Auth::user()->update([
+                'last_login_at' => now(),
+            ]);
+            /**
+             * ==========================================================
+             */
+
+            $user = Auth::user()->loadAuthContext();
+            if ($user && $user->hasRole('superadmin')) {
                 return redirect()->route('ums.users.index');
             }
 
-            if (in_array(Auth::user()->roles, ['sekretaris'])) {
+            if ($user && $user->hasRole('admin')) {
+                return redirect()->route('ums.users.index');
+            }
+
+            if ($user && $user->hasRole('sekdir')) {
                 return redirect()->route('sekdir.dashboard');
             }
 

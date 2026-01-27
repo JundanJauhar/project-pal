@@ -72,17 +72,17 @@ class NotificationController extends Controller
 
         // 2. EVATEK TASKS (Only for Desain users)
         // Check if user has role 'desain' or is in design division
-        if ((isset($user->roles) && $user->roles === 'desain') || (method_exists($user, 'hasRole') && $user->hasRole('desain')) || (isset($user->division) && stripos($user->division->name, 'desain') !== false)) {
-
-            // Find Evatek Items with Pending Revisions OR Recently Completed (last 3 days)
-            $allPendingEvatek = EvatekItem::whereHas('latestRevision', function ($q) {
-                $q->whereIn('status', ['pending', 'revisi'])
-                    ->orWhere(function ($q2) {
-                        $q2->whereIn('status', ['approve', 'not_approve'])
-                            ->where('updated_at', '>=', now()->subDays(3));
-                    });
-            })
-                ->with(['item', 'latestRevision', 'procurement.project', 'vendor'])
+        if ((isset($user->division) && stripos($user->division->name, 'desain') !== false)) {
+            
+            // Find Evatek Items with Pending Revisions that have Vendor Link
+            // Pending means: status 'pending' (waiting for design review)
+            // AND vendor_link is not null (vendor has submitted)
+            $pendingEvatek = EvatekItem::whereHas('latestRevision', function($q) {
+                    $q->whereIn('status', ['pending', 'revisi']) // status pending means waiting review
+                      ->whereNotNull('vendor_link')
+                      ->where('vendor_link', '!=', ''); // Ensure strictly not empty
+                })
+                ->with(['item', 'latestRevision', 'procurement.project'])
                 ->get();
 
             foreach ($allPendingEvatek as $evatek) {

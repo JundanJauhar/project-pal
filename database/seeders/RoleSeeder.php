@@ -18,8 +18,11 @@ class RoleSeeder extends Seeder
 
             'Supply Chain' => [
                 ['role_code' => 'inquiry',     'role_name' => 'Inquiry & Quotation', 'description' => 'Inquiry & quotation vendor'],
+                ['role_code' => 'evatek',     'role_name' => 'evatek', 'description' => 'evatek'],
                 ['role_code' => 'negotiation', 'role_name' => 'Negotiation',          'description' => 'Negosiasi harga'],
+                ['role_code' => 'pengadaan', 'role_name' => 'Pengadaan OC',          'description' => 'Pengadaan OC'],
                 ['role_code' => 'contract',    'role_name' => 'Contract & PO',        'description' => 'Kontrak dan PO'],
+                ['role_code' => 'pembayaran',    'role_name' => 'Pembayaran',        'description' => 'Pembayaran'],
                 ['role_code' => 'delivery',    'role_name' => 'Pengiriman Material',  'description' => 'Logistik & pengiriman'],
             ],
 
@@ -37,15 +40,20 @@ class RoleSeeder extends Seeder
             ],
 
             'Sekretaris Direksi' => [
-                ['role_code' => 'sekdir', 'role_name' => 'Sekretaris Direksi', 'description' => 'Approval kontrak'],
+                ['role_code' => 'sekdir', 'role_name' => 'Sekretaris Direksi', 'description' => 'Grafana'],
             ],
 
             'Desain' => [
-                ['role_code' => 'designer', 'role_name' => 'Designer', 'description' => 'HPS & Evatek'],
+                ['role_code' => 'designer', 'role_name' => 'Designer', 'description' => 'Evatek'],
             ],
 
             'Vendor' => [
                 ['role_code' => 'vendor', 'role_name' => 'Vendor User', 'description' => 'Akses vendor'],
+            ],
+
+            'Sistem' => [
+                ['role_code' => 'superadmin', 'role_name' => 'Super Admin', 'description' => 'Akses Super Admin'],
+                ['role_code' => 'admin', 'role_name' => 'Admin', 'description' => 'Akses Admin Sistem'],
             ],
         ];
 

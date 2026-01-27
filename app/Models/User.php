@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -22,8 +23,8 @@ class User extends Authenticatable
         'password',
         'division_id',
         'vendor_id',
-        'roles',
         'status',
+        'last_login_at',
     ];
 
     protected $hidden = [
@@ -38,14 +39,28 @@ class User extends Authenticatable
         ];
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONS
+    |--------------------------------------------------------------------------
+    */
+
     public function division(): BelongsTo
     {
         return $this->belongsTo(Division::class, 'division_id', 'division_id');
     }
 
-    public function role(): BelongsTo
+    /**
+     * Many-to-many: User <-> Roles
+     */
+    public function roles(): BelongsToMany
     {
-        return $this->belongsTo(Role::class, 'role_id', 'role_id');
+        return $this->belongsToMany(
+            Role::class,
+            'role_user',   // pivot table
+            'user_id',     // FK ke users
+            'role_id'      // FK ke roles
+        );
     }
 
     public function procurementProgress(): HasMany
@@ -53,46 +68,67 @@ class User extends Authenticatable
         return $this->hasMany(ProcurementProgress::class, 'user_id', 'user_id');
     }
 
-        public function vendor(): BelongsTo
+    public function vendor(): BelongsTo
     {
         return $this->belongsTo(Vendor::class, 'vendor_id', 'id_vendor');
     }
 
-    /**
-     * Get all notifications for the user
-     */
     public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class, 'user_id', 'user_id');
     }
 
-    /**
-     * Get notifications sent by this user
-     */
     public function sentNotifications(): HasMany
     {
         return $this->hasMany(Notification::class, 'sender_id', 'user_id');
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | ROLE HELPERS
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Check if user is a vendor
+     * Check single role by role_code
      */
+    public function hasRole(string $roleCode): bool
+    {
+        return $this->roles->contains('role_code', $roleCode);
+    }
+
+    /**
+     * Check multiple roles (OR logic)
+     */
+    public function hasAnyRole(array $roleCodes): bool
+    {
+        return $this->roles
+            ->whereIn('role_code', $roleCodes)
+            ->isNotEmpty();
+    }
+
+    /**
+     * Check multiple roles (AND logic)
+     */
+    public function hasAllRoles(array $roleCodes): bool
+    {
+        return collect($roleCodes)->every(
+            fn($role) => $this->hasRole($role)
+        );
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('superadmin');
+    }
+
     public function isVendor(): bool
     {
         return !is_null($this->vendor_id);
     }
 
-    /**
-     * Check if user has specific role
-     */
-    public function hasRole(string $role): bool
+    public function loadAuthContext(): self
     {
-        return $this->roles === $role;
+        return $this->loadMissing(['roles', 'division']);
     }
-
-    public function isSuperAdmin(): bool
-    {
-        return $this->roles === 'superadmin';
-    }
-
 }

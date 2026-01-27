@@ -11,6 +11,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\SupplyChainController;
+use App\Http\Controllers\SupplyChainDashboardController;
 use App\Http\Controllers\TreasuryController;
 use App\Http\Controllers\AccountingController;
 use App\Http\Controllers\QualityAssuranceController;
@@ -55,6 +56,7 @@ Route::post('/logout', [LoginController::class, 'logout'])
 
 //Capthca
 Route::get('/captcha', [CaptchaController::class, 'generate'])
+    ->middleware('throttle:30,1')
     ->name('captcha.generate');
 /*
 |--------------------------------------------------------------------------
@@ -160,7 +162,7 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
     Route::prefix('supply-chain')->name('supply-chain.')->group(function () {
 
         // Dashboard
-        Route::get('/dashboard', [SupplyChainController::class, 'dashboard'])
+        Route::get('/dashboard', [SupplyChainDashboardController::class, 'index'])
             ->name('dashboard');
 
         Route::post('/dashboard/store', [SupplyChainController::class, 'storePengadaan'])

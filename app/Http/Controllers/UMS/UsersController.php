@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Division;
+use App\Models\Role;
 use App\Helpers\AuditLogger;
 use App\Helpers\ActivityLogger;
 
@@ -20,27 +21,34 @@ class UsersController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::with('division')->orderBy('name');
+        $query = User::with(['division', 'roles'])->orderBy('name');
 
         // SEARCH
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(fn ($q) =>
+            $query->where(
+                fn($q) =>
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
             );
         }
 
         // FILTER DIVISION
         if ($request->filled('division')) {
-            $query->whereHas('division', fn ($q) =>
+            $query->whereHas(
+                'division',
+                fn($q) =>
                 $q->where('division_name', $request->division)
             );
         }
 
         // FILTER ROLE
         if ($request->filled('role')) {
-            $query->where('roles', $request->role);
+            $query->whereHas(
+                'roles',
+                fn($q) =>
+                $q->where('role_code', $request->role)
+            );
         }
 
         // FILTER STATUS
@@ -51,7 +59,7 @@ class UsersController extends Controller
         return view('ums.users.index', [
             'users'     => $query->get(),
             'divisions' => Division::orderBy('division_name')->get(),
-            'roles'     => User::select('roles')->distinct()->pluck('roles'),
+            'roles'     => \App\Models\Role::select('role_code')->distinct()->pluck('role_code'),
         ]);
     }
 
@@ -64,17 +72,6 @@ class UsersController extends Controller
     {
         return view('ums.users.create', [
             'divisions' => Division::orderBy('division_name')->get(),
-            'roles' => [
-                'superadmin',
-                'admin',
-                'sekretaris',
-                'desain',
-                'supply_chain',
-                'treasury',
-                'accounting',
-                'qa',
-                'user',
-            ],
         ]);
     }
 
@@ -85,8 +82,8 @@ class UsersController extends Controller
      */
     public function store(Request $request)
     {
-        // ❌ hanya superadmin boleh membuat user
-        if (Auth::user()->roles !== 'superadmin') {
+        // ❌ hanya superadmin atau admin boleh membuat user
+        if (!Auth::user()->hasRole('superadmin') && !Auth::user()->hasRole('admin')) {
             abort(403, 'Tidak memiliki izin.');
         }
 
@@ -94,15 +91,31 @@ class UsersController extends Controller
             'name'        => 'required|string|max:255',
             'email'       => 'required|email|unique:users,email',
             'password'    => 'required|min:6',
-            'roles'       => 'required|string',
+            'roles'       => 'required|array|min:1',
+            'roles.*'     => 'exists:roles,role_id',
             'division_id' => 'nullable|exists:divisions,division_id',
         ]);
+
+        // Remove roles from data as it's handled by relationship
+        $roleIds = $data['roles'];
+        unset($data['roles']);
 
         $user = User::create([
             ...$data,
             'password' => Hash::make($data['password']),
             'status'   => 'active',
         ]);
+
+        $validRoleCount = Role::where('division_id', $data['division_id'])
+            ->whereIn('role_id', $roleIds)
+            ->count();
+
+        if ($validRoleCount !== count($roleIds)) {
+            abort(422, 'Role tidak sesuai dengan divisi.');
+        }
+
+        // Assign role using relationship
+        $user->roles()->attach($roleIds);
 
         AuditLogger::log(
             action: 'create_user',
@@ -130,19 +143,9 @@ class UsersController extends Controller
     public function edit($user_id)
     {
         return view('ums.users.edit', [
-            'user'      => User::with('division')->findOrFail($user_id),
+            'user'      => User::with('division', 'roles')->findOrFail($user_id),
             'divisions' => Division::orderBy('division_name')->get(),
-            'roles' => [
-                'superadmin',
-                'admin',
-                'sekretaris',
-                'desain',
-                'supply_chain',
-                'treasury',
-                'accounting',
-                'qa',
-                'user',
-            ],
+            'roles'     => Role::orderBy('role_name')->get(),
         ]);
     }
 
@@ -156,26 +159,26 @@ class UsersController extends Controller
         $user = User::findOrFail($user_id);
 
         // ❌ Proteksi superadmin
-        if ($user->roles === 'superadmin' && Auth::user()->roles !== 'superadmin') {
+        if ($user->hasRole('superadmin') && !Auth::user()->hasRole('superadmin')) {
             abort(403, 'Tidak memiliki izin.');
         }
 
         $data = $request->validate([
             'name'        => 'required|string|max:255',
             'email'       => "required|email|unique:users,email,{$user_id},user_id",
-            'roles'       => 'required|string',
+            'roles'       => 'required|array|min:1',
+            'roles.*'     => 'exists:roles,role_id',
             'division_id' => 'nullable|exists:divisions,division_id',
         ]);
+
+        $roleIds = $data['roles'];
+        unset($data['roles']);
 
         $before = $user->toArray();
         $user->update($data);
 
-        AuditLogger::log(
-            action: 'update_user',
-            table: 'users',
-            targetId: $user->user_id,
-            details: ['before' => $before, 'after' => $user->toArray()]
-        );
+        // Sync multiple roles
+        $user->roles()->sync($roleIds);
 
         ActivityLogger::log(
             module: 'User Management',
@@ -198,7 +201,7 @@ class UsersController extends Controller
         $user = User::findOrFail($user_id);
 
         // ❌ superadmin tidak boleh dinonaktifkan
-        if ($user->roles === 'superadmin') {
+        if ($user->hasRole('superadmin')) {
             return back()->with('error', 'Super Admin tidak dapat dinonaktifkan.');
         }
 
@@ -233,7 +236,7 @@ class UsersController extends Controller
         $user = User::findOrFail($user_id);
 
         // ❌ superadmin tidak boleh dihapus
-        if ($user->roles === 'superadmin') {
+        if ($user->hasRole('superadmin')) {
             return back()->with('error', 'Super Admin tidak dapat dihapus.');
         }
 
@@ -253,5 +256,12 @@ class UsersController extends Controller
         $user->delete();
 
         return back()->with('success', 'User berhasil dihapus.');
+    }
+
+    public function getRolesByDivision($division_id)
+    {
+        return Role::where('division_id', $division_id)
+            ->orderBy('role_name')
+            ->get(['role_id', 'role_name']);
     }
 }

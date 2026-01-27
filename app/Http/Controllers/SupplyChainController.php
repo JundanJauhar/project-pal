@@ -22,63 +22,13 @@ use App\Helpers\ActivityLogger;
 
 class SupplyChainController extends Controller
 {
-    /**
-     * Display Supply Chain dashboard
-     */
-    public function dashboard(Request $request)
-    {
-        $search = $request->input('search');
-        $statusFilter = $request->input('status');
-        $priorityFilter = $request->input('priority');
-        $checkpoints = Checkpoint::all();
-
-        $procurements = Procurement::with([
-            'project',
-            'department',
-            'requestProcurements',
-            'requestProcurements.vendor'
-        ])
-            ->when($search, function ($query, $search) {
-                return $query->where(function ($q) use ($search) {
-                    $q->where('code_procurement', 'LIKE', "%{$search}%")
-                        ->orWhere('name_procurement', 'LIKE', "%{$search}%")
-                        ->orWhereHas('department', function ($dept) use ($search) {
-                            $dept->where('department_name', 'LIKE', "%{$search}%");
-                        });
-                });
-            })
-            ->when($priorityFilter, function ($query, $priority) {
-                return $query->where('priority', $priority);
-            })
-            ->when($statusFilter, function ($query, $status) {
-                if ($status === 'belum_ada_vendor') {
-                    return $query->doesntHave('requestProcurements');
-                } else {
-                    return $query->whereHas('requestProcurements', function ($q) use ($status) {
-                        $q->where('request_status', $status);
-                    });
-                }
-            })
-            ->orderBy('start_date', 'desc')
-            ->paginate(10)
-            ->withQueryString();
-
-        ActivityLogger::log(
-            module: 'Supply Chain',
-            action: 'view_dashboard',
-            targetId: null,
-            details: ['filters' => $request->all(), 'user_id' => Auth::id()]
-        );
-
-        return view('supply_chain.dashboard', compact('procurements', 'checkpoints'));
-    }
 
     /**
      * Show form untuk input item baru
      */
     public function inputItem($projectId)
     {
-        if (Auth::user()->roles !== 'supply_chain') {
+        if (Auth::user()->division->name !== 'Supply Chain') {
             abort(403, 'Unauthorized action.');
         }
 
@@ -143,6 +93,13 @@ class SupplyChainController extends Controller
 
     public function storeItem(Request $request, $procurementId)
     {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        // === STEP 2: Load PROCUREMENT ===
+        $procurement = Procurement::findOrFail($procurementId);
+        
         $validated = $request->validate([
             'item_id' => 'required|exists:items,item_id',
             'vendor_ids' => 'required|array|min:1',
@@ -151,10 +108,10 @@ class SupplyChainController extends Controller
 
         $procurement = Procurement::with('project')->findOrFail($procurementId);
 
-        // authorization by procurement → project
+        // authorization by procurement → project (additional check if needed)
         if (
             Auth::user()->department_id !== $procurement->project->department_id
-            && Auth::user()->roles !== 'admin'
+            && Auth::user()->division->name !== 'Supply Chain'
         ) {
             abort(403);
         }
@@ -188,8 +145,36 @@ class SupplyChainController extends Controller
 
     public function storeEvatekItem(Request $request, $procurementId)
     {
-        if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
-            abort(403, 'Unauthorized action.');
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        // === STEP 1: Check ROLE ===
+        if (!$user->hasRole('evatek')) {
+            abort(403, 'Anda tidak punya role evatek.');
+        }
+
+        // === STEP 2: Load PROCUREMENT ===
+        $procurement = Procurement::findOrFail($procurementId);
+
+        // === STEP 3: Get CURRENT CHECKPOINT ===
+        $currentCheckpoint = $procurement->procurementProgress()
+            ->with('checkpoint')
+            ->where('status', 'in_progress')
+            ->first();
+
+        if (!$currentCheckpoint) {
+            abort(400, 'Procurement tidak sedang di tahap apapun.');
+        }
+
+        // === STEP 4: Check CHECKPOINT DIVISION ===
+        if ($currentCheckpoint->checkpoint->responsible_division !== $user->division_id) {
+            abort(403, 'Procurement sedang ditangani divisi lain.');
+        }
+
+        // === STEP 5: Check CHECKPOINT NAME ===
+        if ($currentCheckpoint->checkpoint->point_name !== 'Evatek') {
+            abort(403, 'Procurement tidak sedang di tahap Evatek.');
         }
 
         $validated = $request->validate([
@@ -208,7 +193,7 @@ class SupplyChainController extends Controller
 
             if (
                 Auth::user()->department_id !== $procurement->project->department_id
-                && Auth::user()->roles !== 'admin'
+                && Auth::user()->division->name !== 'Supply Chain'
             ) {
                 abort(403);
             }
@@ -251,7 +236,9 @@ class SupplyChainController extends Controller
                 ]);
 
                 // ✅ Notify Desain Users
-                $desainUsers = \App\Models\User::where('roles', 'desain')->get();
+                $desainUsers = \App\Models\User::whereHas('roles', function ($q) {
+                    $q->where('role_code', 'desain');
+                })->get();
                 $vendorName = \App\Models\Vendor::find($vendorId)->name_vendor ?? 'Vendor';
 
                 foreach ($desainUsers as $user) {
@@ -407,6 +394,12 @@ class SupplyChainController extends Controller
 
     public function simpanVendor($procurementId, Request $request)
     {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        $procurement = Procurement::findOrFail($procurementId);
+
         $validated = $request->validate([
             'vendor_id' => 'required|exists:vendors,id_vendor'
         ]);
@@ -611,6 +604,33 @@ class SupplyChainController extends Controller
 
     public function updateMaterialArrival(Request $request, $procurementId)
     {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        // === STEP 2: Load PROCUREMENT ===
+        $procurement = Procurement::findOrFail($procurementId);
+
+        // === STEP 3: Get CURRENT CHECKPOINT ===
+        $currentCheckpoint = $procurement->procurementProgress()
+            ->with('checkpoint')
+            ->where('status', 'in_progress')
+            ->first();
+
+        if (!$currentCheckpoint) {
+            abort(400, 'Procurement tidak sedang di tahap apapun.');
+        }
+
+        // === STEP 4: Check CHECKPOINT DIVISION ===
+        if ($currentCheckpoint->checkpoint->responsible_division !== $user->division_id) {
+            abort(403, 'Procurement sedang ditangani divisi lain.');
+        }
+
+        // === STEP 5: Check CHECKPOINT NAME ===
+        if ($currentCheckpoint->checkpoint->point_name !== 'Kedatangan Material') {
+            abort(403, 'Procurement tidak sedang di tahap Kedatangan Material.');
+        }
+
         $validated = $request->validate([
             'arrival_date' => 'required|date',
             'notes' => 'nullable|string',
@@ -619,10 +639,12 @@ class SupplyChainController extends Controller
         $procurement = Procurement::findOrFail($procurementId);
         $procurement->update(['status_procurement' => 'inspeksi_barang']);
 
-        $qaUsers = \App\Models\User::where('roles', 'qa')->get();
-        foreach ($qaUsers as $user) {
+        $qaUsers = \App\Models\User::whereHas('roles', function ($q) {
+            $q->where('role_code', 'qa');
+        })->get();
+        foreach ($qaUsers as $qaUser) {
             Notification::create([
-                'user_id' => $user->id,
+                'user_id' => $qaUser->id,
                 'sender_id' => Auth::id(),
                 'type' => 'inspection_required',
                 'title' => 'Inspeksi Material Diperlukan',
@@ -704,8 +726,36 @@ class SupplyChainController extends Controller
      */
     public function storeContractReview(Request $request, $procurementId)
     {
-        if (!in_array(Auth::user()->roles, ['supply_chain', 'admin'])) {
-            abort(403, 'Unauthorized action.');
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $user->loadAuthContext();
+
+        // === STEP 1: Check ROLE ===
+        if (!$user->hasRole('contract')) {
+            abort(403, 'Anda tidak punya role contract.');
+        }
+
+        // === STEP 2: Load PROCUREMENT ===
+        $procurement = Procurement::findOrFail($procurementId);
+
+        // === STEP 3: Get CURRENT CHECKPOINT ===
+        $currentCheckpoint = $procurement->procurementProgress()
+            ->with('checkpoint')
+            ->where('status', 'in_progress')
+            ->first();
+
+        if (!$currentCheckpoint) {
+            abort(400, 'Procurement tidak sedang di tahap apapun.');
+        }
+
+        // === STEP 4: Check CHECKPOINT DIVISION ===
+        if ($currentCheckpoint->checkpoint->responsible_division !== $user->division_id) {
+            abort(403, 'Procurement sedang ditangani divisi lain.');
+        }
+
+        // === STEP 5: Check CHECKPOINT NAME ===
+        if ($currentCheckpoint->checkpoint->point_name !== 'Pengesahan Kontrak') {
+            abort(403, 'Procurement tidak sedang di tahap Pengesahan Kontrak.');
         }
 
         $validated = $request->validate([
