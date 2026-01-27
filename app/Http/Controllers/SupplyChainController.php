@@ -99,7 +99,7 @@ class SupplyChainController extends Controller
 
         // === STEP 2: Load PROCUREMENT ===
         $procurement = Procurement::findOrFail($procurementId);
-        
+
         $validated = $request->validate([
             'item_id' => 'required|exists:items,item_id',
             'vendor_ids' => 'required|array|min:1',
@@ -238,7 +238,11 @@ class SupplyChainController extends Controller
                 // ✅ Notify Desain Users
                 $desainUsers = \App\Models\User::whereHas('roles', function ($q) {
                     $q->where('role_code', 'desain');
-                })->get();
+                })
+                    ->orWhereHas('division', function ($q) {
+                        $q->where('name', 'LIKE', '%desain%');
+                    })
+                    ->get();
                 $vendorName = \App\Models\Vendor::find($vendorId)->name_vendor ?? 'Vendor';
 
                 foreach ($desainUsers as $user) {

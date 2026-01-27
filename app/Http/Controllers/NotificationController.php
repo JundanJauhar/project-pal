@@ -66,26 +66,31 @@ class NotificationController extends Controller
                 ),
                 'date' => $notif->created_at,
                 'action_label' => 'Lihat Detail',
-                'category' => 'inbox'
+                'category' => match (true) {
+                    $notif->title === 'Dokumen Evatek Diupload' => 'division',
+                    $notif->type === 'action' => 'division',
+                    default => 'inbox'
+                }
             ]);
         }
 
         // 2. EVATEK TASKS (Only for Desain users)
         // Check if user has role 'desain' or is in design division
         if ((isset($user->division) && stripos($user->division->name, 'desain') !== false)) {
-            
-            // Find Evatek Items with Pending Revisions that have Vendor Link
-            // Pending means: status 'pending' (waiting for design review)
-            // AND vendor_link is not null (vendor has submitted)
-            $pendingEvatek = EvatekItem::whereHas('latestRevision', function($q) {
-                    $q->whereIn('status', ['pending', 'revisi']) // status pending means waiting review
-                      ->whereNotNull('vendor_link')
-                      ->where('vendor_link', '!=', ''); // Ensure strictly not empty
-                })
-                ->with(['item', 'latestRevision', 'procurement.project'])
+
+            // Find Evatek Items with Pending Revisions OR Completed recently
+            $evatekItems = EvatekItem::whereHas('latestRevision', function ($q) {
+                $q->whereIn('status', ['pending', 'revisi'])
+                    ->orWhere(function ($q2) {
+                        $q2->whereIn('status', ['approve', 'not_approve'])
+                            ->where('updated_at', '>=', now()->subDays(3));
+                    });
+            })
+                ->with(['item', 'latestRevision', 'procurement.project', 'vendor'])
                 ->get();
 
-            foreach ($allPendingEvatek as $evatek) {
+            foreach ($evatekItems as $evatek) {
+                // Ensure latest revision exists
                 $latest = $evatek->latestRevision;
                 if (!$latest) continue;
 
@@ -94,85 +99,65 @@ class NotificationController extends Controller
                 $revCode = $latest->revision_code;
                 $vendorName = $evatek->vendor->name_vendor ?? 'Vendor';
 
-                // CHECK STATUS FIRST
-                if ($latest->status === 'approve') {
-                    $notifications->push((object)[
-                        'id' => 'task_ev_done_' . $evatek->evatek_id,
-                        'is_stored' => false,
-                        'is_read' => true, // Mark as "read" visually or just distinct? User said "notif berubah". Keep it unread-like but Green.
-                        'is_starred' => false,
-                        'type' => 'success',
-                        'icon' => 'bi-check-circle-fill',
-                        'color' => '#28a745',
-                        'title' => 'Evatek Disetujui',
-                        'message' => "Evatek '{$itemName}' ({$revCode}) telah DISETUJUI.",
-                        'link' => route('desain.review-evatek', $evatek->evatek_id),
-                        'date' => $latest->updated_at ?? $latest->created_at,
-                        'action_label' => 'Lihat Detail',
-                        'category' => 'inbox'
-                    ]);
-                } elseif ($latest->status === 'not_approve') {
-                    $notifications->push((object)[
-                        'id' => 'task_ev_reject_' . $evatek->evatek_id,
-                        'is_stored' => false,
-                        'is_read' => false,
-                        'is_starred' => false,
-                        'type' => 'danger',
-                        'icon' => 'bi-x-circle-fill',
-                        'color' => '#dc3545',
-                        'title' => 'Evatek Ditolak',
-                        'message' => "Evatek '{$itemName}' ({$revCode}) DITOLAK.",
-                        'link' => route('desain.review-evatek', $evatek->evatek_id),
-                        'date' => $latest->updated_at ?? $latest->created_at,
-                        'action_label' => 'Lihat Detail',
-                        'category' => 'inbox'
-                    ]);
-                } elseif (empty($vendorLink)) {
-                    // CASE A: Vendor Link Empty => "Menunggu Vendor" (Task 2)
-                    $notifications->push((object)[
-                        'id' => 'task_ev_wait_' . $evatek->evatek_id,
-                        'is_stored' => false,
-                        'is_read' => false,
-                        'is_starred' => false,
-                        'type' => 'info',
-                        'icon' => 'bi-clock-history',
-                        'color' => '#6c757d',
-                        'title' => 'Menunggu Vendor',
-                        'message' => "Menunggu respon dari Vendor {$vendorName} untuk item '{$itemName}' ({$revCode}).",
-                        'link' => route('desain.review-evatek', $evatek->evatek_id),
-                        'date' => $latest->updated_at ?? $latest->created_at,
-                        'action_label' => 'Lihat Status',
-                        'category' => 'vendor'
-                    ]);
-                } else {
-                    // CASE B: Vendor Link FILLED => "Review Evatek" / "Input Link" (Task 1)
-                    $msgTitle = 'Review Evatek Diperlukan';
-                    $msgBody = "Vendor telah mengupload dokumen untuk item '{$itemName}' ({$revCode}). Silakan review.";
+                // Logic based on User Request:
+                // "jika desain sudah ngirim link (sc_design_link) dan vendor belm, maka notif di Vendor"
+                // "jika vendor sudah tapi desain belom (review status), notif di Divisi"
 
-                    if (empty($latest->design_link)) {
-                        $msgTitle = 'Input Link Desain Diperlukan';
-                        $msgBody = "Vendor telah upload ({$itemName}). Harap Divisi input link desain/review.";
-                        $actionLabel = 'Input Link';
-                    } else {
-                        $actionLabel = 'Mulai Review';
+                $notifications->push((object)[
+                    'id' => 'task_ev_' . $evatek->evatek_id,
+                    'is_stored' => false,
+                    'is_read' => false,
+                    'is_starred' => false,
+                    'date' => $latest->updated_at ?? $latest->created_at,
+
+                    // Determine content dynamically
+                    ...match (true) {
+                        // 1. COMPLETED: Approved
+                        ($latest->status === 'approve') => [
+                            'type' => 'success',
+                            'icon' => 'bi-check-circle-fill',
+                            'color' => '#28a745',
+                            'title' => 'Evatek Disetujui',
+                            'message' => "Evatek '{$itemName}' ({$revCode}) telah DISETUJUI.",
+                            'link' => route('desain.review-evatek', $evatek->evatek_id),
+                            'action_label' => 'Lihat Detail',
+                            'category' => 'inbox'
+                        ],
+                        // 2. COMPLETED: Rejected
+                        ($latest->status === 'not_approve') => [
+                            'type' => 'danger',
+                            'icon' => 'bi-x-circle-fill',
+                            'color' => '#dc3545',
+                            'title' => 'Evatek Ditolak',
+                            'message' => "Evatek '{$itemName}' ({$revCode}) DITOLAK.",
+                            'link' => route('desain.review-evatek', $evatek->evatek_id),
+                            'action_label' => 'Lihat Detail',
+                            'category' => 'inbox'
+                        ],
+                        // 3. WAITING VENDOR: Vendor Link Empty
+                        (empty($vendorLink)) => [
+                            'type' => 'info',
+                            'icon' => 'bi-clock-history',
+                            'color' => '#6c757d',
+                            'title' => 'Menunggu Vendor',
+                            'message' => "Menunggu respon dari Vendor {$vendorName} untuk item '{$itemName}' ({$revCode}).",
+                            'link' => route('desain.review-evatek', $evatek->evatek_id),
+                            'action_label' => 'Lihat Status',
+                            'category' => 'vendor' // Matches "Di Vendor"
+                        ],
+                        // 4. WAITING DESIGN: Vendor Link Exists (Default fallback for pending/revisi w/ link)
+                        default => [
+                            'type' => 'action',
+                            'icon' => 'bi-pencil-square',
+                            'color' => '#0d6efd',
+                            'title' => 'Review Evatek Diperlukan',
+                            'message' => "Vendor telah mengupload dokumen untuk item '{$itemName}' ({$revCode}). Silakan review.",
+                            'link' => route('desain.review-evatek', $evatek->evatek_id),
+                            'action_label' => 'Mulai Review',
+                            'category' => 'division' // Matches "Di Divisi"
+                        ]
                     }
-
-                    $notifications->push((object)[
-                        'id' => 'task_ev_' . $evatek->evatek_id,
-                        'is_stored' => false,
-                        'is_read' => false,
-                        'is_starred' => false,
-                        'type' => 'action',
-                        'icon' => 'bi-pencil-square',
-                        'color' => '#0d6efd',
-                        'title' => $msgTitle,
-                        'message' => $msgBody,
-                        'link' => route('desain.review-evatek', $evatek->evatek_id),
-                        'date' => $latest->updated_at ?? $latest->created_at,
-                        'action_label' => $actionLabel ?? 'Mulai Review',
-                        'category' => 'division'
-                    ]);
-                }
+                ]);
             }
         }
 
