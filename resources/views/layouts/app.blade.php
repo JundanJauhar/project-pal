@@ -785,7 +785,7 @@
                     </li>
                     @endif
 
-                    {{-- SEKRETARIS DIREKSI --}}
+                    {{-- SEKRETARIS DIREKSI
                     @if($division === 'Sekretaris Direksi')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('sekdir.approval*') ? 'active' : '' }}"
@@ -800,7 +800,7 @@
                             Projects
                         </a>
                     </li>
-                    @endif
+                    @endif --}}
 
                     {{-- DESAIN & SUPPLY CHAIN --}}
                     @if(in_array($division, ['Desain', 'Supply Chain']))
