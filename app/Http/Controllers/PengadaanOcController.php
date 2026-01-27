@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PengadaanOc;
 use App\Models\Procurement;
+use App\Models\RequestProcurement;
 use App\Models\Vendor;
 use App\Models\Checkpoint;
 use Illuminate\Http\Request;
@@ -49,7 +50,7 @@ class PengadaanOcController extends Controller
         }
 
         $validated = $request->validate([
-            'vendor_id' => 'nullable|exists:vendors,id_vendor',
+            'vendor_id' => 'required|exists:vendors,id_vendor',
             'currency' => 'nullable|string|max:10',
             'nilai' => 'nullable|numeric',
             'tgl_kadep_to_kadiv' => 'nullable|date',
@@ -57,6 +58,9 @@ class PengadaanOcController extends Controller
             'tgl_cto_to_ceo' => 'nullable|date',
             'tgl_acc' => 'nullable|date',
             'remarks' => 'nullable|string|max:2000',
+        ], [
+            'vendor_id.required' => 'Vendor wajib dipilih',
+            'vendor_id.exists' => 'Vendor yang dipilih tidak ditemukan',
         ]);
 
         try {
@@ -66,7 +70,7 @@ class PengadaanOcController extends Controller
 
             $pengadaanOc = PengadaanOc::create([
                 'procurement_id' => $procurement->procurement_id,
-                'vendor_id' => $validated['vendor_id'] ?? null,
+                'vendor_id' => $validated['vendor_id'],
                 'currency' => $validated['currency'] ?? 'IDR',
                 'nilai' => $validated['nilai'] ?? null,
                 'tgl_kadep_to_kadiv' => $validated['tgl_kadep_to_kadiv'] ?? null,
@@ -76,6 +80,13 @@ class PengadaanOcController extends Controller
                 'remarks' => $validated['remarks'] ?? null,
             ]);
 
+            RequestProcurement::where('procurement_id', $procurementId)
+                ->update([
+                    'vendor_id' => $validated['vendor_id']
+                ]);
+
+            $vendor = Vendor::findOrFail($validated['vendor_id']);
+
             DB::commit();
 
             ActivityLogger::log(
@@ -84,6 +95,8 @@ class PengadaanOcController extends Controller
                 targetId: $pengadaanOc->pengadaan_oc_id,
                 details: [
                     'procurement_id' => $procurement->procurement_id,
+                    'vendor_id' => $validated['vendor_id'],
+                    'vendor_name' => $vendor->name_vendor,
                     'checkpoint_id' => $currentCheckpoint->checkpoint_id,
                     'user_id' => $user->id,
                     'division_id' => $user->division_id,
@@ -92,7 +105,7 @@ class PengadaanOcController extends Controller
 
             return redirect()
                 ->route('procurements.show', $procurement->procurement_id)
-                ->with('success', 'Pengadaan OC berhasil disimpan.')
+                ->with('success', "Pengadaan OC untuk vendor {$vendor->name_vendor} berhasil disimpan dan tersinkronisasi.")
                 ->withFragment('pengadaan-oc');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -142,7 +155,7 @@ class PengadaanOcController extends Controller
         }
 
         $validated = $request->validate([
-            'vendor_id' => 'nullable|exists:vendors,id_vendor',
+            'vendor_id' => 'required|exists:vendors,id_vendor',
             'currency' => 'nullable|string|max:10',
             'nilai' => 'nullable|numeric|min:0',
             'tgl_kadep_to_kadiv' => 'nullable|date',
@@ -150,6 +163,9 @@ class PengadaanOcController extends Controller
             'tgl_cto_to_ceo' => 'nullable|date',
             'tgl_acc' => 'nullable|date',
             'remarks' => 'nullable|string',
+        ], [
+            'vendor_id.required' => 'Vendor wajib dipilih',
+            'vendor_id.exists' => 'Vendor yang dipilih tidak ditemukan',
         ]);
 
         try {
@@ -159,12 +175,19 @@ class PengadaanOcController extends Controller
 
             $validated['currency'] = $validated['currency'] ?? 'IDR';
 
-            // Jika nilai tidak dikirim (dari hidden input kosong), retain nilai lama
+            // Jika nilai tidak dikirim, retain nilai lama
             if (!isset($validated['nilai']) || $validated['nilai'] === null || $validated['nilai'] === '') {
                 unset($validated['nilai']);
             }
 
             $po->update($validated);
+
+            RequestProcurement::where('procurement_id', $po->procurement_id)
+                ->update([
+                    'vendor_id' => $validated['vendor_id']
+                ]);
+
+            $vendor = Vendor::findOrFail($validated['vendor_id']);
 
             DB::commit();
 
@@ -174,6 +197,8 @@ class PengadaanOcController extends Controller
                 targetId: $po->pengadaan_oc_id,
                 details: [
                     'procurement_id' => $procurement->procurement_id,
+                    'vendor_id' => $validated['vendor_id'],
+                    'vendor_name' => $vendor->name_vendor,
                     'checkpoint_id' => $currentCheckpoint->checkpoint_id,
                     'user_id' => $user->id,
                     'division_id' => $user->division_id,
@@ -181,7 +206,7 @@ class PengadaanOcController extends Controller
             );
 
             return redirect()->route('procurements.show', $po->procurement_id)
-                ->with('success', 'Pengadaan OC berhasil diperbarui.')
+                ->with('success', "Pengadaan OC berhasil diperbarui dan vendor {$vendor->name_vendor} tersinkronisasi.")
                 ->withFragment('pengadaan-oc');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -235,6 +260,8 @@ class PengadaanOcController extends Controller
         try {
             $po = PengadaanOc::findOrFail($id);
             $procId = $po->procurement_id;
+            $vendorName = $po->vendor->name_vendor ?? 'Unknown';
+
             $po->delete();
 
             ActivityLogger::log(
@@ -243,6 +270,7 @@ class PengadaanOcController extends Controller
                 targetId: $id,
                 details: [
                     'procurement_id' => $procId,
+                    'vendor_name' => $vendorName,
                     'user_id' => $user->id,
                     'division_id' => $user->division_id,
                 ]
@@ -280,7 +308,7 @@ class PengadaanOcController extends Controller
                         'pengadaan_oc_id' => $po->pengadaan_oc_id,
                         'vendor_id' => $po->vendor_id,
                         'vendor_name' => $po->vendor->name_vendor ?? '-',
-                        'nilai' => $po->nilai ? 'Rp ' . number_format($po->nilai, 0, ',', '.') : '-',
+                        'nilai' => $po->nilai ? $po->currency . ' ' . number_format($po->nilai, 0, ',', '.') : '-',
                         'currency' => $po->currency,
                         'tgl_kadep_to_kadiv' => $po->tgl_kadep_to_kadiv ? $po->tgl_kadep_to_kadiv->format('d/m/Y') : '-',
                         'tgl_kadiv_to_cto' => $po->tgl_kadiv_to_cto ? $po->tgl_kadiv_to_cto->format('d/m/Y') : '-',

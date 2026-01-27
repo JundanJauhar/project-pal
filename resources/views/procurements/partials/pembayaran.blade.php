@@ -192,7 +192,7 @@
                         <input type="date" name="realization_date" class="form-control"
                             value="{{ $pay->realization_date?->format('Y-m-d') }}">
                     </div>
-                </input>
+                </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>
@@ -206,7 +206,10 @@
 @endif
 
 {{-- ============================================ --}}
-{{-- MODAL CREATE (LUAR TABLE) --}}
+{{-- MODAL CREATE (SELALU ADA SAAT CHECKPOINT 7) --}}
+{{-- ✅ PENTING: Modal ini TIDAK DIKONDISIKAN DENGAN pembayaranCount --}}
+{{-- Karena setelah form submit, pembayaranCount berubah dari 0 ke 1 --}}
+{{-- Modal harus tetap tersedia untuk create pembayaran kedua, ketiga, dst --}}
 {{-- ============================================ --}}
 @if($currentCheckpointSequence == 7)
 <div class="modal fade" id="modalCreatePembayaran" tabindex="-1" aria-hidden="true">
@@ -262,7 +265,7 @@
                         <label class="form-label">Realisasi</label>
                         <input type="date" name="realization_date" class="form-control">
                     </div>
-                </input>
+                </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>

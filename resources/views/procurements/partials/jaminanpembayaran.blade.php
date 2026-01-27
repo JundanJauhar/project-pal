@@ -45,13 +45,6 @@
 
                 <tbody>
                     @php
-                    // Vendor yang VALID untuk Jaminan Pembayaran (dari Inquiry & Quotation)
-                    $jaminanVendors = collect($inquiryQuotations ?? [])
-                    ->map(fn ($iq) => $iq->vendor)
-                    ->filter()
-                    ->unique('id_vendor')
-                    ->values();
-
                     // Total jaminans
                     $jaminanCount = $jaminans->count();
                     @endphp
@@ -152,6 +145,26 @@
 
                 <div class="modal-body row g-3">
 
+                    {{-- VENDOR (DISPLAY ONLY - TIDAK BISA DIUBAH) --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Vendor (Otomatis)</label>
+                        <input type="text" class="form-control" disabled
+                            value="{{ $jaminan->vendor->name_vendor ?? '-' }}">
+                    </div>
+
+                    {{-- JENIS PEMBAYARAN (DISPLAY ONLY) --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Jenis Pembayaran</label>
+                        <input type="text" class="form-control" disabled
+                            value="@php
+                                $paymentType = $pembayarans
+                                    ->where('vendor_id', $jaminan->vendor_id)
+                                    ->first()
+                                    ?->payment_type;
+                                echo $paymentType ?? '-';
+                            @endphp">
+                    </div>
+
                     {{-- Advance Payment Guarantee --}}
                     <div class="col-md-4">
                         <label class="form-label">Advance Payment Guarantee</label>
@@ -195,87 +208,11 @@
                     </div>
                 </div>
 
-                <form method="POST" action="{{ route('jaminan-pembayaran.update', $jaminan->jaminan_pembayaran_id) }}">
-                    @csrf
-
-                    <div class="modal-body row g-3">
-                        @php
-                        $jaminanVendors = collect($inquiryQuotations ?? [])
-                            ->map(fn ($iq) => $iq->vendor)
-                            ->filter()
-                            ->unique('id_vendor')
-                            ->values();
-                        @endphp
-
-                        {{-- Vendor --}}
-                        <div class="col-md-6">
-                            <label class="form-label">Vendor *</label>
-                            <select name="vendor_id" class="form-select" required>
-                                @foreach($jaminanVendors as $vendor)
-                                <option value="{{ $vendor->id_vendor }}"
-                                    @selected($vendor->id_vendor == $jaminan->vendor_id)>
-                                    {{ $vendor->name_vendor }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        {{-- Jenis Pembayaran (Display Only) --}}
-                        <div class="col-md-6">
-                            <label class="form-label">Jenis Pembayaran</label>
-                            <input type="text" class="form-control" disabled
-                                value="@php echo $pembayarans->where('vendor_id', $jaminan->vendor_id)->first()?->payment_type ?? '-'; @endphp">
-                        </div>
-
-                        {{-- Advance Payment Guarantee --}}
-                        <div class="col-md-4">
-                            <label class="form-label">Advance Payment Guarantee</label>
-                            <input type="checkbox" name="advance_guarantee" value="1"
-                                @checked($jaminan->advance_guarantee)>
-                        </div>
-
-                        {{-- Performance Bond --}}
-                        <div class="col-md-4">
-                            <label class="form-label">Performance Bond</label>
-                            <input type="checkbox" name="performance_bond" value="1"
-                                @checked($jaminan->performance_bond)>
-                        </div>
-
-                        {{-- Warranty Bond --}}
-                        <div class="col-md-4">
-                            <label class="form-label">Warranty Bond</label>
-                            <input type="checkbox" name="warranty_bond" value="1"
-                                @checked($jaminan->warranty_bond)>
-                        </div>
-
-                        {{-- Target Terbit --}}
-                        <div class="col-md-4">
-                            <label class="form-label">Target Terbit</label>
-                            <input type="date" name="target_terbit" class="form-control"
-                                value="{{ $jaminan->target_terbit?->format('Y-m-d') }}">
-                        </div>
-
-                        {{-- Realisasi Terbit --}}
-                        <div class="col-md-4">
-                            <label class="form-label">Realisasi Terbit</label>
-                            <input type="date" name="realisasi_terbit" class="form-control"
-                                value="{{ $jaminan->realisasi_terbit?->format('Y-m-d') }}">
-                        </div>
-
-                        {{-- Expiry Date --}}
-                        <div class="col-md-4">
-                            <label class="form-label">Expiry Date</label>
-                            <input type="date" name="expiry_date" class="form-control"
-                                value="{{ $jaminan->expiry_date?->format('Y-m-d') }}">
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-sm btn-action-create">Simpan</button>
-                    </div>
-                </form>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-sm btn-action-create">Simpan</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -283,7 +220,7 @@
 @endif
 
 {{-- ============================================ --}}
-{{-- MODAL CREATE (LUAR TABLE) --}}
+{{-- MODAL CREATE (LUAR TABLE - SELALU ADA SAAT CHECKPOINT 7) --}}
 {{-- ============================================ --}}
 @if($currentCheckpointSequence == 7 && $pembayarans->count() > 0)
 <div class="modal fade" id="modalCreateJaminan" tabindex="-1" aria-hidden="true">
@@ -299,6 +236,25 @@
                 <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
 
                 <div class="modal-body row g-3">
+
+                    {{-- VENDOR SELECTION (DROPDOWN PEMBAYARAN YANG ADA) --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Vendor *</label>
+                        <select name="vendor_id" class="form-select" id="vendorJaminanSelect" required>
+                            <option value="" disabled selected>Pilih Vendor</option>
+                            @foreach($pembayarans->unique('vendor_id') as $payment)
+                            <option value="{{ $payment->vendor_id }}">
+                                {{ $payment->vendor->name_vendor ?? '-' }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- JENIS PEMBAYARAN (AUTO-FILL) --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Jenis Pembayaran</label>
+                        <input type="text" class="form-control" id="paymentTypeDisplay" disabled value="-">
+                    </div>
 
                     {{-- Advance Payment Guarantee --}}
                     <div class="col-md-4">
