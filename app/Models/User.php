@@ -24,6 +24,7 @@ class User extends Authenticatable
         'division_id',
         'vendor_id',
         'status',
+        'last_login_at',
     ];
 
     protected $hidden = [

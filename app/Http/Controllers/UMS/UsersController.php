@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Division;
+use App\Models\Role;
 use App\Helpers\AuditLogger;
 use App\Helpers\ActivityLogger;
 
@@ -71,17 +72,6 @@ class UsersController extends Controller
     {
         return view('ums.users.create', [
             'divisions' => Division::orderBy('division_name')->get(),
-            'roles' => [
-                'superadmin',
-                'admin',
-                'sekretaris',
-                'desain',
-                'supply_chain',
-                'treasury',
-                'accounting',
-                'qa',
-                'user',
-            ],
         ]);
     }
 
@@ -101,12 +91,13 @@ class UsersController extends Controller
             'name'        => 'required|string|max:255',
             'email'       => 'required|email|unique:users,email',
             'password'    => 'required|min:6',
-            'roles'       => 'required|string',
+            'roles'       => 'required|array|min:1',
+            'roles.*'     => 'exists:roles,role_id',
             'division_id' => 'nullable|exists:divisions,division_id',
         ]);
 
         // Remove roles from data as it's handled by relationship
-        $roleCode = $data['roles'];
+        $roleIds = $data['roles'];
         unset($data['roles']);
 
         $user = User::create([
@@ -115,11 +106,16 @@ class UsersController extends Controller
             'status'   => 'active',
         ]);
 
-        // Assign role using relationship
-        $role = \App\Models\Role::where('role_code', $roleCode)->first();
-        if ($role) {
-            $user->roles()->attach($role->role_id);
+        $validRoleCount = Role::where('division_id', $data['division_id'])
+            ->whereIn('role_id', $roleIds)
+            ->count();
+
+        if ($validRoleCount !== count($roleIds)) {
+            abort(422, 'Role tidak sesuai dengan divisi.');
         }
+
+        // Assign role using relationship
+        $user->roles()->attach($roleIds);
 
         AuditLogger::log(
             action: 'create_user',
@@ -147,19 +143,9 @@ class UsersController extends Controller
     public function edit($user_id)
     {
         return view('ums.users.edit', [
-            'user'      => User::with('division')->findOrFail($user_id),
+            'user'      => User::with('division', 'roles')->findOrFail($user_id),
             'divisions' => Division::orderBy('division_name')->get(),
-            'roles' => [
-                'superadmin',
-                'admin',
-                'sekretaris',
-                'desain',
-                'supply_chain',
-                'treasury',
-                'accounting',
-                'qa',
-                'user',
-            ],
+            'roles'     => Role::orderBy('role_name')->get(),
         ]);
     }
 
@@ -180,29 +166,19 @@ class UsersController extends Controller
         $data = $request->validate([
             'name'        => 'required|string|max:255',
             'email'       => "required|email|unique:users,email,{$user_id},user_id",
-            'roles'       => 'required|string',
+            'roles'       => 'required|array|min:1',
+            'roles.*'     => 'exists:roles,role_id',
             'division_id' => 'nullable|exists:divisions,division_id',
         ]);
 
-        // Remove roles from data as it's handled by relationship
-        $roleCode = $data['roles'];
+        $roleIds = $data['roles'];
         unset($data['roles']);
 
         $before = $user->toArray();
         $user->update($data);
 
-        // Update role using relationship
-        $role = \App\Models\Role::where('role_code', $roleCode)->first();
-        if ($role) {
-            $user->roles()->sync([$role->role_id]);
-        }
-
-        AuditLogger::log(
-            action: 'update_user',
-            table: 'users',
-            targetId: $user->user_id,
-            details: ['before' => $before, 'after' => $user->toArray()]
-        );
+        // Sync multiple roles
+        $user->roles()->sync($roleIds);
 
         ActivityLogger::log(
             module: 'User Management',
@@ -280,5 +256,12 @@ class UsersController extends Controller
         $user->delete();
 
         return back()->with('success', 'User berhasil dihapus.');
+    }
+
+    public function getRolesByDivision($division_id)
+    {
+        return Role::where('division_id', $division_id)
+            ->orderBy('role_name')
+            ->get(['role_id', 'role_name']);
     }
 }
