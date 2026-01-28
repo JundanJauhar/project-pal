@@ -58,7 +58,7 @@
         }
 
         .logo {
-            translate=z-2;
+            translate: z-2;
         }
 
         .company-name {
@@ -179,6 +179,16 @@
             margin-top: 4px;
             min-height: 16px;
         }
+
+        .scm-title {
+            margin-top: -50px;
+            margin-bottom: 50px;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #003d82;
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -187,6 +197,9 @@
         <div class=logo> {{-- asset() mengacu ke folder public/, jangan sertakan 'public/' di path --}}
             <img src="{{ asset('images/logo-pal.png') }}" class="logo-pal" alt="PAL Logo">
         </div>
+
+        <h1 class="scm-title">SUPPLY CHAIN MANAGEMENT</h1>
+
         <div class="login-container">
             <div class="login-header">
                 <div class="logo-container">
