@@ -20,6 +20,7 @@
 
     .profile-header {
         display: flex;
+        flex-direction: column;
         align-items: center;
         text-align: center;
         justify-content: center;
@@ -235,6 +236,13 @@
     <a href="{{ route('vendor.index') }}" class="back-link">
         <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
     </a>
+
+    @if(session('success'))
+    <div class="alert-success-custom">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        {{ session('success') }}
+    </div>
+    @endif
 
     @if(session('error'))
     <div class="alert-danger-custom">
