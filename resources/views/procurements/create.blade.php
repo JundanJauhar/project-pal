@@ -357,12 +357,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
             <div class="row">
                 <div class="col-6 mb-2">
-                    <label class="form-label">Jumlah <span class="text-danger">*</span></label>
-                    <input type="number" name="items[${itemIndex}][quantity]" class="form-control item-quantity" data-index="${itemIndex}" min="1" required>
+                    <label class="form-label">Jumlah</label>
+                    <input type="number" name="items[${itemIndex}][quantity]" class="form-control item-quantity" data-index="${itemIndex}" min="1">
                 </div>
                 <div class="col-6 mb-2">
-                    <label class="form-label">Unit <span class="text-danger">*</span></label>
-                    <input type="text" name="items[${itemIndex}][unit]" class="form-control" placeholder="pcs, kg, dll" required>
+                    <label class="form-label">Unit</label>
+                    <input type="text" name="items[${itemIndex}][unit]" class="form-control" placeholder="pcs, kg, dll">
                 </div>
             </div>
         `;
