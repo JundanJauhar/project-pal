@@ -21,6 +21,8 @@
     .profile-header {
         display: flex;
         align-items: center;
+        text-align: center;
+        justify-content: center;
         gap: 20px;
         margin-bottom: 35px;
         padding-bottom: 25px;
@@ -234,13 +236,6 @@
         <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
     </a>
 
-    @if(session('success'))
-    <div class="alert-success-custom">
-        <i class="bi bi-check-circle-fill me-2"></i>
-        {{ session('success') }}
-    </div>
-    @endif
-
     @if(session('error'))
     <div class="alert-danger-custom">
         <i class="bi bi-x-circle-fill me-2"></i>
@@ -261,11 +256,8 @@
 
     <div class="profile-card">
         <div class="profile-header">
-            <div class="profile-avatar">
-                {{ substr($vendor->name_vendor ?? 'V', 0, 1) }}
-            </div>
             <div class="profile-info">
-                <h2>{{ $vendor->name_vendor }}</h2>
+                <h1>{{ $vendor->name_vendor }}</h1>
                 <p><i class="bi bi-envelope me-1"></i> {{ $vendor->user_vendor }}</p>
                 <div class="mt-2">
                     <span class="info-badge">
