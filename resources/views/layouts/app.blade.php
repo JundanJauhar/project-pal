@@ -725,10 +725,15 @@
                     @endif
                 </a>
 
-                {{-- Nama Vendor --}}
-                <span class="text-dark fw-semibold" style="font-size: 15px;">
+                {{-- Profile Link --}}
+                <a href="{{ route('vendor.profile') }}" class="text-dark me-2" style="font-size: 20px; text-decoration: none;" title="Pengaturan Profil">
+                    <i class="bi bi-gear"></i>
+                </a>
+
+                {{-- Nama Vendor dengan link ke profil --}}
+                <a href="{{ route('vendor.profile') }}" class="text-dark fw-semibold text-decoration-none" style="font-size: 15px;">
                     {{ Auth::guard('vendor')->user()->name_vendor ?? 'Vendor' }}
-                </span>
+                </a>
 
                 {{-- Logout Button --}}
                 <form method="POST" action="{{ route('logout') }}" class="d-inline">
@@ -789,9 +794,9 @@
                     @if($division === 'Sekretaris Direksi')
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('sekdir.approval*') ? 'active' : '' }}"
-                            href="{{ route('sekdir.approval') }}" wire:navigate>
-                            Department
-                        </a>
+                    href="{{ route('sekdir.approval') }}" wire:navigate>
+                    Department
+                    </a>
                     </li>
 
                     <li class="nav-item">

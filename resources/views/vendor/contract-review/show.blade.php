@@ -205,6 +205,13 @@
         border: 1px solid #ddd;
         margin-top: 20px;
     }
+
+    /* Simple link status styles - sama seperti evatek */
+    .link-status {
+        font-size: 12px;
+        color: #777;
+        margin-top: 5px;
+    }
 </style>
 @endpush
 
@@ -280,6 +287,8 @@ $item = $items->first();
                             <input type="text" class="link-input vendor-link" value="{{ $rev->vendor_link }}">
                             <button class="action-btn btn-upload save-link">Save</button>
                             <div class="link-status"></div>
+                            <div class="link-status"></div>
+
                         </td>
                         <td>
                             <input type="text" class="link-input sc-link" value="{{ $rev->sc_link }}" disabled>
@@ -398,6 +407,9 @@ $item = $items->first();
     });
 
     function saveLink(row) {
+        const vendorLink = row.querySelector(".vendor-link").value;
+        const statusDiv = row.querySelector(".link-status");
+
         fetch("{{ route('vendor.contract-review.save-link') }}", {
                 method: "POST",
                 headers: {
@@ -406,14 +418,23 @@ $item = $items->first();
                 },
                 body: JSON.stringify({
                     revision_id: row.dataset.revisionId,
-                    vendor_link: row.querySelector(".vendor-link").value
+                    vendor_link: vendorLink
                 })
             })
             .then(r => r.json())
             .then(r => {
                 if (r.success) {
-                    row.querySelector(".link-status").innerText = "Saved";
+                    statusDiv.innerText = "✓ Saved";
+                    statusDiv.style.color = "#28a745";
+                } else {
+                    statusDiv.innerText = "✗ Failed";
+                    statusDiv.style.color = "#d62828";
                 }
+            })
+            .catch(err => {
+                console.error(err);
+                statusDiv.innerText = "✗ Error";
+                statusDiv.style.color = "#d62828";
             });
     }
 

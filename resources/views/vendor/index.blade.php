@@ -88,10 +88,19 @@
     }
 
     @keyframes blink {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }
-        100% { opacity: 1; }
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        100% {
+            opacity: 1;
+        }
     }
+
     .blink-animation {
         animation: blink 1.5s infinite;
     }
@@ -250,11 +259,11 @@
                 {{-- Posisi --}}
                 <td style="padding: 12px 8px; text-align: center;">
                     @if(in_array($status, ['approve', 'not approve']))
-                        <span class="text-muted">-</span>
+                    <span class="text-muted">-</span>
                     @elseif(empty(trim($latestRevision->vendor_link ?? '')))
-                        <span class="badge bg-warning text-dark">Evatek Vendor</span>
+                    <span class="badge bg-warning text-dark">Evatek Vendor</span>
                     @else
-                        <span class="badge bg-info text-dark">Evatek Divisi</span>
+                    <span class="badge bg-info text-dark">Evatek Divisi</span>
                     @endif
                 </td>
 
@@ -362,7 +371,7 @@
 </div>
 
 <div class="big-card mt-4">
- 
+
     <table class="request-table">
         <thead>
             <tr>
@@ -377,11 +386,11 @@
         <tbody>
             @forelse($contractReviews as $review)
             @php
-                $proc = $review->procurement ?? null;
-                $proj = $proc ? $proc->project : ($review->project ?? null);
-                $requestProc = $proc ? $proc->requestProcurements->first() : null;
-                $items = $requestProc ? $requestProc->items : collect();
-                $item = $items->first();
+            $proc = $review->procurement ?? null;
+            $proj = $proc ? $proc->project : ($review->project ?? null);
+            $requestProc = $proc ? $proc->requestProcurements->first() : null;
+            $items = $requestProc ? $requestProc->items : collect();
+            $item = $items->first();
             @endphp
             <tr>
                 {{-- Item --}}
@@ -399,22 +408,22 @@
                 {{-- Status --}}
                 <td style="padding: 12px 8px; text-align: center;">
                     @php
-                        $latestRevision = $review->revisions->first();
-                        $statusClass = 'status-pending';
-                        $statusText = 'Pending';
-                        
-                        if($latestRevision) {
-                            if($latestRevision->result == 'approve') {
-                                $statusClass = 'status-approved';
-                                $statusText = 'Approved';
-                            } elseif($latestRevision->result == 'not_approve') {
-                                $statusClass = 'status-not-approved';
-                                $statusText = 'Not Approved';
-                            } elseif($latestRevision->result == 'revisi') {
-                                $statusClass = 'status-revisi';
-                                $statusText = 'Revisi';
-                            }
-                        }
+                    $latestRevision = $review->revisions->first();
+                    $statusClass = 'status-pending';
+                    $statusText = 'Pending';
+
+                    if($latestRevision) {
+                    if($latestRevision->result == 'approve') {
+                    $statusClass = 'status-approved';
+                    $statusText = 'Approved';
+                    } elseif($latestRevision->result == 'not_approve') {
+                    $statusClass = 'status-not-approved';
+                    $statusText = 'Not Approved';
+                    } elseif($latestRevision->result == 'revisi') {
+                    $statusClass = 'status-revisi';
+                    $statusText = 'Revisi';
+                    }
+                    }
                     @endphp
                     <span class="status-desain {{ $statusClass }}">{{ $statusText }}</span>
                 </td>

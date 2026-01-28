@@ -224,14 +224,51 @@ class VendorEvatekController extends Controller
             abort(403, 'Vendor not found');
         }
 
-        $validated = $request->validate([
+        // Base validation rules
+        $rules = [
             'name_vendor' => 'required|string|max:100',
             'address' => 'nullable|string',
             'phone_number' => 'nullable|string|max:20',
             'email' => 'required|email|max:100',
+        ];
+
+        // Add password validation if user wants to change password
+        if ($request->filled('current_password') || $request->filled('new_password')) {
+            $rules['current_password'] = 'required|string';
+            $rules['new_password'] = 'required|string|min:6|confirmed';
+        }
+
+        $validated = $request->validate($rules, [
+            'name_vendor.required' => 'Nama perusahaan wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'current_password.required' => 'Password saat ini wajib diisi untuk mengubah password.',
+            'new_password.required' => 'Password baru wajib diisi.',
+            'new_password.min' => 'Password baru minimal 6 karakter.',
+            'new_password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
 
-        $vendor->update($validated);
+        // Verify current password if changing password
+        if ($request->filled('current_password')) {
+            if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $vendor->password)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['current_password' => 'Password saat ini tidak sesuai.']);
+            }
+        }
+
+        // Update basic profile info
+        $vendor->name_vendor = $validated['name_vendor'];
+        $vendor->address = $validated['address'] ?? $vendor->address;
+        $vendor->phone_number = $validated['phone_number'] ?? $vendor->phone_number;
+        $vendor->email = $validated['email'];
+
+        // Update password if provided
+        if ($request->filled('new_password')) {
+            $vendor->password = \Illuminate\Support\Facades\Hash::make($validated['new_password']);
+        }
+
+        $vendor->save();
 
         return redirect()->route('vendor.profile')
             ->with('success', 'Profil vendor berhasil diperbarui!');
@@ -474,8 +511,11 @@ class VendorEvatekController extends Controller
 
         $revision->save();
 
-        // NOTIFY SUPPLY CHAIN USERS
-        $scmUsers = \App\Models\User::where('roles', 'supply_chain')->get();
+        // NOTIFY SUPPLY CHAIN USERS - Fixed query using proper relationship
+        $scmUsers = \App\Models\User::whereHas('division', function ($q) {
+            $q->where('division_name', 'LIKE', '%Supply Chain%');
+        })->get();
+
         foreach ($scmUsers as $user) {
             \App\Models\Notification::create([
                 'user_id' => $user->user_id,
@@ -483,7 +523,7 @@ class VendorEvatekController extends Controller
                 'type' => 'info',
                 'title' => 'Link Kontrak dari Vendor',
                 'message' => "Vendor {$vendor->name_vendor} telah mengupload dokumen kontrak untuk {$revision->revision_code}. Silakan cek dan respons.",
-                'action_url' => route('contract-review.show', $revision->contract_review_id),
+                'action_url' => route('supply-chain.contract-review.show', $revision->contract_review_id),
                 'reference_type' => 'App\Models\ContractReview',
                 'reference_id' => $revision->contract_review_id,
                 'is_read' => false,
