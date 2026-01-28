@@ -10,6 +10,8 @@ use App\Http\Controllers\UMS\SystemSettingController;
 use App\Http\Controllers\UMS\AdminScopeController;
 use App\Http\Controllers\UMS\DivisionManagementController;
 use App\Http\Controllers\UMS\DashboardController; 
+use App\Http\Controllers\UMS\ProcurementManagementController;
+
 
 Route::prefix('ums')
     ->middleware(['auth'])
@@ -87,7 +89,13 @@ Route::prefix('ums')
             ->name('roles.destroy');
     });
 
+    Route::prefix('procurement')->name('procurement.')->group(function () {
+    Route::get('/', [ProcurementManagementController::class, 'index'])
+        ->name('index');
 
+    Route::delete('/{id}', [ProcurementManagementController::class, 'destroy'])
+        ->name('destroy');
+});
         /*
         |--------------------------------------------------------------------------
         | SESSION MONITORING

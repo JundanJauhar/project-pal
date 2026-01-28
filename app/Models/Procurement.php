@@ -79,7 +79,7 @@ class Procurement extends Model
 
     public function pengadaanOcs()
     {
-        return $this->hasMany(PengadaanOc::class, 'procurement_id', 'procurement_id');
+        return $this->hasMany(PengadaanOC::class, 'procurement_id', 'procurement_id');
     }
 
     public function pengesahanKontraks()

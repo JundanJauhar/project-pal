@@ -24,8 +24,8 @@ return new class extends Migration
             // Kolom tambahan yang kamu ingin gunakan
             $table->text('specification')->nullable();
 
-            $table->integer('amount')->default(1);
-            $table->string('unit', 50)->default('pcs');
+            $table->integer('amount')->nullable();
+            $table->string('unit', 50)->nullable();
 
             // Standard Laravel timestamps
             $table->timestamps();

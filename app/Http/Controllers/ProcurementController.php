@@ -86,8 +86,8 @@ class ProcurementController extends Controller
             'items' => 'required|array|min:1',
             'items.*.item_name' => 'required|string|max:255',
             'items.*.description' => 'nullable|string',
-            'items.*.quantity' => 'required|numeric|min:1',
-            'items.*.unit' => 'required|string|max:50',
+            'items.*.quantity' => 'nullable|numeric',
+            'items.*.unit' => 'nullable|string|max:50',
         ], [
             'items.required' => 'Minimal harus ada 1 item untuk procurement',
             'items.min' => 'Minimal harus ada 1 item untuk procurement',
