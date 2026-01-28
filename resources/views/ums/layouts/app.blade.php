@@ -144,10 +144,10 @@
         <img src="{{ asset('images/logo-pal.png') }}" alt="PAL Indonesia">
     </div>
 
-    <a class="nav-link {{ request()->routeIs('ums.dashboard') ? 'active' : '' }}"
+    {{-- <a class="nav-link {{ request()->routeIs('ums.dashboard') ? 'active' : '' }}"
     href="{{ route('ums.dashboard') }}">
         <i class="bi bi-speedometer2"></i> Dashboard
-    </a>
+    </a> --}}
 
 
     <div class="menu-section">
@@ -161,6 +161,12 @@
         <a class="nav-link {{ request()->is('ums/divisions*') ? 'active' : '' }}"
         href="{{ route('ums.divisions.index') }}">
             <i class="bi bi-diagram-3"></i> Divisi Management
+        </a>
+
+        <a href="{{ route('ums.procurement.index') }}" 
+        class="nav-link {{ request()->is('ums/procurement*') ? 'active' : '' }}">
+            <i class="bi bi-cart-check"></i>
+            <span>Procurement Management</span>
         </a>
 
     </div>
