@@ -71,11 +71,22 @@ Route::prefix('ums')
         |--------------------------------------------------------------------------
         */
         Route::prefix('divisions')->name('divisions.')->group(function () {
-            Route::get('/', [DivisionManagementController::class, 'index'])->name('index');
-            Route::post('/', [DivisionManagementController::class, 'store'])->name('store');
-            Route::put('/{id}', [DivisionManagementController::class, 'update'])->name('update');
-            Route::delete('/{id}', [DivisionManagementController::class, 'destroy'])->name('destroy');
-        });
+        Route::get('/', [DivisionManagementController::class, 'index'])->name('index');
+        Route::post('/', [DivisionManagementController::class, 'store'])->name('store');
+
+        // Edit division (LOCKED)
+        Route::put('/{id}', [DivisionManagementController::class, 'update'])->name('update');
+
+        Route::delete('/{id}', [DivisionManagementController::class, 'destroy'])->name('destroy');
+
+        // Roles Management
+        Route::post('/{division}/roles', [DivisionManagementController::class, 'addRole'])
+            ->name('roles.store');
+
+        Route::delete('/roles/{role}', [DivisionManagementController::class, 'deleteRole'])
+            ->name('roles.destroy');
+    });
+
 
         /*
         |--------------------------------------------------------------------------
