@@ -228,7 +228,7 @@
                     @csrf
 
                     <div class="mb-3">
-                        <label for="login" class="form-label">Email / Username</label>
+                        <label for="login" class="form-label">Email / Name</label>
                         <input type="text"
                             class="form-control @error('login') is-invalid @enderror"
                             id="login"
