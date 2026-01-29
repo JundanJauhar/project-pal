@@ -189,8 +189,94 @@
             color: #003d82;
             text-align: center;
         }
+
+        /* ===== FORGOT PASSWORD OVERLAY ===== */
+        .overlay-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(6px);
+            background: rgba(0,0,0,0.4);
+            z-index: 999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .forgot-modal {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 420px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: fadeInScale 0.2s ease;
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .forgot-modal h4 {
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #003d82;
+        }
+
+        .forgot-modal .btn-close-custom {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
     </style>
 </head>
+
+<!-- ===== FORGOT PASSWORD OVERLAY ===== -->
+<div class="overlay-backdrop" id="forgotOverlay">
+    <div class="forgot-modal position-relative">
+        <div class="btn-close-custom" onclick="closeForgotModal()">
+            <i class="bi bi-x-lg"></i>
+        </div>
+
+        <h4>Lupa Password</h4>
+        <p class="text-muted mb-3" style="font-size:13px;">
+            Masukkan email Anda untuk menerima link reset password.
+        </p>
+
+        @if (session('status'))
+            <div class="alert alert-success">
+                {{ session('status') }}
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('password.email') }}">
+            @csrf
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email"
+                       name="email"
+                       class="form-control @error('email') is-invalid @enderror"
+                       placeholder="email@domain.com"
+                       required>
+
+                @error('email')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <button class="btn btn-login">
+                Kirim Link Reset Password
+            </button>
+        </form>
+    </div>
+</div>
 
 <body>
     <div class=login-wrapper>
@@ -297,7 +383,7 @@
                         </div>
 
                         <!-- Forgot Password (Kanan) -->
-                        <a href="#" class="forgot-password">
+                        <a href="javascript:void(0)" class="forgot-password" onclick="openForgotModal()">
                             Forgot Password
                         </a>
                     </div>
@@ -334,6 +420,21 @@
         setInterval(refreshCaptcha, 20000);
     </script>
 
-</body>
+    <script>
+        function openForgotModal() {
+            document.getElementById('forgotOverlay').style.display = 'flex';
+        }
 
+        function closeForgotModal() {
+            document.getElementById('forgotOverlay').style.display = 'none';
+        }
+
+        // Auto buka overlay jika ada error/status dari reset password
+        @if ($errors->has('email') || session('status'))
+            document.addEventListener('DOMContentLoaded', function () {
+                openForgotModal();
+            });
+        @endif
+    </script>
+</body>
 </html>
