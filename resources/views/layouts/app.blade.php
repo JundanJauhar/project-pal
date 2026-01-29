@@ -498,7 +498,6 @@
             display: inline-block;
         }
 
-        /* Priority color variants use CSS variables so user can edit them */
         .badge-priority.badge-rendah {
             background: var(--priority-rendah);
             color: var(--priority-rendah-text);

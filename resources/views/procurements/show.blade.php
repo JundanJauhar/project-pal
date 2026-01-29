@@ -342,6 +342,11 @@
             </div>
 
             <div class="info-item">
+                <div class="info-label">No PR</div>
+                <div class="info-value">{{ $procurement->no_pr ?? '-' }}</div>
+            </div>
+
+            <div class="info-item">
                 <div class="info-label">Vendor</div>
                 <div class="info-value">
                     {{ $procurement->requestProcurements->first()?->vendor?->name_vendor ?? 'Belum ditentukan' }}
