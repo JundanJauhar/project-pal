@@ -163,10 +163,10 @@
             <i class="bi bi-diagram-3"></i> Divisi Management
         </a>
 
-        <a href="{{ route('ums.procurement.index') }}" 
-        class="nav-link {{ request()->is('ums/procurement*') ? 'active' : '' }}">
+        <a href="{{ route('ums.project.index') }}" 
+        class="nav-link {{ request()->is('ums/project*') ? 'active' : '' }}">
             <i class="bi bi-cart-check"></i>
-            <span>Procurement Management</span>
+            <span>Project Management</span>
         </a>
 
     </div>

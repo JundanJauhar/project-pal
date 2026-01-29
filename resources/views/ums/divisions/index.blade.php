@@ -372,5 +372,4 @@ function addRoleInput() {
 }
 </script>
 @endpush
-
 @endsection

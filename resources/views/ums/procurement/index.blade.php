@@ -48,7 +48,7 @@
     font-weight: 700;
     padding: 12px;
     border-bottom: 1px solid #ddd;
-    text-align: left;
+    text-align: center;
 }
 
 .procurement-table td {
@@ -56,6 +56,7 @@
     padding: 14px 10px;
     border-bottom: 1px solid #eee;
     vertical-align: middle;
+    text-align: center;
 }
 
 .code-badge {
@@ -77,13 +78,21 @@
     background: #c62828;
     border: none;
     color: #fff;
-    width: 28px;
-    height: 28px;
+    padding: 4px 8px;
     border-radius: 6px;
+    font-size: 12px;
 }
 </style>
 
 <div class="procurement-wrapper">
+
+    {{-- Project Info --}}
+    @if(isset($project))
+        <div class="mb-2 text-muted-sm">
+            Project:
+            <strong>{{ $project->project_code }} - {{ $project->project_name }}</strong>
+        </div>
+    @endif
 
     {{-- Title --}}
     <div class="procurement-title">Procurement Management</div>
@@ -91,13 +100,24 @@
         Manage and monitor all procurement activities
     </div>
 
-    {{-- Toolbar (Search & Filter) --}}
-    <form method="GET"
-          action="{{ route('ums.procurement.index') }}"
-          class="procurement-toolbar">
+    {{-- Toolbar --}}
+    <div class="procurement-toolbar">
 
-        <div class="procurement-search">
-            {{-- Search --}}
+        {{-- Left: Back Button --}}
+        <div>
+            <a href="{{ route('ums.project.index') }}"
+               class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Projects
+            </a>
+        </div>
+
+        {{-- Right: Search --}}
+        <form method="GET"
+              action="{{ isset($project)
+                    ? route('ums.project.procurements', $project->project_id)
+                    : route('ums.procurement.index') }}"
+              class="procurement-search">
+
             <div class="input-group input-group-sm" style="width: 220px;">
                 <span class="input-group-text bg-white">
                     <i class="bi bi-search"></i>
@@ -109,42 +129,46 @@
                        placeholder="Search procurement...">
             </div>
 
-            {{-- Filter Project --}}
-            <select name="project_code"
-                    class="form-select form-select-sm"
-                    style="width: 160px;">
-                <option value="">All Project</option>
-                @foreach($procurements->pluck('project.project_code')->unique()->filter() as $projectCode)
-                    <option value="{{ $projectCode }}"
-                        {{ request('project_code') == $projectCode ? 'selected' : '' }}>
-                        {{ $projectCode }}
-                    </option>
-                @endforeach
-            </select>
-
             <button type="submit" class="btn btn-sm btn-primary">
-                <i class="bi bi-funnel"></i>
+                Search
             </button>
 
-            @if(request('search') || request('project_code'))
-                <a href="{{ route('ums.procurement.index') }}"
+            @if(request('search'))
+                <a href="{{ isset($project)
+                            ? route('ums.project.procurements', $project->project_id)
+                            : route('ums.procurement.index') }}"
                    class="btn btn-sm btn-outline-secondary">
                     Reset
                 </a>
             @endif
+        </form>
+    </div>
+
+    {{-- Alerts --}}
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-    </form>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
 
     {{-- Table --}}
     <table class="procurement-table">
         <thead>
             <tr>
-                <th style="width:60px;">No</th>
+                <th style="width:60px;">#</th>
                 <th>Kode Project</th>
                 <th>Kode Procurement</th>
                 <th>Nama Procurement</th>
                 <th>Deskripsi</th>
-                <th style="width:70px; text-align:center;">Aksi</th>
+                <th style="width:100px;">Aksi</th>
             </tr>
         </thead>
 
@@ -173,13 +197,13 @@
                     {{ \Illuminate\Support\Str::limit($procurement->description, 90) ?? '-' }}
                 </td>
 
-                <td style="text-align:center;">
+                <td>
                     <form action="{{ route('ums.procurement.destroy', $procurement->procurement_id) }}"
                           method="POST"
+                          class="d-inline"
                           onsubmit="return confirm('Yakin ingin menghapus procurement ini?')">
                         @csrf
                         @method('DELETE')
-
                         <button type="submit"
                                 class="delete-btn"
                                 title="Hapus Procurement">
@@ -199,5 +223,4 @@
     </table>
 
 </div>
-
 @endsection
