@@ -9,6 +9,7 @@ use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class CheckpointTransitionService
 {
@@ -216,9 +217,7 @@ class CheckpointTransitionService
     }
 
     /** 8 → 9: Pengiriman Material → Kedatangan Material */
-    protected function validateCheckpoint8To9(): void
-    {
-    }
+    protected function validateCheckpoint8To9(): void {}
 
     /** 9 → 10: Kedatangan Material → Verifikasi Dokumen (QA inspeksi) */
     protected function validateCheckpoint9To10(): void
@@ -343,14 +342,38 @@ class CheckpointTransitionService
 
         switch ($fromCheckpoint->point_sequence) {
             case 1: // baru selesai Permintaan Pengadaan
-                $this->notifyDivision(7, 'Evatek dimulai', 'Procurement siap evaluasi teknis');
+                // Notification moved to SupplyChainController::storeEvatekItem to ensure correct ordering
                 break;
 
             case 3: // Evatek selesai
-                $vendors = $this->procurement->evatekItems()->with('vendor')->get()->pluck('vendor.name_vendor')->unique()->implode(', ');
-                $msg = "Evatek selesai untuk procurement '{$this->procurement->name_procurement}' (Vendor: {$vendors}). Silakan lanjutkan ke proses negotiation.";
+                // Auto-create Negotiation records for vendors involved in Evatek
+                $evatekItems = $this->procurement->evatekItems()->with('vendor')->get();
+                $vendors = $evatekItems->pluck('vendor')->unique('id_vendor');
+
+                foreach ($vendors as $vendor) {
+                    \App\Models\Negotiation::firstOrCreate([
+                        'procurement_id' => $this->procurement->procurement_id,
+                        'vendor_id' => $vendor->id_vendor,
+                    ], [
+                        // Initial empty values to be filled by SCM
+                        'hps' => 0,
+                        'currency_hps' => 'IDR',
+                        'budget' => 0,
+                        'currency_budget' => 'IDR',
+                        'harga_final' => 0,
+                        'currency_harga_final' => 'IDR',
+                        'tanggal_kirim' => null,
+                        'tanggal_terima' => null,
+                        'lead_time' => 0,
+                        'link' => null,
+                        'notes' => 'Auto-generated after Evatek completion',
+                    ]);
+                }
+
+                $vendorNames = $vendors->pluck('name_vendor')->implode(', ');
+                $msg = "Evatek selesai untuk procurement '{$this->procurement->name_procurement}' (Vendor: {$vendorNames}). Proses Negotiation telah dimulai.";
                 $url = route('procurements.show', $this->procurement->procurement_id);
-                
+
                 $this->notifyDivision(2, 'Evatek Selesai', $msg, $url);
                 break;
 

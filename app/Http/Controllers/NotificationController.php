@@ -25,8 +25,111 @@ class NotificationController extends Controller
             ->orderBy('created_at', 'desc')
             ->limit(50) // Limit to avoid overload, or use pagination manually later
             ->get();
+        // Optimization: Pre-fetch Evatek statuses for categorization
+        $evatekIds = $dbNotifications->whereIn('title', ['Dokumen Evatek Diupload', 'Review Evatek Diperlukan'])->pluck('reference_id')->unique()->filter();
+        $evatekActionMap = [];
+        $evatekItems = collect(); // Initialize empty collection
 
+        if ($evatekIds->isNotEmpty()) {
+            $eItems = EvatekItem::whereIn('evatek_id', $evatekIds)->with('latestRevision')->get();
+            foreach ($eItems as $e) {
+                // Action needed if NOT approved/rejected AND latest revision is pending+has link
+                $isAction = !in_array($e->status, ['approve', 'not_approve'])
+                    && $e->latestRevision
+                    && $e->latestRevision->status === 'pending'
+                    && !empty($e->latestRevision->vendor_link);
+                $evatekActionMap[$e->evatek_id] = $isAction;
+            }
+            $evatekItems = $eItems; // Assign to variable for reuse
+        }
+
+        // Also load all Evatek items referenced in any notification for badge determination
+        $allEvatekRefIds = $dbNotifications->where('reference_type', 'App\\Models\\EvatekItem')->pluck('reference_id')->unique()->filter();
+        if ($allEvatekRefIds->isNotEmpty()) {
+            $additionalEvateks = EvatekItem::whereIn('evatek_id', $allEvatekRefIds)->with('latestRevision')->get();
+            // Merge with existing evatekItems
+            $evatekItems = $evatekItems->merge($additionalEvateks)->unique('evatek_id');
+        }
         foreach ($dbNotifications as $notif) {
+            // ✅ Extract badge info from notification reference
+            $badgeLabel = null;
+            $badgeColor = null;
+
+            // Determine badge based on reference type and title
+            if ($notif->reference_type === 'App\Models\EvatekItem' && $notif->reference_id) {
+                $evatekItem = $evatekItems->firstWhere('evatek_id', $notif->reference_id);
+                if ($evatekItem && $evatekItem->latestRevision) {
+                    $revCode = $evatekItem->latestRevision->revision_code;
+                    $revStatus = $evatekItem->latestRevision->status;
+
+                    if ($revStatus === 'approve') {
+                        $badgeLabel = 'APPROVE';
+                        $badgeColor = '#10B981'; // green
+                    } elseif ($revStatus === 'not_approve') {
+                        $badgeLabel = 'NOT APPROVE';
+                        $badgeColor = '#EF4444'; // red
+                    } elseif ($revStatus === 'revisi' || $revStatus === 'pending') {
+                        // Check if this is initial creation (R0 with no vendor link)
+                        if ($revCode === 'R0' && empty($evatekItem->latestRevision->vendor_link)) {
+                            $badgeLabel = 'BARU';
+                            $badgeColor = '#3B82F6'; // blue
+                        } else {
+                            $badgeLabel = 'REVISI ' . $revCode;
+                            $badgeColor = '#F59E0B'; // yellow
+                        }
+                    }
+                }
+            } elseif ($notif->reference_type === 'App\Models\ContractReview' && $notif->reference_id) {
+                // Get contract review info
+                $contractReview = \App\Models\ContractReview::with('revisions')->find($notif->reference_id);
+                if ($contractReview) {
+                    $latestRevision = $contractReview->revisions()->latest('created_at')->first();
+                    if ($latestRevision) {
+                        $revCode = $latestRevision->revision_code;
+                        $revStatus = $latestRevision->result ?? 'pending';
+
+                        if ($revStatus === 'approve') {
+                            $badgeLabel = 'APPROVE';
+                            $badgeColor = '#10B981'; // green
+                        } elseif ($revStatus === 'not_approve') {
+                            $badgeLabel = 'NOT APPROVE';
+                            $badgeColor = '#EF4444'; // red
+                        } elseif ($revCode === 'R0' && empty($latestRevision->vendor_link)) {
+                            $badgeLabel = 'BARU';
+                            $badgeColor = '#3B82F6'; // blue
+                        } else {
+                            $badgeLabel = 'REVISI ' . $revCode;
+                            $badgeColor = '#F59E0B'; // yellow
+                        }
+                    }
+                }
+            }
+
+            // Fallback badge based on title if no reference-based badge
+            if (!$badgeLabel) {
+                $badgeLabel = match (true) {
+                    // Complete statuses
+                    str_contains($notif->title, 'Evatek Selesai') || str_contains($notif->title, 'Evatek Completed') => 'EVATEK COMPLETE',
+                    str_contains($notif->title, 'Review Kontrak') && str_contains($notif->message, 'selesai') => 'REVIEW KONTRAK COMPLETE',
+                    // Negotiation
+                    str_contains($notif->title, 'Siap Negosiasi') || str_contains($notif->title, 'Negosiasi') => 'NEGOSIASI',
+                    // Standard statuses
+                    str_contains($notif->title, 'Baru') || str_contains($notif->title, 'Dimulai') => 'BARU',
+                    str_contains($notif->title, 'Approve') || str_contains($notif->title, 'Disetujui') => 'APPROVE',
+                    str_contains($notif->title, 'Ditolak') || str_contains($notif->title, 'Reject') => 'NOT APPROVE',
+                    default => null
+                };
+                $badgeColor = match ($badgeLabel) {
+                    'BARU' => '#3B82F6',
+                    'APPROVE' => '#10B981',
+                    'NOT APPROVE' => '#EF4444',
+                    'EVATEK COMPLETE' => '#8B5CF6', // purple
+                    'REVIEW KONTRAK COMPLETE' => '#8B5CF6', // purple
+                    'NEGOSIASI' => '#F59E0B', // orange/yellow
+                    default => null
+                };
+            }
+
             $notifications->push((object)[
                 'id' => $notif->notification_id,
                 'is_stored' => true,
@@ -66,9 +169,23 @@ class NotificationController extends Controller
                 ),
                 'date' => $notif->created_at,
                 'action_label' => 'Lihat Detail',
+                'badge_label' => $badgeLabel,
+                'badge_color' => $badgeColor,
                 'category' => match (true) {
-                    $notif->title === 'Dokumen Evatek Diupload' => 'division',
-                    $notif->type === 'action' => 'division',
+                    // ✅ Evatek uploaded - Check status (Dynamic)
+                    // ✅ Evatek uploaded - Check status (Dynamic)
+                    ($notif->title === 'Dokumen Evatek Diupload' || $notif->title === 'Review Evatek Diperlukan' && ($evatekActionMap[$notif->reference_id] ?? false)) => 'division',
+                    $notif->title === 'Dokumen Evatek Diupload' || $notif->title === 'Review Evatek Diperlukan' => 'inbox',
+                    // ✅ Evatek - Link incomplete
+                    $notif->title === 'Lengkapi Dokumen Evatek' || $notif->title === 'Perlu Isi Link Evatek' => 'division',
+                    // ✅ Contract review - vendor uploaded, SCM needs to review
+                    $notif->title === 'Review Kontrak Diperlukan' => 'division',
+                    // ✅ Contract review - SCM waiting for vendor
+                    $notif->title === 'Menunggu Vendor' => 'vendor',
+                    // ✅ Contract review - SC needs to upload link
+                    $notif->title === 'Lengkapi Dokumen Kontrak' => 'division',
+                    // ✅ Contract review action (bukan negotiation)
+                    ($notif->type === 'action' && $notif->title !== 'Siap Negosiasi') => 'division',
                     default => 'inbox'
                 }
             ]);
@@ -98,10 +215,25 @@ class NotificationController extends Controller
                 $itemName = $evatek->item->item_name ?? 'Item';
                 $revCode = $latest->revision_code;
                 $vendorName = $evatek->vendor->name_vendor ?? 'Vendor';
+                $revStatus = $latest->status;
 
-                // Logic based on User Request:
-                // "jika desain sudah ngirim link (sc_design_link) dan vendor belm, maka notif di Vendor"
-                // "jika vendor sudah tapi desain belom (review status), notif di Divisi"
+                // ✅ Determine badge
+                $badgeLabel = null;
+                $badgeColor = null;
+
+                if ($revStatus === 'approve') {
+                    $badgeLabel = 'APPROVE';
+                    $badgeColor = '#10B981'; // green
+                } elseif ($revStatus === 'not_approve') {
+                    $badgeLabel = 'NOT APPROVE';
+                    $badgeColor = '#EF4444'; // red
+                } elseif ($revCode === 'R0' && empty($vendorLink)) {
+                    $badgeLabel = 'BARU';
+                    $badgeColor = '#3B82F6'; // blue
+                } else {
+                    $badgeLabel = 'REVISI ' . $revCode;
+                    $badgeColor = '#F59E0B'; // yellow
+                }
 
                 $notifications->push((object)[
                     'id' => 'task_ev_' . $evatek->evatek_id,
@@ -109,6 +241,8 @@ class NotificationController extends Controller
                     'is_read' => false,
                     'is_starred' => false,
                     'date' => $latest->updated_at ?? $latest->created_at,
+                    'badge_label' => $badgeLabel,
+                    'badge_color' => $badgeColor,
 
                     // Determine content dynamically
                     ...match (true) {
@@ -258,84 +392,13 @@ class NotificationController extends Controller
 
         // 3. CONTRACT REVIEW TASKS (Only for Supply Chain users)
 
+        /*
+        // 3. CONTRACT REVIEW TASKS (Only for Supply Chain users)
+        // ✅ Computed tasks removed - Now using Stored Notifications logic (like vendor)
         if ($isScm) {
-            $reviews = \App\Models\ContractReview::where('status', '!=', 'completed')
-                ->with(['procurement.project', 'vendor', 'revisions'])
-                ->get();
-
-            foreach ($reviews as $review) {
-                // Get latest revision (sort by ID desc)
-                $latest = $review->revisions->sortByDesc('contract_review_revision_id')->first();
-
-                if (!$latest) continue;
-
-                $projName = $review->procurement->project->project_name ?? 'Project';
-                $vendorName = $review->vendor->name_vendor ?? 'Vendor';
-
-                // LOGIC: Show notification for ALL states but customize appearance
-                // 1. Action Needed (Vendor uploaded, SCM needs to review)
-                if (!empty($latest->vendor_link) && in_array($latest->result, ['pending', 'revisi'])) {
-                    $title = 'Review Kontrak Diperlukan';
-                    $msg = "Vendor {$vendorName} telah mengupload dokumen kontrak {$projName} ({$latest->revision_code}). Silakan review.";
-                    $type = 'action';
-                    $color = '#fd7e14'; // Orange
-                    $icon = 'bi-file-earmark-text';
-                    $actionLabel = 'Review Kontrak';
-                }
-                // 2. Waiting (Vendor needs to upload)
-                elseif (empty($latest->vendor_link) && in_array($latest->result, ['pending', 'revisi'])) {
-                    $title = 'Menunggu Vendor';
-                    $msg = "Menunggu Vendor {$vendorName} mengupload dokumen kontrak {$projName} ({$latest->revision_code}).";
-                    $type = 'info';
-                    $color = '#6c757d'; // Gray
-                    $icon = 'bi-clock-history';
-                    $actionLabel = 'Lihat Detail';
-                }
-                // 3. Approved
-                elseif ($latest->result == 'approve') {
-                    // Persistent notification per user request
-                    $title = 'Kontrak Disetujui';
-                    $msg = "Review kontrak {$projName} ({$latest->revision_code}) dengan Vendor {$vendorName} telah DISETUJUI.";
-                    $type = 'success';
-                    $color = '#28a745'; // Green
-                    $icon = 'bi-check-circle-fill';
-                    $actionLabel = 'Lihat Detail';
-                }
-                // 4. Rejected
-                elseif ($latest->result == 'not_approve') {
-                    $title = 'Kontrak Ditolak';
-                    $msg = "Review kontrak {$projName} ({$latest->revision_code}) dengan Vendor {$vendorName} DITOLAK.";
-                    $type = 'danger';
-                    $color = '#dc3545'; // Red
-                    $icon = 'bi-x-circle-fill';
-                    $actionLabel = 'Lihat Detail';
-                } else {
-                    continue;
-                }
-
-                $category = 'inbox'; // Default
-                if ($type === 'action') {
-                    $category = 'division';
-                } elseif ($title === 'Menunggu Vendor') {
-                    $category = 'vendor';
-                }
-
-                $notifications->push((object)[
-                    'id' => 'task_cr_scm_' . $review->contract_review_id . '_' . $latest->revision_code,
-                    'is_stored' => false,
-                    'is_read' => false,
-                    'type' => $type,
-                    'icon' => $icon,
-                    'color' => $color,
-                    'title' => $title,
-                    'message' => $msg,
-                    'link' => route('supply-chain.contract-review.show', $review->contract_review_id),
-                    'date' => $latest->updated_at ?? $latest->created_at,
-                    'action_label' => $actionLabel,
-                    'category' => $category
-                ]);
-            }
+             // Computed tasks logic disabled to prevent duplicates
         }
+        */
 
         // Adjust DB Notifications and Evatek to have category too
         // We need to re-loop or adjust the previous loops. 
