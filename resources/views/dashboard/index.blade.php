@@ -250,23 +250,24 @@
             <div class="card card-custom">
                 <div class="card-body">
                     <form id="filter-form" class="row g-3 align-items-end">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <input type="text" class="form-control" name="search" placeholder="Cari Pengadaan..." value="">
                         </div>
-                        <div class="col-md-2"></div>
+                        <div class="col-md-1"></div>
                         <div class="col-md-2">
                             <select class="form-select" name="project">
                                 <option value="">Semua Project</option>
                                 @foreach($projects as $project)
                                 <option value="{{ $project->project_code }}">{{ $project->project_code }}</option>
                                 @endforeach
-                                <!-- <option value="W000301">W000301</option>
-                                <option value="W000302">W000302</option>
-                                <option value="W000303">W000303</option>
-                                <option value="W000304">W000304</option>
-                                <option value="W000305">W000305</option>
-                                <option value="W000306">W000306</option>
-                                <option value="W000307">W000307</option> -->
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="department">
+                                <option value="">Semua Department</option>
+                                @foreach($departments as $department)
+                                <option value="{{ $department->department_id }}">{{ $department->department_name }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -275,22 +276,6 @@
                                 @foreach($checkpoints as $checkpoint)
                                 <option value="{{ $checkpoint->point_name }}">{{ $checkpoint->point_name }}</option>
                                 @endforeach
-                                <!-- <option value="Penawaran Permintaan">Penawaran Permintaan</option>
-                                <option value="Evatek">Evatek</option>
-                                <option value="Negosiasi">Negosiasi</option>
-                                <option value="Usulan Pengadaan / OC">Usulan Pengadaan / OC</option>
-                                <option value="Pengesahan Kontrak">Pengesahan Kontrak</option>
-                                <option value="Pengiriman Material">Pengiriman Material</option>
-                                <option value="Pembayaran DP">Pembayaran DP</option>
-                                <option value="Proses Importasi / Produksi">Proses Importasi / Produksi</option>
-                                <option value="Kedatangan Material">Kedatangan Material</option>
-                                <option value="Serah Terima Dokumen">Serah Terima Dokumen</option>
-                                <option value="Inspeksi Barang">Inspeksi Barang</option>
-                                <option value="Berita Acara / NCR">Berita Acara / NCR</option>
-                                <option value="Verifikasi Dokumen">Verifikasi Dokumen</option>
-                                <option value="Pembayaran">Pembayaran</option>
-                                <option value="completed">Selesai</option>
-                                <option value="cancelled">Dibatalkan</option> -->
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -400,7 +385,9 @@
 
         <div class="mt-3">
             <div id="procurements-pagination">
+                @if($procurements->total() > $procurements->perPage())
                 {{ $procurements->links() }}
+                @endif
             </div>
         </div>
 
@@ -425,10 +412,11 @@
         const checkpointSelect = document.querySelector('select[name="checkpoint"]');
         const prioritySelect = document.querySelector('select[name="priority"]');
         const projectSelect = document.querySelector('select[name="project"]');
+        const departmentSelect = document.querySelector('select[name="department"]');
         const tbody = document.getElementById('procurements-tbody');
         const paginationWrap = document.getElementById('procurements-pagination');
 
-        if (!searchInput || !checkpointSelect || !prioritySelect || !tbody || !paginationWrap) {
+        if (!searchInput || !checkpointSelect || !prioritySelect || !tbody || !departmentSelect || !paginationWrap) {
             console.error('Missing required elements');
             return;
         }
@@ -477,6 +465,9 @@
 
                 return `
             <tr>
+                <td style="padding: 12px 8px; text-align:center;">
+                    <strong>${((lastPagination.current_page - 1) * lastPagination.per_page) + items.indexOf(p) + 1}</strong>
+                </td>
                 <td style="padding: 12px 8px; text-align:center;"><strong>${p.project_code}</strong></td>
                 <td style="padding: 12px 8px; text-align:center"><strong>${p.code_procurement}</strong></td>
                 <td style="padding: 12px 8px;">${p.name_procurement?.substring(0, 40) || '-'}</td>
@@ -504,7 +495,7 @@
         }
 
         function renderPagination() {
-            if (!lastPagination) {
+            if (!lastPagination || lastPagination.last_page <= 1) {
                 paginationWrap.innerHTML = '';
                 return;
             }
@@ -522,13 +513,14 @@
                     `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${i})">${i}</a></li>`;
             }
 
-            html += p.has_more ?
+            html += p.current_page < p.last_page ?
                 `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${p.current_page + 1})">Berikutnya →</a></li>` :
                 `<li class="page-item disabled"><span class="page-link">Berikutnya →</span></li>`;
 
             html += `</ul></nav>`;
             paginationWrap.innerHTML = html;
         }
+
 
         window.goToPage = function(page) {
             currentPage = page;
@@ -540,8 +532,9 @@
             const checkpoint = encodeURIComponent(checkpointSelect.value);
             const priority = encodeURIComponent(prioritySelect.value);
             const project = encodeURIComponent(projectSelect.value);
+            const department = encodeURIComponent(departmentSelect.value);
 
-            const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&priority=${priority}&project=${project}&page=${currentPage}`;
+            const url = `{{ route('dashboard.search') }}?q=${q}&checkpoint=${checkpoint}&priority=${priority}&project=${project}&department=${department}&page=${currentPage}`;
             fetch(url, {
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
@@ -573,6 +566,7 @@
         checkpointSelect.addEventListener('change', debouncedFetch);
         prioritySelect.addEventListener('change', debouncedFetch);
         projectSelect.addEventListener('change', debouncedFetch);
+        departmentSelect.addEventListener('change', debouncedFetch);
     });
 </script>
 @endpush

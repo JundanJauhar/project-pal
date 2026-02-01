@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Checkpoint;
 use App\Models\Project;
 use App\Models\Procurement;
+use App\Models\RequestProcurement;
+use App\Models\Department;
 use App\Models\ProcurementProgress;
 use App\Models\Notification;
 use App\Services\CheckpointTransitionService;
@@ -37,6 +39,7 @@ class DashboardController extends Controller
 
         $checkpoints = Checkpoint::all();
         $projects = Project::all();
+        $departments = Department::all();
         $priority = Procurement::select('priority')->distinct()->get();
 
         // === GLOBAL PROCUREMENT QUERY (NO AUTHORIZATION FILTER) ===
@@ -80,7 +83,7 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        return view('dashboard.index', compact('stats', 'procurements', 'notifications', 'checkpoints', 'projects', 'priority'));
+        return view('dashboard.index', compact('stats', 'procurements', 'notifications', 'checkpoints', 'projects', 'priority', 'departments'));
     }
 
     /**
@@ -107,7 +110,7 @@ class DashboardController extends Controller
             });
         }
 
-        return $query->orderBy('start_date', 'desc')
+        return $query->orderBy('created_at', 'desc')
             ->paginate(10);
     }
 
@@ -147,7 +150,7 @@ class DashboardController extends Controller
             $searchTerm = $request->q;
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('name_procurement', 'like', "%$searchTerm%")
-                  ->orWhere('code_procurement', 'like', "%$searchTerm%");
+                    ->orWhere('code_procurement', 'like', "%$searchTerm%");
             });
         }
 
@@ -155,6 +158,12 @@ class DashboardController extends Controller
         if ($request->filled('priority')) {
             $query->where('priority', $request->priority);
         }
+
+        // Filter by department
+        if ($request->filled('department')) {
+            $query->where('department_procurement', $request->department);
+        }
+
 
         // Filter by project
         if ($request->filled('project')) {
@@ -204,6 +213,7 @@ class DashboardController extends Controller
                 'priority' => $request->priority ?? null,
                 'project' => $request->project ?? null,
                 'checkpoint' => $request->checkpoint ?? null,
+                'department' => $request->department ?? null,
                 'page' => $page,
                 'user_id' => $user->id,
                 'has_vendor_filter' => $user->hasRole('vendor')
@@ -431,7 +441,7 @@ class DashboardController extends Controller
 
         // Count stats (GLOBAL)
         $statsQuery = Procurement::where('project_id', $project->project_id);
-        
+
         // Apply vendor filter untuk stats juga (consistency)
         if ($user->hasRole('vendor')) {
             $statsQuery->whereHas('requestProcurements', function ($q) use ($user) {
