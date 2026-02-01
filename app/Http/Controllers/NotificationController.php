@@ -447,11 +447,10 @@ class NotificationController extends Controller
                 'read_at' => now()
             ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'All notifications marked as read'
-        ]);
+        return redirect()
+            ->route('notifications.index');
     }
+
 
     /**
      * Get unread notification count

@@ -26,9 +26,14 @@ class VendorEvatekController extends Controller
 
         // Ambil evatek items HANYA untuk vendor ini berdasarkan id_vendor
         $evatekItems = EvatekItem::where('vendor_id', $vendor->id_vendor)
-            ->with(['item', 'procurement', 'project', 'latestRevision'])
+            ->with([
+                'item',
+                'procurement.project',
+                'latestRevision'
+            ])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
+
 
         // Ambil contract reviews untuk vendor ini
         $contractReviews = ContractReview::where('vendor_id', $vendor->id_vendor)
@@ -152,7 +157,7 @@ class VendorEvatekController extends Controller
 
         // Ambil evatek items untuk vendor ini
         $evatekItems = EvatekItem::where('vendor_id', $vendor->id_vendor)
-            ->with(['item', 'procurement', 'project',])
+            ->with(['item', 'procurement.project'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -192,7 +197,7 @@ class VendorEvatekController extends Controller
         $vendor = Auth::guard('vendor')->user();
 
         $evatekItems = EvatekItem::where('vendor_id', $vendor->id_vendor)
-            ->with(['item', 'procurement', 'project'])
+            ->with(['item', 'procurement.project'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 

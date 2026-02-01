@@ -168,7 +168,6 @@
             $catatan = $latestRevision ? ($latestRevision->catatan_approval ?? $latestRevision->alasan_reject ?? '-') : '-';
             @endphp
                 
-            @endphp
             <tr data-status="{{ $evatek->status }}" data-pic="{{ $evatek->pic_evatek }}" data-target="{{ $evatek->target_date }}" class="evatek-row">
                 <td style="padding: 12px 8px; text-align: left;">
                     <a href="{{ route('desain.review-evatek', $evatek->evatek_id) }}"

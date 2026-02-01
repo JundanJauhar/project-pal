@@ -25,11 +25,13 @@ class Procurement extends Model
         'start_date',
         'end_date',
         'status_procurement',
+        'use_evatek',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'use_evatek' => 'boolean',
     ];
 
     protected $with = ['procurementProgress.checkpoint', 'requestProcurements.vendor'];

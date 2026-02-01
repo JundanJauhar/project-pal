@@ -364,7 +364,7 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
 
             <div class="mb-2">
-                <label class="form-label">Deskripsi</label>
+                <label class="form-label">Spesifikasi</label>
                 <textarea name="items[${itemIndex}][description]" class="form-control" rows="2"></textarea>
             </div>
 

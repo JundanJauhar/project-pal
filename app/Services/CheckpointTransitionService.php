@@ -157,6 +157,11 @@ class CheckpointTransitionService
     /** 3 → 4: Evatek → Negotiation */
     protected function validateCheckpoint3To4(): void
     {
+        // ✅ JIKA EVATEK DIMATIKAN → LEWATI VALIDASI
+        if (!$this->procurement->use_evatek) {
+            return;
+        }
+
         $allEvatek = $this->procurement->evatekItems()->get();
 
         if ($allEvatek->isEmpty()) {
@@ -177,6 +182,7 @@ class CheckpointTransitionService
             $this->errors[] = 'Setiap item harus memiliki minimal satu vendor EVATEK yang approve.';
         }
     }
+
 
     /** 4 → 5: Negotiation → Usulan Pengadaan / OC */
     protected function validateCheckpoint4To5(): void
@@ -341,51 +347,58 @@ class CheckpointTransitionService
         if (!$fromCheckpoint) return;
 
         switch ($fromCheckpoint->point_sequence) {
-            case 1: // baru selesai Permintaan Pengadaan
-                // Notification moved to SupplyChainController::storeEvatekItem to ensure correct ordering
+
+            case 1:
+                // Notification handled elsewhere
                 break;
 
-            case 3: // Evatek selesai
-                // Auto-create Negotiation records for vendors involved in Evatek
-                $evatekItems = $this->procurement->evatekItems()->with('vendor')->get();
-                $vendors = $evatekItems->pluck('vendor')->unique('id_vendor');
+            case 3: // ✅ EVATEK SELESAI
+                // ❌ TIDAK LAGI AUTO-GENERATE NEGOTIATION RECORD
 
-                foreach ($vendors as $vendor) {
-                    \App\Models\Negotiation::firstOrCreate([
-                        'procurement_id' => $this->procurement->procurement_id,
-                        'vendor_id' => $vendor->id_vendor,
-                    ], [
-                        // Initial empty values to be filled by SCM
-                        'hps' => 0,
-                        'currency_hps' => 'IDR',
-                        'budget' => 0,
-                        'currency_budget' => 'IDR',
-                        'harga_final' => 0,
-                        'currency_harga_final' => 'IDR',
-                        'tanggal_kirim' => null,
-                        'tanggal_terima' => null,
-                        'lead_time' => 0,
-                        'link' => null,
-                        'notes' => 'Auto-generated after Evatek completion',
-                    ]);
-                }
+                // Ambil vendor yang terlibat (hanya untuk informasi notifikasi)
+                $vendors = $this->procurement
+                    ->evatekItems()
+                    ->with('vendor')
+                    ->get()
+                    ->pluck('vendor')
+                    ->filter()
+                    ->unique('id_vendor');
 
                 $vendorNames = $vendors->pluck('name_vendor')->implode(', ');
-                $msg = "Evatek selesai untuk procurement '{$this->procurement->name_procurement}' (Vendor: {$vendorNames}). Proses Negotiation telah dimulai.";
-                $url = route('procurements.show', $this->procurement->procurement_id);
 
-                $this->notifyDivision(2, 'Evatek Selesai', $msg, $url);
+                $message = "Evatek selesai untuk procurement '{$this->procurement->name_procurement}'. "
+                    . "Procurement siap masuk tahap Negosiasi."
+                    . ($vendorNames ? " Vendor terkait: {$vendorNames}." : '');
+
+                $actionUrl = route('procurements.show', $this->procurement->procurement_id);
+
+                // ✅ NOTIFIKASI KE DIVISI SUPPLY CHAIN / TERKAIT
+                $this->notifyDivision(
+                    2, // Supply Chain Division ID
+                    'Evatek Selesai',
+                    $message,
+                    $actionUrl
+                );
+
                 break;
 
-            case 6: // selesai Pengesahan Kontrak → info ke Accounting soal DP
-                $this->notifyDivision(3, 'DP Payment Ready', 'Pembayaran DP siap diproses');
+            case 6: // Pengesahan Kontrak → Accounting
+                $this->notifyDivision(
+                    3,
+                    'DP Payment Ready',
+                    'Pembayaran DP siap diproses'
+                );
                 break;
 
-            case 10: // selesai Verifikasi Dokumen → info ke Treasury
-                $this->notifyDivision(4, 'Verifikasi Dokumen Selesai', 'Procurement siap diproses pembayaran final');
+            case 10: // Verifikasi Dokumen → Treasury
+                $this->notifyDivision(
+                    4,
+                    'Verifikasi Dokumen Selesai',
+                    'Procurement siap diproses pembayaran final'
+                );
                 break;
 
-            case 10: // selesai Pembayaran final
+            case 11: // Pembayaran final selesai
                 $this->notifyCheckpoint10Complete();
                 break;
         }
@@ -424,6 +437,55 @@ class CheckpointTransitionService
             ]);
         }
     }
+
+    /**
+     * Skip Evatek jika procurement tidak menggunakan Evatek
+     */
+    public function skipEvatekIfDisabled(): void
+    {
+        // Jika masih pakai Evatek → jangan skip
+        if ($this->procurement->use_evatek) {
+            return;
+        }
+
+        // Ambil checkpoint aktif
+        $currentCheckpoint = $this->getCurrentCheckpoint();
+
+        if (!$currentCheckpoint) {
+            return;
+        }
+
+        // Evatek biasanya sequence = 3
+        if ($currentCheckpoint->point_sequence !== 3) {
+            return;
+        }
+
+        // Tandai Evatek completed tanpa validasi
+        ProcurementProgress::updateOrCreate(
+            [
+                'procurement_id' => $this->procurement->procurement_id,
+                'checkpoint_id'  => $currentCheckpoint->point_id,
+            ],
+            [
+                'status'     => 'completed',
+                'note'       => 'Evatek dilewati (toggle OFF)',
+                'user_id'    => Auth::id(),
+                'start_date' => now(),
+                'end_date'   => now(),
+            ]
+        );
+
+        // Start checkpoint berikutnya (Negotiation)
+        $nextCheckpoint = Checkpoint::where(
+            'point_sequence',
+            $currentCheckpoint->point_sequence + 1
+        )->first();
+
+        if ($nextCheckpoint) {
+            $this->initializeCheckpoint($nextCheckpoint);
+        }
+    }
+
 
     // ===================== HELPERS =====================
 
@@ -504,6 +566,11 @@ class CheckpointTransitionService
 
         $data = array_merge(['notes' => $note], $extraData);
 
-        return $this->transition($current->point_sequence, $data);
+        $result = $this->transition($current->point_sequence, $data);
+
+        // ✅ Setelah transition, cek apakah Evatek perlu diskip
+        $this->skipEvatekIfDisabled();
+
+        return $result;
     }
 }
