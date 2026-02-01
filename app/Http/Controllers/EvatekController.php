@@ -63,15 +63,20 @@ class EvatekController extends Controller
     /**
      * Show daftar permintaan evatek
      */
-    public function daftarPermintaan($procurementId)
+    public function daftarPermintaan($projectId)
     {
+        // Get all procurements for this project
+        $procurements = Procurement::where('project_id', $projectId)->get();
+        $procurementIds = $procurements->pluck('procurement_id');
+
+        // Get all evatek items for these procurements
         $evatekItems = EvatekItem::with([
             'item',
             'vendor',
             'procurement',
             'latestRevision'
         ])
-            ->where('procurement_id', $procurementId)
+            ->whereIn('procurement_id', $procurementIds)
             ->orderBy('updated_at', 'desc')
             ->get();
 
@@ -105,7 +110,14 @@ class EvatekController extends Controller
             ->unique()
             ->toArray();
 
-        return view('desain.daftar-permintaan', compact('evatekItems', 'unreadEvatekIds'));
+        // Get unique PICs for filter dropdown
+        $uniquePics = $evatekItems->pluck('pic_evatek')
+            ->filter() // Remove null/empty values
+            ->unique()
+            ->sort()
+            ->values();
+
+        return view('desain.daftar-permintaan', compact('evatekItems', 'unreadEvatekIds', 'uniquePics'));
     }
 
     /**
@@ -145,6 +157,54 @@ class EvatekController extends Controller
 
             // ✅ AUTO-UPDATE EVATEK STATUS
             $this->updateEvatekStatus($evatek);
+
+            // ✅ Notification Logic (Desain updates Link)
+            if ($request->has('design_link')) {
+                // 1. Delete all previous notifications for this Evatek item to prevent duplicates
+                \App\Models\Notification::whereIn('title', ['Perlu Isi Link Evatek', 'Review Evatek Diperlukan', 'Menunggu Vendor', 'Lengkapi Dokumen Evatek'])
+                    ->where('reference_type', 'App\Models\EvatekItem')
+                    ->where('reference_id', $evatek->evatek_id)
+                    ->delete();
+
+                // 2. Check Vendor Link Status
+                $revFresh = \App\Models\EvatekRevision::find($request->revision_id);
+                $isVendorFilled = !empty($revFresh->vendor_link);
+
+                // 3. Notify Desain Users
+                $desainDiv = \App\Models\Division::where('division_name', 'LIKE', '%Desain%')->first();
+                if ($desainDiv) {
+                    $desainUsers = \App\Models\User::where('division_id', $desainDiv->division_id)->get();
+                    foreach ($desainUsers as $user) {
+                        if ($isVendorFilled) {
+                            // Both links ready -> Review Needed
+                            \App\Models\Notification::create([
+                                'user_id' => $user->user_id,
+                                'title' => 'Review Evatek Diperlukan',
+                                'reference_type' => 'App\Models\EvatekItem',
+                                'reference_id' => $evatek->evatek_id,
+                                'message' => "Dokumen evatek '{$evatek->item->item_name}' ({$revFresh->revision_code}) lengkap. Silakan review.",
+                                'action_url' => route('desain.review-evatek', $evatek->evatek_id),
+                                'type' => 'info',
+                                'is_read' => false,
+                                'created_at' => now(),
+                            ]);
+                        } else {
+                            // Vendor link empty -> Wait Vendor
+                            \App\Models\Notification::create([
+                                'user_id' => $user->user_id,
+                                'title' => 'Menunggu Vendor',
+                                'reference_type' => 'App\Models\EvatekItem',
+                                'reference_id' => $evatek->evatek_id,
+                                'message' => "Menunggu Vendor {$evatek->vendor->name_vendor} mengupload dokumen evatek '{$evatek->item->item_name}' ({$revFresh->revision_code}).",
+                                'action_url' => route('desain.review-evatek', $evatek->evatek_id),
+                                'type' => 'info',
+                                'is_read' => false,
+                                'created_at' => now(),
+                            ]);
+                        }
+                    }
+                }
+            }
 
             try {
                 ActivityLogger::log(
@@ -208,6 +268,13 @@ class EvatekController extends Controller
             'current_date' => now()->toDateString(),
         ]);
 
+        // ✅ DELETE notifikasi "Menunggu Review Desain" untuk item ini
+        // Agar tidak ada duplikasi - hanya 1 notifikasi aktif per item
+        \App\Models\VendorNotification::where('vendor_id', $evatek->vendor_id)
+            ->where('title', 'Menunggu Review Desain')
+            ->where('link', route('vendor.evatek.review', $evatek->evatek_id))
+            ->delete();
+
         // ✅ Notify Vendor (Keep per-item for Vendor visibility)
         \App\Models\VendorNotification::create([
             'vendor_id' => $evatek->vendor_id,
@@ -218,6 +285,25 @@ class EvatekController extends Controller
             'created_at' => now(),
         ]);
 
+        // ✅ Notify SC for History (Per Item)
+        $scmDiv = \App\Models\Division::where('division_name', 'LIKE', '%Supply%')->first();
+        if ($scmDiv) {
+            $scmUsers = \App\Models\User::where('division_id', $scmDiv->division_id)->get();
+            foreach ($scmUsers as $user) {
+                \App\Models\Notification::create([
+                    'user_id' => $user->user_id,
+                    'type' => 'success',
+                    'title' => 'Evatek Item Disetujui',
+                    'message' => "Evatek untuk item '{$evatek->item->item_name}' ({$revision->revision_code}) telah disetujui oleh Desain.",
+                    'action_url' => route('procurements.show', $evatek->procurement_id),
+                    'reference_type' => 'App\Models\EvatekItem',
+                    'reference_id' => $evatek->evatek_id,
+                    'is_read' => false,
+                    'created_at' => now(),
+                ]);
+            }
+        }
+
         // NOTE: Per-item notifications for Desain and SC are removed to reduce noise.
         // Notifications are now sent only when ALL items in the procurement are complete.
 
@@ -225,16 +311,30 @@ class EvatekController extends Controller
         $procurement = $evatek->procurement;
 
         if ($procurement && $procurement->evatekItems()->count() > 0) {
-            $allEvatek = $procurement->evatekItems()->get();
+            $allEvatek = $procurement->evatekItems()->with('latestRevision')->get();
             $allItemIds = $allEvatek->pluck('item_id')->unique();
+
+            // Get items where the latest revision has 'approve' status
             $itemIdsWithApproved = $allEvatek
-                ->where('status', 'approve')
+                ->filter(fn($e) => $e->latestRevision && $e->latestRevision->status === 'approve')
                 ->pluck('item_id')
                 ->unique();
 
             $missingItems = $allItemIds->diff($itemIdsWithApproved);
 
             if ($missingItems->isEmpty()) {
+                // Double Check: Ensure ALL items in the procurement have an Evatek entry
+                // Count total unique items in this procurement
+                $procurementItemsCount = $procurement->items()->count();
+
+                // If evatek item count < total items, not all items have started evatek yet
+                if ($allItemIds->count() < $procurementItemsCount) {
+                    // Not all items have Evatek started yet.
+                    // Do nothing, wait for other items to be created and approved.
+                    return response()->json(['success' => true]);
+                }
+
+
                 $service = new \App\Services\CheckpointTransitionService($procurement);
                 $service->completeCurrentAndMoveNext("Semua item sudah punya vendor approve di Evatek");
 
@@ -315,15 +415,40 @@ class EvatekController extends Controller
             'current_date' => now()->toDateString(),
         ]);
 
+        // ✅ DELETE notifikasi "Menunggu Review Desain" untuk item ini
+        \App\Models\VendorNotification::where('vendor_id', $evatek->vendor_id)
+            ->where('title', 'Menunggu Review Desain')
+            ->where('link', route('vendor.evatek.review', $evatek->evatek_id))
+            ->delete();
+
         // Notify Vendor
         \App\Models\VendorNotification::create([
             'vendor_id' => $evatek->vendor_id,
             'type' => 'danger',
-            'title' => 'Evatek Ditolak',
+            'title' => 'Evatek Ditolak ',
             'message' => "Evatek untuk item '{$evatek->item->item_name}' ({$revision->revision_code}) DITOLAK.",
             'link' => route('vendor.evatek.review', $evatek->evatek_id),
             'created_at' => now(),
         ]);
+
+        // ✅ Notify SC for History (Per Item)
+        $scmDiv = \App\Models\Division::where('division_name', 'LIKE', '%Supply%')->first();
+        if ($scmDiv) {
+            $scmUsers = \App\Models\User::where('division_id', $scmDiv->division_id)->get();
+            foreach ($scmUsers as $user) {
+                \App\Models\Notification::create([
+                    'user_id' => $user->user_id,
+                    'type' => 'danger',
+                    'title' => 'Evatek Item Ditolak',
+                    'message' => "Evatek untuk item '{$evatek->item->item_name}' ({$revision->revision_code}) ditolak oleh Desain.",
+                    'action_url' => route('procurements.show', $evatek->procurement_id),
+                    'reference_type' => 'App\Models\EvatekItem',
+                    'reference_id' => $evatek->evatek_id,
+                    'is_read' => false,
+                    'created_at' => now(),
+                ]);
+            }
+        }
 
         ActivityLogger::log(
             module: 'Evatek',
@@ -372,6 +497,31 @@ class EvatekController extends Controller
             'current_date' => now()->toDateString(),
             'evatek_status' => null,  // ✅ Reset ke null (kosong)
         ]);
+
+        // ✅ Notify Desain Users: Lengkapi Dokumen (for new revision)
+        $desainDiv = \App\Models\Division::where('division_name', 'LIKE', '%Desain%')->first();
+        if ($desainDiv) {
+            $desainUsers = \App\Models\User::where('division_id', $desainDiv->division_id)->get();
+            foreach ($desainUsers as $user) {
+                \App\Models\Notification::create([
+                    'user_id' => $user->user_id,
+                    'type' => 'info',
+                    'title' => 'Lengkapi Dokumen Evatek',
+                    'message' => "Silakan lengkapi dokumen revisi evatek '{$evatek->item->item_name}' ({$nextCode}).",
+                    'action_url' => route('desain.review-evatek', $evatek->evatek_id),
+                    'reference_type' => 'App\Models\EvatekItem',
+                    'reference_id' => $evatek->evatek_id,
+                    'is_read' => false,
+                    'created_at' => now(),
+                ]);
+            }
+        }
+
+        // ✅ DELETE notifikasi lama untuk item ini
+        \App\Models\VendorNotification::where('vendor_id', $evatek->vendor_id)
+            ->whereIn('title', ['Menunggu Review Desain', 'Evatek Disetujui', 'Evatek Ditolak'])
+            ->where('link', route('vendor.evatek.review', $evatek->evatek_id))
+            ->delete();
 
         // Notify Vendor
         \App\Models\VendorNotification::create([

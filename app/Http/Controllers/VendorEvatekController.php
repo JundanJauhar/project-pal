@@ -297,6 +297,14 @@ class VendorEvatekController extends Controller
             abort(403, 'Unauthorized access to this evatek item');
         }
 
+        // ✅ AUTO MARK-AS-READ: Mark notification as read when vendor opens this page
+        \App\Models\VendorNotification::where('vendor_id', $vendor->id_vendor)
+            ->where('title', 'Menunggu Review Desain')
+            ->where('link', route('vendor.evatek.review', $evatekId))
+            ->where('is_read', false)
+            ->update(['is_read' => true, 'read_at' => now()]);
+
+
         $item = $evatek->item;
 
         // Get all revisions
@@ -357,6 +365,10 @@ class VendorEvatekController extends Controller
         $revision->vendor_link = $validated['vendor_link'];
         $revision->save();
 
+        // ✅ UPDATE EVATEK STATUS - Match logic from EvatekController
+        $this->updateEvatekStatusForVendor($evatek);
+
+
         // NOTIFY DESAIN USERS
         $desainUsers = \App\Models\User::whereHas('roles', function ($q) {
             $q->where('role_code', 'desain');
@@ -366,12 +378,26 @@ class VendorEvatekController extends Controller
             })
             ->get();
         foreach ($desainUsers as $user) {
-            // Check if similar unread notification already exists
+            // Check if design_link is filled
+            $isDesignFilled = !empty($revision->design_link);
+            $notifTitle = $isDesignFilled ? 'Review Evatek Diperlukan' : 'Perlu Isi Link Evatek';
+            $notifMsg = $isDesignFilled
+                ? "Vendor {$vendor->name_vendor} mengupload dokumen utk '{$evatek->item->item_name}' ({$revision->revision_code}). Dokumen Lengkap. Silakan Review."
+                : "Vendor {$vendor->name_vendor} mengupload dokumen utk '{$evatek->item->item_name}' ({$revision->revision_code}). Silakan lengkapi link Desain.";
+
+            // ✅ DELETE OLD Notifications (Clean up stale states)
+            \App\Models\Notification::where('user_id', $user->user_id)
+                ->where('reference_type', 'App\Models\EvatekItem')
+                ->where('reference_id', $evatek->evatek_id)
+                ->whereIn('title', ['Menunggu Vendor', 'Lengkapi Dokumen Evatek'])
+                ->delete();
+
+            // Check uniqueness
             $exists = \App\Models\Notification::where('user_id', $user->user_id)
                 ->where('reference_type', 'App\Models\EvatekItem')
                 ->where('reference_id', $evatek->evatek_id)
-                ->where('title', 'Dokumen Evatek Diupload')
-                ->where('is_read', false)
+                ->where('title', $notifTitle)
+                ->where('message', 'LIKE', "%({$revision->revision_code})%")
                 ->exists();
 
             if (!$exists) {
@@ -379,8 +405,8 @@ class VendorEvatekController extends Controller
                     'user_id' => $user->user_id,
                     'sender_id' => null,
                     'type' => 'info',
-                    'title' => 'Dokumen Evatek Diupload',
-                    'message' => "Vendor {$vendor->name_vendor} mengupload dokumen untuk item '{$evatek->item->item_name}'.",
+                    'title' => $notifTitle,
+                    'message' => $notifMsg,
                     'action_url' => route('desain.review-evatek', $evatek->evatek_id),
                     'reference_type' => 'App\Models\EvatekItem',
                     'reference_id' => $evatek->evatek_id,
@@ -390,6 +416,32 @@ class VendorEvatekController extends Controller
             }
         }
 
+
+        // ✅ DELETE notifikasi "Evatek Baru" atau "Revisi Diperlukan" untuk item ini
+        // Agar tidak ada duplikasi - hanya 1 notifikasi aktif per item di label
+        \App\Models\VendorNotification::where('vendor_id', $vendor->id_vendor)
+            ->whereIn('title', ['Evatek Baru', 'Revisi Diperlukan'])
+            ->where('link', route('vendor.evatek.review', $evatek->evatek_id))
+            ->delete();
+
+        // ✅ NOTIFY VENDOR: Menunggu Review Desain (Unik per Revisi)
+        $existsVendor = \App\Models\VendorNotification::where('vendor_id', $vendor->id_vendor)
+            ->where('title', 'Menunggu Review Desain')
+            ->where('link', route('vendor.evatek.review', $evatek->evatek_id))
+            ->where('message', 'LIKE', "%({$revision->revision_code})%")
+            ->exists();
+
+        if (!$existsVendor) {
+            \App\Models\VendorNotification::create([
+                'vendor_id' => $vendor->id_vendor,
+                'type' => 'info',
+                'title' => 'Menunggu Review Desain',
+                'message' => "Dokumen Evatek untuk item '{$evatek->item->item_name}' ({$revision->revision_code}) sedang direview oleh tim Desain.",
+                'link' => route('vendor.evatek.review', $evatek->evatek_id),
+                'is_read' => false,
+                'created_at' => now(),
+            ]);
+        }
 
         return response()->json([
             'success' => true,
@@ -456,6 +508,14 @@ class VendorEvatekController extends Controller
             abort(403, 'Unauthorized');
         }
 
+        // ✅ AUTO MARK-AS-READ: Mark notification as read when vendor opens this page
+        \App\Models\VendorNotification::where('vendor_id', $vendor->id_vendor)
+            ->where('title', 'Menunggu Review SCM')
+            ->where('link', route('vendor.contract-review.review', $contractReviewId))
+            ->where('is_read', false)
+            ->update(['is_read' => true, 'read_at' => now()]);
+
+
         $revisions = $contractReview->revisions;
 
         if ($revisions->isEmpty()) {
@@ -511,25 +571,73 @@ class VendorEvatekController extends Controller
 
         $revision->save();
 
-        // NOTIFY SUPPLY CHAIN USERS - Fixed query using proper relationship
+        // ✅ DELETE old notifications for this contract review to prevent duplicates
+        \App\Models\Notification::whereIn('title', ['Lengkapi Dokumen Kontrak', 'Review Kontrak Diperlukan', 'Menunggu Vendor'])
+            ->where('reference_type', 'App\Models\ContractReview')
+            ->where('reference_id', $revision->contract_review_id)
+            ->delete();
+
+        // NOTIFY SUPPLY CHAIN USERS - Check SC link status
         $scmUsers = \App\Models\User::whereHas('division', function ($q) {
             $q->where('division_name', 'LIKE', '%Supply Chain%');
         })->get();
 
+        // Fresh reload to check SC link status
+        $revisionFresh = \App\Models\ContractReviewRevision::find($revision->contract_review_revision_id);
+        $isSCLinkFilled = !empty($revisionFresh->sc_link);
+
         foreach ($scmUsers as $user) {
-            \App\Models\Notification::create([
-                'user_id' => $user->user_id,
-                'sender_id' => null,
+            if ($isSCLinkFilled) {
+                // Both links filled -> Review Needed
+                \App\Models\Notification::create([
+                    'user_id' => $user->user_id,
+                    'sender_id' => null,
+                    'type' => 'action',
+                    'title' => 'Review Kontrak Diperlukan',
+                    'message' => "Dokumen kontrak '{$revision->contractReview->procurement->procurement_name}' ({$revision->revision_code}) lengkap. Silakan review.",
+                    'action_url' => route('supply-chain.contract-review.show', $revision->contract_review_id),
+                    'reference_type' => 'App\Models\ContractReview',
+                    'reference_id' => $revision->contract_review_id,
+                    'is_read' => false,
+                    'created_at' => now(),
+                ]);
+            } else {
+                // SC link empty -> Need to complete
+                \App\Models\Notification::create([
+                    'user_id' => $user->user_id,
+                    'sender_id' => null,
+                    'type' => 'action',
+                    'title' => 'Lengkapi Dokumen Kontrak',
+                    'message' => "Silakan lengkapi dokumen revisi kontrak '{$revision->contractReview->procurement->procurement_name}' ({$revision->revision_code}).",
+                    'action_url' => route('supply-chain.contract-review.show', $revision->contract_review_id),
+                    'reference_type' => 'App\Models\ContractReview',
+                    'reference_id' => $revision->contract_review_id,
+                    'is_read' => false,
+                    'created_at' => now(),
+                ]);
+            }
+        }
+
+
+        // ✅ NOTIFY VENDOR: Menunggu Review SCM (Unik per Revisi)
+        $existsVendor = \App\Models\VendorNotification::where('vendor_id', $vendor->id_vendor)
+            ->where('title', 'Menunggu Review SCM')
+            ->where('link', route('vendor.contract-review.review', $revision->contract_review_id))
+            ->where('message', 'LIKE', "%({$revision->revision_code})%")
+            ->exists();
+
+        if (!$existsVendor) {
+            \App\Models\VendorNotification::create([
+                'vendor_id' => $vendor->id_vendor,
                 'type' => 'info',
-                'title' => 'Link Kontrak dari Vendor',
-                'message' => "Vendor {$vendor->name_vendor} telah mengupload dokumen kontrak untuk {$revision->revision_code}. Silakan cek dan respons.",
-                'action_url' => route('supply-chain.contract-review.show', $revision->contract_review_id),
-                'reference_type' => 'App\Models\ContractReview',
-                'reference_id' => $revision->contract_review_id,
+                'title' => 'Menunggu Review SCM',
+                'message' => "Dokumen kontrak ({$revision->revision_code}) sedang direview oleh Supply Chain.",
+                'link' => route('vendor.contract-review.review', $revision->contract_review_id),
                 'is_read' => false,
                 'created_at' => now(),
             ]);
         }
+
 
         return response()->json([
             'success' => true,
@@ -599,14 +707,58 @@ class VendorEvatekController extends Controller
                     $evatekItem = EvatekItem::find($evatekId);
                     if ($evatekItem) {
                         $latest = $evatekItem->latestRevision;
-                        // If vendor link exists, action is DONE. Remove from 'vendor' category.
+                        // ✅ Jika vendor sudah upload link, PINDAHKAN ke inbox (hilang dari Perlu Tindakan)
                         if ($latest && !empty($latest->vendor_link)) {
-                            $category = 'inbox'; // Move to history/inbox
+                            $category = 'inbox'; // Pindah ke Kotak Masuk, keluar dari "Perlu Tindakan"
                         }
                     }
                 }
-            } elseif ($sn->title === 'Menunggu Review Desain') {
-                $category = 'division';
+            }
+            // ✅ Vendor sudah upload, menunggu review desain
+            elseif ($sn->title === 'Menunggu Review Desain') {
+                // Cek apakah sudah selesai diproses
+                if (preg_match('/\/vendor\/evatek\/(\d+)\/review/', $sn->link, $matches)) {
+                    $evatekId = $matches[1];
+                    $evatekItem = EvatekItem::find($evatekId);
+                    if ($evatekItem) {
+                        $latest = $evatekItem->latestRevision;
+                        // Jika sudah approved/rejected, pindahkan ke inbox (jangan delete)
+                        if ($latest && in_array($latest->status, ['approve', 'not_approve'])) {
+                            $category = 'inbox'; // ✅ Masuk Kotak Masuk, keluar dari label "Menunggu Review"
+                        } else {
+                            $category = 'division'; // Masih menunggu review
+                        }
+                    } else {
+                        $category = 'division';
+                    }
+                } else {
+                    $category = 'division';
+                }
+            }
+            // ✅ Contract Review: Menunggu Review SCM
+            elseif ($sn->title === 'Menunggu Review SCM') {
+                // Cek apakah sudah selesai diproses
+                if (preg_match('/\/vendor\/contract-review\/(\d+)\/review/', $sn->link, $matches)) {
+                    $contractReviewId = $matches[1];
+                    $contractReview = \App\Models\ContractReview::find($contractReviewId);
+                    if ($contractReview) {
+                        $latest = $contractReview->revisions()->orderBy('contract_review_revision_id', 'desc')->first();
+                        // Jika sudah approved/rejected, pindahkan ke inbox (jangan delete)
+                        if ($latest && in_array($latest->result, ['approve', 'not_approve'])) {
+                            $category = 'inbox'; // ✅ Masuk Kotak Masuk, keluar dari label "Menunggu Review"
+                        } else {
+                            $category = 'division'; // Masih menunggu review
+                        }
+                    } else {
+                        $category = 'division';
+                    }
+                } else {
+                    $category = 'division';
+                }
+            }
+            // ✅ Evatek sudah selesai (Disetujui/Ditolak) - HANYA inbox, tidak di label
+            elseif (in_array($sn->title, ['Evatek Disetujui', 'Evatek Ditolak'])) {
+                $category = 'inbox'; // Tidak masuk label "Menunggu Review"
             }
 
             $notifications->push((object)[
@@ -671,15 +823,12 @@ class VendorEvatekController extends Controller
             }
             // 2. Waiting (Vendor uploaded, waiting SCM)
             elseif (!empty($latest->vendor_link) && in_array($latest->result, ['pending', 'revisi'])) {
-                $title = 'Menunggu Review SCM';
-                $msg = "Dokumen kontrak {$projName} ({$revCode}) sedang direview oleh Supply Chain.";
-                $type = 'info';
-                $color = '#17a2b8'; // Blue info
-                $icon = 'bi-hourglass-split';
-                $actionLabel = 'Lihat Status';
-                $category = 'division';
+                // ✅ TIDAK BUAT COMPUTED TASK - Andalkan stored notification yang dibuat saat vendor upload
+                // Stored notification sudah dibuat di saveContractLink() method
+                // Ini memastikan is_read tracking bekerja sempurna
+                continue;
             }
-            // 3. Approved
+            // 3. Approved - ✅ SELESAI, hilang dari "Menunggu Review"
             elseif ($latest->result == 'approve') {
                 $title = 'Kontrak Disetujui';
                 $msg = "Review kontrak {$projName} ({$revCode}) telah DISETUJUI.";
@@ -687,8 +836,9 @@ class VendorEvatekController extends Controller
                 $color = '#28a745'; // Green
                 $icon = 'bi-check-circle-fill';
                 $actionLabel = 'Lihat Detail';
+                $category = 'inbox'; // ✅ Masuk Kotak Masuk (tidak di label)
             }
-            // 4. Rejected (Not Approved)
+            // 4. Rejected (Not Approved) - ✅ SELESAI, hilang dari "Menunggu Review"
             elseif ($latest->result == 'not_approve') {
                 $title = 'Kontrak Ditolak';
                 $msg = "Review kontrak {$projName} ({$revCode}) DITOLAK.";
@@ -696,6 +846,7 @@ class VendorEvatekController extends Controller
                 $color = '#dc3545'; // Red
                 $icon = 'bi-x-circle-fill';
                 $actionLabel = 'Lihat Detail';
+                $category = 'inbox'; // ✅ Masuk Kotak Masuk (tidak di label)
             } else {
                 continue; // Skip unknown states
             }
@@ -717,56 +868,15 @@ class VendorEvatekController extends Controller
         }
 
         // 3. COMPUTED TASKS (Evatek Pending)
-        $evatekItems = EvatekItem::where('vendor_id', $vendor->id_vendor)
-            ->with(['item', 'procurement.project', 'latestRevision'])
-            ->get();
+        // ✅ TIDAK PERLU COMPUTED TASKS - Semua notifikasi evatek dibuat via stored notifications:
+        // - "Evatek Baru" → Dibuat saat create evatek
+        // - "Revisi Diperlukan" → Dibuat saat desain minta revisi
+        // - "Evatek Disetujui" → Dibuat saat approve
+        // - "Evatek Ditolak" → Dibuat saat not approve
+        // - "Menunggu Review Desain" → Dibuat saat vendor upload link
 
-        foreach ($evatekItems as $evatek) {
-            $latest = $evatek->latestRevision;
-            if (!$latest) continue;
-
-            $itemName = $evatek->item->item_name ?? 'Item';
-            $revCode = $latest->revision_code;
-            $link = route('vendor.evatek.review', $evatek->evatek_id);
-
-            // Pending Action Only
-            if (($latest->status == 'pending' || $latest->status == 'revisi') && empty($latest->vendor_link)) {
-                // User Request: Skip "Permintaan Dokumen" for R0 because "Evatek Baru" DB notification already exists.
-                if ($revCode === 'R0') continue;
-
-                $notifications->push((object)[
-                    'id' => 'task_ev_' . $evatek->evatek_id, // Virtual ID
-                    'is_stored' => false,
-                    'is_read' => false,
-                    'type' => 'action',
-                    'icon' => 'bi-cloud-upload-fill',
-                    'color' => '#0d6efd',
-                    'title' => 'Permintaan Dokumen Evatek',
-                    'message' => "Silakan upload dokumen Evatek untuk item {$itemName} ({$revCode}).",
-                    'link' => $link,
-                    'date' => $latest->created_at, // or updated_at
-                    'action_label' => 'Upload Dokumen',
-                    'category' => 'vendor'
-                ]);
-            }
-            // Waiting for Division (Vendor has uploaded)
-            elseif (($latest->status == 'pending' || $latest->status == 'revisi') && !empty($latest->vendor_link)) {
-                $notifications->push((object)[
-                    'id' => 'task_ev_wait_' . $evatek->evatek_id, // Virtual ID
-                    'is_stored' => false,
-                    'is_read' => false,
-                    'type' => 'info',
-                    'icon' => 'bi-hourglass-split',
-                    'color' => '#17a2b8', // Info Blue
-                    'title' => 'Menunggu Review Desain',
-                    'message' => "Dokumen Evatek untuk item {$itemName} ({$revCode}) sedang direview oleh tim Desain.",
-                    'link' => $link,
-                    'date' => $latest->updated_at ?? $latest->created_at,
-                    'action_label' => 'Lihat Status',
-                    'category' => 'division'
-                ]);
-            }
-        }
+        // Semua stored notifications sudah di-handle di bagian stored notifications di atas
+        // Tidak perlu computed tasks untuk evatek lagi
 
         // Sort by date descending
         $notifications = $notifications->sortByDesc('date');
@@ -807,5 +917,46 @@ class VendorEvatekController extends Controller
             'success' => true,
             'is_starred' => $notif->is_starred
         ]);
+    }
+
+    /**
+     * Update evatek_status based on vendor and design link availability
+     * Mirrors logic from EvatekController::updateEvatekStatus
+     */
+    private function updateEvatekStatusForVendor(EvatekItem $evatek)
+    {
+        // If status is already final (approve/not_approve), evatek_status should be null
+        if ($evatek->status === 'approve' || $evatek->status === 'not_approve') {
+            $evatek->evatek_status = null;
+            $evatek->save();
+            return;
+        }
+
+        $latestRevision = $evatek->revisions()->latest('revision_id')->first();
+
+        if (!$latestRevision) {
+            $evatek->evatek_status = null;  // Default empty
+            $evatek->save();
+            return;
+        }
+
+        $hasVendorLink = !empty($latestRevision->vendor_link);
+        $hasDesignLink = !empty($latestRevision->design_link);
+
+        // If both are present, status is empty (all complete)
+        if ($hasVendorLink && $hasDesignLink) {
+            $evatek->evatek_status = null;
+        } elseif (!$hasVendorLink && $hasDesignLink) {
+            // Design link exists but vendor link is empty
+            $evatek->evatek_status = 'evatek-vendor';
+        } elseif ($hasVendorLink && !$hasDesignLink) {
+            // Vendor link exists but design link is empty
+            $evatek->evatek_status = 'evatek-desain';
+        } else {
+            // Both are empty → null (default)
+            $evatek->evatek_status = null;
+        }
+
+        $evatek->save();
     }
 }

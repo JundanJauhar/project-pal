@@ -110,7 +110,7 @@
 
 @section('content')
 
-<h1 class="fw-bold mb-5 text-center" >{{ $vendor->name_vendor }}</h1>
+<h1 class="fw-bold mb-5 text-center">{{ $vendor->name_vendor }}</h1>
 
 <h2 class="fw-bold mb-2">Evatek Vendor</h2>
 <div class="row">
@@ -263,7 +263,7 @@
                     @elseif(empty(trim($latestRevision->vendor_link ?? '')))
                     <span class="badge bg-warning text-dark">Evatek Vendor</span>
                     @else
-                    <span class="badge bg-info text-dark">Evatek Divisi</span>
+                    <span class="badge bg-info text-dark">Evatek Desain</span>
                     @endif
                 </td>
 
@@ -378,6 +378,7 @@
                 <th style="text-align: left;">Item</th>
                 <th style="text-align: left;">Project / Procurement</th>
                 <th style="text-align: center;">Status Evatek</th>
+                <th style="text-align: center;">Posisi</th>
                 <th style="text-align: center;">Catatan</th>
                 <th style="text-align: center;">Dibuat</th>
                 <th style="text-align: center;">Aksi</th>
@@ -428,6 +429,21 @@
                     <span class="status-desain {{ $statusClass }}">{{ $statusText }}</span>
                 </td>
 
+                {{-- Posisi --}}
+                <td style="padding: 12px 8px; text-align: center;">
+                    @php
+                    $latestRevision = $review->revisions->first();
+                    $reviewStatus = $latestRevision ? $latestRevision->result : null;
+                    @endphp
+                    @if(in_array($reviewStatus, ['approve', 'not_approve']))
+                    <span class="text-muted">-</span>
+                    @elseif(empty(trim($latestRevision->vendor_link ?? '')))
+                    <span class="badge bg-warning text-dark">Di Vendor</span>
+                    @else
+                    <span class="badge bg-info text-dark">Di Desain</span>
+                    @endif
+                </td>
+
                 {{-- Catatan --}}
                 <td style="padding: 12px 8px; text-align: left; font-size: 13px;">
                     {{ $review->remarks ?? '-' }}
@@ -448,7 +464,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="6" class="text-center py-5">
+                <td colspan="7" class="text-center py-5">
                     Belum ada review kontrak untuk saat ini.
                 </td>
             </tr>

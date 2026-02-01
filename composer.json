@@ -31,8 +31,10 @@
         },
         "files": [
             "app/Helpers/AuditLogger.php",
-            "app/Helpers/ActivityLogger.php"
+            "app/Helpers/ActivityLogger.php",
+            "app/Helpers/CurrencyConverter.php"
         ]
+        
     },
     "autoload-dev": {
         "psr-4": {

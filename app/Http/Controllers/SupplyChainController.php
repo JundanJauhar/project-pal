@@ -246,12 +246,15 @@ class SupplyChainController extends Controller
                 $vendorName = \App\Models\Vendor::find($vendorId)->name_vendor ?? 'Vendor';
 
                 foreach ($desainUsers as $user) {
+                    // 1. Create 'Lengkapi Dokumen' notification FIRST (appearing lower/older)
+
+                    // 2. Create 'Proses Evatek Dimulai' notification SECOND (appearing higher/newer)
                     Notification::create([
                         'user_id' => $user->user_id,
                         'sender_id' => Auth::id(),
                         'type' => 'info',
                         'title' => 'Proses Evatek Dimulai',
-                        'message' => "Proses Evatek dimulai untuk item '{$item->item_name}' dengan vendor {$vendorName}. Silakan cek.",
+                        'message' => "Proses Evatek dimulai untuk item '{$item->item_name}' dengan vendor {$vendorName}.Silahkan isi dokumen evatek.",
                         'action_url' => route('desain.review-evatek', $evatek->evatek_id),
                         'reference_type' => 'App\Models\EvatekItem',
                         'reference_id' => $evatek->evatek_id,
@@ -802,6 +805,26 @@ class SupplyChainController extends Controller
                 ]
             );
 
+            // ✅ Notify SCM Users: Menunggu Vendor
+            $contractReview->load('vendor', 'procurement.project');
+            $scmUsers = \App\Models\User::whereHas('division', function ($q) {
+                $q->where('division_name', 'LIKE', '%Supply Chain%');
+            })->get();
+
+            foreach ($scmUsers as $user) {
+                \App\Models\Notification::create([
+                    'user_id' => $user->user_id,
+                    'type' => 'info',
+                    'title' => 'Lengkapi Dokumen Kontrak',
+                    'message' => "Silakan lengkapi dokumen kontrak awal (R0) untuk {$contractReview->procurement->project->project_name} sebelum dikirim ke vendor.",
+                    'action_url' => route('supply-chain.contract-review.show', $contractReview->contract_review_id),
+                    'reference_type' => 'App\Models\ContractReview',
+                    'reference_id' => $contractReview->contract_review_id,
+                    'is_read' => false,
+                    'created_at' => now(),
+                ]);
+            }
+
             DB::commit();
 
             return redirect()->route('procurements.show', $procurementId)
@@ -868,6 +891,70 @@ class SupplyChainController extends Controller
 
             if (!empty($updateData)) {
                 $revision->update($updateData);
+
+                // ✅ Handle Notification Logic for SCM
+                if (isset($updateData['sc_link'])) {
+                    // Load related data
+                    $contractReview = $revision->contractReview;
+                    $contractReview->load('vendor', 'procurement.project');
+
+                    // 1. Delete "Lengkapi Dokumen Kontrak" (Done)
+                    \App\Models\Notification::whereIn('title', ['Lengkapi Dokumen Kontrak', 'Perlu Isi Link'])
+                        ->where('reference_type', 'App\Models\ContractReview')
+                        ->where('reference_id', $contractReview->contract_review_id)
+                        ->delete();
+
+                    // 2. Check State
+                    $isVendorFilled = !empty($revision->vendor_link);
+                    $scmUsers = \App\Models\User::whereHas('division', function ($q) {
+                        $q->where('division_name', 'LIKE', '%Supply Chain%');
+                    })->get();
+
+                    foreach ($scmUsers as $user) {
+                        if ($isVendorFilled) {
+                            // Both filled -> Review Needed
+                            // Check existence
+                            $exists = \App\Models\Notification::where('user_id', $user->user_id)
+                                ->where('title', 'Review Kontrak Diperlukan')
+                                ->where('message', 'LIKE', "%{$revision->revision_code}%")
+                                ->exists();
+
+                            if (!$exists) {
+                                \App\Models\Notification::create([
+                                    'user_id' => $user->user_id,
+                                    'type' => 'info',
+                                    'title' => 'Review Kontrak Diperlukan',
+                                    'message' => "Dokumen kontrak {$contractReview->procurement->project->project_name} ({$revision->revision_code}) lengkap. Silakan review.",
+                                    'action_url' => route('supply-chain.contract-review.show', $contractReview->contract_review_id),
+                                    'reference_type' => 'App\Models\ContractReview',
+                                    'reference_id' => $contractReview->contract_review_id,
+                                    'is_read' => false,
+                                    'created_at' => now(),
+                                ]);
+                            }
+                        } else {
+                            // Vendor Empty -> Wating Vendor
+                            $exists = \App\Models\Notification::where('user_id', $user->user_id)
+                                ->where('title', 'Menunggu Vendor')
+                                ->where('message', 'LIKE', "%{$revision->revision_code}%")
+                                ->exists();
+
+                            if (!$exists) {
+                                \App\Models\Notification::create([
+                                    'user_id' => $user->user_id,
+                                    'type' => 'info',
+                                    'title' => 'Menunggu Vendor',
+                                    'message' => "Menunggu Vendor {$contractReview->vendor->name_vendor} mengupload dokumen kontrak {$contractReview->procurement->project->project_name} ({$revision->revision_code}).",
+                                    'action_url' => route('supply-chain.contract-review.show', $contractReview->contract_review_id),
+                                    'reference_type' => 'App\Models\ContractReview',
+                                    'reference_id' => $contractReview->contract_review_id,
+                                    'is_read' => false,
+                                    'created_at' => now(),
+                                ]);
+                            }
+                        }
+                    }
+                }
             }
 
             return response()->json(['success' => true]);
@@ -926,6 +1013,38 @@ class SupplyChainController extends Controller
                 'status' => 'completed',
             ]);
 
+            // ✅ DELETE notifikasi "Menunggu Review SCM" untuk contract ini
+            \App\Models\VendorNotification::where('vendor_id', $contractReview->vendor_id)
+                ->where('title', 'Menunggu Review SCM')
+                ->where('link', route('vendor.contract-review.review', $contractReview->contract_review_id))
+                ->delete();
+
+            // ✅ DELETE stored notification "Review Kontrak Diperlukan" untuk SCM users
+            \App\Models\Notification::where('title', 'Review Kontrak Diperlukan')
+                ->where('action_url', route('supply-chain.contract-review.show', $contractReview->contract_review_id))
+                ->delete();
+
+            // ✅ Notify ALL SCM Users (History)
+            $contractReview->load('procurement.project');
+            $scmUsers = \App\Models\User::whereHas('division', function ($q) {
+                $q->where('division_name', 'LIKE', '%Supply Chain%');
+            })->get();
+
+            foreach ($scmUsers as $user) {
+                \App\Models\Notification::create([
+                    'user_id' => $user->user_id,
+                    'type' => 'success',
+                    'title' => 'Kontrak Disetujui',
+                    'message' => "Kontrak pengadaan '{$contractReview->procurement->project->project_name}' ({$revision->revision_code}) telah DISETUJUI.",
+                    'action_url' => route('supply-chain.contract-review.show', $contractReview->contract_review_id),
+                    'reference_type' => 'App\Models\ContractReview',
+                    'reference_id' => $contractReview->contract_review_id,
+                    'is_read' => false,
+                    'created_at' => now(),
+                ]);
+            }
+
+
             ActivityLogger::log(
                 module: 'Contract Review',
                 action: 'approve_revision',
@@ -967,6 +1086,38 @@ class SupplyChainController extends Controller
                 'result' => 'not_approve',
                 'status' => 'completed',
             ]);
+
+            // ✅ DELETE notifikasi "Menunggu Review SCM" untuk contract ini
+            \App\Models\VendorNotification::where('vendor_id', $contractReview->vendor_id)
+                ->where('title', 'Menunggu Review SCM')
+                ->where('link', route('vendor.contract-review.review', $contractReview->contract_review_id))
+                ->delete();
+
+            // ✅ DELETE stored notification "Review Kontrak Diperlukan" untuk SCM users
+            \App\Models\Notification::where('title', 'Review Kontrak Diperlukan')
+                ->where('action_url', route('supply-chain.contract-review.show', $contractReview->contract_review_id))
+                ->delete();
+
+            // ✅ Notify ALL SCM Users (History)
+            $contractReview->load('procurement.project');
+            $scmUsers = \App\Models\User::whereHas('division', function ($q) {
+                $q->where('division_name', 'LIKE', '%Supply Chain%');
+            })->get();
+
+            foreach ($scmUsers as $user) {
+                \App\Models\Notification::create([
+                    'user_id' => $user->user_id,
+                    'type' => 'danger',
+                    'title' => 'Kontrak Ditolak',
+                    'message' => "Kontrak pengadaan '{$contractReview->procurement->project->project_name}' ({$revision->revision_code}) DITOLAK.",
+                    'action_url' => route('supply-chain.contract-review.show', $contractReview->contract_review_id),
+                    'reference_type' => 'App\Models\ContractReview',
+                    'reference_id' => $contractReview->contract_review_id,
+                    'is_read' => false,
+                    'created_at' => now(),
+                ]);
+            }
+
 
             ActivityLogger::log(
                 module: 'Contract Review',
@@ -1025,12 +1176,42 @@ class SupplyChainController extends Controller
                 'status' => 'on_progress',
             ]);
 
+            // ✅ DELETE stored notification lama untuk SCM users dan vendor
+            \App\Models\Notification::whereIn('title', ['Review Kontrak Diperlukan'])
+                ->where('action_url', route('supply-chain.contract-review.show', $contractReview->contract_review_id))
+                ->delete();
+
+            \App\Models\VendorNotification::where('vendor_id', $contractReview->vendor_id)
+                ->whereIn('title', ['Menunggu Review SCM', 'Kontrak Disetujui', 'Kontrak Ditolak'])
+                ->where('link', route('vendor.contract-review.review', $contractReview->contract_review_id))
+                ->delete();
+
             ActivityLogger::log(
                 module: 'Contract Review',
                 action: 'create_revision',
                 targetId: $contractReview->contract_review_id,
                 details: ['new_revision' => $newRevisionCode, 'user_id' => Auth::id()]
             );
+
+            // ✅ Notify SCM Users: Menunggu Vendor
+            $contractReview->load('vendor', 'procurement.project');
+            $scmUsers = \App\Models\User::whereHas('division', function ($q) {
+                $q->where('division_name', 'LIKE', '%Supply Chain%');
+            })->get();
+
+            foreach ($scmUsers as $user) {
+                \App\Models\Notification::create([
+                    'user_id' => $user->user_id,
+                    'type' => 'info',
+                    'title' => 'Lengkapi Dokumen Kontrak',
+                    'message' => "Silakan lengkapi dokumen revisi kontrak {$contractReview->procurement->project->project_name} ({$newRevisionCode}).",
+                    'action_url' => route('supply-chain.contract-review.show', $contractReview->contract_review_id),
+                    'reference_type' => 'App\Models\ContractReview',
+                    'reference_id' => $contractReview->contract_review_id,
+                    'is_read' => false,
+                    'created_at' => now(),
+                ]);
+            }
 
             DB::commit();
 
