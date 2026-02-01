@@ -24,57 +24,37 @@ class LoginController extends Controller
      */
     public function authenticate(Request $request)
     {
-        /*
-        |----------------------------------------------------------------------
-        | 1. VALIDASI INPUT DASAR
-        |----------------------------------------------------------------------
-        */
-        $credentials = $request->validate([
-            'email'    => 'required|string',
+        // 1. VALIDASI INPUT
+        $request->validate([
+            'login'    => 'required|string',
             'password' => 'required|string',
             'captcha'  => 'required|string',
         ]);
 
-        /*
-        |----------------------------------------------------------------------
-        | 2. VALIDASI CAPTCHA (ON-PREMISE + EXPIRED)
-        |----------------------------------------------------------------------
-        */
+        $loginInput = trim($request->login);
+
+        // 2. VALIDASI CAPTCHA
         $captcha = Session::get('captcha');
 
-        // Captcha tidak ada di session
-        if (!$captcha) {
-            throw ValidationException::withMessages([
-                'captcha' => 'Captcha telah kedaluwarsa. Silakan ulangi.',
-            ]);
-        }
-
-        // Captcha expired (lebih dari 20 detik)
-        if (now()->timestamp > $captcha['expires_at']) {
+        if (!$captcha || now()->timestamp > $captcha['expires_at']) {
             Session::forget('captcha');
-
             throw ValidationException::withMessages([
                 'captcha' => 'Captcha telah kedaluwarsa. Silakan ulangi.',
             ]);
         }
 
-        // Captcha tidak cocok
         if (strtoupper($request->captcha) !== $captcha['code']) {
             throw ValidationException::withMessages([
                 'captcha' => 'Captcha tidak sesuai.',
             ]);
         }
 
-        /*
-        |----------------------------------------------------------------------
-        | 3. LOGIN VENDOR
-        |----------------------------------------------------------------------
-        */
-        if (str_ends_with(strtolower($credentials['email']), '@vendor.com')) {
+        // 3. LOGIN VENDOR (EMAIL KHUSUS)
+        if (str_ends_with($loginInput, '@vendor.com')) {
 
             if (Auth::guard('vendor')->attempt([
-                'user_vendor' => $credentials['email'],
-                'password'    => $credentials['password'],
+                'user_vendor' => $loginInput,
+                'password'    => $request->password,
             ], $request->boolean('remember'))) {
 
                 $request->session()->regenerate();
@@ -84,58 +64,63 @@ class LoginController extends Controller
             }
 
             throw ValidationException::withMessages([
-                'email' => 'Email login atau password vendor salah.',
+                'login' => 'Email atau password vendor salah.',
             ]);
         }
 
         /*
-        |----------------------------------------------------------------------
+        |--------------------------------------------------------------------------
         | 4. LOGIN USER INTERNAL
-        |----------------------------------------------------------------------
+        |    - EMAIL
+        |    - NAME 
+        |--------------------------------------------------------------------------
         */
+        // Cek EMAIL
+        $user = User::whereRaw('BINARY email = ?', [$loginInput])
+            ->where('status', 'active')
+            ->first();
+
+        // NAME (HARUS SAMA PERSIS)
+        if (!$user) {
+            $user = User::whereRaw('BINARY name = ?', [$loginInput])
+                ->where('status', 'active')
+                ->first();
+        }
+
+        if (!$user) {
+            throw ValidationException::withMessages([
+                'login' => 'Username atau email tidak ditemukan.',
+            ]);
+        }
+
+        // Auth pakai EMAIL (standar Laravel)
         if (Auth::attempt([
-            'email'    => $credentials['email'],
-            'password' => $credentials['password'],
+            'email'    => $user->email,
+            'password' => $request->password,
         ], $request->boolean('remember'))) {
 
             $request->session()->regenerate();
             Session::forget('captcha');
 
-            /**
-             * ==========================================================
-             * ✅ TAMBAHAN WAJIB: UPDATE LAST LOGIN
-             * ==========================================================
-             */
             Auth::user()->update([
                 'last_login_at' => now(),
             ]);
-            /**
-             * ==========================================================
-             */
 
             $user = Auth::user()->loadAuthContext();
-            if ($user && $user->hasRole('superadmin')) {
+
+            if ($user->hasRole('superadmin') || $user->hasRole('admin')) {
                 return redirect()->route('ums.users.index');
             }
 
-            if ($user && $user->hasRole('admin')) {
-                return redirect()->route('ums.users.index');
-            }
-
-            if ($user && $user->hasRole('sekdir')) {
+            if ($user->hasRole('sekdir')) {
                 return redirect()->route('sekdir.dashboard');
             }
 
             return redirect()->route('dashboard');
         }
 
-        /*
-        |----------------------------------------------------------------------
-        | 5. LOGIN GAGAL
-        |----------------------------------------------------------------------
-        */
         throw ValidationException::withMessages([
-            'email' => 'Email atau password salah.',
+            'login' => 'Password salah.',
         ]);
     }
 

@@ -9,9 +9,9 @@ use App\Http\Controllers\UMS\SessionMonitoringController;
 use App\Http\Controllers\UMS\SystemSettingController;
 use App\Http\Controllers\UMS\AdminScopeController;
 use App\Http\Controllers\UMS\DivisionManagementController;
-use App\Http\Controllers\UMS\DashboardController; 
+use App\Http\Controllers\UMS\DashboardController;
 use App\Http\Controllers\UMS\ProcurementManagementController;
-
+use App\Http\Controllers\UMS\ProjectManagementController;
 
 Route::prefix('ums')
     ->middleware(['auth'])
@@ -20,7 +20,7 @@ Route::prefix('ums')
 
         /*
         |--------------------------------------------------------------------------
-        | HEALTH CHECK (OPTIONAL)
+        | HEALTH CHECK
         |--------------------------------------------------------------------------
         */
         Route::get('divisions-test', function () {
@@ -29,7 +29,7 @@ Route::prefix('ums')
 
         /*
         |--------------------------------------------------------------------------
-        | DEFAULT UMS DASHBOARD (FIXED)
+        | DASHBOARD
         |--------------------------------------------------------------------------
         */
         Route::get('/', [DashboardController::class, 'index'])
@@ -51,7 +51,6 @@ Route::prefix('ums')
                 'destroy' => 'users.destroy',
             ]);
 
-        // Toggle active / inactive
         Route::post(
             'users/{user}/toggle-status',
             [UsersController::class, 'toggleStatus']
@@ -73,38 +72,72 @@ Route::prefix('ums')
         |--------------------------------------------------------------------------
         */
         Route::prefix('divisions')->name('divisions.')->group(function () {
-        Route::get('/', [DivisionManagementController::class, 'index'])->name('index');
-        Route::post('/', [DivisionManagementController::class, 'store'])->name('store');
 
-        // Edit division (LOCKED)
-        Route::put('/{id}', [DivisionManagementController::class, 'update'])->name('update');
+            Route::get('/', [DivisionManagementController::class, 'index'])
+                ->name('index');
 
-        Route::delete('/{id}', [DivisionManagementController::class, 'destroy'])->name('destroy');
+            Route::post('/', [DivisionManagementController::class, 'store'])
+                ->name('store');
 
-        // Roles Management
-        Route::post('/{division}/roles', [DivisionManagementController::class, 'addRole'])
-            ->name('roles.store');
+            Route::put('/{id}', [DivisionManagementController::class, 'update'])
+                ->name('update');
 
-        Route::delete('/roles/{role}', [DivisionManagementController::class, 'deleteRole'])
-            ->name('roles.destroy');
-    });
+            Route::delete('/{id}', [DivisionManagementController::class, 'destroy'])
+                ->name('destroy');
 
-    Route::prefix('procurement')->name('procurement.')->group(function () {
-    Route::get('/', [ProcurementManagementController::class, 'index'])
-        ->name('index');
+            // Roles
+            Route::post('/{division}/roles', [DivisionManagementController::class, 'addRole'])
+                ->name('roles.store');
 
-    Route::delete('/{id}', [ProcurementManagementController::class, 'destroy'])
-        ->name('destroy');
-});
+            Route::delete('/roles/{role}', [DivisionManagementController::class, 'deleteRole'])
+                ->name('roles.destroy');
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | PROJECT MANAGEMENT (NEW - MAIN PAGE)
+        |--------------------------------------------------------------------------
+        */
+        Route::prefix('projects')->name('project.')->group(function () {
+
+            Route::get('/', [ProjectManagementController::class, 'index'])
+                ->name('index');
+
+            Route::post('/', [ProjectManagementController::class, 'store'])
+                ->name('store');
+
+            Route::delete('/{id}', [ProjectManagementController::class, 'destroy'])
+                ->name('destroy');
+
+            Route::get('/{projectId}/procurements',
+                [ProcurementManagementController::class, 'byProject']
+            )->name('procurements');
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | PROCUREMENT (LEGACY / OPTIONAL GLOBAL LIST)
+        |--------------------------------------------------------------------------
+        | Bisa dipertahankan atau nanti di-hide dari sidebar
+        */
+        Route::prefix('procurement')->name('procurement.')->group(function () {
+
+            // Global procurement list (optional)
+            Route::get('/', [ProcurementManagementController::class, 'index'])
+                ->name('index');
+
+            // Delete procurement
+            Route::delete('/{id}', [ProcurementManagementController::class, 'destroy'])
+                ->name('destroy');
+        });
+
         /*
         |--------------------------------------------------------------------------
         | SESSION MONITORING
         |--------------------------------------------------------------------------
         */
-        Route::get(
-            'sessions',
-            [SessionMonitoringController::class, 'index']
-        )->name('sessions.index');
+        Route::get('sessions', [SessionMonitoringController::class, 'index'])
+            ->name('sessions.index');
 
         Route::post(
             'sessions/{sessionId}/force-logout',
@@ -121,15 +154,11 @@ Route::prefix('ums')
         | SYSTEM SETTINGS
         |--------------------------------------------------------------------------
         */
-        Route::get(
-            'settings',
-            [SystemSettingController::class, 'index']
-        )->name('settings.index');
+        Route::get('settings', [SystemSettingController::class, 'index'])
+            ->name('settings.index');
 
-        Route::post(
-            'settings',
-            [SystemSettingController::class, 'update']
-        )->name('settings.update');
+        Route::post('settings', [SystemSettingController::class, 'update'])
+            ->name('settings.update');
 
         /*
         |--------------------------------------------------------------------------
@@ -152,29 +181,21 @@ Route::prefix('ums')
         | AUDIT LOGS
         |--------------------------------------------------------------------------
         */
-        Route::get(
-            'audit-logs',
-            [AuditLogController::class, 'index']
-        )->name('audit_logs.index');
+        Route::get('audit-logs', [AuditLogController::class, 'index'])
+            ->name('audit_logs.index');
 
-        Route::get(
-            'audit-logs/{id}',
-            [AuditLogController::class, 'show']
-        )->name('audit_logs.show');
+        Route::get('audit-logs/{id}', [AuditLogController::class, 'show'])
+            ->name('audit_logs.show');
 
         /*
         |--------------------------------------------------------------------------
         | ACTIVITY LOGS
         |--------------------------------------------------------------------------
         */
-        Route::get(
-            'activity-logs',
-            [ActivityLogController::class, 'index']
-        )->name('activity_logs.index');
+        Route::get('activity-logs', [ActivityLogController::class, 'index'])
+            ->name('activity_logs.index');
 
-        Route::get(
-            'activity-logs/{id}',
-            [ActivityLogController::class, 'show']
-        )->name('activity_logs.show');
+        Route::get('activity-logs/{id}', [ActivityLogController::class, 'show'])
+            ->name('activity_logs.show');
 
     });
