@@ -312,28 +312,15 @@ class EvatekController extends Controller
 
         if ($procurement && $procurement->evatekItems()->count() > 0) {
             $allEvatek = $procurement->evatekItems()->with('latestRevision')->get();
-            $allItemIds = $allEvatek->pluck('item_id')->unique();
 
-            // Get items where the latest revision has 'approve' status
-            $itemIdsWithApproved = $allEvatek
-                ->filter(fn($e) => $e->latestRevision && $e->latestRevision->status === 'approve')
-                ->pluck('item_id')
-                ->unique();
+            // ✅ Check if ALL evatek items have 'approve' status in their latest revision
+            $allApproved = $allEvatek->every(function ($evatekItem) {
+                return $evatekItem->latestRevision
+                    && $evatekItem->latestRevision->status === 'approve';
+            });
 
-            $missingItems = $allItemIds->diff($itemIdsWithApproved);
-
-            if ($missingItems->isEmpty()) {
-                // Double Check: Ensure ALL items in the procurement have an Evatek entry
-                // Count total unique items in this procurement
-                $procurementItemsCount = $procurement->items()->count();
-
-                // If evatek item count < total items, not all items have started evatek yet
-                if ($allItemIds->count() < $procurementItemsCount) {
-                    // Not all items have Evatek started yet.
-                    // Do nothing, wait for other items to be created and approved.
-                    return response()->json(['success' => true]);
-                }
-
+            if ($allApproved) {
+                // ✅ All evatek items are approved - send notifications and transition checkpoint
 
                 $service = new \App\Services\CheckpointTransitionService($procurement);
                 $service->completeCurrentAndMoveNext("Semua item sudah punya vendor approve di Evatek");

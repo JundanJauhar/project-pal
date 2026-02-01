@@ -804,9 +804,6 @@ class SupplyChainController extends Controller
                     'user_id' => Auth::id(),
                 ]
             );
-
-            // ✅ Notify SCM Users: Menunggu Vendor
-            $contractReview->load('vendor', 'procurement.project');
             $scmUsers = \App\Models\User::whereHas('division', function ($q) {
                 $q->where('division_name', 'LIKE', '%Supply Chain%');
             })->get();
@@ -1030,18 +1027,32 @@ class SupplyChainController extends Controller
                 $q->where('division_name', 'LIKE', '%Supply Chain%');
             })->get();
 
-            foreach ($scmUsers as $user) {
-                \App\Models\Notification::create([
-                    'user_id' => $user->user_id,
-                    'type' => 'success',
-                    'title' => 'Kontrak Disetujui',
-                    'message' => "Kontrak pengadaan '{$contractReview->procurement->project->project_name}' ({$revision->revision_code}) telah DISETUJUI.",
-                    'action_url' => route('supply-chain.contract-review.show', $contractReview->contract_review_id),
-                    'reference_type' => 'App\Models\ContractReview',
-                    'reference_id' => $contractReview->contract_review_id,
-                    'is_read' => false,
-                    'created_at' => now(),
-                ]);
+            // ✅ Check if ALL contract reviews for this procurement are approved
+            $procurement = $contractReview->procurement;
+            if ($procurement && $procurement->contractReviews()->count() > 0) {
+                $allContractReviews = $procurement->contractReviews()->with('revisions')->get();
+
+                // Check if ALL contract reviews have 'approve' result
+                $allApproved = $allContractReviews->every(function ($review) {
+                    $latestRevision = $review->revisions()->latest('contract_review_revision_id')->first();
+                    return $latestRevision && $latestRevision->result === 'approve';
+                });
+                
+                if ($allApproved) {
+                    // Notify Supply Chain Division (completion notification)
+                    foreach ($scmUsers as $user) {
+                        \App\Models\Notification::create([
+                            'user_id' => $user->user_id,
+                            'type' => 'success',
+                            'title' => 'Review Kontrak Selesai',
+                            'message' => "Seluruh review kontrak pada pengadaan '{$procurement->procurement_name}' telah selesai.",
+                            'action_url' => route('procurements.show', $procurement->procurement_id),
+                            'reference_type' => 'App\Models\Procurement',
+                            'reference_id' => $procurement->procurement_id,
+                            'is_read' => false,
+                        ]);
+                    }
+                }
             }
 
 
