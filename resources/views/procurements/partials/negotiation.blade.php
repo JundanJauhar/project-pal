@@ -274,6 +274,10 @@
                                 name="hps"
                                 id="hpsRaw{{ $neg->negotiation_id }}"
                                 value="{{ $neg->hps ?? '' }}">
+                            <input type="hidden"
+                                name="currency_hps"
+                                id="currencyEditHps{{ $neg->negotiation_id }}"
+                                value="{{ $neg->currency_hps ?? 'IDR' }}">
                         </div>
                     </div>
 
@@ -303,6 +307,10 @@
                                 name="budget"
                                 id="budgetRaw{{ $neg->negotiation_id }}"
                                 value="{{ $neg->budget ?? '' }}">
+                            <input type="hidden"
+                                name="currency_budget"
+                                id="currencyEditBudget{{ $neg->negotiation_id }}"
+                                value="{{ $neg->currency_budget ?? 'IDR' }}">
                         </div>
                     </div>
 
@@ -332,6 +340,10 @@
                                 name="harga_final"
                                 id="hargaFinalRaw{{ $neg->negotiation_id }}"
                                 value="{{ $neg->harga_final ?? '' }}">
+                            <input type="hidden"
+                                name="currency_harga_final"
+                                id="currencyEditHargaFinal{{ $neg->negotiation_id }}"
+                                value="{{ $neg->currency_harga_final ?? 'IDR' }}">
                         </div>
                     </div>
 
@@ -451,6 +463,10 @@
                             <input type="hidden"
                                 name="hps"
                                 id="hpsRawCreate">
+                            <input type="hidden"
+                                name="currency_hps"
+                                id="currencyCreateHps"
+                                value="IDR">
                         </div>
                     </div>
 
@@ -479,6 +495,10 @@
                             <input type="hidden"
                                 name="budget"
                                 id="budgetRawCreate">
+                            <input type="hidden"
+                                name="currency_budget"
+                                id="currencyCreateBudget"
+                                value="IDR">
                         </div>
                     </div>
 
@@ -507,6 +527,10 @@
                             <input type="hidden"
                                 name="harga_final"
                                 id="hargaFinalRawCreate">
+                            <input type="hidden"
+                                name="currency_harga_final"
+                                id="currencyCreateHargaFinal"
+                                value="IDR">
                         </div>
                     </div>
 

@@ -1,5 +1,42 @@
+@if($procurement->use_evatek)
 <div id="evatek">
-    <h5 class="section-title">Evatek</h5>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="section-title mb-0">Evatek</h5>
+
+        @if(!$isAfterEvatek)
+        {{-- TOGGLE EVATEK --}}
+        <form action="{{ route('procurements.toggle-evatek', $procurement->procurement_id) }}"
+            method="POST"
+            class="d-flex align-items-center gap-2">
+            @csrf
+
+            <span class="fw-semibold" style="font-size: 13px;">Gunakan Evatek</span>
+
+            <div class="form-check form-switch mb-0">
+                <input type="hidden" name="use_evatek" value="0">
+
+                <input class="form-check-input"
+                    type="checkbox"
+                    name="use_evatek"
+                    value="1"
+                    onchange="this.form.submit()"
+                    {{ $procurement->use_evatek ? 'checked' : '' }}
+                    {{ !$canToggleEvatek ? 'disabled' : '' }}>
+            </div>
+
+            <span class="badge {{ $procurement->use_evatek ? 'bg-success' : 'bg-secondary' }}">
+                {{ $procurement->use_evatek ? 'EVATEK AKTIF' : 'EVATEK NONAKTIF' }}
+            </span>
+
+            @if(!$canToggleEvatek)
+            <span class="badge bg-warning">
+                <i class="bi bi-lock"></i> TERKUNCI
+            </span>
+            @endif
+        </form>
+        @endif
+    </div>
 
     {{-- Alert Error --}}
     @if ($errors->any())
@@ -11,6 +48,14 @@
         </ul>
     </div>
     @endif
+
+    @if(!$isAfterEvatek && !$canToggleEvatek)
+    <div class="alert alert-warning">
+        <strong>Evatek terkunci.</strong>
+        Toggle tidak dapat diubah karena sudah melewati tahap Evatek.
+    </div>
+    @endif
+
 
     <div class="dashboard-table-wrapper">
         <div class="table-responsive">
@@ -36,24 +81,24 @@
                     @php
                     // Hitung kondisi terlebih dahulu
                     $evatekVendors = collect($inquiryQuotations ?? [])
-                        ->map(fn ($iq) => $iq->vendor)
-                        ->filter()
-                        ->unique('id_vendor')
-                        ->values();
+                    ->map(fn ($iq) => $iq->vendor)
+                    ->filter()
+                    ->unique('id_vendor')
+                    ->values();
 
                     $allItems = collect();
                     foreach ($procurement->requestProcurements as $request) {
-                        foreach ($request->items as $item) {
-                            $allItems->push([
-                                'item' => $item,
-                                'request' => $request,
-                            ]);
-                        }
+                    foreach ($request->items as $item) {
+                    $allItems->push([
+                    'item' => $item,
+                    'request' => $request,
+                    ]);
+                    }
                     }
 
                     $evatekItemIds = $evatekItems->pluck('item_id')->toArray();
-                    $uncompletedItems = $allItems->filter(fn ($itemData) => 
-                        !in_array($itemData['item']->item_id, $evatekItemIds)
+                    $uncompletedItems = $allItems->filter(fn ($itemData) =>
+                    !in_array($itemData['item']->item_id, $evatekItemIds)
                     )->values();
 
                     $totalItems = $allItems->count();
@@ -63,162 +108,162 @@
 
                     {{-- ✅ TAMPILKAN EVATEK ITEMS YANG SUDAH ADA --}}
                     @if($evatekCount > 0)
-                        @foreach($evatekItems as $evatek)
-                        @php
-                        $item = $evatek->item;
-                        $latestRevision = $evatek->revisions?->first();
-                        @endphp
-                        <tr>
-                            {{-- No --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                {{ $loop->iteration }}
-                            </td>
+                    @foreach($evatekItems as $evatek)
+                    @php
+                    $item = $evatek->item;
+                    $latestRevision = $evatek->revisions?->first();
+                    @endphp
+                    <tr>
+                        {{-- No --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            {{ $loop->iteration }}
+                        </td>
 
-                            {{-- Nama Item --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                {{ $item->item_name }}
-                            </td>
+                        {{-- Nama Item --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            {{ $item->item_name }}
+                        </td>
 
-                            {{-- Vendor --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                {{ $evatek->vendor->name_vendor ?? '-' }}
-                            </td>
+                        {{-- Vendor --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            {{ $evatek->vendor->name_vendor ?? '-' }}
+                        </td>
 
-                            {{-- PIC Evatek --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                @if($evatek->pic_evatek)
-                                    <span style="padding: 4px 8px; border-radius: 4px; background: #E3F2FD; color: #1976D2; font-weight: 600; font-size: 12px;">
-                                        {{ $evatek->pic_evatek }}
-                                    </span>
-                                @else
-                                    <span style="color: #999;">-</span>
-                                @endif
-                            </td>
+                        {{-- PIC Evatek --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            @if($evatek->pic_evatek)
+                            <span style="padding: 4px 8px; border-radius: 4px; background: #E3F2FD; color: #1976D2; font-weight: 600; font-size: 12px;">
+                                {{ $evatek->pic_evatek }}
+                            </span>
+                            @else
+                            <span style="color: #999;">-</span>
+                            @endif
+                        </td>
 
-                            {{-- Tanggal Start --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                {{ $evatek->start_date->format('d/m/Y') }}
-                            </td>
+                        {{-- Tanggal Start --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            {{ $evatek->start_date->format('d/m/Y') }}
+                        </td>
 
-                            {{-- Tanggal Target --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                {{ $evatek->target_date?->format('d/m/Y') ?? '-' }}
-                            </td>
+                        {{-- Tanggal Target --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            {{ $evatek->target_date?->format('d/m/Y') ?? '-' }}
+                        </td>
 
-                            {{-- Revision --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                <span style="padding: 4px 12px; border-radius: 4px; background: #F5F5F5; font-weight: 600;">
-                                    {{ $evatek->current_revision }}
-                                </span>
-                            </td>
+                        {{-- Revision --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            <span style="padding: 4px 12px; border-radius: 4px; background: #F5F5F5; font-weight: 600;">
+                                {{ $evatek->current_revision }}
+                            </span>
+                        </td>
 
-                            {{-- Status (Approval Status) --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                @php
-                                $statusColors = [
-                                    'on_progress' => ['text' => '#ECAD02', 'label' => 'On Progress'],
-                                    'approve' => ['text' => '#28AC00', 'label' => 'Approved'],
-                                    'not_approve' => ['text' => '#F10303', 'label' => 'Rejected'],
-                                ];
-                                $statusConfig = $statusColors[$evatek->status] ?? ['text' => '#383d41', 'label' => ucfirst($evatek->status)];
-                                @endphp
-                                <span style="color: {{ $statusConfig['text'] }}; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 14px;">
-                                    {{ $statusConfig['label'] }}
-                                </span>
-                            </td>
+                        {{-- Status (Approval Status) --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            @php
+                            $statusColors = [
+                            'on_progress' => ['text' => '#ECAD02', 'label' => 'On Progress'],
+                            'approve' => ['text' => '#28AC00', 'label' => 'Approved'],
+                            'not_approve' => ['text' => '#F10303', 'label' => 'Rejected'],
+                            ];
+                            $statusConfig = $statusColors[$evatek->status] ?? ['text' => '#383d41', 'label' => ucfirst($evatek->status)];
+                            @endphp
+                            <span style="color: {{ $statusConfig['text'] }}; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 14px;">
+                                {{ $statusConfig['label'] }}
+                            </span>
+                        </td>
 
-                            {{-- Evatek Status (Link Input Tracking) --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                @if($evatek->evatek_status)
-                                    @php
-                                    $evatekStatusColors = [
-                                        'evatek-vendor' => ['text' => '#FF9800', 'label' => 'evatek-vendor'],
-                                        'evatek-desain' => ['text' => '#2196F3', 'label' => 'evatek-desain'],
-                                    ];
-                                    $evatekStatusConfig = $evatekStatusColors[$evatek->evatek_status] ?? ['text' => '#999', 'label' => 'Unknown'];
-                                    @endphp
-                                    <span style="color: {{ $evatekStatusConfig['text'] }}; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 13px; display: inline-block;">
-                                        ● {{ $evatekStatusConfig['label'] }}
-                                    </span>
-                                @else
-                                    <span style="color: #999;">-</span>
-                                @endif
-                            </td>
+                        {{-- Evatek Status (Link Input Tracking) --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            @if($evatek->evatek_status)
+                            @php
+                            $evatekStatusColors = [
+                            'evatek-vendor' => ['text' => '#FF9800', 'label' => 'evatek-vendor'],
+                            'evatek-desain' => ['text' => '#2196F3', 'label' => 'evatek-desain'],
+                            ];
+                            $evatekStatusConfig = $evatekStatusColors[$evatek->evatek_status] ?? ['text' => '#999', 'label' => 'Unknown'];
+                            @endphp
+                            <span style="color: {{ $evatekStatusConfig['text'] }}; padding: 6px 12px; border-radius: 4px; font-weight: 600; font-size: 13px; display: inline-block;">
+                                ● {{ $evatekStatusConfig['label'] }}
+                            </span>
+                            @else
+                            <span style="color: #999;">-</span>
+                            @endif
+                        </td>
 
-                            {{-- Link SC Design --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                @if($evatek->sc_design_link)
-                                    <a href="{{ $evatek->sc_design_link }}" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600;">Link</a>
-                                @else
-                                    <span style="color: #999;">-</span>
-                                @endif
-                            </td>
+                        {{-- Link SC Design --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            @if($evatek->sc_design_link)
+                            <a href="{{ $evatek->sc_design_link }}" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600;">Link</a>
+                            @else
+                            <span style="color: #999;">-</span>
+                            @endif
+                        </td>
 
-                            {{-- Aksi --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                <a href="{{ route('desain.review-evatek', $evatek->evatek_id) }}"
-                                    class="btn btn-sm btn-action-review">
-                                    Review
-                                </a>
-                            </td>
-                        </tr>
-                        @endforeach
+                        {{-- Aksi --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            <a href="{{ route('desain.review-evatek', $evatek->evatek_id) }}"
+                                class="btn btn-sm btn-action-review">
+                                Review
+                            </a>
+                        </td>
+                    </tr>
+                    @endforeach
                     @endif
 
                     {{-- ✅ TAMPILKAN ROW CREATE UNTUK ITEMS YANG BELUM PUNYA EVATEK --}}
                     @if($uncompleteCount > 0)
-                        @foreach($uncompletedItems as $itemData)
-                        @php
-                        $item = $itemData['item'];
-                        $request = $itemData['request'];
-                        $rowNum = $evatekCount + $loop->iteration;
-                        @endphp
-                        <tr>
-                            {{-- No --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $rowNum }}</td>
+                    @foreach($uncompletedItems as $itemData)
+                    @php
+                    $item = $itemData['item'];
+                    $request = $itemData['request'];
+                    $rowNum = $evatekCount + $loop->iteration;
+                    @endphp
+                    <tr>
+                        {{-- No --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $rowNum }}</td>
 
-                            {{-- Nama Item --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                {{ $item->item_name }}
-                            </td>
+                        {{-- Nama Item --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            {{ $item->item_name }}
+                        </td>
 
-                            {{-- Vendor --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                {{ $request->vendor->name_vendor ?? '-' }}
-                            </td>
+                        {{-- Vendor --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            {{ $request->vendor->name_vendor ?? '-' }}
+                        </td>
 
-                            {{-- PIC (Kosong) --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
+                        {{-- PIC (Kosong) --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
 
-                            {{-- Tanggal Start --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
+                        {{-- Tanggal Start --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
 
-                            {{-- Tanggal Target --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
+                        {{-- Tanggal Target --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
 
-                            {{-- Revision --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
+                        {{-- Revision --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
 
-                            {{-- Status --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
+                        {{-- Status --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
 
-                            {{-- Evatek Status --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
+                        {{-- Evatek Status --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
 
-                            {{-- Link SC Design --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
+                        {{-- Link SC Design --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
 
-                            {{-- Aksi --}}
-                            <td style="padding: 12px 8px; text-align: center; color: #000;">
-                                <button type="button"
-                                    class="btn btn-sm btn-action-create"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#modalCreateEvatek{{ $item->item_id }}">
-                                    Create
-                                </button>
-                            </td>
-                        </tr>
-                        @endforeach
+                        {{-- Aksi --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            <button type="button"
+                                class="btn btn-sm btn-action-create"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalCreateEvatek{{ $item->item_id }}">
+                                Create
+                            </button>
+                        </td>
+                    </tr>
+                    @endforeach
                     @endif
 
                     {{-- ✅ EMPTY STATE --}}
@@ -238,106 +283,107 @@
 {{-- ============================================ --}}
 {{-- MODAL CREATE EVATEK (LUAR TABLE) --}}
 {{-- ============================================ --}}
-@if($uncompleteCount > 0)
-    @foreach($uncompletedItems as $itemData)
-    @php
-    $item = $itemData['item'];
-    $request = $itemData['request'];
-    @endphp
+@if(!$isAfterEvatek && $uncompleteCount > 0)
+@foreach($uncompletedItems as $itemData)
+@php
+$item = $itemData['item'];
+$request = $itemData['request'];
+@endphp
 
-    <div class="modal fade" id="modalCreateEvatek{{ $item->item_id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Input Evatek - {{ $item->item_name }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal fade" id="modalCreateEvatek{{ $item->item_id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Input Evatek - {{ $item->item_name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="POST" action="{{ route('supply-chain.evatek-item.store', $procurement->procurement_id) }}">
+                @csrf
+                <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
+                <input type="hidden" name="item_id" value="{{ $item->item_id }}">
+
+                <div class="modal-body">
+                    {{-- PIC Evatek Selection --}}
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight: 600; font-size: 14px;">Pilih PIC *</label>
+                        <select name="pic_evatek"
+                            class="form-select"
+                            required
+                            style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                            <option value="">-- Pilih PIC --</option>
+                            <option value="EO">Engineering Officer (EO)</option>
+                            <option value="HC">Head of Construction (HC)</option>
+                            <option value="MO">Material Officer (MO)</option>
+                            <option value="HO">Head of Operations (HO)</option>
+                            <option value="SEWACO">SEWACO</option>
+                        </select>
+                    </div>
+
+                    {{-- Tanggal Target Input --}}
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight: 600; font-size: 14px;">Tanggal Target *</label>
+                        <input type="date"
+                            name="target_date"
+                            class="form-control"
+                            value="{{ $procurement->end_date->format('Y-m-d') }}"
+                            min="{{ now()->toDateString() }}"
+                            required
+                            style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                        <small style="color: #666;">Default: Tanggal target procurement</small>
+                    </div>
+
+                    {{-- Vendor Selection --}}
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                            Pilih Vendor *
+                        </label>
+
+                        <select name="vendor_ids[]"
+                            class="form-select"
+                            multiple
+                            size="4"
+                            required
+                            style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+
+                            @if($evatekVendors->count() > 0)
+                            @foreach($evatekVendors as $vendor)
+                            <option value="{{ $vendor->id_vendor }}">
+                                {{ $vendor->name_vendor }}
+                            </option>
+                            @endforeach
+                            @else
+                            <option disabled>
+                                Tidak ada vendor dari Inquiry & Quotation
+                            </option>
+                            @endif
+                        </select>
+
+                        <small style="color: #666;">
+                            Vendor berasal dari Inquiry & Quotation yang sudah dibuat
+                        </small>
+                    </div>
+
+                    {{-- SC Design Link --}}
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight: 600; font-size: 14px;">Link SC Design</label>
+                        <input type="url"
+                            name="sc_design_link"
+                            class="form-control"
+                            placeholder="https://example.com/design"
+                            style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                        <small style="color: #666;">Opsional - URL dokumen desain dari divisi SC</small>
+                    </div>
                 </div>
 
-                <form method="POST" action="{{ route('supply-chain.evatek-item.store', $procurement->procurement_id) }}">
-                    @csrf
-                    <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
-                    <input type="hidden" name="item_id" value="{{ $item->item_id }}">
-
-                    <div class="modal-body">
-                        {{-- PIC Evatek Selection --}}
-                        <div class="mb-3">
-                            <label class="form-label" style="font-weight: 600; font-size: 14px;">Pilih PIC *</label>
-                            <select name="pic_evatek"
-                                class="form-select"
-                                required
-                                style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                                <option value="">-- Pilih PIC --</option>
-                                <option value="EO">Engineering Officer (EO)</option>
-                                <option value="HC">Head of Construction (HC)</option>
-                                <option value="MO">Material Officer (MO)</option>
-                                <option value="HO">Head of Operations (HO)</option>
-                                <option value="SEWACO">SEWACO</option>
-                            </select>
-                        </div>
-
-                        {{-- Tanggal Target Input --}}
-                        <div class="mb-3">
-                            <label class="form-label" style="font-weight: 600; font-size: 14px;">Tanggal Target *</label>
-                            <input type="date"
-                                name="target_date"
-                                class="form-control"
-                                value="{{ $procurement->end_date->format('Y-m-d') }}"
-                                min="{{ now()->toDateString() }}"
-                                required
-                                style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                            <small style="color: #666;">Default: Tanggal target procurement</small>
-                        </div>
-
-                        {{-- Vendor Selection --}}
-                        <div class="mb-3">
-                            <label class="form-label" style="font-weight: 600; font-size: 14px;">
-                                Pilih Vendor *
-                            </label>
-
-                            <select name="vendor_ids[]"
-                                class="form-select"
-                                multiple
-                                size="4"
-                                required
-                                style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-
-                                @if($evatekVendors->count() > 0)
-                                    @foreach($evatekVendors as $vendor)
-                                    <option value="{{ $vendor->id_vendor }}">
-                                        {{ $vendor->name_vendor }}
-                                    </option>
-                                    @endforeach
-                                @else
-                                    <option disabled>
-                                        Tidak ada vendor dari Inquiry & Quotation
-                                    </option>
-                                @endif
-                            </select>
-
-                            <small style="color: #666;">
-                                Vendor berasal dari Inquiry & Quotation yang sudah dibuat
-                            </small>
-                        </div>
-
-                        {{-- SC Design Link --}}
-                        <div class="mb-3">
-                            <label class="form-label" style="font-weight: 600; font-size: 14px;">Link SC Design</label>
-                            <input type="url"
-                                name="sc_design_link"
-                                class="form-control"
-                                placeholder="https://example.com/design"
-                                style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                            <small style="color: #666;">Opsional - URL dokumen desain dari divisi SC</small>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-sm btn-action-create">Buat Evatek</button>
-                    </div>
-                </form>
-            </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-action-abort" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-sm btn-action-create">Buat Evatek</button>
+                </div>
+            </form>
         </div>
     </div>
-    @endforeach
+</div>
+@endforeach
+@endif
 @endif

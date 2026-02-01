@@ -214,6 +214,8 @@ class ProcurementController extends Controller
         $service = new CheckpointTransitionService($procurement);
         $currentCheckpoint = $service->getCurrentCheckpoint();
         $currentCheckpointSequence = $currentCheckpoint?->point_sequence ?? null;
+        $canToggleEvatek = $this->canToggleEvatek($procurement);
+        $isAfterEvatek = $currentCheckpointSequence > 3;
 
         if ($currentCheckpoint) {
             $currentStageIndex = $currentCheckpoint->point_sequence;
@@ -367,9 +369,66 @@ class ProcurementController extends Controller
             'pembayarans',
             'jaminans',
             'materialDeliveries',
-            'currentCheckpointSequence'
+            'currentCheckpointSequence',
+            'canToggleEvatek',
+            'isAfterEvatek'
         ));
     }
+
+    private function canToggleEvatek(Procurement $procurement): bool
+    {
+        // Jika belum ada EvatekItem → masih boleh toggle
+        if ($procurement->evatekItems()->count() === 0) {
+            return true;
+        }
+
+        // Evatek = checkpoint sequence ke-3 (SESUAIKAN JIKA BERBEDA)
+        $evatekSequence = 3;
+
+        $lastCompletedSequence = $procurement->procurementProgress()
+            ->where('status', 'completed')
+            ->join('checkpoints', 'procurement_progress.checkpoint_id', '=', 'checkpoints.point_id')
+            ->max('checkpoints.point_sequence');
+
+        return $lastCompletedSequence < $evatekSequence;
+    }
+
+
+    public function toggleEvatek(Request $request, $procurementId)
+    {
+        $request->validate([
+            'use_evatek' => 'required|boolean',
+        ]);
+
+        $procurement = Procurement::with('evatekItems')->findOrFail($procurementId);
+
+        // 🔒 LOCK VALIDATION
+        if (!$this->canToggleEvatek($procurement)) {
+            return back()->with(
+                'error',
+                'Evatek sudah melewati checkpoint dan tidak dapat diubah.'
+            );
+        }
+
+        $procurement->update([
+            'use_evatek' => $request->boolean('use_evatek'),
+        ]);
+
+        // Jika dimatikan → skip Evatek di flow checkpoint
+        if (!$procurement->use_evatek) {
+            $service = new CheckpointTransitionService($procurement);
+            $service->skipEvatekIfDisabled();
+        }
+
+        return back()->with(
+            'success',
+            $procurement->use_evatek
+                ? 'Evatek diaktifkan untuk procurement ini.'
+                : 'Evatek dinonaktifkan dan akan dilewati.'
+        );
+    }
+
+
 
     public function getProgress($id)
     {

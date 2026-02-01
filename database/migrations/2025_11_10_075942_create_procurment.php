@@ -32,6 +32,10 @@ return new class extends Migration
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
 
+            $table->boolean('use_evatek')
+                ->default(true)
+                ->comment('Menentukan apakah procurement melalui proses Evatek');
+
             // Status alur procurement
             $table->enum('status_procurement', [
                 'in_progress',

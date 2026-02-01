@@ -94,10 +94,10 @@ Route::middleware('auth:vendor')->group(function () {
 
     Route::get('/vendor/notifications', [VendorEvatekController::class, 'notifications'])
         ->name('vendor.notifications');
-        
+
     Route::post('/vendor/notifications/{id}/read', [VendorEvatekController::class, 'markAsRead'])
         ->name('vendor.notifications.read');
-    
+
     Route::post('/vendor/notifications/{id}/toggle-star', [VendorEvatekController::class, 'toggleStar'])
         ->name('vendor.notifications.toggle-star');
 
@@ -162,6 +162,8 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
     Route::get('/procurements/{id}/progress', [ProcurementController::class, 'getProgress'])->name('procurements.progress');
     Route::post('/procurements/{id}/progress', [ProcurementController::class, 'updateProgress'])->name('procurements.update-progress');
     Route::resource('procurements', ProcurementController::class, ['only' => ['index', 'show', 'create', 'store', 'update']]);
+    Route::post('/procurements/{procurementId}/toggle-evatek',[ProcurementController::class, 'toggleEvatek'])->name('procurements.toggle-evatek');
+
 
     // User list (user division)
     Route::get('/user/list', function () {
@@ -186,9 +188,26 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
     */
     Route::prefix('supply-chain')->name('supply-chain.')->group(function () {
 
-        // Dashboard
+        // ===============================
+        // SUPPLY CHAIN DASHBOARD (UI)
+        // ===============================
         Route::get('/dashboard', [SupplyChainDashboardController::class, 'index'])
             ->name('dashboard');
+
+        // ===============================
+        // SUPPLY CHAIN DASHBOARD (AJAX)
+        // ===============================
+        Route::prefix('ajax')->name('ajax.')->group(function () {
+
+            Route::get('/procurement', [SupplyChainDashboardController::class, 'ajaxProcurement'])
+                ->name('procurement');
+
+            Route::get('/contract', [SupplyChainDashboardController::class, 'ajaxContract'])
+                ->name('contract');
+
+            Route::get('/payment', [SupplyChainDashboardController::class, 'ajaxPayment'])
+                ->name('payment');
+        });
 
         Route::post('/dashboard/store', [SupplyChainController::class, 'storePengadaan'])
             ->name('dashboard.store');
@@ -492,8 +511,8 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
 
     Route::prefix('supply-chain/jaminan-pembayaran')->group(function () {
 
-    // CREATE (PROCUREMENT BASED)
-    Route::post(
+        // CREATE (PROCUREMENT BASED)
+        Route::post(
             '/procurement/{procurementId}',
             [JaminanPembayaranController::class, 'store']
         )->name('jaminan-pembayaran.store');

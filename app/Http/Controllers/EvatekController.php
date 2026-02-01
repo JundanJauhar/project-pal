@@ -73,7 +73,7 @@ class EvatekController extends Controller
         $evatekItems = EvatekItem::with([
             'item',
             'vendor',
-            'procurement',
+            'procurement.project',
             'latestRevision'
         ])
             ->whereIn('procurement_id', $procurementIds)
@@ -311,21 +311,40 @@ class EvatekController extends Controller
         $procurement = $evatek->procurement;
 
         if ($procurement && $procurement->evatekItems()->count() > 0) {
-            $allEvatek = $procurement->evatekItems()->with('latestRevision')->get();
 
-            // ✅ Check if ALL evatek items have 'approve' status in their latest revision
-            $allApproved = $allEvatek->every(function ($evatekItem) {
-                return $evatekItem->latestRevision
-                    && $evatekItem->latestRevision->status === 'approve';
+            /**
+             * Ambil semua evatek item + latest revision
+             * lalu kelompokkan berdasarkan item_id
+             */
+            $evatekPerItem = $procurement->evatekItems()
+                ->with('latestRevision')
+                ->get()
+                ->groupBy('item_id');
+
+            /**
+             * LOGIKA UTAMA:
+             * - Untuk SETIAP item
+             * - HARUS ada minimal 1 vendor
+             * - yang latestRevision.status === 'approve'
+             */
+            $allItemsSatisfied = $evatekPerItem->every(function ($evateks) {
+                return $evateks->contains(function ($evatekItem) {
+                    return $evatekItem->latestRevision
+                        && $evatekItem->latestRevision->status === 'approve';
+                });
             });
 
-            if ($allApproved) {
-                // ✅ All evatek items are approved - send notifications and transition checkpoint
+            if ($allItemsSatisfied) {
 
+                // ✅ AUTO MOVE CHECKPOINT
                 $service = new \App\Services\CheckpointTransitionService($procurement);
-                $service->completeCurrentAndMoveNext("Semua item sudah punya vendor approve di Evatek");
+                $service->completeCurrentAndMoveNext(
+                    "Semua item sudah memiliki minimal satu vendor approve di Evatek"
+                );
 
-                // ✅ Notify Desain Division (All Items Complete)
+                // ============================
+                // NOTIFIKASI DESAIN (GLOBAL)
+                // ============================
                 $desainDiv = \App\Models\Division::where('division_name', 'LIKE', '%Desain%')->first();
                 if ($desainDiv) {
                     $desainUsers = \App\Models\User::where('division_id', $desainDiv->division_id)->get();
@@ -335,20 +354,23 @@ class EvatekController extends Controller
                             'type' => 'success',
                             'title' => 'Evatek Selesai',
                             'message' => "Seluruh item pada pengadaan '{$procurement->procurement_name}' telah selesai Evatek.",
-                            'action_url' => route('desain.review-evatek', $evatek->evatek_id), // Or list view
-                            'reference_type' => 'App\Models\Procurement', // Changed to Procurement as it wraps all
+                            'action_url' => route('procurements.show', $procurement->procurement_id),
+                            'reference_type' => 'App\Models\Procurement',
                             'reference_id' => $procurement->procurement_id,
                             'is_read' => false,
+                            'created_at' => now(),
                         ]);
                     }
                 }
 
-                // ✅ Notify SC: Ready for Negotiation (All Items Complete)
-                $scmDivAll = \App\Models\Division::where('division_name', 'LIKE', '%Supply%')->first();
-                if ($scmDivAll) {
-                    $scmUsersAll = \App\Models\User::where('division_id', $scmDivAll->division_id)->get();
-                    foreach ($scmUsersAll as $user) {
-                        $n = \App\Models\Notification::create([
+                // ============================
+                // NOTIFIKASI SUPPLY CHAIN
+                // ============================
+                $scmDiv = \App\Models\Division::where('division_name', 'LIKE', '%Supply%')->first();
+                if ($scmDiv) {
+                    $scmUsers = \App\Models\User::where('division_id', $scmDiv->division_id)->get();
+                    foreach ($scmUsers as $user) {
+                        $notif = \App\Models\Notification::create([
                             'user_id' => $user->user_id,
                             'type' => 'action',
                             'title' => 'Siap Negosiasi',
@@ -357,13 +379,13 @@ class EvatekController extends Controller
                             'reference_type' => 'App\Models\Procurement',
                             'reference_id' => $procurement->procurement_id,
                             'is_read' => false,
+                            'created_at' => now()->addSeconds(5),
                         ]);
-                        $n->created_at = now()->addSeconds(5);
-                        $n->save();
                     }
                 }
             }
         }
+
 
         ActivityLogger::log(
             module: 'Evatek',
