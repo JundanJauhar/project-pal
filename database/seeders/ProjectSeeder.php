@@ -121,6 +121,7 @@ class ProjectSeeder extends Seeder
             'name_procurement' => 'Pengadaan Plat Baja untuk Hull Kapal',
             'description' => 'Plat baja marine grade berkualitas tinggi',
             'department_procurement' => $dept1->department_id,
+            'no_pr' => 'PR-2025-001',
             'priority' => 'tinggi',
             'start_date' => Carbon::now(),
             'end_date' => Carbon::now()->addDays(30),

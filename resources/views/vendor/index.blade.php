@@ -88,10 +88,19 @@
     }
 
     @keyframes blink {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }
-        100% { opacity: 1; }
+        0% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        100% {
+            opacity: 1;
+        }
     }
+
     .blink-animation {
         animation: blink 1.5s infinite;
     }
@@ -101,7 +110,7 @@
 
 @section('content')
 
-<h1 class="fw-bold mb-5 text-center" >{{ $vendor->name_vendor }}</h1>
+<h1 class="fw-bold mb-5 text-center">{{ $vendor->name_vendor }}</h1>
 
 <h2 class="fw-bold mb-2">Evatek Vendor</h2>
 <div class="row">
@@ -250,11 +259,11 @@
                 {{-- Posisi --}}
                 <td style="padding: 12px 8px; text-align: center;">
                     @if(in_array($status, ['approve', 'not approve']))
-                        <span class="text-muted">-</span>
+                    <span class="text-muted">-</span>
                     @elseif(empty(trim($latestRevision->vendor_link ?? '')))
-                        <span class="badge bg-warning text-dark">Evatek Vendor</span>
+                    <span class="badge bg-warning text-dark">Evatek Vendor</span>
                     @else
-                        <span class="badge bg-info text-dark">Evatek Divisi</span>
+                    <span class="badge bg-info text-dark">Evatek Desain</span>
                     @endif
                 </td>
 
@@ -362,13 +371,14 @@
 </div>
 
 <div class="big-card mt-4">
- 
+
     <table class="request-table">
         <thead>
             <tr>
                 <th style="text-align: left;">Item</th>
                 <th style="text-align: left;">Project / Procurement</th>
                 <th style="text-align: center;">Status Evatek</th>
+                <th style="text-align: center;">Posisi</th>
                 <th style="text-align: center;">Catatan</th>
                 <th style="text-align: center;">Dibuat</th>
                 <th style="text-align: center;">Aksi</th>
@@ -377,11 +387,11 @@
         <tbody>
             @forelse($contractReviews as $review)
             @php
-                $proc = $review->procurement ?? null;
-                $proj = $proc ? $proc->project : ($review->project ?? null);
-                $requestProc = $proc ? $proc->requestProcurements->first() : null;
-                $items = $requestProc ? $requestProc->items : collect();
-                $item = $items->first();
+            $proc = $review->procurement ?? null;
+            $proj = $proc ? $proc->project : ($review->project ?? null);
+            $requestProc = $proc ? $proc->requestProcurements->first() : null;
+            $items = $requestProc ? $requestProc->items : collect();
+            $item = $items->first();
             @endphp
             <tr>
                 {{-- Item --}}
@@ -399,24 +409,39 @@
                 {{-- Status --}}
                 <td style="padding: 12px 8px; text-align: center;">
                     @php
-                        $latestRevision = $review->revisions->first();
-                        $statusClass = 'status-pending';
-                        $statusText = 'Pending';
-                        
-                        if($latestRevision) {
-                            if($latestRevision->result == 'approve') {
-                                $statusClass = 'status-approved';
-                                $statusText = 'Approved';
-                            } elseif($latestRevision->result == 'not_approve') {
-                                $statusClass = 'status-not-approved';
-                                $statusText = 'Not Approved';
-                            } elseif($latestRevision->result == 'revisi') {
-                                $statusClass = 'status-revisi';
-                                $statusText = 'Revisi';
-                            }
-                        }
+                    $latestRevision = $review->revisions->first();
+                    $statusClass = 'status-pending';
+                    $statusText = 'Pending';
+
+                    if($latestRevision) {
+                    if($latestRevision->result == 'approve') {
+                    $statusClass = 'status-approved';
+                    $statusText = 'Approved';
+                    } elseif($latestRevision->result == 'not_approve') {
+                    $statusClass = 'status-not-approved';
+                    $statusText = 'Not Approved';
+                    } elseif($latestRevision->result == 'revisi') {
+                    $statusClass = 'status-revisi';
+                    $statusText = 'Revisi';
+                    }
+                    }
                     @endphp
                     <span class="status-desain {{ $statusClass }}">{{ $statusText }}</span>
+                </td>
+
+                {{-- Posisi --}}
+                <td style="padding: 12px 8px; text-align: center;">
+                    @php
+                    $latestRevision = $review->revisions->first();
+                    $reviewStatus = $latestRevision ? $latestRevision->result : null;
+                    @endphp
+                    @if(in_array($reviewStatus, ['approve', 'not_approve']))
+                    <span class="text-muted">-</span>
+                    @elseif(empty(trim($latestRevision->vendor_link ?? '')))
+                    <span class="badge bg-warning text-dark">Di Vendor</span>
+                    @else
+                    <span class="badge bg-info text-dark">Di Desain</span>
+                    @endif
                 </td>
 
                 {{-- Catatan --}}
@@ -439,7 +464,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="6" class="text-center py-5">
+                <td colspan="7" class="text-center py-5">
                     Belum ada review kontrak untuk saat ini.
                 </td>
             </tr>

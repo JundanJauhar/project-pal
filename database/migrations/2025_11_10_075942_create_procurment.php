@@ -23,9 +23,10 @@ return new class extends Migration
 
             // FK ke department (karena procurement dibuat oleh department tertentu)
             $table->unsignedBigInteger('department_procurement')->nullable();
+            $table->string('no_pr')->nullable();
 
             // Prioritas pengadaan
-            $table->enum('priority', ['rendah', 'sedang', 'tinggi'])->default('sedang');
+            $table->enum('priority', ['Rendah', 'Sedang', 'Tinggi'])->default('Sedang');
 
             // Range tanggal procurement
             $table->date('start_date')->nullable();

@@ -171,6 +171,19 @@
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for ="no_pr" class="form-label">No PR</label>
+                            <input type="text"
+                                id="no_pr"
+                                name="no_pr"
+                                class="form-control @error('no_pr') is-invalid @enderror"
+                                value="{{ old('no_pr', $procurement->no_pr ?? '') }}"
+                                placeholder="Masukkan No PR jika ada">
+                            @error('no_pr')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
 
                     <div class="mb-3">

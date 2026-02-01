@@ -8,21 +8,23 @@
     body {
         background-color: #f6f8fc;
     }
-    
+
     .email-container {
         display: flex;
-        height: calc(100vh - 100px); /* Adjust based on navbar height */
+        height: calc(100vh - 100px);
+        /* Adjust based on navbar height */
         background: #fff;
         border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
         margin-top: 20px;
     }
 
     /* Sidebar */
     .email-sidebar {
         width: 260px;
-        background: #f8f9fa; /* Light gray like Gmail sidebar */
+        background: #f8f9fa;
+        /* Light gray like Gmail sidebar */
         padding: 20px 10px;
         display: flex;
         flex-direction: column;
@@ -44,8 +46,9 @@
         transition: box-shadow 0.2s;
         width: fit-content;
     }
+
     .compose-btn:hover {
-        box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3);
+        box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.3);
     }
 
     .sidebar-item {
@@ -88,7 +91,8 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        min-width: 0; /* Fix flex overflow */
+        min-width: 0;
+        /* Fix flex overflow */
     }
 
     .email-toolbar {
@@ -118,7 +122,7 @@
     }
 
     .email-row:hover {
-        box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+        box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0, 0 1px 2px 0 rgba(60, 64, 67, .3), 0 1px 3px 1px rgba(60, 64, 67, .15);
         z-index: 1;
         background: #f8f9fa;
     }
@@ -127,23 +131,27 @@
         background-color: #fff;
         font-weight: 700;
     }
-    
+
     .email-row.read {
-        background-color: #f8f9fa; /* Slightly darker for read logic if desired, or keep white */
+        background-color: #f8f9fa;
+        /* Slightly darker for read logic if desired, or keep white */
         font-weight: 400;
     }
-    .email-row.read .email-sender, .email-row.read .email-subject {
+
+    .email-row.read .email-sender,
+    .email-row.read .email-subject {
         color: #5f6368;
     }
-    
+
     .email-checkbox {
         margin-right: 15px;
     }
-    
+
     .email-star {
         margin-right: 15px;
         color: #dadce0;
     }
+
     .email-star.active {
         color: #f4b400;
     }
@@ -170,7 +178,7 @@
         text-overflow: ellipsis;
         font-size: 14px;
     }
-    
+
     .email-snippet {
         color: #5f6368;
         font-weight: 400;
@@ -199,9 +207,52 @@
         font-weight: 700;
     }
 
-    .badge-vendor { background: #e8f0fe; color: #1967d2; }
-    .badge-division { background: #fce8e6; color: #c5221f; }
-    .badge-inbox { background: #e6f4ea; color: #137333; }
+    /* Specific Badge Styles */
+    .badge-baru {
+        background: #DBEAFE;
+        color: #1E40AF;
+    }
+
+    .badge-revisi {
+        background: #FEF3C7;
+        color: #92400E;
+    }
+
+    .badge-approve {
+        background: #D1FAE5;
+        color: #065F46;
+    }
+
+    .badge-notApprove {
+        background: #FEE2E2;
+        color: #991B1B;
+    }
+
+    .badge-complete {
+        background: #DDD6FE;
+        color: #5B21B6;
+    }
+
+    .badge-negosiasi {
+        background: #FED7AA;
+        color: #9A3412;
+    }
+
+    /* Legacy category badges (still used for non-process notifications) */
+    .badge-vendor {
+        background: #e8f0fe;
+        color: #1967d2;
+    }
+
+    .badge-division {
+        background: #fce8e6;
+        color: #c5221f;
+    }
+
+    .badge-inbox {
+        background: #e6f4ea;
+        color: #137333;
+    }
 
     /* Empty State */
     .empty-state {
@@ -212,6 +263,7 @@
         height: 100%;
         color: #5f6368;
     }
+
     .empty-state i {
         font-size: 48px;
         margin-bottom: 16px;
@@ -225,11 +277,13 @@
             height: 100%;
             z-index: 100;
             transition: left 0.3s;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         }
+
         .email-sidebar.show {
             left: 0;
         }
+
         .email-sender {
             width: 140px;
         }
@@ -251,7 +305,6 @@
 
             <a href="javascript:void(0)" class="sidebar-item active" onclick="filterEmails('all', this)" id="filter-all">
                 <i class="bi bi-inbox-fill"></i> Kotak Masuk
-                <span class="sidebar-badge" id="count-all">{{ $notifications->count() }}</span>
             </a>
             <a href="javascript:void(0)" class="sidebar-item" onclick="filterEmails('unread', this)">
                 <i class="bi bi-envelope-exclamation"></i> Belum Dibaca
@@ -264,9 +317,9 @@
                 <i class="bi bi-star" style="color: #f4b400;"></i> Berbintang
                 <span class="sidebar-badge" id="count-starred">{{ $notifications->where('is_starred', true)->count() }}</span>
             </a>
-            
+
             <div class="mt-4 mb-2 px-4 text-xs font-weight-bold text-secondary text-uppercase" style="font-size: 11px;">Labels</div>
-            
+
             <a href="javascript:void(0)" class="sidebar-item" onclick="filterEmails('division', this)">
                 <i class="bi bi-person-workspace" style="color: #c5221f;"></i> Di Divisi
                 <span class="sidebar-badge">{{ $notifications->where('category', 'division')->count() }}</span>
@@ -291,7 +344,7 @@
                     </div>
                 </div>
                 <div>
-                     <form action="{{ route('notifications.read-all') }}" method="POST" style="display:inline;">
+                    <form action="{{ route('notifications.read-all') }}" method="POST" style="display:inline;">
                         @csrf
                         <button type="submit" class="btn btn-sm text-secondary" title="Tandai semua dibaca">
                             <i class="bi bi-check-all fs-5"></i>
@@ -306,70 +359,89 @@
             <!-- List -->
             <div class="email-list" id="emailList">
                 @if($notifications->count() > 0)
-                    @foreach($notifications as $notif)
-                        @php
-                            $isRead = $notif->is_read ?? false;
-                            $cat = $notif->category ?? 'inbox';
-                            // Determine class based on category for visualization
-                            $badgeClass = match($cat) {
-                                'vendor' => 'badge-vendor',
-                                'division' => 'badge-division',
-                                default => 'badge-inbox'
-                            };
-                            $badgeLabel = match($cat) {
-                                'vendor' => 'Vendor',
-                                'division' => 'Action Needed',
-                                default => 'Inbox'
-                            };
-                            
-                            $rowClass = $isRead ? 'read' : 'unread';
-                            $isStarred = $notif->is_starred ?? false;
-                            $starClass = $isStarred ? 'active' : '';
-                            $starIcon = $isStarred ? 'bi-star-fill' : 'bi-star';
-                        @endphp
-                        
-                        <div class="email-row {{ $rowClass }}" 
-                             data-category="{{ $cat }}" 
-                             data-read="{{ $isRead ? 'true' : 'false' }}"
-                             data-starred="{{ $isStarred ? 'true' : 'false' }}"
-                             data-id="{{ $notif->id }}"
-                             data-link="{{ $notif->link ?? '#' }}"
-                             onclick="openNotification(this)">
-                            
-                            <div class="email-checkbox" onclick="event.stopPropagation()">
-                                <input type="checkbox" class="form-check-input">
-                            </div>
-                            <div class="email-star {{ $starClass }}" onclick="toggleStar(this, '{{ $notif->id }}'); event.stopPropagation()">
-                                <i class="bi {{ $starIcon }}"></i>
-                            </div>
-                            
-                            <div class="email-sender">
-                                {{ $notif->title }}
-                            </div>
-                            
-                            <div class="email-content">
-                                <span class="{{ $badgeClass }} badge-category">{{ $badgeLabel }}</span>
-                                <span class="email-subject">{{ $notif->message }}</span>
-                                <span class="email-snippet"> - Click to view details</span>
-                            </div>
-                            
-                            <div class="email-meta">
-                                @if(isset($notif->date))
-                                    {{ \Carbon\Carbon::parse($notif->date)->format('M d') }}
-                                @else
-                                    {{ \Carbon\Carbon::parse($notif->created_at)->format('M d') }}
-                                @endif
-                            </div>
-                        </div>
-                    @endforeach
-                @else
-                    <div class="empty-state">
-                        <i class="bi bi-inbox"></i>
-                        <h5>Your inbox is empty</h5>
-                        <p class="text-muted">No new notifications</p>
+                @foreach($notifications as $notif)
+                @php
+                $isRead = $notif->is_read ?? false;
+                $cat = $notif->category ?? 'inbox';
+
+                // Check if notification has specific badge
+                $hasBadge = isset($notif->badge_label) && $notif->badge_label;
+
+                // Determine badge class and label
+                if ($hasBadge) {
+                $badgeLabel = $notif->badge_label;
+                // Determine CSS class from badge label
+                $badgeClass = match(true) {
+                $badgeLabel === 'BARU' => 'badge-baru',
+                str_starts_with($badgeLabel, 'REVISI') => 'badge-revisi',
+                $badgeLabel === 'APPROVE' => 'badge-approve',
+                $badgeLabel === 'NOT APPROVE' => 'badge-notApprove',
+                str_contains($badgeLabel, 'COMPLETE') => 'badge-complete',
+                $badgeLabel === 'NEGOSIASI' => 'badge-negosiasi',
+                default => 'badge-inbox'
+                };
+                } else {
+                // Fallback to category-based badge
+                $badgeClass = match($cat) {
+                'vendor' => 'badge-vendor',
+                'division' => 'badge-division',
+                default => 'badge-inbox'
+                };
+                $badgeLabel = match($cat) {
+                'vendor' => 'Vendor',
+                'division' => 'Action Needed',
+                default => 'Inbox'
+                };
+                }
+
+                $rowClass = $isRead ? 'read' : 'unread';
+                $isStarred = $notif->is_starred ?? false;
+                $starClass = $isStarred ? 'active' : '';
+                $starIcon = $isStarred ? 'bi-star-fill' : 'bi-star';
+                @endphp
+
+                <div class="email-row {{ $rowClass }}"
+                    data-category="{{ $cat }}"
+                    data-read="{{ $isRead ? 'true' : 'false' }}"
+                    data-starred="{{ $isStarred ? 'true' : 'false' }}"
+                    data-id="{{ $notif->id }}"
+                    data-link="{{ $notif->link ?? '#' }}"
+                    onclick="openNotification(this)">
+
+                    <div class="email-checkbox" onclick="event.stopPropagation()">
+                        <input type="checkbox" class="form-check-input">
                     </div>
+                    <div class="email-star {{ $starClass }}" onclick="toggleStar(this, '{{ $notif->id }}'); event.stopPropagation()">
+                        <i class="bi {{ $starIcon }}"></i>
+                    </div>
+
+                    <div class="email-sender">
+                        {{ $notif->title }}
+                    </div>
+
+                    <div class="email-content">
+                        <span class="{{ $badgeClass }} badge-category">{{ $badgeLabel }}</span>
+                        <span class="email-subject">{{ $notif->message }}</span>
+                        <span class="email-snippet"> - Click to view details</span>
+                    </div>
+
+                    <div class="email-meta">
+                        @if(isset($notif->date))
+                        {{ \Carbon\Carbon::parse($notif->date)->format('M d') }}
+                        @else
+                        {{ \Carbon\Carbon::parse($notif->created_at)->format('M d') }}
+                        @endif
+                    </div>
+                </div>
+                @endforeach
+                @else
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h5>Your inbox is empty</h5>
+                    <p class="text-muted">No new notifications</p>
+                </div>
                 @endif
-                
+
                 <!-- Hidden Empty State for Filtering -->
                 <div class="empty-state d-none" id="filterEmptyState">
                     <i class="bi bi-search"></i>
@@ -403,20 +475,20 @@
             icon.classList.add('bi-star');
             isStarred = false;
         }
-        
+
         // Update data attribute for filtering
-        if(row) row.setAttribute('data-starred', isStarred ? 'true' : 'false');
-        
+        if (row) row.setAttribute('data-starred', isStarred ? 'true' : 'false');
+
         // Update counter (simple incremental/decremental)
         const badge = document.getElementById('count-starred');
-        if(badge) {
+        if (badge) {
             let current = parseInt(badge.innerText || '0');
             badge.innerText = isStarred ? current + 1 : Math.max(0, current - 1);
         }
 
         // AJAX Call
         // Ignore virtual tasks for starring (unless we implement virtual storage)
-        if(id && !id.toString().startsWith('task_')) {
+        if (id && !id.toString().startsWith('task_')) {
             fetch(`{{ url('/notifications') }}/${id}/toggle-star`, {
                 method: 'POST',
                 headers: {
@@ -430,7 +502,7 @@
     function filterEmails(filterType, element) {
         // Active State
         document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-        if(element) element.classList.add('active');
+        if (element) element.classList.add('active');
 
         const rows = document.querySelectorAll('.email-row');
         let visibleCount = 0;
@@ -441,7 +513,7 @@
             const isStarred = row.getAttribute('data-starred') === 'true';
 
             let show = false;
-            switch(filterType) {
+            switch (filterType) {
                 case 'all':
                     show = true;
                     break;
@@ -463,12 +535,12 @@
             }
 
             row.style.display = show ? 'flex' : 'none';
-            if(show) visibleCount++;
+            if (show) visibleCount++;
         });
 
         // Toggle Empty State
         const emptyState = document.getElementById('filterEmptyState');
-        if(visibleCount === 0 && rows.length > 0) {
+        if (visibleCount === 0 && rows.length > 0) {
             emptyState.classList.remove('d-none');
         } else {
             emptyState.classList.add('d-none');
@@ -478,7 +550,7 @@
     function searchEmails() {
         const queryRaw = document.getElementById('searchNotif').value.toLowerCase();
         const rows = document.querySelectorAll('.email-row');
-        
+
         // Remove previous highlights
         document.querySelectorAll('.highlight').forEach(mark => {
             const parent = mark.parentNode;
@@ -487,9 +559,9 @@
         });
 
         // Use active filter as base if no query
-        if(!queryRaw.trim()) {
+        if (!queryRaw.trim()) {
             const activeFilter = document.querySelector('.sidebar-item.active');
-            if(activeFilter) activeFilter.click();
+            if (activeFilter) activeFilter.click();
             return;
         }
 
@@ -500,22 +572,22 @@
         // in:read -> is_read=true
         // in:unread -> is_read=false
         // in:starred -> is_starred=true
-        
+
         let terms = [];
         let filters = {};
 
         const tokens = queryRaw.split(/\s+/);
         tokens.forEach(token => {
-            if(token.startsWith('in:') || token.startsWith('label:')) {
+            if (token.startsWith('in:') || token.startsWith('label:')) {
                 const val = token.split(':')[1];
-                if(val === 'sent' || val === 'vendor') filters.category = 'vendor';
-                else if(val === 'inbox') filters.category = 'inbox'; // or division?
-                else if(val === 'division') filters.category = 'division';
-                else if(val === 'read') filters.read = true;
-                else if(val === 'unread') filters.read = false;
-                else if(val === 'starred') filters.starred = true;
+                if (val === 'sent' || val === 'vendor') filters.category = 'vendor';
+                else if (val === 'inbox') filters.category = 'inbox'; // or division?
+                else if (val === 'division') filters.category = 'division';
+                else if (val === 'read') filters.read = true;
+                else if (val === 'unread') filters.read = false;
+                else if (val === 'starred') filters.starred = true;
             } else {
-                if(token.length > 0) terms.push(token);
+                if (token.length > 0) terms.push(token);
             }
         });
 
@@ -523,7 +595,7 @@
             const sender = row.querySelector('.email-sender');
             const subject = row.querySelector('.email-subject');
             const snippet = row.querySelector('.email-snippet');
-            
+
             const senderText = sender.textContent.toLowerCase();
             const subjectText = subject.textContent.toLowerCase();
             const snippetText = snippet.textContent.toLowerCase();
@@ -531,23 +603,23 @@
 
             // 1. Text Match (AND logic)
             const textMatch = terms.length === 0 || terms.every(term => fullText.includes(term));
-            
+
             // 2. Filter Match
             let filterMatch = true;
-            if(filters.category) {
+            if (filters.category) {
                 // "sent" maps to "vendor" in our category logic for internal view (items At Vendor)
-                if(row.getAttribute('data-category') !== filters.category) filterMatch = false;
+                if (row.getAttribute('data-category') !== filters.category) filterMatch = false;
             }
-            if(filters.read !== undefined) {
+            if (filters.read !== undefined) {
                 const isRead = row.getAttribute('data-read') === 'true';
-                if(isRead !== filters.read) filterMatch = false;
+                if (isRead !== filters.read) filterMatch = false;
             }
-            if(filters.starred !== undefined) {
+            if (filters.starred !== undefined) {
                 const isStarred = row.getAttribute('data-starred') === 'true';
-                if(isStarred !== filters.starred) filterMatch = false;
+                if (isStarred !== filters.starred) filterMatch = false;
             }
 
-            if(textMatch && filterMatch) {
+            if (textMatch && filterMatch) {
                 row.style.display = 'flex';
                 // Highlight matches for all terms simultaneously
                 highlightTerms(sender, terms);
@@ -563,7 +635,7 @@
         if (!query) return;
         // Escape special regex chars in query to be safe
         const safeQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        
+
         // Use a complex regex to avoid highlighting inside existing tags if we run multiple passes
         // But since we cleaned efficiently at start, we can be simpler.
         // However, we are running loop for TERMS. So term2 might highlight inside an element that term1 already highlighted?
@@ -572,7 +644,7 @@
         // To be safe against breaking HTML tags, we should only replace text content nodes, but that's complex in plain JS without a library.
         // Quick fix: regex that ignores HTML tags is hard.
         // Better approach for multi-term: specific highlight function that walks text nodes.
-        
+
         // Let's stick to safe regex for now, but apply it carefully.
         // Or better: construct one big regex for all terms and run it ONCE per element.
         // Let's modify searchEmails to pass all terms to highlightText.
@@ -580,7 +652,7 @@
 
     function highlightTerms(element, terms) {
         if (!terms || terms.length === 0) return;
-        
+
         const text = element.textContent; // Get plain text
         if (!text.trim()) return;
 
@@ -588,7 +660,7 @@
         // Creating a regex like (term1|term2|term3)
         const pattern = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
         const regex = new RegExp(`(${pattern})`, 'gi');
-        
+
         const newHTML = text.replace(regex, '<span class="highlight" style="background-color: #fff59d; font-weight: bold;">$1</span>');
         element.innerHTML = newHTML;
     }
@@ -601,15 +673,15 @@
         // 1. Mark as read if needed (AJAX)
         // Only if it's a DB notification (usually plain numeric ID or we check is_stored from server, but here we can try anyway)
         // If it starts with 'task_', it's virtual, no need to mark read in DB usually unless we want to track it there
-        
+
         // Optimistic update
         element.classList.remove('unread');
         element.classList.add('read');
         element.setAttribute('data-read', 'true');
-        
+
         // If not virtual task (assumed if ID is numeric), call API
         if (!id.toString().startsWith('task_') && !isRead) {
-             fetch(`{{ url('/notifications') }}/${id}/read`, {
+            fetch(`{{ url('/notifications') }}/${id}/read`, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
