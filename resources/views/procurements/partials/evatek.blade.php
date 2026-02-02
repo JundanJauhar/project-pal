@@ -1,17 +1,14 @@
 @if($procurement->use_evatek)
 <div id="evatek">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-3 mb-3">
         <h5 class="section-title mb-0">Evatek</h5>
 
         @if(!$isAfterEvatek)
-        {{-- TOGGLE EVATEK --}}
         <form action="{{ route('procurements.toggle-evatek', $procurement->procurement_id) }}"
             method="POST"
-            class="d-flex align-items-center gap-2">
+            class="d-flex align-items-center">
             @csrf
-
-            <span class="fw-semibold" style="font-size: 13px;">Gunakan Evatek</span>
 
             <div class="form-check form-switch mb-0">
                 <input type="hidden" name="use_evatek" value="0">
@@ -25,18 +22,15 @@
                     {{ !$canToggleEvatek ? 'disabled' : '' }}>
             </div>
 
-            <span class="badge {{ $procurement->use_evatek ? 'bg-success' : 'bg-secondary' }}">
-                {{ $procurement->use_evatek ? 'EVATEK AKTIF' : 'EVATEK NONAKTIF' }}
-            </span>
-
             @if(!$canToggleEvatek)
-            <span class="badge bg-warning">
+            <span class="badge bg-warning ms-2">
                 <i class="bi bi-lock"></i> TERKUNCI
             </span>
             @endif
         </form>
         @endif
     </div>
+
 
     {{-- Alert Error --}}
     @if ($errors->any())
