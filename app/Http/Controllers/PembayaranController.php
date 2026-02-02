@@ -65,6 +65,8 @@ class PembayaranController extends Controller
             'percentage'       => 'required|numeric|min:1|max:100',
             'no_memo'          => 'nullable|string|max:100',
             'link'             => 'nullable|url|max:255',
+            'lsd'              => 'nullable|date',
+            'evidence_link'    => 'nullable|url|max:255',
             'target_date'      => 'nullable|date',
             'realization_date' => 'nullable|date',
         ], [
@@ -115,6 +117,8 @@ class PembayaranController extends Controller
                 'currency'         => $currency,
                 'no_memo'          => $validated['no_memo'] ?? null,
                 'link'             => $validated['link'] ?? null,
+                'lsd'              => $validated['lsd'] ?? null,
+                'evidence_link'    => $validated['evidence_link'] ?? null,
                 'target_date'      => $validated['target_date'] ?? null,
                 'realization_date' => $validated['realization_date'] ?? null,
             ]);
@@ -201,6 +205,8 @@ class PembayaranController extends Controller
             'percentage'       => 'required|numeric|min:1|max:100',
             'no_memo'          => 'nullable|string|max:100',
             'link'             => 'nullable|url|max:255',
+            'lsd'              => 'nullable|date',
+            'evidence_link'    => 'nullable|url|max:255',
             'target_date'      => 'nullable|date',
             'realization_date' => 'nullable|date',
         ]);
@@ -353,6 +359,8 @@ class PembayaranController extends Controller
                         'currency' => $p->currency,
                         'no_memo' => $p->no_memo ?? '-',
                         'link' => $p->link ?? '-',
+                        'lsd' => $p->lsd?->format('d/m/Y') ?? '-',
+                        'evidence_link' => $p->evidence_link ?? '-',
                         'target_date' => $p->target_date?->format('d/m/Y') ?? '-',
                         'realization' => $p->realization_date?->format('d/m/Y') ?? '-',
                     ];

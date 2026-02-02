@@ -22,6 +22,8 @@ class Pembayaran extends Model
         'currency',
         'no_memo',
         'link',
+        'lsd',
+        'evidence_link',
         'target_date',
         'realization_date',
     ];
@@ -31,6 +33,7 @@ class Pembayaran extends Model
         'payment_value'    => 'decimal:2',
         'target_date'      => 'date',
         'realization_date' => 'date',
+        'lsd'              => 'date',
     ];
 
     // ================= RELATIONSHIPS =================

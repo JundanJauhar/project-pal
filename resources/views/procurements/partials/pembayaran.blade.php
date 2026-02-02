@@ -26,7 +26,9 @@
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Persen</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Nilai Pembayaran</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">No Memo</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Link</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Link Memo</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">LSD</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Link Evidence</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Target</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Realisasi</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
@@ -76,6 +78,20 @@
                             @endif
                         </td>
 
+                        {{-- LSD --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            {{ $pay->lsd?->format('d/m/Y') ?? '-' }}
+                        </td>
+
+                        {{-- Link Evidence --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            @if($pay->evidence_link)
+                            <a href="{{ $pay->evidence_link }}" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600;">Link</a>
+                            @else
+                            <span style="color: #999;">-</span>
+                            @endif
+                        </td>
+
                         {{-- Target --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $pay->target_date?->format('d/m/Y') }}</td>
 
@@ -97,7 +113,7 @@
                     {{-- ✅ EMPTY STATE DENGAN CREATE BUTTON (HANYA SAAT CHECKPOINT 7 & TIDAK ADA PEMBAYARAN) --}}
                     @if($pembayaranCount == 0 && $currentCheckpointSequence == 7)
                     <tr>
-                        <td colspan="9" class="text-center text-muted" style="padding: 12px 8px;">
+                        <td colspan="11" class="text-center text-muted" style="padding: 12px 8px;">
                             Belum ada data Pembayaran
                         </td>
                         <td class="text-center">
@@ -113,7 +129,7 @@
                     {{-- ✅ ROW CREATE (HANYA SAAT CHECKPOINT 7 & ADA PEMBAYARAN) --}}
                     @if($pembayaranCount > 0 && $currentCheckpointSequence == 7)
                     <tr>
-                        <td colspan="9"></td>
+                        <td colspan="11"></td>
                         <td class="text-center">
                             <button class="btn btn-sm btn-action-create"
                                 data-bs-toggle="modal"
@@ -150,7 +166,7 @@
                     <div class="col-md-6">
                         <label class="form-label">Jenis Pembayaran</label>
                         <select name="payment_type" class="form-select">
-                            @foreach(['SKBDN','L/C','TT'] as $type)
+                            @foreach(['SKBDN','DP','L/C','TT'] as $type)
                             <option value="{{ $type }}" @selected($pay->payment_type==$type)>
                                 {{ $type }}
                             </option>
@@ -177,6 +193,20 @@
                         <label class="form-label">Link</label>
                         <input type="url" name="link" class="form-control"
                             value="{{ $pay->link }}">
+                    </div>
+
+                    {{-- LSD (Last Service Date) --}}
+                    <div class="col-md-6">
+                        <label class="form-label">LSD</label>
+                        <input type="date" name="lsd" class="form-control"
+                            value="{{ $pay->lsd?->format('Y-m-d') }}">
+                    </div>
+
+                    {{-- Evidence Link --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Evidence Link</label>
+                        <input type="url" name="evidence_link" class="form-control"
+                            value="{{ $pay->evidence_link }}">
                     </div>
 
                     {{-- Target Date --}}
@@ -231,6 +261,7 @@
                         <select name="payment_type" class="form-select" required>
                             <option value="" disabled selected>Pilih</option>
                             <option value="SKBDN">SKBDN</option>
+                            <option value="DP">DP</option>
                             <option value="L/C">L/C</option>
                             <option value="TT">TT</option>
                         </select>
@@ -252,6 +283,18 @@
                     <div class="col-md-6">
                         <label class="form-label">Link</label>
                         <input type="url" name="link" class="form-control">
+                    </div>
+
+                    {{-- LSD (Last Service Date) --}}
+                    <div class="col-md-6">
+                        <label class="form-label">LSD</label>
+                        <input type="date" name="lsd" class="form-control">
+                    </div>
+
+                    {{-- Evidence Link --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Evidence Link</label>
+                        <input type="url" name="evidence_link" class="form-control">
                     </div>
 
                     {{-- Target Date --}}

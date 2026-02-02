@@ -16,18 +16,14 @@ class JaminanPembayaran extends Model
     protected $fillable = [
         'vendor_id',
         'procurement_id',
-        'advance_guarantee',   // Jaminan Uang Muka
-        'performance_bond',    // Jaminan Pelaksanaan
-        'warranty_bond',       // Jaminan Pemeliharaan
+        'jenis_jaminan',
         'target_terbit',
         'realisasi_terbit',
         'expiry_date',
+        'link',
     ];
 
     protected $casts = [
-        'advance_guarantee' => 'boolean',
-        'performance_bond'  => 'boolean',
-        'warranty_bond'     => 'boolean',
         'target_terbit'     => 'date',
         'realisasi_terbit'  => 'date',
         'expiry_date'       => 'date',

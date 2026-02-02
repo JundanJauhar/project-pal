@@ -1,5 +1,5 @@
 <div id="pengadaan-oc">
-    <h5 class="section-title">Pengadaan OC</h5>
+    <h5 class="section-title">Usulan Pengadaan</h5>
 
     {{-- Alert Error (LUAR TABLE) --}}
     @if ($errors->any())

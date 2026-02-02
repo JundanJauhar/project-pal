@@ -81,6 +81,8 @@ class ProcurementController extends Controller
             'name_procurement' => 'required|string|max:255',
             'description' => 'nullable|string',
             'department_procurement' => 'required|exists:departments,department_id',
+            'juru_beli' => 'required|string|max:100',
+            'biro_pengadaan' => 'required|string|max:100',
             'no_pr' => 'nullable|string',
             'priority' => 'required|in:rendah,sedang,tinggi',
             'end_date' => 'required|date|after:today',

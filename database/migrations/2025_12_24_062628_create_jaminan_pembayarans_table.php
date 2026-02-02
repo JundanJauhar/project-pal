@@ -17,14 +17,17 @@ return new class extends Migration
             $table->unsignedBigInteger('procurement_id')->nullable();
 
             // Jenis Jaminan
-            $table->boolean('advance_guarantee')->default(false);
-            $table->boolean('performance_bond')->default(false);
-            $table->boolean('warranty_bond')->default(false);
+            $table->enum('jenis_jaminan', [
+                'advance_payment_guarantee',
+                'performance_bond',
+                'warranty_bond'
+            ]);
 
             // Timeline Jaminan
             $table->date('target_terbit')->nullable();
             $table->date('realisasi_terbit')->nullable();
             $table->date('expiry_date')->nullable();
+            $table->text('link')->nullable();
 
             $table->timestamps();
 

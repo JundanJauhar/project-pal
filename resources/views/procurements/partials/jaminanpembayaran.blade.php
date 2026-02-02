@@ -33,12 +33,11 @@
                     <tr>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">No</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Advance Payment Guarantee</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Performance Bond</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Warranty Bond</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Jenis Jaminan</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Target Terbit</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Realisasi Terbit</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Expiry Date</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Link</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                     </tr>
                 </thead>
@@ -59,14 +58,14 @@
                         {{-- Vendor --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $jaminan->vendor->name_vendor ?? '-' }}</td>
 
-                        {{-- Advance Payment Guarantee --}}
-                        <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $jaminan->advance_guarantee ? '✔' : '-' }}</td>
-
-                        {{-- Performance Bond --}}
-                        <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $jaminan->performance_bond ? '✔' : '-' }}</td>
-
-                        {{-- Warranty Bond --}}
-                        <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $jaminan->warranty_bond ? '✔' : '-' }}</td>
+                        {{-- Jenis Jaminan --}}
+                        <td class="text-center">
+                            @switch($jaminan->jenis_jaminan)
+                            @case('advance_payment_guarantee') Advance Payment Guarantee @break
+                            @case('performance_bond') Performance Bond @break
+                            @case('warranty_bond') Warranty Bond @break
+                            @endswitch
+                        </td>
 
                         {{-- Target Terbit --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $jaminan->target_terbit?->format('d/m/Y') ?? '-' }}</td>
@@ -76,6 +75,15 @@
 
                         {{-- Expiry Date --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $jaminan->expiry_date?->format('d/m/Y') ?? '-' }}</td>
+
+                        {{-- Link --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            @if($jaminan->link)
+                            <a href="{{ $jaminan->link }}" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600;">Link</a>
+                            @else
+                            <span style="color: #999;">-</span>
+                            @endif
+                        </td>
 
                         {{-- Aksi --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
@@ -92,7 +100,7 @@
                     {{-- ✅ EMPTY STATE DENGAN CREATE BUTTON (TERINTEGRASI) --}}
                     @if($jaminanCount == 0)
                     <tr>
-                        <td colspan="8" class="text-center text-muted" style="padding: 12px 8px;">
+                        <td colspan="7" class="text-center text-muted" style="padding: 12px 8px;">
                             Tidak ada data Jaminan Pembayaran.
                         </td>
                         <td class="text-center">
@@ -109,7 +117,7 @@
                     {{-- ✅ ROW CREATE (SAAT ADA DATA & CHECKPOINT 7) --}}
                     @if($currentCheckpointSequence == 7 && $pembayarans->count() > 0)
                     <tr>
-                        <td colspan="8"></td>
+                        <td colspan="7"></td>
                         <td class="text-center">
                             <button class="btn btn-sm btn-action-create"
                                 data-bs-toggle="modal"
@@ -152,38 +160,22 @@
                             value="{{ $jaminan->vendor->name_vendor ?? '-' }}">
                     </div>
 
-                    {{-- JENIS PEMBAYARAN (DISPLAY ONLY) --}}
                     <div class="col-md-6">
-                        <label class="form-label">Jenis Pembayaran</label>
-                        <input type="text" class="form-control" disabled
-                            value="@php
-                                $paymentType = $pembayarans
-                                    ->where('vendor_id', $jaminan->vendor_id)
-                                    ->first()
-                                    ?->payment_type;
-                                echo $paymentType ?? '-';
-                            @endphp">
-                    </div>
-
-                    {{-- Advance Payment Guarantee --}}
-                    <div class="col-md-4">
-                        <label class="form-label">Advance Payment Guarantee</label>
-                        <input type="checkbox" name="advance_guarantee" value="1"
-                            @checked($jaminan->advance_guarantee)>
-                    </div>
-
-                    {{-- Performance Bond --}}
-                    <div class="col-md-4">
-                        <label class="form-label">Performance Bond</label>
-                        <input type="checkbox" name="performance_bond" value="1"
-                            @checked($jaminan->performance_bond)>
-                    </div>
-
-                    {{-- Warranty Bond --}}
-                    <div class="col-md-4">
-                        <label class="form-label">Warranty Bond</label>
-                        <input type="checkbox" name="warranty_bond" value="1"
-                            @checked($jaminan->warranty_bond)>
+                        <label class="form-label">Jenis Jaminan</label>
+                        <select name="jenis_jaminan" class="form-select" required>
+                            <option value="advance_payment_guarantee"
+                                @selected($jaminan->jenis_jaminan === 'advance_payment_guarantee')>
+                                Advance Payment Guarantee
+                            </option>
+                            <option value="performance_bond"
+                                @selected($jaminan->jenis_jaminan === 'performance_bond')>
+                                Performance Bond
+                            </option>
+                            <option value="warranty_bond"
+                                @selected($jaminan->jenis_jaminan === 'warranty_bond')>
+                                Warranty Bond
+                            </option>
+                        </select>
                     </div>
 
                     {{-- Target Terbit --}}
@@ -205,6 +197,13 @@
                         <label class="form-label">Expiry Date</label>
                         <input type="date" name="expiry_date" class="form-control"
                             value="{{ $jaminan->expiry_date?->format('Y-m-d') }}">
+                    </div>
+
+                    {{-- Link --}}
+                    <div class="col-md-12">
+                        <label class="form-label">Link</label>
+                        <input type="url" name="link" class="form-control"
+                            value="{{ $jaminan->link }}">
                     </div>
                 </div>
 
@@ -250,28 +249,15 @@
                         </select>
                     </div>
 
-                    {{-- JENIS PEMBAYARAN (AUTO-FILL) --}}
+                    {{-- JENIS JAMINAN --}}
                     <div class="col-md-6">
-                        <label class="form-label">Jenis Pembayaran</label>
-                        <input type="text" class="form-control" id="paymentTypeDisplay" disabled value="-">
-                    </div>
-
-                    {{-- Advance Payment Guarantee --}}
-                    <div class="col-md-4">
-                        <label class="form-label">Advance Payment Guarantee</label>
-                        <input type="checkbox" name="advance_guarantee" value="1">
-                    </div>
-
-                    {{-- Performance Bond --}}
-                    <div class="col-md-4">
-                        <label class="form-label">Performance Bond</label>
-                        <input type="checkbox" name="performance_bond" value="1">
-                    </div>
-
-                    {{-- Warranty Bond --}}
-                    <div class="col-md-4">
-                        <label class="form-label">Warranty Bond</label>
-                        <input type="checkbox" name="warranty_bond" value="1">
+                        <label class="form-label">Jenis Jaminan *</label>
+                        <select name="jenis_jaminan" class="form-select" required>
+                            <option value="" disabled selected>Pilih Jenis Jaminan</option>
+                            <option value="advance_payment_guarantee">Advance Payment Guarantee</option>
+                            <option value="performance_bond">Performance Bond</option>
+                            <option value="warranty_bond">Warranty Bond</option>
+                        </select>
                     </div>
 
                     {{-- Target Terbit --}}
@@ -290,6 +276,12 @@
                     <div class="col-md-4">
                         <label class="form-label">Expiry Date</label>
                         <input type="date" name="expiry_date" class="form-control">
+                    </div>
+
+                    {{-- Link --}}
+                    <div class="col-md-12">
+                        <label class="form-label">Link</label>
+                        <input type="url" name="link" class="form-control">
                     </div>
                 </div>
 

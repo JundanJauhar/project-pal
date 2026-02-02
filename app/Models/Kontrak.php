@@ -26,6 +26,7 @@ class Kontrak extends Model
         'incoterms',
         'coo',
         'warranty',
+        'delivery_time',
         'link',
         'remarks',
     ];

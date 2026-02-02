@@ -24,7 +24,7 @@
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tgl Kirim ke Vendor</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tgl Feedback Vendor</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Revision</th>
-                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Hasil</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Remarks</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Aksi</th>
                     </tr>
@@ -97,13 +97,9 @@
                             </span>
                         </td>
 
-                        {{-- Tanggal Hasil --}}
+                        {{-- Remarks --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
-                            @if($latestRevision && $latestRevision->date_result)
-                            {{ \Carbon\Carbon::parse($latestRevision->date_result)->format('d/m/Y') }}
-                            @else
-                            <span style="color: #999;">-</span>
-                            @endif
+                            {{ $review->remarks ?? '-' }}
                         </td>
 
                         {{-- Status --}}
@@ -161,7 +157,7 @@
                         {{-- Revision --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
 
-                        {{-- Tanggal Hasil --}}
+                        {{-- Remarks --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">-</td>
 
                         {{-- Status --}}
