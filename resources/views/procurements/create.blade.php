@@ -4,100 +4,100 @@
 
 @push('styles')
 <style>
-/* Card styling */
-.card .card-custom {
-    /* border-radius: 12px; */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border: none;
-}
+    /* Card styling */
+    .card .card-custom {
+        /* border-radius: 12px; */
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: none;
+    }
 
-/* Header card - KEDUA BIRU dengan ukuran sama */
-.card-header-custom,
-.card-header-custom-white {
-    background-color: #03418C;
-    background: #03418C;
-    color: white;
-    padding: 1rem 1.25rem;
-    border-radius: 12px 12px 0 0;
-    min-height: 60px;
-    display: flex;
-    align-items: center;
-}
+    /* Header card - KEDUA BIRU dengan ukuran sama */
+    .card-header-custom,
+    .card-header-custom-white {
+        background-color: #03418C;
+        background: #03418C;
+        color: white;
+        padding: 1rem 1.25rem;
+        border-radius: 12px 12px 0 0;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+    }
 
-.card-header-custom h5,
-.card-header-custom-white h5 {
-    color: white;
-    margin: 0;  
-    font-size: 1.25rem;
-}
+    .card-header-custom h5,
+    .card-header-custom-white h5 {
+        color: white;
+        margin: 0;
+        font-size: 1.25rem;
+    }
 
-/* Tombol Tambah - PUTIH dengan text BIRU */
-.btn-add-item-custom {
-    background-color: white;
-    background: white;
-    color: #03418C;
-    border: 1px solid #03418C;
-    padding: 6px 16px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.2s;
-}
+    /* Tombol Tambah - PUTIH dengan text BIRU */
+    .btn-add-item-custom {
+        background-color: white;
+        background: white;
+        color: #03418C;
+        border: 1px solid #03418C;
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
 
-.btn-add-item-custom:hover {
-    background-color: #f0f0f0;
-    background: #f0f0f0;
-    color: #03418C;
-    border-color: #03418C;
-}
+    .btn-add-item-custom:hover {
+        background-color: #f0f0f0;
+        background: #f0f0f0;
+        color: #03418C;
+        border-color: #03418C;
+    }
 
-/* Tombol Simpan - BIRU dengan hover */
-.btn-primary.btn-custom {
-    background-color: #03418C;
-    background: #03418C;
-    border-color: #03418C;
-    color: white;
-}
+    /* Tombol Simpan - BIRU dengan hover */
+    .btn-primary.btn-custom {
+        background-color: #03418C;
+        background: #03418C;
+        border-color: #03418C;
+        color: white;
+    }
 
-.btn-primary.btn-custom:hover {
-    background-color: #022d5f;
-    background: #022d5f;
-    border-color: #022d5f;
-    color: white;
-}
+    .btn-primary.btn-custom:hover {
+        background-color: #022d5f;
+        background: #022d5f;
+        border-color: #022d5f;
+        color: white;
+    }
 
-/* Tombol Batal tetap abu-abu */
-.btn-secondary.btn-custom {
-    background-color: #6c757d;
-    border-color: #6c757d;
-}
+    /* Tombol Batal tetap abu-abu */
+    .btn-secondary.btn-custom {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
 
-.btn-secondary.btn-custom:hover {
-    background-color: #5a6268;
-    border-color: #545b62;
-}
+    .btn-secondary.btn-custom:hover {
+        background-color: #5a6268;
+        border-color: #545b62;
+    }
 
-.btn-remove-item {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
+    .btn-remove-item {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
 
-.btn-remove-item:hover {
-    background-color: #c82333;
-}
+    .btn-remove-item:hover {
+        background-color: #c82333;
+    }
 
-.card-body {
-    border: none;
-}
+    .card-body {
+        border: none;
+    }
 </style>
 @endpush
 
@@ -130,14 +130,14 @@
                             <select name="project_code" id="project_code" class="form-select" required>
                                 <option value="">Pilih Project</option>
                                 @foreach($projects as $project)
-                                    <option value="{{ $project->project_code }}" 
-                                        {{ old('project_code', $procurement->project_code ?? '') == $project->project_code ? 'selected' : '' }}>
-                                        {{ $project->project_code }}
-                                    </option>
+                                <option value="{{ $project->project_code }}"
+                                    {{ old('project_code', $procurement->project_code ?? '') == $project->project_code ? 'selected' : '' }}>
+                                    {{ $project->project_code }}
+                                </option>
                                 @endforeach
                             </select>
                             @error('project_code')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -152,7 +152,7 @@
                                 readonly
                                 required>
                             @error('code_procurement')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -161,19 +161,19 @@
                             <select name="department_procurement" id="department_procurement" class="form-select" required>
                                 <option value="">Pilih Department</option>
                                 @foreach($departments as $department)
-                                    <option value="{{ $department->department_id }}"
-                                        {{ old('department_procurement', $procurement->department_procurement ?? '') == $department->department_id ? 'selected' : '' }}>
-                                        {{ $department->department_name }}
-                                    </option>
+                                <option value="{{ $department->department_id }}"
+                                    {{ old('department_procurement', $procurement->department_procurement ?? '') == $department->department_id ? 'selected' : '' }}>
+                                    {{ $department->department_name }}
+                                </option>
                                 @endforeach
                             </select>
                             @error('department_procurement')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label for ="no_pr" class="form-label">No PR</label>
+                            <label for="no_pr" class="form-label">No PR</label>
                             <input type="text"
                                 id="no_pr"
                                 name="no_pr"
@@ -181,9 +181,41 @@
                                 value="{{ old('no_pr', $procurement->no_pr ?? '') }}"
                                 placeholder="Masukkan No PR jika ada">
                             @error('no_pr')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="juru_beli" class="form-label">
+                                Juru Beli <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                id="juru_beli"
+                                name="juru_beli"
+                                class="form-control @error('juru_beli') is-invalid @enderror"
+                                value="{{ old('juru_beli', $procurement->juru_beli ?? '') }}"
+                                placeholder="Nama Juru Beli"
+                                required>
+                            @error('juru_beli')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="biro_pengadaan" class="form-label">
+                                Biro <span class="text-danger">*</span>
+                            </label>
+                            <select name="biro_pengadaan"
+                                id="biro_pengadaan"
+                                class="form-select @error('biro_pengadaan') is-invalid @enderror"
+                                required>
+                                <option value="">Pilih Biro</option>
+                            </select>
+                            @error('biro_pengadaan')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                     </div>
 
                     <div class="mb-3">
@@ -281,76 +313,130 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Data projects dari server
-    const projectsData = {
-        @foreach($projects as $p)
+    document.addEventListener('DOMContentLoaded', function() {
+        // ============================================
+        // 1. PROJECT CODE GENERATION
+        // ============================================
+        const projectsData = {
+            @foreach($projects as $p)
             "{{ $p->project_code }}": {{ $p->procurements_count ?? 0 }},
-        @endforeach
-    };
+            @endforeach
+        };
 
-    const projectSelect = document.getElementById('project_code');
-    const codeInput = document.getElementById('code_procurement');
+        const projectSelect = document.getElementById('project_code');
+        const codeInput = document.getElementById('code_procurement');
 
-    function padSeq(n) {
-        return String(n).padStart(2, '0');
-    }
-
-    function generateSuggestedCode(projectCode) {
-        const count = projectsData[projectCode] ?? 0;
-        const seq = padSeq(count + 1);
-        return `${projectCode}-${seq}`;
-    }
-
-    if (projectSelect) {
-        const initialProject = projectSelect.value;
-        const isEdit = {{ isset($procurement) ? 'true' : 'false' }};
-        
-        if (initialProject && !isEdit) {
-            codeInput.value = generateSuggestedCode(initialProject);
+        function padSeq(n) {
+            return String(n).padStart(2, '0');
         }
 
-        projectSelect.addEventListener('change', function() {
-            const pc = this.value;
-            if (!pc) {
-                codeInput.value = '';
-                return;
+        function generateSuggestedCode(projectCode) {
+            const count = projectsData[projectCode] ?? 0;
+            const seq = padSeq(count + 1);
+            return `${projectCode}-${seq}`;
+        }
+
+        if (projectSelect) {
+            const initialProject = projectSelect.value;
+            const isEdit = {{ isset($procurement) ? 'true' : 'false' }};
+
+            if (initialProject && !isEdit) {
+                codeInput.value = generateSuggestedCode(initialProject);
             }
-            if (!isEdit) {
-                codeInput.value = generateSuggestedCode(pc);
+
+            projectSelect.addEventListener('change', function() {
+                const pc = this.value;
+                if (!pc) {
+                    codeInput.value = '';
+                    return;
+                }
+                if (!isEdit) {
+                    codeInput.value = generateSuggestedCode(pc);
+                }
+            });
+        }
+
+        // ============================================
+        // 2. DEPARTMENT - BIRO MAPPING
+        // ============================================
+        const departmentSelect = document.getElementById('department_procurement');
+        const biroSelect = document.getElementById('biro_pengadaan');
+        const biroMapping = {
+            1: [ // Departemen Pengadaan Produksi
+                'Raw Material & Consumable',
+                'Electric Outfitting & Sewaco',
+                'Machinery & Hull Outfitting',
+                'Maintenance & Repairation'
+            ],
+            2: [ // Departemen Pengadaan Non Produksi & Investasi
+                'Investasi',
+                'Jasa Umum',
+                'Material Umum & ATK'
+            ],
+            3: [ // Departemen Pengadaan Jasa
+                'Jasa Non Produksi',
+                'Jasa Rekum & Harkan',
+                'Jasa Kapal Baru'
+            ]
+        };
+
+
+        function resetBiro() {
+            biroSelect.innerHTML = '<option value="">Pilih Biro</option>';
+        }
+
+        departmentSelect.addEventListener('change', function () {
+            resetBiro();
+
+            const selectedDeptId = this.value;
+            if (!biroMapping[selectedDeptId]) return;
+
+            biroMapping[selectedDeptId].forEach(biro => {
+                const option = document.createElement('option');
+                option.value = biro;
+                option.textContent = biro;
+                biroSelect.appendChild(option);
+            });
+        });
+
+
+        // 🔁 Handle EDIT MODE - trigger change event untuk populate biro
+        @if(old('department_procurement', $procurement->department_procurement ?? false))
+            departmentSelect.dispatchEvent(new Event('change'));
+            biroSelect.value = "{{ old('biro_pengadaan', $procurement->biro_pengadaan ?? '') }}";
+        @endif
+
+        // ============================================
+        // 3. FORM VALIDATION
+        // ============================================
+        const mainForm = document.getElementById('mainForm');
+        mainForm.addEventListener('submit', function(e) {
+            const items = document.querySelectorAll('#itemsContainer .card');
+            if (items.length === 0) {
+                e.preventDefault();
+                alert('Minimal harus ada 1 item untuk procurement ini!');
+                return false;
             }
         });
-    }
-
-    // Validasi sebelum submit - pastikan ada minimal 1 item
-    const mainForm = document.getElementById('mainForm');
-    mainForm.addEventListener('submit', function(e) {
-        const items = document.querySelectorAll('#itemsContainer .card');
-        if (items.length === 0) {
-            e.preventDefault();
-            alert('Minimal harus ada 1 item untuk procurement ini!');
-            return false;
-        }
     });
-});
 </script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const container = document.getElementById("itemsContainer");
-    const btnAdd = document.getElementById("btnAddItem");
+    document.addEventListener("DOMContentLoaded", function() {
+        const container = document.getElementById("itemsContainer");
+        const btnAdd = document.getElementById("btnAddItem");
 
-    let itemIndex = 0;
+        let itemIndex = 0;
 
-    function createItemCard() {
-        itemIndex++;
+        function createItemCard() {
+            itemIndex++;
 
-        const card = document.createElement('div');
-        card.className = 'card p-3 mb-3 shadow-sm position-relative';
-        card.style.borderRadius = '12px';
-        card.dataset.itemId = itemIndex;
+            const card = document.createElement('div');
+            card.className = 'card p-3 mb-3 shadow-sm position-relative';
+            card.style.borderRadius = '12px';
+            card.dataset.itemId = itemIndex;
 
-        card.innerHTML = `
+            card.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 class="mb-0"><strong>Item ${itemIndex}</strong></h6>
                 <button type="button" class="btn-remove-item" onclick="removeItem(${itemIndex})">
@@ -380,23 +466,23 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
         `;
 
-        container.appendChild(card);
-    }
-
-    // Fungsi untuk menghapus item
-    window.removeItem = function(index) {
-        const card = container.querySelector(`[data-item-id="${index}"]`);
-        if (card) {
-            card.remove();
+            container.appendChild(card);
         }
-    };
 
-    btnAdd.addEventListener("click", () => {
+        // Fungsi untuk menghapus item
+        window.removeItem = function(index) {
+            const card = container.querySelector(`[data-item-id="${index}"]`);
+            if (card) {
+                card.remove();
+            }
+        };
+
+        btnAdd.addEventListener("click", () => {
+            createItemCard();
+        });
+
+        // Tambah 1 item default saat halaman load
         createItemCard();
     });
-
-    // Tambah 1 item default saat halaman load
-    createItemCard();
-});
 </script>
 @endpush

@@ -71,12 +71,11 @@ class JaminanPembayaranController extends Controller
          */
         $validated = $request->validateWithBag('jaminan', [
             'procurement_id' => 'required|exists:procurement,procurement_id',
-            'advance_guarantee' => 'nullable|boolean',
-            'performance_bond' => 'nullable|boolean',
-            'warranty_bond' => 'nullable|boolean',
+            'jenis_jaminan' => 'required|in:advance_payment_guarantee,performance_bond,warranty_bond',
             'target_terbit' => 'nullable|date',
             'realisasi_terbit' => 'nullable|date',
             'expiry_date' => 'nullable|date|after:target_terbit',
+            'link' => 'nullable|url|max:255',
         ], [
             'procurement_id.required' => 'Procurement tidak valid',
             'expiry_date.after' => 'Expiry date harus setelah target terbit',
@@ -107,12 +106,11 @@ class JaminanPembayaranController extends Controller
             $jaminan = JaminanPembayaran::create([
                 'procurement_id' => $validated['procurement_id'],
                 'vendor_id' => $vendorId,
-                'advance_guarantee' => $request->boolean('advance_guarantee'),
-                'performance_bond' => $request->boolean('performance_bond'),
-                'warranty_bond' => $request->boolean('warranty_bond'),
+                'jenis_jaminan' => $validated['jenis_jaminan'],
                 'target_terbit' => $validated['target_terbit'] ?? null,
                 'realisasi_terbit' => $validated['realisasi_terbit'] ?? null,
                 'expiry_date' => $validated['expiry_date'] ?? null,
+                'link' => $validated['link'] ?? null,
             ]);
 
             DB::commit();
@@ -199,12 +197,11 @@ class JaminanPembayaranController extends Controller
         }
 
         $validated = $request->validateWithBag('jaminan', [
-            'advance_guarantee' => 'nullable|boolean',
-            'performance_bond' => 'nullable|boolean',
-            'warranty_bond' => 'nullable|boolean',
+            'jenis_jaminan' => 'required|in:advance_payment_guarantee,performance_bond,warranty_bond',
             'target_terbit' => 'nullable|date',
             'realisasi_terbit' => 'nullable|date',
             'expiry_date' => 'nullable|date|after:target_terbit',
+            'link' => 'nullable|url|max:255',
         ]);
 
         try {
@@ -213,12 +210,11 @@ class JaminanPembayaranController extends Controller
              * vendor_id TIDAK DIUBAH
              */
             $jaminan->update([
-                'advance_guarantee' => $request->boolean('advance_guarantee'),
-                'performance_bond' => $request->boolean('performance_bond'),
-                'warranty_bond' => $request->boolean('warranty_bond'),
+                'jenis_jaminan' => $validated['jenis_jaminan'],
                 'target_terbit' => $validated['target_terbit'] ?? null,
                 'realisasi_terbit' => $validated['realisasi_terbit'] ?? null,
                 'expiry_date' => $validated['expiry_date'] ?? null,
+                'link' => $validated['link'] ?? null,
             ]);
 
             // Log activity
@@ -355,12 +351,11 @@ class JaminanPembayaranController extends Controller
                     return [
                         'jaminan_pembayaran_id' => $j->jaminan_pembayaran_id,
                         'vendor' => $j->vendor->name_vendor ?? '-',
-                        'advance_guarantee' => $j->advance_guarantee,
-                        'performance_bond' => $j->performance_bond,
-                        'warranty_bond' => $j->warranty_bond,
+                        'jenis_jaminan' => $j->jenis_jaminan,
                         'target_terbit' => $j->target_terbit?->format('d/m/Y') ?? '-',
                         'realisasi_terbit' => $j->realisasi_terbit?->format('d/m/Y') ?? '-',
                         'expiry_date' => $j->expiry_date?->format('d/m/Y') ?? '-',
+                        'link' => $j->link ?? '-',
                     ];
                 });
 

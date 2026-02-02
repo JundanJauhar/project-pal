@@ -42,6 +42,7 @@
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Incoterms</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">COO</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Warranty</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Delivery Time</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Link</th>
                         <th style="padding: 12px 8px; text-align: center; color: #000;">Aksi</th>
                     </tr>
@@ -103,6 +104,9 @@
                         {{-- Warranty --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $kontrak->warranty ?? '-' }}</td>
 
+                        {{-- Delivery Time --}}
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $kontrak->delivery_time ?? '-' }}</td>
+
                         {{-- Link --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             @if($kontrak->link)
@@ -127,7 +131,7 @@
                     {{-- ✅ ROW CREATE (SELALU TAMPIL SAAT CHECKPOINT 6) --}}
                     @if($currentCheckpointSequence == 6)
                     <tr>
-                        <td colspan="12"></td>
+                        <td colspan="13"></td>
                         <td class="text-center">
                             <button class="btn btn-sm btn-action-create"
                                 data-bs-toggle="modal"
@@ -280,6 +284,13 @@
                         <label class="form-label">Warranty</label>
                         <input type="text" name="warranty" class="form-control"
                             value="{{ $kontrak->warranty }}">
+                    </div>
+
+                    {{-- Delivery Time --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Delivery Time</label>
+                        <input type="text" name="delivery_time" class="form-control"
+                            value="{{ $kontrak->delivery_time }}">
                     </div>
 
                     {{-- Link --}}
@@ -464,6 +475,12 @@
                     <div class="col-md-6">
                         <label class="form-label">Warranty</label>
                         <input type="text" name="warranty" class="form-control">
+                    </div>
+
+                    {{-- Delivery Time --}}
+                    <div class="col-md-6">
+                        <label class="form-label">Delivery Time</label>
+                        <input type="text" name="delivery_time" class="form-control">
                     </div>
 
                     {{-- Link --}}

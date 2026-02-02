@@ -38,6 +38,7 @@
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">ETD</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">ETA SBY Port</th>
                         <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">ETA PAL</th>
+                        <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Link</th>
                         <th style="padding: 12px 8px; text-align: center; color: #000;">Aksi</th>
                     </tr>
                 </thead>
@@ -64,6 +65,13 @@
                         <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $delivery->etd?->format('d/m/Y') ?? '-' }}</td>
                         <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $delivery->eta_sby_port?->format('d/m/Y') ?? '-' }}</td>
                         <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $delivery->eta_pal?->format('d/m/Y') ?? '-' }}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            @if($delivery->link)
+                            <a href="{{ $delivery->link }}" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600;">Link</a>
+                            @else
+                            <span style="color: #999;">-</span>
+                            @endif
+                        </td>
                         <td style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">
                             <button class="btn btn-sm btn-action-edit"
                                 data-bs-toggle="modal"
@@ -77,7 +85,7 @@
                     @if($materialDeliveries->count() == 0 && $currentCheckpointSequence == 8)
                     <tr>
                         <td>{{ $row }}</td>
-                        <td colspan="6" class="text-center text-muted">
+                        <td colspan="7" class="text-center text-muted">
                             Belum ada pengiriman material</td>
                         <td class="text-center">
                             <button class="btn btn-sm btn-action-create"
@@ -92,7 +100,7 @@
                     {{-- ================= ROW CREATE (HANYA SAAT CHECKPOINT 8) ================= --}}
                     @if($materialDeliveries->count() > 0 && $currentCheckpointSequence == 8)
                     <tr>
-                        <td colspan="7"></td>
+                        <td colspan="8"></td>
                         <td class="text-center">
                             <button class="btn btn-sm btn-action-create"
                                 data-bs-toggle="modal"
@@ -174,6 +182,13 @@
                             value="{{ $delivery->eta_pal?->format('Y-m-d') }}">
                     </div>
 
+                    {{-- Link --}}
+                    <div class="col-12">
+                        <label class="form-label">Link</label>
+                        <input type="url" name="link" class="form-control"
+                            value="{{ $delivery->link }}">
+                    </div>
+
                     {{-- Remark --}}
                     <div class="col-12">
                         <label class="form-label">Remark</label>
@@ -253,6 +268,12 @@
                     <div class="col-md-6">
                         <label class="form-label">ETA PAL</label>
                         <input type="date" name="eta_pal" class="form-control">
+                    </div>
+
+                    {{-- Link --}}
+                    <div class="col-12">
+                        <label class="form-label">Link</label>
+                        <input type="url" name="link" class="form-control">
                     </div>
 
                     {{-- Remark --}}

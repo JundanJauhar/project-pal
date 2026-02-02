@@ -25,6 +25,9 @@ return new class extends Migration
             $table->string('no_memo')->nullable();
             $table->string('link')->nullable();
 
+            $table->date('lsd')->nullable(); // Last Service Date
+            $table->string('evidence_link')->nullable();
+
             $table->date('target_date')->nullable();
             $table->date('realization_date')->nullable();
 

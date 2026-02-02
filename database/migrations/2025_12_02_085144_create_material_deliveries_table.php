@@ -21,6 +21,7 @@ return new class extends Migration
             $table->date('eta_pal')->nullable();
             $table->date('atd')->nullable();
             $table->date('ata_sby_port')->nullable();
+            $table->text('link')->nullable();
 
             $table->longText('remark')->nullable();
             $table->timestamps();

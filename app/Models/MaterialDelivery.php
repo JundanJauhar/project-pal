@@ -24,6 +24,7 @@ class MaterialDelivery extends Model
         'eta_pal',
         'atd',
         'ata_sby_port',
+        'link',
         'remark',
     ];
 

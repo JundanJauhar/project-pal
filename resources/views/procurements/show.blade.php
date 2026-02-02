@@ -358,6 +358,11 @@
                 <div class="info-label">Department</div>
                 <div class="info-value">{{ $procurement->department->department_name ?? '-' }}</div>
             </div>
+            
+            <div class="info-item">
+                <div class="info-label">Biro</div>
+                <div class="info-value">{{ $procurement->biro_pengadaan ?? '-' }}</div>
+            </div>
 
             <div class="info-item">
                 <div class="info-label">No PR</div>
@@ -380,6 +385,11 @@
         </div>
 
         <div>
+            <div class="info-item">
+                <div class="info-label">Juru Beli</div>
+                <div class="info-value">{{ strtoupper($procurement->juru_beli ?? '-') }}</div>
+            </div>
+
             <div class="info-item">
                 <div class="info-label">Prioritas</div>
                 <div class="info-value">

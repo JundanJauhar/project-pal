@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('incoterms')->nullable();
             $table->string('coo')->nullable();
             $table->string('warranty')->nullable();
+            $table->string('delivery_time')->nullable();
             $table->text('link')->nullable();
 
             $table->longText('remarks')->nullable();

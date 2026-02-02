@@ -23,6 +23,8 @@ return new class extends Migration
 
             // FK ke department (karena procurement dibuat oleh department tertentu)
             $table->unsignedBigInteger('department_procurement')->nullable();
+            $table->string('juru_beli', 100)->nullable();
+            $table->string('biro_pengadaan', 100)->nullable();
             $table->string('no_pr')->nullable();
 
             // Prioritas pengadaan

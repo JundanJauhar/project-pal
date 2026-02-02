@@ -57,7 +57,8 @@ class MaterialDeliveryController extends Controller
             'eta_pal' => 'nullable|date|after_or_equal:eta_sby_port',
             'atd' => 'nullable|date',
             'ata_sby_port' => 'nullable|date|after_or_equal:atd',
-            'remark' => 'nullable|string|max:1000',
+            'link' => 'nullable|url|max:255',
+            'remark' => 'nullable|string|max:255',
         ]);
 
         DB::beginTransaction();
@@ -80,6 +81,7 @@ class MaterialDeliveryController extends Controller
                 'eta_pal' => $validated['eta_pal'] ?? null,
                 'atd' => $validated['atd'] ?? null,
                 'ata_sby_port' => $validated['ata_sby_port'] ?? null,
+                'link' => $validated['link'] ?? null,
                 'remark' => $validated['remark'] ?? null,
             ]);
 
@@ -161,6 +163,7 @@ class MaterialDeliveryController extends Controller
             'eta_pal' => 'nullable|date|after_or_equal:eta_sby_port',
             'atd' => 'nullable|date',
             'ata_sby_port' => 'nullable|date|after_or_equal:atd',
+            'link' => 'nullable|url|max:255',
             'remark' => 'nullable|string|max:1000',
         ], [
             'imo_number.regex' => 'IMO Number harus 7 digit angka',
@@ -299,6 +302,7 @@ class MaterialDeliveryController extends Controller
                         'eta_pal' => $del->eta_pal ? $del->eta_pal->format('d/m/Y') : '-',
                         'atd' => $del->atd ? $del->atd->format('d/m/Y') : '-',
                         'ata_sby_port' => $del->ata_sby_port ? $del->ata_sby_port->format('d/m/Y') : '-',
+                        'link' => $del->link ?? '-',
                         'remark' => $del->remark ?? '-',
                     ];
                 });

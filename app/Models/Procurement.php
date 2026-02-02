@@ -20,6 +20,8 @@ class Procurement extends Model
         'name_procurement',
         'description',
         'department_procurement',
+        'juru_beli',
+        'biro_pengadaan',
         'no_pr',
         'priority',
         'start_date',
