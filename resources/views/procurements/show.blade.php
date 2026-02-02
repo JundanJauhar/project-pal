@@ -296,6 +296,24 @@
         border: 1px solid #002e5c;
     }
 
+    .swal-actions-custom {
+        display: flex !important;
+        justify-content: center;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .swal-actions-custom .btn {
+        min-width: 100px;
+        border-radius: 6px;
+        font-weight: 600;
+    }
+
+    .swal-actions-custom .btn-action-abort,
+    .swal-actions-custom .btn-action-create {
+        box-shadow: none;
+    }
+
     .modal-dialog {
         margin: 0 auto;
         top: 50%;

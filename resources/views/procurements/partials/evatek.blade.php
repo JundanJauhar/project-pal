@@ -1,42 +1,37 @@
 @if($procurement->use_evatek)
 <div id="evatek">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex align-items-center gap-3 mb-3">
         <h5 class="section-title mb-0">Evatek</h5>
 
         @if(!$isAfterEvatek)
-        {{-- TOGGLE EVATEK --}}
-        <form action="{{ route('procurements.toggle-evatek', $procurement->procurement_id) }}"
+        <form id="evatekToggleForm"
+            action="{{ route('procurements.toggle-evatek', $procurement->procurement_id) }}"
             method="POST"
-            class="d-flex align-items-center gap-2">
+            class="d-flex align-items-center">
             @csrf
-
-            <span class="fw-semibold" style="font-size: 13px;">Gunakan Evatek</span>
 
             <div class="form-check form-switch mb-0">
                 <input type="hidden" name="use_evatek" value="0">
 
                 <input class="form-check-input"
                     type="checkbox"
+                    id="evatekToggle"
                     name="use_evatek"
                     value="1"
-                    onchange="this.form.submit()"
                     {{ $procurement->use_evatek ? 'checked' : '' }}
                     {{ !$canToggleEvatek ? 'disabled' : '' }}>
             </div>
 
-            <span class="badge {{ $procurement->use_evatek ? 'bg-success' : 'bg-secondary' }}">
-                {{ $procurement->use_evatek ? 'EVATEK AKTIF' : 'EVATEK NONAKTIF' }}
-            </span>
-
             @if(!$canToggleEvatek)
-            <span class="badge bg-warning">
+            <span class="badge bg-warning ms-2">
                 <i class="bi bi-lock"></i> TERKUNCI
             </span>
             @endif
         </form>
         @endif
     </div>
+
 
     {{-- Alert Error --}}
     @if ($errors->any())
@@ -311,11 +306,11 @@ $request = $itemData['request'];
                             class="form-select"
                             required
                             style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                            <option value="">-- Pilih PIC --</option>
-                            <option value="EO">Engineering Officer (EO)</option>
-                            <option value="HC">Head of Construction (HC)</option>
-                            <option value="MO">Material Officer (MO)</option>
-                            <option value="HO">Head of Operations (HO)</option>
+                            <option value="" disabled selected>-- Pilih PIC --</option>
+                            <option value="EO">EO</option>
+                            <option value="HC">HC</option>
+                            <option value="MO">MO</option>
+                            <option value="HO">HO</option>
                             <option value="SEWACO">SEWACO</option>
                         </select>
                     </div>
@@ -387,3 +382,50 @@ $request = $itemData['request'];
 @endforeach
 @endif
 @endif
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggle = document.getElementById('evatekToggle');
+        const form = document.getElementById('evatekToggleForm');
+
+        if (!toggle || !form) return;
+
+        let previousState = toggle.checked;
+
+        toggle.addEventListener('change', function(e) {
+            e.preventDefault();
+
+            const newState = toggle.checked;
+
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: newState ?
+                    'Anda akan mengaktifkan Evatek untuk procurement ini.' :
+                    'Anda akan menonaktifkan Evatek dan tahap ini akan dilewati.',
+                icon: 'question',
+
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Simpan!',
+                cancelButtonText: 'Batal',
+
+                reverseButtons: true,
+                buttonsStyling: false,
+                scrollbarPadding: false,
+
+                customClass: {
+                    confirmButton: 'btn btn-sm btn-action-create',
+                    cancelButton: 'btn btn-sm btn-action-abort',
+                    actions: 'swal-actions-custom'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                } else {
+                    toggle.checked = previousState;
+                }
+            });
+
+            previousState = newState;
+        });
+    });
+</script>
