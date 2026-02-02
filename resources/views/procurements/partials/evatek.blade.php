@@ -5,7 +5,8 @@
         <h5 class="section-title mb-0">Evatek</h5>
 
         @if(!$isAfterEvatek)
-        <form action="{{ route('procurements.toggle-evatek', $procurement->procurement_id) }}"
+        <form id="evatekToggleForm"
+            action="{{ route('procurements.toggle-evatek', $procurement->procurement_id) }}"
             method="POST"
             class="d-flex align-items-center">
             @csrf
@@ -15,9 +16,9 @@
 
                 <input class="form-check-input"
                     type="checkbox"
+                    id="evatekToggle"
                     name="use_evatek"
                     value="1"
-                    onchange="this.form.submit()"
                     {{ $procurement->use_evatek ? 'checked' : '' }}
                     {{ !$canToggleEvatek ? 'disabled' : '' }}>
             </div>
@@ -305,11 +306,11 @@ $request = $itemData['request'];
                             class="form-select"
                             required
                             style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                            <option value="">-- Pilih PIC --</option>
-                            <option value="EO">Engineering Officer (EO)</option>
-                            <option value="HC">Head of Construction (HC)</option>
-                            <option value="MO">Material Officer (MO)</option>
-                            <option value="HO">Head of Operations (HO)</option>
+                            <option value="" disabled selected>-- Pilih PIC --</option>
+                            <option value="EO">EO</option>
+                            <option value="HC">HC</option>
+                            <option value="MO">MO</option>
+                            <option value="HO">HO</option>
                             <option value="SEWACO">SEWACO</option>
                         </select>
                     </div>
@@ -381,3 +382,50 @@ $request = $itemData['request'];
 @endforeach
 @endif
 @endif
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggle = document.getElementById('evatekToggle');
+        const form = document.getElementById('evatekToggleForm');
+
+        if (!toggle || !form) return;
+
+        let previousState = toggle.checked;
+
+        toggle.addEventListener('change', function(e) {
+            e.preventDefault();
+
+            const newState = toggle.checked;
+
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: newState ?
+                    'Anda akan mengaktifkan Evatek untuk procurement ini.' :
+                    'Anda akan menonaktifkan Evatek dan tahap ini akan dilewati.',
+                icon: 'question',
+
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Simpan!',
+                cancelButtonText: 'Batal',
+
+                reverseButtons: true,
+                buttonsStyling: false,
+                scrollbarPadding: false,
+
+                customClass: {
+                    confirmButton: 'btn btn-sm btn-action-create',
+                    cancelButton: 'btn btn-sm btn-action-abort',
+                    actions: 'swal-actions-custom'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                } else {
+                    toggle.checked = previousState;
+                }
+            });
+
+            previousState = newState;
+        });
+    });
+</script>
