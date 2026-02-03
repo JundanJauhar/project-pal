@@ -61,7 +61,7 @@ class PembayaranController extends Controller
 
         $validated = $request->validate([
             'procurement_id'   => 'required|exists:procurement,procurement_id',
-            'payment_type'     => 'required|in:SKBDN,L/C,TT',
+            'payment_type'     => 'required|in:SKBDN,DP,L/C,TT',
             'percentage'       => 'required|numeric|min:1|max:100',
             'no_memo'          => 'nullable|string|max:100',
             'link'             => 'nullable|url|max:255',
@@ -201,7 +201,7 @@ class PembayaranController extends Controller
         }
 
         $validated = $request->validate([
-            'payment_type'     => 'required|in:SKBDN,L/C,TT',
+            'payment_type'     => 'required|in:SKBDN,DP,L/C,TT',
             'percentage'       => 'required|numeric|min:1|max:100',
             'no_memo'          => 'nullable|string|max:100',
             'link'             => 'nullable|url|max:255',
