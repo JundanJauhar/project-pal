@@ -440,7 +440,7 @@
                     @elseif(empty(trim($latestRevision->vendor_link ?? '')))
                     <span class="badge bg-warning text-dark">Di Vendor</span>
                     @else
-                    <span class="badge bg-info text-dark">Di Desain</span>
+                    <span class="badge bg-info text-dark">Di Supply Chain</span>
                     @endif
                 </td>
 

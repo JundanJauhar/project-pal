@@ -132,8 +132,8 @@
                     <tr>
                         <th></th>
                         <th>Revision</th>
-                        <th>Vendor File Link</th>
                         <th>SC File Link</th>
+                        <th>Vendor File Link</th>
                         <th>Decision</th>
                     </tr>
                 </thead>
@@ -149,13 +149,14 @@
                             </td>
                             <td><strong>{{ $rev->revision_code }}</strong></td>
                             <td>
-                                <input type="text" class="link-input vendor-link" value="{{ $rev->vendor_link }}">
-                            </td>
-                            <td>
                                 <input type="text" class="link-input sc-link" value="{{ $rev->sc_link }}" >
                                 <button class="action-btn btn-upload save-link">Save</button>
                                 <div class="link-status"></div>
                             </td>
+                            <td>
+                                <input type="text" class="link-input vendor-link" value="{{ $rev->vendor_link }}">
+                            </td>
+                           
                             <td>
                                 @if(in_array($rev->result, ['approve', 'not_approve', 'revisi']))
                                     <div class="d-flex flex-column align-items-center">
@@ -595,13 +596,14 @@ function submitRevisi(row) {
         <tr data-revision-id="${next.contract_review_revision_id}" data-rev="${next.revision_code}">
             <td><input type="checkbox" class="rev-check"></td>
             <td><strong>${next.revision_code}</strong></td>
-            <td>
-                <input type="text" class="link-input vendor-link">
-                <div class="link-status"></div>
-            </td>
+            
             <td>
                 <input type="text" class="link-input sc-link">
                 <button class="action-btn btn-upload save-link">Save</button>
+                <div class="link-status"></div>
+            </td>
+            <td>
+                <input type="text" class="link-input vendor-link">
                 <div class="link-status"></div>
             </td>
             <td>
