@@ -50,7 +50,7 @@
 .btn-save { background: #007bff; } /* Blue for Save Status */
 
 /* Default state: Gray for decision buttons */
-.btn-approve, .btn-reject, .btn-revisi { background: #e0e0e0; color: #555; }
+.btn-approve, .btn-reject, .btn-revisi { background: #e0e0e0; color: #555; height: 60px; align-items: center; justify-content: center; }
 
 /* Active states */
 .btn-approve.active { background: #28a745; color: white; }
@@ -162,7 +162,7 @@
                                         @elseif($rev->status == 'not approve')
                                             <span class="fw-bold text-danger">Not Approved</span>
                                         @elseif($rev->status == 'revisi')
-                                            <span class="fw-bold text-warning" style="color:#ffc107;">Revisi</span>
+                                            <span class="fw-bold text-warning" style="color:#ffc107;">Approved With Comment</span>
                                         @endif
                                         <span class="text-muted" style="font-size: 11px;">
                                             {{ \Carbon\Carbon::parse($rev->updated_at)->format('d/m/Y H:i') }}
@@ -170,7 +170,7 @@
                                     </div>
                                 @else
                                     <button class="action-btn btn-approve approve-btn">Approve</button>
-                                    <button class="action-btn btn-revisi revisi-btn">Revisi</button>
+                                    <button class="action-btn btn-revisi revisi-btn">Approve With Comment</button>
                                     <button class="action-btn btn-reject reject-btn">Not Approve</button>
                                     <button class="action-btn btn-save save-status" style="display:none;">Save Status</button>
                                 @endif
@@ -403,7 +403,7 @@ function saveSelectedStatus(row) {
         statusText = "Not Approve / Tolak";
         confirmColor = "#d62828";
     } else if (selectedStatus === "revisi") {
-        statusText = "Revisi";
+        statusText = "Approve with comments";
         confirmColor = "#ffc107";
     }
 
@@ -502,7 +502,7 @@ function submitRevisi(row) {
             </td>
             <td>
                 <button class="action-btn btn-approve approve-btn">Approve</button>
-                <button class="action-btn btn-revisi revisi-btn">Revisi</button>
+                <button class="action-btn btn-revisi revisi-btn">Approve With Comment</button>
                 <button class="action-btn btn-reject reject-btn">Not Approve</button>
                 <button class="action-btn btn-save save-status" style="display:none;">Save Status</button>
             </td>
