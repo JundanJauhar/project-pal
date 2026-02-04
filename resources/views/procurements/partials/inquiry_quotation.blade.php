@@ -123,7 +123,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <form method="POST" action="{{ route('inquiry-quotation.update', $iq->inquiry_quotation_id) }}">
+            <form method="POST" 
+                  action="{{ route('inquiry-quotation.update', $iq->inquiry_quotation_id) }}"
+                  onsubmit="return validateVendor(this)">
                 @csrf
                 <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
 
@@ -131,14 +133,26 @@
                     {{-- Vendor --}}
                     <div class="col-md-6">
                         <label class="form-label">Vendor *</label>
-                        <select name="vendor_id" class="form-select" required>
-                            @foreach($vendors as $vendor)
-                            <option value="{{ $vendor->id_vendor }}"
-                                @selected($vendor->id_vendor == $iq->vendor_id)>
-                                {{ $vendor->name_vendor }}
-                            </option>
-                            @endforeach
-                        </select>
+                        <div class="position-relative">
+                            <input type="text"
+                                class="form-control vendor-search-input"
+                                data-dropdown-id="vendorDropdownEdit{{ $iq->inquiry_quotation_id }}"
+                                data-vendor-id-target="vendorIdEdit{{ $iq->inquiry_quotation_id }}"
+                                placeholder="Cari vendor..."
+                                autocomplete="off"
+                                value="{{ $iq->vendor->name_vendor ?? '' }}"
+                                required>
+
+                            <input type="hidden"
+                                name="vendor_id"
+                                id="vendorIdEdit{{ $iq->inquiry_quotation_id }}"
+                                value="{{ $iq->vendor_id }}">
+
+                            <div id="vendorDropdownEdit{{ $iq->inquiry_quotation_id }}"
+                                 class="list-group position-absolute w-100 shadow d-none"
+                                 style="z-index: 1055; max-height: 220px; overflow-y: auto; top: 100%; left: 0;">
+                            </div>
+                        </div>
                     </div>
 
                     {{-- Tanggal Inquiry --}}
@@ -169,7 +183,7 @@
                             value="{{ $iq->lead_time }}">
                     </div>
 
-                    {{-- Nilai Harga (PERBAIKAN: Pisahkan Display & Raw) --}}
+                    {{-- Nilai Harga --}}
                     <div class="col-md-6">
                         <label class="form-label">Nilai Harga</label>
                         <div class="input-group">
@@ -187,19 +201,16 @@
                                 @endforeach
                             </ul>
 
-                            {{-- INPUT DISPLAY (only for user to see formatted value) --}}
                             <input type="text"
                                 class="form-control currency-input"
                                 data-raw-target="nilaiHargaRaw{{ $iq->inquiry_quotation_id }}"
                                 value="{{ number_format($iq->nilai_harga ?? 0, 0, ',', '.') }}">
 
-                            {{-- INPUT RAW (hidden, actual value sent to server) --}}
                             <input type="hidden"
                                 name="nilai_harga"
                                 id="nilaiHargaRaw{{ $iq->inquiry_quotation_id }}"
                                 value="{{ $iq->nilai_harga ?? '' }}">
 
-                            {{-- INPUT CURRENCY --}}
                             <input type="hidden"
                                 name="currency"
                                 id="currencyEdit{{ $iq->inquiry_quotation_id }}"
@@ -244,22 +255,35 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <form method="POST" action="{{ route('inquiry-quotation.store', $procurement->procurement_id) }}">
+            <form method="POST" 
+                  action="{{ route('inquiry-quotation.store', $procurement->procurement_id) }}"
+                  onsubmit="return validateVendor(this)">
                 @csrf
                 <input type="hidden" name="procurement_id" value="{{ $procurement->procurement_id }}">
 
                 <div class="modal-body row g-3">
-                    {{-- Pilih Vendor --}}
+                    {{-- Vendor --}}
                     <div class="col-md-6">
                         <label class="form-label">Pilih Vendor *</label>
-                        <select name="vendor_id" class="form-select" required>
-                            <option value="" disabled selected>Pilih vendor</option>
-                            @foreach($vendors as $vendor)
-                            <option value="{{ $vendor->id_vendor }}">
-                                {{ $vendor->name_vendor }}
-                            </option>
-                            @endforeach
-                        </select>
+                        <div class="position-relative">
+                            <input type="text"
+                                class="form-control vendor-search-input"
+                                data-dropdown-id="vendorDropdownCreate"
+                                data-vendor-id-target="vendorIdCreate"
+                                placeholder="Cari vendor..."
+                                autocomplete="off"
+                                required>
+
+                            <input type="hidden"
+                                name="vendor_id"
+                                id="vendorIdCreate"
+                                value="">
+
+                            <div id="vendorDropdownCreate"
+                                 class="list-group position-absolute w-100 shadow d-none"
+                                 style="z-index: 1055; max-height: 220px; overflow-y: auto; top: 100%; left: 0;">
+                            </div>
+                        </div>
                     </div>
 
                     {{-- Tanggal Inquiry --}}
@@ -286,7 +310,7 @@
                         <input type="text" name="lead_time" class="form-control" placeholder="ex: 7 hari kerja">
                     </div>
 
-                    {{-- Nilai Harga (PERBAIKAN: Pisahkan Display & Raw) --}}
+                    {{-- Nilai Harga --}}
                     <div class="col-md-6">
                         <label class="form-label">Nilai Harga</label>
                         <div class="input-group">
@@ -300,19 +324,16 @@
                                 <li><a class="dropdown-item" onclick="selectCurrency('SGD')">SGD</a></li>
                             </ul>
 
-                            {{-- INPUT DISPLAY (only for user to see formatted value) --}}
                             <input type="text"
                                 class="form-control currency-input"
                                 data-raw-target="nilaiHargaRawCreate"
                                 placeholder="0">
 
-                            {{-- INPUT RAW (hidden, actual value sent to server) --}}
                             <input type="hidden"
                                 name="nilai_harga"
                                 id="nilaiHargaRawCreate"
                                 value="">
 
-                            {{-- INPUT CURRENCY --}}
                             <input type="hidden"
                                 name="currency"
                                 id="currencyInput"
@@ -342,3 +363,236 @@
     </div>
 </div>
 @endif
+
+{{-- ============================================ --}}
+{{-- VENDOR DATA (untuk autocomplete) --}}
+{{-- ============================================ --}}
+<script>
+const vendorsData = @json(
+    $vendors->map(fn($v) => [
+        'id' => $v->id_vendor,
+        'name' => $v->name_vendor
+    ])->values()
+);
+</script>
+
+{{-- ============================================ --}}
+{{-- OPTIONAL ENHANCEMENT: CSS STYLING --}}
+{{-- ============================================ --}}
+<style>
+/* Highlight styling untuk keyword (OPTIONAL ENHANCEMENT B) */
+.vendor-highlight {
+    background-color: #fff3cd;
+    font-weight: bold;
+    padding: 0 2px;
+}
+
+/* Active item styling untuk keyboard navigation (OPTIONAL ENHANCEMENT C) */
+.list-group-item.active {
+    background-color: #e7f3ff;
+    border-color: #0066cc;
+    color: #000;
+    font-weight: 500;
+}
+</style>
+
+{{-- ============================================ --}}
+{{-- VENDOR AUTOCOMPLETE SCRIPT (WITH ENHANCEMENTS) --}}
+{{-- ============================================ --}}
+<script>
+// Tracking variable untuk keyboard navigation (OPTIONAL ENHANCEMENT C)
+let selectedIndexMap = {};  // Store selected index per dropdown
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Init semua vendor search input
+    document.querySelectorAll('.vendor-search-input').forEach(input => {
+        const dropdownId = input.dataset.dropdownId;
+        const vendorIdTarget = input.dataset.vendorIdTarget;
+
+        const dropdown = document.getElementById(dropdownId);
+        const hiddenInput = document.getElementById(vendorIdTarget);
+
+        if (!dropdown || !hiddenInput) {
+            console.warn(`Dropdown atau hidden input tidak ditemukan: ${dropdownId}`);
+            return;
+        }
+
+        // Initialize selected index for this dropdown
+        selectedIndexMap[dropdownId] = -1;
+
+        // ===== EVENT: INPUT SEARCH =====
+        input.addEventListener('input', function () {
+            const keyword = this.value.toLowerCase().trim();
+            dropdown.innerHTML = '';
+            hiddenInput.value = '';
+            selectedIndexMap[dropdownId] = -1;  // Reset selection
+
+            if (!keyword) {
+                dropdown.classList.add('d-none');
+                return;
+            }
+
+            const matches = vendorsData.filter(v =>
+                v.name.toLowerCase().includes(keyword)
+            );
+
+            if (matches.length === 0) {
+                const noResult = document.createElement('div');
+                noResult.className = 'list-group-item text-muted';
+                noResult.textContent = 'Vendor tidak ditemukan';
+                dropdown.appendChild(noResult);
+                dropdown.classList.remove('d-none');
+                return;
+            }
+
+            // Render dropdown items
+            matches.forEach((v, index) => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'list-group-item list-group-item-action';
+                item.dataset.index = index;  // Store index for keyboard nav
+
+                // ✨ OPTIONAL ENHANCEMENT B: Highlight keyword
+                const highlightedName = v.name.replace(
+                    new RegExp(`(${keyword})`, 'gi'),
+                    '<strong>$1</strong>'
+                );
+                item.innerHTML = highlightedName;
+
+                // Handle click pada dropdown item
+                item.onclick = (e) => {
+                    e.preventDefault();
+                    selectVendor(input, hiddenInput, dropdown, v, dropdownId);
+                };
+
+                dropdown.appendChild(item);
+            });
+
+            dropdown.classList.remove('d-none');
+        });
+
+        // ===== EVENT: BLUR (KELUAR DARI INPUT) =====
+        input.addEventListener('blur', () => {
+            setTimeout(() => {
+                dropdown.classList.add('d-none');
+            }, 200);
+        });
+
+        // ===== EVENT: KEYBOARD NAVIGATION (OPTIONAL ENHANCEMENT C) =====
+        input.addEventListener('keydown', (e) => {
+            const items = dropdown.querySelectorAll('.list-group-item-action');
+            
+            if (items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndexMap[dropdownId] = Math.min(
+                    selectedIndexMap[dropdownId] + 1,
+                    items.length - 1
+                );
+                updateKeyboardSelection(items, dropdownId);
+            }
+            else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndexMap[dropdownId] = Math.max(
+                    selectedIndexMap[dropdownId] - 1,
+                    -1
+                );
+                updateKeyboardSelection(items, dropdownId);
+            }
+            else if (e.key === 'Enter' && selectedIndexMap[dropdownId] >= 0) {
+                e.preventDefault();
+                items[selectedIndexMap[dropdownId]].click();
+            }
+            else if (e.key === 'Escape') {
+                dropdown.classList.add('d-none');
+            }
+        });
+    });
+
+    // ===== EVENT: KLIK DI LUAR DROPDOWN =====
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.vendor-search-input') &&
+            !e.target.closest('.list-group')) {
+            document.querySelectorAll('[id^="vendorDropdown"]').forEach(d => {
+                d.classList.add('d-none');
+            });
+        }
+    });
+});
+
+/**
+ * Select vendor dan update display
+ */
+function selectVendor(input, hiddenInput, dropdown, vendor, dropdownId) {
+    input.value = vendor.name;
+    hiddenInput.value = vendor.id;
+    dropdown.classList.add('d-none');
+    selectedIndexMap[dropdownId] = -1;  // Reset selection
+}
+
+/**
+ * Update keyboard selection visual (OPTIONAL ENHANCEMENT C)
+ */
+function updateKeyboardSelection(items, dropdownId) {
+    const selectedIndex = selectedIndexMap[dropdownId];
+    
+    items.forEach((item, index) => {
+        if (index === selectedIndex) {
+            item.classList.add('active');
+            item.scrollIntoView({ block: 'nearest' });
+        } else {
+            item.classList.remove('active');
+        }
+    });
+}
+
+/**
+ * Validasi vendor_id sebelum submit (OPTIONAL ENHANCEMENT A)
+ */
+function validateVendor(form) {
+    const vendorIdInput = form.querySelector('input[name="vendor_id"]');
+    
+    if (!vendorIdInput) {
+        return true;
+    }
+    
+    if (!vendorIdInput.value.trim()) {
+        alert('⚠️ Silakan pilih vendor dari daftar dropdown');
+        const vendorInput = form.querySelector('.vendor-search-input');
+        if (vendorInput) vendorInput.focus();
+        return false;
+    }
+    
+    return true;
+}
+</script>
+
+{{-- ============================================ --}}
+{{-- CURRENCY INPUT HANDLER (EXISTING) --}}
+{{-- ============================================ --}}
+<script>
+function selectCurrency(currency) {
+    document.getElementById('currencyInput').value = currency;
+    document.getElementById('dropdownCurrency').textContent = currency;
+}
+
+function selectCurrencyEdit(currency, id) {
+    document.getElementById(`currencyEdit${id}`).value = currency;
+    document.getElementById(`dropdownCurrency${id}`).textContent = currency;
+}
+
+// Currency input formatter
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.currency-input').forEach(input => {
+        input.addEventListener('input', function() {
+            let value = this.value.replace(/[^\d]/g, '');
+            let formatted = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            this.value = formatted;
+
+            const rawTargetId = this.dataset.rawTarget;
+            document.getElementById(rawTargetId).value = value || '';
+        });
+    });
+});
+</script>
