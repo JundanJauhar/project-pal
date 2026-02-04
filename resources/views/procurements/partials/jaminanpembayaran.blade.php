@@ -149,8 +149,6 @@
 
             <form method="POST" action="{{ route('jaminan-pembayaran.update', $jaminan->jaminan_pembayaran_id) }}">
                 @csrf
-                @method('PUT')
-
                 <div class="modal-body row g-3">
 
                     {{-- VENDOR (DISPLAY ONLY - TIDAK BISA DIUBAH) --}}
