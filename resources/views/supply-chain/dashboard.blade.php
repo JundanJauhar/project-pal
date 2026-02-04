@@ -255,7 +255,9 @@
     }
 
     @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     /* Header */
@@ -288,20 +290,20 @@
 
     <!-- Tab Navigation -->
     <div class="sc-tabs">
-        <button type="button" 
-            class="sc-tab-btn active" 
+        <button type="button"
+            class="sc-tab-btn active"
             data-tab="procurement"
             onclick="switchTab('procurement')">
             <i class="bi bi-box-seam"></i> Daftar Pengadaan
         </button>
-        <button type="button" 
-            class="sc-tab-btn" 
+        <button type="button"
+            class="sc-tab-btn"
             data-tab="contract"
             onclick="switchTab('contract')">
             <i class="bi bi-file-earmark-text"></i> Daftar Kontrak
         </button>
-        <button type="button" 
-            class="sc-tab-btn" 
+        <button type="button"
+            class="sc-tab-btn"
             data-tab="payment"
             onclick="switchTab('payment')">
             <i class="bi bi-credit-card"></i> Daftar Pembayaran
@@ -334,7 +336,9 @@
 @push('scripts')
 <script>
     // ===== DATA =====
-    const departments = {!! json_encode($departments) !!};
+    const departments = {
+        !!json_encode($departments) !!
+    };
     let currentTab = 'procurement';
     let currentPage = 1;
     let isLoading = false;
@@ -352,7 +356,7 @@
     function switchTab(tab) {
         currentTab = tab;
         currentPage = 1;
-        
+
         // Update active tab button
         document.querySelectorAll('.sc-tab-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.tab === tab);
@@ -525,7 +529,7 @@
     // ===== RENDER TABLE =====
     function renderTable(data) {
         const container = document.getElementById('content-container');
-        
+
         if (!data.data || data.data.length === 0) {
             container.innerHTML = getEmptyState();
             return;
@@ -568,12 +572,12 @@
                 <tr>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">No</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Project</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode Pengadaan</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Nama Pengadaan</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Department</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Mulai</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Selesai</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tgl Mulai</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tgl Selesai</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Prioritas</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Status</th>
                 </tr>
@@ -583,11 +587,18 @@
                 <tr>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">No</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode Pengadaan</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Nama Pengadaan</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">No PO</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Nilai Kontrak</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Mata Uang</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Item</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tanggal Kontrak</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Maker</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Nilai</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Payment Term</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Incoterms</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">COO</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Warranty</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Delivery Time</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Link</th>
                 </tr>
             `;
         } else if (currentTab === 'payment') {
@@ -597,10 +608,14 @@
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Kode Pengadaan</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Vendor</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Jenis Pembayaran</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Persen</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Nilai Pembayaran</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Persentase</th>
-                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Tgl Realisasi</th>
                     <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">No Memo</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Link Memo</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">LSD</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Link Evidence</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Target</th>
+                    <th style="padding: 12px 8px; text-align: center; font-weight: 600; color: #000;">Realisasi</th>
                 </tr>
             `;
         }
@@ -613,7 +628,7 @@
                 const rowNumber = (currentPage - 1) * 15 + i + 1;
                 const statusClass = getStatusClass(row.status_procurement);
                 const priorityClass = getPriorityClass(row.priority);
-                
+
                 return `
                     <tr>
                         <td style="padding: 12px 8px; text-align: center; color: #000;"><strong>${rowNumber}</strong></td>
@@ -626,14 +641,14 @@
                         </td>
                         <td style="padding: 12px 8px; color: #000;">${row.name_procurement}</td>
                         <td style="padding: 12px 8px; text-align: center; color: #000;">${row.department_name}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.start_date}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.end_date}</td>
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             ${row.vendor_name ? 
                                 `<span class="sc-badge sc-badge-success">${row.vendor_name}</span>` : 
                                 `<span class="sc-badge sc-badge-warning">Belum dipilih</span>`
                             }
                         </td>
-                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.start_date}</td>
-                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.end_date}</td>
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             <span class="sc-badge ${priorityClass}">
                                 ${row.priority.charAt(0).toUpperCase() + row.priority.slice(1)}
@@ -650,7 +665,7 @@
         } else if (currentTab === 'contract') {
             return rows.map((row, i) => {
                 const rowNumber = (currentPage - 1) * 15 + i + 1;
-                
+
                 return `
                     <tr>
                         <td style="padding: 12px 8px; text-align: center; color: #000;"><strong>${rowNumber}</strong></td>
@@ -660,25 +675,39 @@
                                 ${row.code_procurement}
                             </a>
                         </td>
-                        <td style="padding: 12px 8px; color: #000;">${row.name_procurement}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.no_po}</td>
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             ${row.vendor_name || '<span style="color: #999;">-</span>'}
                         </td>
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
-                            ${row.nilai_kontrak > 0 ? 
-                                new Intl.NumberFormat('id-ID').format(row.nilai_kontrak) : 
+                            ${row.item_name || '<span style="color: #999;">-</span>'}
+                        </td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.tanggal_kontrak}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.maker}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            ${row.nilai > 0 ? 
+                                row.currency + ' ' + new Intl.NumberFormat('id-ID').format(row.nilai) : 
                                 '<span style="color: #999;">-</span>'
                             }
                         </td>
-                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.mata_uang}</td>
-                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.tanggal_kontrak}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.payment_term}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.incoterms}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.coo}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.warranty}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.delivery_time}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            ${row.link ? 
+                                '<a href="' + row.link + '" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600;">Link</a>' : 
+                                '<span style="color: #999;">-</span>'
+                            }
+                        </td>
                     </tr>
                 `;
             }).join('');
         } else if (currentTab === 'payment') {
             return rows.map((row, i) => {
                 const rowNumber = (currentPage - 1) * 15 + i + 1;
-                
+
                 if (row.type === 'empty') {
                     return `
                         <tr>
@@ -689,7 +718,7 @@
                                     ${row.code_procurement}
                                 </a>
                             </td>
-                            <td colspan="6" style="padding: 12px 8px; text-align: center; color: #999; font-style: italic;">
+                            <td colspan="10" style="padding: 12px 8px; text-align: center; color: #999; font-style: italic;">
                                 Tidak ada data pembayaran untuk pengadaan ini
                             </td>
                         </tr>
@@ -708,24 +737,42 @@
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             ${row.vendor_name || '<span style="color: #999;">-</span>'}
                         </td>
-                        <td style="padding: 12px 8px; text-align: center; color: #000;">SKBDN</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">${row.payment_type}</td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            ${row.percentage ? row.percentage + '%' : '<span style="color: #999;">-</span>'}
+                        </td>
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             ${row.payment_value > 0 ? 
-                                new Intl.NumberFormat('id-ID').format(row.payment_value) : 
+                                row.currency + ' ' + new Intl.NumberFormat('id-ID').format(row.payment_value) : 
                                 '<span style="color: #999;">-</span>'
                             }
                         </td>
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
-                            ${row.percentage ? row.percentage + '%' : '<span style="color: #999;">-</span>'}
+                            ${row.no_memo}
+                        </td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            ${row.link ? 
+                                '<a href="' + row.link + '" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600;">Link</a>' : 
+                                '<span style="color: #999;">-</span>'
+                            }
+                        </td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            ${row.lsd}
+                        </td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            ${row.evidence_link ? 
+                                '<a href="' + row.evidence_link + '" target="_blank" style="color: #0066cc; text-decoration: underline; font-weight: 600;">Link</a>' : 
+                                '<span style="color: #999;">-</span>'
+                            }
+                        </td>
+                        <td style="padding: 12px 8px; text-align: center; color: #000;">
+                            ${row.target_date}
                         </td>
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             ${row.realization_date ? 
                                 row.realization_date : 
                                 '<span class="sc-badge sc-badge-warning">Belum Direalisasi</span>'
                             }
-                        </td>
-                        <td style="padding: 12px 8px; text-align: center; color: #000;">
-                            <small style="font-size: 12px;">${row.no_memo || '-'}</small>
                         </td>
                     </tr>
                 `;
@@ -736,7 +783,7 @@
     // ===== RENDER PAGINATION =====
     function renderPagination(pagination) {
         const container = document.getElementById('pagination-container');
-        
+
         if (!pagination || pagination.last_page <= 1) {
             container.innerHTML = '';
             return;
