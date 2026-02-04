@@ -336,9 +336,7 @@
 @push('scripts')
 <script>
     // ===== DATA =====
-    const departments = {
-        !!json_encode($departments) !!
-    };
+    const departments = @json($departments);
     let currentTab = 'procurement';
     let currentPage = 1;
     let isLoading = false;
