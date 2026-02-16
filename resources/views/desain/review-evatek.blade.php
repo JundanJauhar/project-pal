@@ -50,7 +50,27 @@
 .btn-save { background: #007bff; } /* Blue for Save Status */
 
 /* Default state: Gray for decision buttons */
-.btn-approve, .btn-reject, .btn-revisi { background: #e0e0e0; color: #555; height: 60px; align-items: center; justify-content: center; }
+.btn-approve,
+    .btn-reject,
+    .btn-revisi {
+        background: #e0e0e0;
+        color: #555;
+        height: 60px;
+        width: 110px;
+        /* Slightly wider */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    .decision-group {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 10px;
+    }
 
 /* Active states */
 .btn-approve.active { background: #28a745; color: white; }
@@ -64,6 +84,10 @@
     background: #e0e0e0;
     color: #999;
 }
+
+/* save input */
+.save-input { width: 30%; }
+.save-status { font-size: 12px; color: #ffffff; }
 
 /* checkbox */
 .rev-check {
@@ -149,7 +173,7 @@
                                 <input type="text" class="link-input vendor-link" value="{{ $rev->vendor_link }}">
                                 <div class="link-status"></div>
                             </td>
-                            <td>
+                            <td class="save-input">
                                 <input type="text" class="link-input design-link" value="{{ $rev->design_link }}">
                                 <button class="action-btn btn-upload save-link">Save</button>
                                 <div class="link-status"></div>
@@ -169,10 +193,12 @@
                                         </span>
                                     </div>
                                 @else
+                                <div class="decision-group">
                                     <button class="action-btn btn-approve approve-btn">Approve</button>
                                     <button class="action-btn btn-revisi revisi-btn">Approve With Comment</button>
                                     <button class="action-btn btn-reject reject-btn">Not Approve</button>
-                                    <button class="action-btn btn-save save-status" style="display:none;">Save Status</button>
+                                </div>
+                                <button class="action-btn btn-save save-status" style="display:none;">Save Status</button>
                                 @endif
                             </td>
                         </tr>

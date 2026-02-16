@@ -74,7 +74,8 @@ class EvatekController extends Controller
             'item',
             'vendor',
             'procurement.project',
-            'latestRevision'
+            'latestRevision',
+            'revisions'
         ])
             ->whereIn('procurement_id', $procurementIds)
             ->orderBy('updated_at', 'desc')

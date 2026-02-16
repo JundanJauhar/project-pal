@@ -51,7 +51,27 @@
 .btn-upload { background: #000; }
 
 /* Default state: Gray */
-.btn-approve, .btn-reject, .btn-revisi { background: #e0e0e0; color: #555; }
+    .btn-approve,
+    .btn-reject,
+    .btn-revisi {
+        background: #e0e0e0;
+        color: #555;
+        height: 60px;
+        width: 100px;
+        /* Slightly wider */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    .decision-group {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 10px;
+    }
 
 /* Active states */
 .btn-approve.active { background: #28AC00; color: white; }
@@ -172,9 +192,12 @@
                                         </span>
                                     </div>
                                 @else
+                                <div class="decision-group">
+
                                     <button class="action-btn btn-approve approve-btn">Approve</button>
                                     <button class="action-btn btn-revisi revisi-btn">Revisi</button>
                                     <button class="action-btn btn-reject reject-btn">Not Approve</button>
+                                </div>
                                     <button class="action-btn btn-save save-status" style="display:none; background:#007bff;">Save Status</button>
                                 @endif
                             </td>
