@@ -1865,37 +1865,38 @@
 
                     // --- RENDER MODAL ROW ---
                     const isLastInGroup = (index === rowCount - 1);
-                    const groupBorderBottom = isLastInGroup ? 'border-bottom: 2px solid #333;' : 'border-bottom: 1px solid #ccc;';
-                    modalHtml += `<tr style="${groupBorderBottom}">`;
+                    const cellBorderBottom = isLastInGroup ? 'border-bottom: 2px solid #333;' : 'border-bottom: 1px solid #ccc;';
+                    modalHtml += `<tr>`;
                     if (index === 0) {
-                        modalHtml += `<td rowspan="${rowCount}" style="text-align: center; font-weight: bold; vertical-align: middle; border: 1px solid #bbb; border-bottom: 2px solid #333; background: #fdfdfd;">${no}</td>`;
-                        modalHtml += `<td rowspan="${rowCount}" style="font-weight: 600; color: #1a5276; vertical-align: middle; border: 1px solid #bbb; border-bottom: 2px solid #333; background: #fdfdfd;">${itemName}</td>`;
+                        modalHtml += `<td rowspan="${rowCount}" style="text-align: center; font-weight: bold; vertical-align: middle; border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; border-bottom: 2px solid #333; background: #fdfdfd;">${no}</td>`;
+                        modalHtml += `<td rowspan="${rowCount}" style="font-weight: 600; color: #1a5276; vertical-align: middle; border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; border-bottom: 2px solid #333; background: #fdfdfd;">${itemName}</td>`;
                     }
-                    modalHtml += `<td style="border: 1px solid #bbb; ${groupBorderBottom} padding: 12px 10px; font-size: 11px;">
+                    modalHtml += `<td style="border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; ${cellBorderBottom} padding: 12px 10px; font-size: 11px;">
                 <div style="font-weight: 700; color: #444; margin-bottom: 5px;">
                     <i class="fas fa-building me-1"></i>${vendorName}
                 </div>
                 ${logText}
               </td>`;
-                    modalHtml += `<td style="border: 1px solid #bbb; ${groupBorderBottom} text-align: center; font-size: 11px; vertical-align: middle;">${lastUpdate}</td>`;
-                    modalHtml += `<td style="border: 1px solid #bbb; ${groupBorderBottom} text-align: center; vertical-align: middle;"><span class="badge" style="background: #e3f2fd; color: #1565C0; font-size: 9px;">${statusPengadaan}</span></td>`;
-                    modalHtml += `<td style="border: 1px solid #bbb; ${groupBorderBottom} text-align: center; font-weight: 600; vertical-align: middle;">${pic}</td>`;
-                    modalHtml += `<td style="border: 1px solid #bbb; ${groupBorderBottom} text-align: center; font-size: 11px; vertical-align: middle;">${targetDate}</td>`;
-                    modalHtml += `<td style="border: 1px solid #bbb; ${groupBorderBottom} text-align: center; vertical-align: middle;"><span style="color: ${statusColor}; font-weight: bold; font-size: 10px;">${statusLabel}</span></td>`;
+                    modalHtml += `<td style="border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; ${cellBorderBottom} text-align: center; font-size: 11px; vertical-align: middle;">${lastUpdate}</td>`;
+                    modalHtml += `<td style="border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; ${cellBorderBottom} text-align: center; vertical-align: middle;"><span class="badge" style="background: #e3f2fd; color: #1565C0; font-size: 9px;">${statusPengadaan}</span></td>`;
+                    modalHtml += `<td style="border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; ${cellBorderBottom} text-align: center; font-weight: 600; vertical-align: middle;">${pic}</td>`;
+                    modalHtml += `<td style="border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; ${cellBorderBottom} text-align: center; font-size: 11px; vertical-align: middle;">${targetDate}</td>`;
+                    modalHtml += `<td style="border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; ${cellBorderBottom} text-align: center; vertical-align: middle;"><span style="color: ${statusColor}; font-weight: bold; font-size: 10px;">${statusLabel}</span></td>`;
                     modalHtml += `</tr>`;
 
                     // --- RENDER PRINT ROW (Sama seperti modal, hanya R terakhir) ---
+                    const printCellBorder = isLastInGroup ? 'border-bottom: 2px solid #333;' : 'border-bottom: 1px solid #aaa;';
                     printHtml += `<tr>`;
                     if (index === 0) {
-                        printHtml += `<td rowspan="${rowCount}" style="border: 1px solid #333; text-align: center; vertical-align: middle;">${no}</td>`;
-                        printHtml += `<td rowspan="${rowCount}" style="border: 1px solid #333; vertical-align: middle;">${itemName}</td>`;
+                        printHtml += `<td rowspan="${rowCount}" style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; border-bottom: 2px solid #333; text-align: center; vertical-align: middle;">${no}</td>`;
+                        printHtml += `<td rowspan="${rowCount}" style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; border-bottom: 2px solid #333; vertical-align: middle;">${itemName}</td>`;
                     }
-                    printHtml += `<td style="border: 1px solid #333; font-size: 7px; padding: 3px;"><strong>${vendorName}:</strong> ${logTextPrint}</td>`;
-                    printHtml += `<td style="border: 1px solid #333; text-align: center;">${lastUpdate}</td>`;
-                    printHtml += `<td style="border: 1px solid #333; text-align: center;">${statusPengadaan}</td>`;
-                    printHtml += `<td style="border: 1px solid #333; text-align: center;">${pic}</td>`;
-                    printHtml += `<td style="border: 1px solid #333; text-align: center;">${targetDate}</td>`;
-                    printHtml += `<td style="border: 1px solid #333; text-align: center;">${statusLabel}</td>`;
+                    printHtml += `<td style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; ${printCellBorder} font-size: 7px; padding: 3px;"><strong>${vendorName}:</strong> ${logTextPrint}</td>`;
+                    printHtml += `<td style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; ${printCellBorder} text-align: center;">${lastUpdate}</td>`;
+                    printHtml += `<td style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; ${printCellBorder} text-align: center;">${statusPengadaan}</td>`;
+                    printHtml += `<td style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; ${printCellBorder} text-align: center;">${pic}</td>`;
+                    printHtml += `<td style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; ${printCellBorder} text-align: center;">${targetDate}</td>`;
+                    printHtml += `<td style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; ${printCellBorder} text-align: center;">${statusLabel}</td>`;
                     printHtml += `</tr>`;
                 });
             });
