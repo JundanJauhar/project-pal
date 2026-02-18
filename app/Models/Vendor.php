@@ -89,13 +89,11 @@ class Vendor extends Authenticatable
         return $this->password;
     }
 
-    /**
-     * Get the name of the unique identifier for the user.
-     */
-    public function getAuthIdentifierName()
-    {
-        return 'user_vendor';
-    }
+    // NOTE:
+    // Do NOT override getAuthIdentifierName() to 'user_vendor'.
+    // Laravel's database session handler stores the authenticated identifier
+    // into sessions.user_id (BIGINT). Vendor login uses user_vendor for lookup,
+    // but the persistent identifier must remain the numeric primary key (id_vendor).
 
     /**
      * Get request procurements for this vendor
