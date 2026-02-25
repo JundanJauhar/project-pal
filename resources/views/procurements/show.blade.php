@@ -840,5 +840,75 @@
         @endif
 
     }); // END DOMContentLoaded
+
+    /**
+     * ===============================
+     * KONFIRMASI 2 LANGKAH - CHECKPOINT TRANSITION
+     * ===============================
+     * Intercept semua form dengan tombol btn-action-simpan
+     * (Save Checkpoint / Ganti Tahap)
+     */
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-action-simpan');
+        if (!btn) return;
+
+        e.preventDefault();
+        const form = btn.closest('form');
+        if (!form) return;
+
+        Swal.fire({
+            title: 'Simpan & Lanjut Tahap?',
+            text: 'Apakah Anda yakin ingin menyimpan dan melanjutkan ke tahap berikutnya? Tindakan ini tidak dapat dibatalkan.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya, Simpan!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+    });
+
+    /**
+     * ===============================
+     * KONFIRMASI 2 LANGKAH - SIMPAN DATA (MODAL FORMS)
+     * ===============================
+     * Intercept semua form submit di dalam modal
+     * yang memiliki tombol btn-action-create bertipe submit
+     */
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('button[type="submit"].btn-action-create');
+        if (!btn) return;
+
+        const form = btn.closest('form');
+        if (!form) return;
+
+        // Skip jika form sudah dikonfirmasi (flag)
+        if (form.dataset.confirmed === 'true') {
+            form.dataset.confirmed = 'false';
+            return;
+        }
+
+        e.preventDefault();
+
+        Swal.fire({
+            title: 'Simpan Data?',
+            text: 'Apakah Anda yakin ingin melanjutkan proses ini?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#007bff',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.dataset.confirmed = 'true';
+                btn.click();
+            }
+        });
+    });
 </script>
 @endpush
