@@ -420,6 +420,34 @@ document.addEventListener('DOMContentLoaded', function () {
         // Initialize selected index for this dropdown
         selectedIndexMap[dropdownId] = -1;
 
+        // ===== EVENT: FOCUS/CLICK → Tampilkan semua vendor =====
+        input.addEventListener('focus', function () {
+            const keyword = this.value.toLowerCase().trim();
+            if (keyword) return; // Jika sudah ada keyword, biarkan event input handle
+
+            dropdown.innerHTML = '';
+            selectedIndexMap[dropdownId] = -1;
+
+            vendorsData.forEach((v, index) => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'list-group-item list-group-item-action';
+                item.dataset.index = index;
+                item.textContent = v.name;
+
+                item.onclick = (e) => {
+                    e.preventDefault();
+                    selectVendor(input, hiddenInput, dropdown, v, dropdownId);
+                };
+
+                dropdown.appendChild(item);
+            });
+
+            if (vendorsData.length > 0) {
+                dropdown.classList.remove('d-none');
+            }
+        });
+
         // ===== EVENT: INPUT SEARCH =====
         input.addEventListener('input', function () {
             const keyword = this.value.toLowerCase().trim();

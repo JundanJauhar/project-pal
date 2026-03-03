@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PengadaanOc;
+use App\Models\PengadaanOC;
 use App\Models\Procurement;
 use App\Models\RequestProcurement;
 use App\Models\Vendor;
@@ -68,7 +68,7 @@ class PengadaanOcController extends Controller
 
             $procurement = Procurement::findOrFail($procurementId);
 
-            $pengadaanOc = PengadaanOc::create([
+            $pengadaanOc = PengadaanOC::create([
                 'procurement_id' => $procurement->procurement_id,
                 'vendor_id' => $validated['vendor_id'],
                 'currency' => $validated['currency'] ?? 'IDR',
@@ -131,7 +131,7 @@ class PengadaanOcController extends Controller
         }
 
         // === STEP 2: Load PENGADAAN OC + PROCUREMENT ===
-        $po = PengadaanOc::with('procurement')->findOrFail($id);
+        $po = PengadaanOC::with('procurement')->findOrFail($id);
         $procurement = $po->procurement;
 
         // === STEP 3: Get CURRENT CHECKPOINT ===
@@ -171,7 +171,7 @@ class PengadaanOcController extends Controller
         try {
             DB::beginTransaction();
 
-            $po = PengadaanOc::findOrFail($id);
+            $po = PengadaanOC::findOrFail($id);
 
             $validated['currency'] = $validated['currency'] ?? 'IDR';
 
@@ -234,7 +234,7 @@ class PengadaanOcController extends Controller
         }
 
         // === STEP 2: Load PENGADAAN OC + PROCUREMENT ===
-        $po = PengadaanOc::with(['procurement'])->findOrFail($id);
+        $po = PengadaanOC::with(['procurement'])->findOrFail($id);
         $procurement = $po->procurement;
 
         // === STEP 3: Get CURRENT CHECKPOINT ===
@@ -258,7 +258,7 @@ class PengadaanOcController extends Controller
         }
 
         try {
-            $po = PengadaanOc::findOrFail($id);
+            $po = PengadaanOC::findOrFail($id);
             $procId = $po->procurement_id;
             $vendorName = $po->vendor->name_vendor ?? 'Unknown';
 
@@ -299,7 +299,7 @@ class PengadaanOcController extends Controller
         try {
             $procurement = Procurement::findOrFail($procurementId);
 
-            $pengadaanOcs = PengadaanOc::where('procurement_id', $procurementId)
+            $pengadaanOcs = PengadaanOC::where('procurement_id', $procurementId)
                 ->with(['vendor'])
                 ->orderBy('created_at', 'desc')
                 ->get()

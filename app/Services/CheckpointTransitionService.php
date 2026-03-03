@@ -390,6 +390,16 @@ class CheckpointTransitionService
                 );
                 break;
 
+            case 8: // Pengiriman Material → Kedatangan Material (QA)
+                $actionUrl = route('qa.detail-approval', $this->procurement->procurement_id);
+                $this->notifyDivision(
+                    5, // Quality Assurance Division ID
+                    'Material Tiba — Inspeksi Diperlukan',
+                    "Material untuk procurement '{$this->procurement->name_procurement}' (Kode: {$this->procurement->code_procurement}) telah tiba. Silakan lakukan inspeksi dan verifikasi kualitas material.",
+                    $actionUrl
+                );
+                break;
+
             case 10: // Verifikasi Dokumen → Treasury
                 $this->notifyDivision(
                     4,

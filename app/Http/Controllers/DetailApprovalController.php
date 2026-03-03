@@ -51,9 +51,15 @@ class DetailApprovalController extends Controller
             ]
         );
 
+        // Cek apakah semua item sudah punya inspection report
+        $allInspected = $items->count() > 0 && $items->every(function ($item) {
+            return $item->inspectionReports->isNotEmpty();
+        });
+
         return view('qa.detail-approval', [
-            'procurement' => $procurement,
-            'items'       => $items,
+            'procurement'  => $procurement,
+            'items'        => $items,
+            'allInspected' => $allInspected,
         ]);
     }
 
@@ -78,8 +84,9 @@ class DetailApprovalController extends Controller
         $data = $request->validate([
             'items'           => 'required|array|min:1',
             'items.*.item_id' => 'required|integer|exists:items,item_id',
-            'items.*.result'  => 'required|string|in:passed,failed',
-            'items.*.notes'   => 'nullable|string|max:2000',
+            'items.*.result'       => 'required|string|in:passed,failed',
+            'items.*.notes'        => 'nullable|string|max:2000',
+            'items.*.arrival_date' => 'nullable|date',
         ]);
 
         $now = Carbon::now();
@@ -99,6 +106,11 @@ class DetailApprovalController extends Controller
                     'success' => false,
                     'message' => "Keterangan wajib diisi untuk item id {$item->item_id} yang tidak lolos.",
                 ], 422);
+            }
+
+            // Simpan arrival_date ke item
+            if (!empty($it['arrival_date'])) {
+                $item->update(['arrival_date' => $it['arrival_date']]);
             }
 
             // Cek apakah sudah ada inspection report untuk item ini

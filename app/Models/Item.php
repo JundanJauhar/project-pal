@@ -20,6 +20,7 @@ class Item extends Model
         'specification',
         'amount',
         'unit',
+        'arrival_date',
         'status',
         'approved_by',
         'approved_at',

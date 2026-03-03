@@ -114,6 +114,7 @@ class NotificationController extends Controller
                     // Negotiation
                     str_contains($notif->title, 'Siap Negosiasi') || str_contains($notif->title, 'Negosiasi') => 'NEGOSIASI',
                     // Standard statuses
+                    str_contains($notif->title, 'Material Tiba') || str_contains($notif->title, 'Inspeksi Diperlukan') => 'INSPEKSI QA',
                     str_contains($notif->title, 'Baru') || str_contains($notif->title, 'Dimulai') => 'BARU',
                     str_contains($notif->title, 'Approve') || str_contains($notif->title, 'Disetujui') => 'APPROVE',
                     str_contains($notif->title, 'Ditolak') || str_contains($notif->title, 'Reject') => 'NOT APPROVE',
@@ -123,6 +124,7 @@ class NotificationController extends Controller
                     'BARU' => '#3B82F6',
                     'APPROVE' => '#10B981',
                     'NOT APPROVE' => '#EF4444',
+                    'INSPEKSI QA' => '#EF4444', // red - urgent
                     'EVATEK COMPLETE' => '#8B5CF6', // purple
                     'REVIEW KONTRAK COMPLETE' => '#8B5CF6', // purple
                     'NEGOSIASI' => '#F59E0B', // orange/yellow
