@@ -40,14 +40,14 @@
                     $reviewedVendorIds = $contractReviews->pluck('vendor_id')->toArray();
 
                     // Vendor yang belum punya contract review
-                    $uncompletedVendors = $pengadaanOcVendors->filter(fn ($vendor) =>
+                    $uncompletedVendors = $UsulanPengadaanVendors->filter(fn ($vendor) =>
                     !in_array($vendor->id_vendor, $reviewedVendorIds)
                     )->values();
 
                     // Total reviews dan vendors
                     $reviewCount = $contractReviews->count();
                     $uncompletedCount = $uncompletedVendors->count();
-                    $totalVendors = $pengadaanOcVendors->count();
+                    $totalVendors = $UsulanPengadaanVendors->count();
                     @endphp
 
                     {{-- ✅ TAMPILKAN CONTRACT REVIEWS YANG SUDAH ADA --}}
@@ -180,7 +180,7 @@
                     @if($totalVendors == 0)
                     <tr>
                         <td colspan="9" class="text-center text-muted" style="padding: 12px 8px;">
-                            Belum ada Pengadaan OC yang selesai untuk review kontrak
+                            Belum ada Usulan Pengadaan yang selesai untuk review kontrak
                         </td>
                     </tr>
                     @endif

@@ -195,8 +195,8 @@ class CheckpointTransitionService
     /** 5 → 6: Usulan Pengadaan / OC → Pengesahan Kontrak (WAJIB vendor) */
     protected function validateCheckpoint5To6(): void
     {
-        if (!$this->procurement->pengadaanOcs()->exists()) {
-            $this->errors[] = 'Minimal 1 pengadaanOC.';
+        if (!$this->procurement->UsulanPengadaan()->exists()) {
+            $this->errors[] = 'Minimal 1 UsulanPengadaan.';
         }
     }
 

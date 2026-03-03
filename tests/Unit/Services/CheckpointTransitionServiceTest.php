@@ -107,15 +107,15 @@ class CheckpointTransitionServiceTest extends TestCase
     }
 
     /**
-     * Test checkpoint 5 to 6 requires pengadaan OC
+     * Test checkpoint 5 to 6 requires usulan pengadaan
      */
-    public function test_checkpoint_5_ke_6_memerlukan_pengadaan_oc()
+    public function test_checkpoint_5_ke_6_memerlukan_usulan_pengadaan()
     {
         $service = new CheckpointTransitionService($this->procurement);
         $result = $service->transition(5);
 
         $this->assertFalse($result['success']);
-        $this->assertContains('Minimal 1 pengadaanOC.', $result['errors']);
+        $this->assertContains('Minimal 1 UsulanPengadaan.', $result['errors']);
     }
 
     /**

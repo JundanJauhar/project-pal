@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Negotiation;
 use App\Models\Procurement;
 use App\Models\Vendor;
-use App\Models\PengadaanOC;
+use App\Models\UsulanPengadaan;
 use App\Models\PengesahanKontrak;
 use App\Models\Kontrak;
 use Illuminate\Http\Request;
@@ -230,9 +230,9 @@ class NegotiationController extends Controller
                 'notes' => $validated['notes'] ?? null,
             ]);
 
-            // SINKRONISASI KE PENGADAAN OC & PENGESAHAN KONTRAK
+            // SINKRONISASI KE USULAN PENGADAAN & PENGESAHAN KONTRAK
             // Ini sangat penting! Update nilai harga final ke dokumen berikutnya
-            PengadaanOC::where('procurement_id', $neg->procurement_id)
+            UsulanPengadaan::where('procurement_id', $neg->procurement_id)
                 ->where('vendor_id', $neg->vendor_id)
                 ->update([
                     'nilai' => $neg->harga_final,

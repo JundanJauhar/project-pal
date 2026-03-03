@@ -16,7 +16,7 @@
         <div class="table-responsive">
             {{-- Button Save Checkpoint (LUAR TABLE) --}}
             <div class="btn-simpan-wrapper">
-                @if($currentCheckpointSequence == 5 && $pengadaanOcs->count() > 0)
+                @if($currentCheckpointSequence == 5 && $UsulanPengadaan->count() > 0)
                 <form action="{{ route('checkpoint.transition', $procurement->procurement_id) }}" method="POST">
                     @csrf
                     <input type="hidden" name="from_checkpoint" value="5">
@@ -49,20 +49,20 @@
                     * HITUNG KONDISI TERLEBIH DAHULU
                     */
 
-                    // Vendor yang VALID untuk Pengadaan OC (dari Inquiry & Quotation)
+                    // Vendor yang VALID untuk Usulan Pengadaan (dari Inquiry & Quotation)
                     $poVendors = collect($inquiryQuotations ?? [])
                     ->map(fn ($iq) => $iq->vendor)
                     ->filter()
                     ->unique('id_vendor')
                     ->values();
 
-                    // Total pengadaan OCs
-                    $poCount = $pengadaanOcs->count();
+                    // Total Usulan Pengadaan
+                    $poCount = $UsulanPengadaan->count();
                     @endphp
 
-                    {{-- ✅ TAMPILKAN PENGADAAN OC ITEMS YANG SUDAH ADA --}}
+                    {{-- ✅ TAMPILKAN USULAN PENGADAAN ITEMS YANG SUDAH ADA --}}
                     @if($poCount > 0)
-                    @foreach($pengadaanOcs as $po)
+                    @foreach($UsulanPengadaan as $po)
                     <tr>
                         {{-- No --}}
                         <td style="padding: 12px 8px; text-align: center; color: #000;">{{ $loop->iteration }}</td>
@@ -98,7 +98,7 @@
                         <td style="padding: 12px 8px; text-align: center; color: #000;">
                             <button class="btn btn-sm btn-action-edit"
                                 data-bs-toggle="modal"
-                                data-bs-target="#modalEditPO{{ $po->pengadaan_oc_id }}">
+                                data-bs-target="#modalEditPO{{ $po->usulan_pengadaan_id }}">
                                 Edit
                             </button>
                         </td>
@@ -110,7 +110,7 @@
                     @if($poCount == 0 && $currentCheckpointSequence == 5)
                     <tr>
                         <td colspan="8" class="text-center text-muted" style="padding: 12px 8px;">
-                            Belum ada Pengadaan OC
+                            Belum ada Usulan Pengadaan
                         </td>
                         <td class="text-center">
                             <button class="btn btn-sm btn-action-create"
@@ -145,16 +145,16 @@
 {{-- MODAL EDIT (LUAR TABLE) --}}
 {{-- ============================================ --}}
 @if($poCount > 0)
-@foreach($pengadaanOcs as $po)
-<div class="modal fade" id="modalEditPO{{ $po->pengadaan_oc_id }}" tabindex="-1" aria-hidden="true">
+@foreach($UsulanPengadaan as $po)
+<div class="modal fade" id="modalEditPO{{ $po->usulan_pengadaan_id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Edit Pengadaan OC</h5>
+                <h5 class="modal-title">Edit Usulan Pengadaan</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <form method="POST" action="{{ route('pengadaan-oc.update', $po->pengadaan_oc_id) }}">
+            <form method="POST" action="{{ route('pengadaan-oc.update', $po->usulan_pengadaan_id) }}">
                 @csrf
 
                 <div class="modal-body row g-3">
@@ -184,13 +184,13 @@
                         <label class="form-label">Nilai</label>
                         <div class="input-group">
                             <button class="btn btn-outline-secondary dropdown-toggle" type="button"
-                                data-bs-toggle="dropdown" id="dropdownCurrencyEdit{{ $po->pengadaan_oc_id }}">
+                                data-bs-toggle="dropdown" id="dropdownCurrencyEdit{{ $po->usulan_pengadaan_id }}">
                                 {{ $po->currency ?? 'IDR' }}
                             </button>
                             <ul class="dropdown-menu">
                                 @foreach(['IDR','USD','EUR','SGD'] as $cur)
                                 <li>
-                                    <a class="dropdown-item" onclick="selectCurrencyEditPO('{{ $cur }}', '{{ $po->pengadaan_oc_id }}')">
+                                    <a class="dropdown-item" onclick="selectCurrencyEditPO('{{ $cur }}', '{{ $po->usulan_pengadaan_id }}')">
                                         {{ $cur }}
                                     </a>
                                 </li>
@@ -199,20 +199,20 @@
                             {{-- DISPLAY --}}
                             <input type="text"
                                 class="form-control currency-input"
-                                data-raw-target="nilaiPORaw{{ $po->pengadaan_oc_id }}"
+                                data-raw-target="nilaiPORaw{{ $po->usulan_pengadaan_id }}"
                                 value="{{ number_format($po->nilai ?? 0, 0, ',', '.') }}"
                                 readonly>
 
                             {{-- RAW --}}
                             <input type="hidden"
                                 name="nilai"
-                                id="nilaiPORaw{{ $po->pengadaan_oc_id }}"
+                                id="nilaiPORaw{{ $po->usulan_pengadaan_id }}"
                                 value="{{ $po->nilai ?? '' }}">
 
                             {{-- CURRENCY --}}
                             <input type="hidden"
                                 name="currency"
-                                id="currencyEditPO{{ $po->pengadaan_oc_id }}"
+                                id="currencyEditPO{{ $po->usulan_pengadaan_id }}"
                                 value="{{ $po->currency }}">
                         </div>
                     </div>
@@ -271,7 +271,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Create Pengadaan OC</h5>
+                <h5 class="modal-title">Create Usulan Pengadaan</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 

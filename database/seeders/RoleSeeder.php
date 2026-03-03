@@ -20,7 +20,7 @@ class RoleSeeder extends Seeder
                 ['role_code' => 'inquiry',     'role_name' => 'Inquiry & Quotation', 'description' => 'Inquiry & quotation vendor'],
                 ['role_code' => 'evatek',     'role_name' => 'evatek', 'description' => 'evatek'],
                 ['role_code' => 'negotiation', 'role_name' => 'Negotiation',          'description' => 'Negosiasi harga'],
-                ['role_code' => 'pengadaan', 'role_name' => 'Pengadaan OC',          'description' => 'Pengadaan OC'],
+                ['role_code' => 'pengadaan', 'role_name' => 'Usulan Pengadaan',      'description' => 'Usulan Pengadaan'],
                 ['role_code' => 'contract',    'role_name' => 'Contract & PO',        'description' => 'Kontrak dan PO'],
                 ['role_code' => 'pembayaran',    'role_name' => 'Pembayaran',        'description' => 'Pembayaran'],
                 ['role_code' => 'delivery',    'role_name' => 'Pengiriman Material',  'description' => 'Logistik & pengiriman'],
