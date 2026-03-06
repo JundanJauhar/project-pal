@@ -170,8 +170,8 @@
                             </td>
                             <td><strong>{{ $rev->revision_code }}</strong></td>
                             <td>
-                                <input type="text" class="link-input vendor-link" value="{{ $rev->vendor_link }}" {{ $isReadOnly ? 'readonly' : '' }}>
-                                <div class="link-status"></div>
+                                <input type="text" class="link-input vendor-link" value="{{ $rev->vendor_link }}" readonly>
+                                <!-- <div class="link-status"></div> -->
                             </td>
                             <td class="save-input">
                                 <input type="text" class="link-input design-link" value="{{ $rev->design_link }}" {{ $isReadOnly ? 'readonly' : '' }}>
@@ -360,7 +360,7 @@ function saveLink(row) {
             },
             body: JSON.stringify({
                 revision_id: row.dataset.revisionId,
-                vendor_link: row.querySelector(".vendor-link").value,
+                // vendor_link: row.querySelector(".vendor-link").value,
                 design_link: row.querySelector(".design-link").value
             })
         })
