@@ -29,7 +29,7 @@ use App\Http\Controllers\EvatekController;
 use App\Http\Controllers\VendorEvatekController;
 use App\Http\Controllers\InquiryQuotationController;
 use App\Http\Controllers\NegotiationController;
-use App\Http\Controllers\PengadaanOcController;
+use App\Http\Controllers\UsulanPengadaanController;
 use App\Http\Controllers\PengesahanKontrakController;
 use App\Http\Controllers\KontrakController;
 use App\Http\Controllers\MaterialDeliveryController;
@@ -406,25 +406,25 @@ Route::middleware(['auth', 'redirect.if.vendor'])->group(function () {
         // CREATE (PROCUREMENT BASED)
         Route::post(
             '/procurement/{procurementId}',
-            [PengadaanOcController::class, 'store']
+            [UsulanPengadaanController::class, 'store']
         )->name('pengadaan-oc.store');
 
         // UPDATE (OC BASED)
         Route::post(
-            '/{pengadaanOcId}/update',
-            [PengadaanOcController::class, 'update']
+            '/{UsulanPengadaanId}/update',
+            [UsulanPengadaanController::class, 'update']
         )->name('pengadaan-oc.update');
 
         // DELETE
         Route::delete(
-            '/{pengadaanOcId}',
-            [PengadaanOcController::class, 'delete']
+            '/{UsulanPengadaanId}',
+            [UsulanPengadaanController::class, 'delete']
         )->name('pengadaan-oc.delete');
 
         // GET BY PROCUREMENT
         Route::get(
             '/procurement/{procurementId}',
-            [PengadaanOcController::class, 'getByProcurement']
+            [UsulanPengadaanController::class, 'getByProcurement']
         )->name('pengadaan-oc.getByProcurement');
     });
 

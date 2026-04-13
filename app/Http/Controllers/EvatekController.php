@@ -57,7 +57,11 @@ class EvatekController extends Controller
             $evatek->log = '';
         }
 
-        return view('desain.review-evatek', compact('item', 'evatek', 'revisions'));
+        // Supply Chain users can only view (read-only), only Desain can edit
+        $userDivision = Auth::user()->division?->division_name ?? '';
+        $isReadOnly = str_contains($userDivision, 'Supply');
+
+        return view('desain.review-evatek', compact('item', 'evatek', 'revisions', 'isReadOnly'));
     }
 
     /**
@@ -74,7 +78,8 @@ class EvatekController extends Controller
             'item',
             'vendor',
             'procurement.project',
-            'latestRevision'
+            'latestRevision',
+            'revisions'
         ])
             ->whereIn('procurement_id', $procurementIds)
             ->orderBy('updated_at', 'desc')
@@ -126,6 +131,12 @@ class EvatekController extends Controller
      */
     public function saveLink(Request $request)
     {
+        // Only Desain division can save links
+        $userDivision = Auth::user()->division?->division_name ?? '';
+        if (str_contains($userDivision, 'Supply')) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengubah data evatek.'], 403);
+        }
+
         \Log::info("DEBUG SAVELINK: ", $request->all());
 
         try {
@@ -235,6 +246,12 @@ class EvatekController extends Controller
      */
     public function saveLog(Request $request)
     {
+        // Only Desain division can save logs
+        $userDivision = Auth::user()->division?->division_name ?? '';
+        if (str_contains($userDivision, 'Supply')) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengubah data evatek.'], 403);
+        }
+
         $evatek = EvatekItem::findOrFail($request->evatek_id);
 
         $evatek->update([
@@ -250,6 +267,12 @@ class EvatekController extends Controller
      */
     public function approve(Request $request)
     {
+        // Only Desain division can approve
+        $userDivision = Auth::user()->division?->division_name ?? '';
+        if (str_contains($userDivision, 'Supply')) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengubah data evatek.'], 403);
+        }
+
         $revision = EvatekRevision::findOrFail($request->revision_id);
 
         if (!$revision->evatek_id) {
@@ -406,6 +429,12 @@ class EvatekController extends Controller
      */
     public function reject(Request $request)
     {
+        // Only Desain division can reject
+        $userDivision = Auth::user()->division?->division_name ?? '';
+        if (str_contains($userDivision, 'Supply')) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengubah data evatek.'], 403);
+        }
+
         $revision = EvatekRevision::findOrFail($request->revision_id);
 
         if (!$revision->evatek_id) {
@@ -478,6 +507,12 @@ class EvatekController extends Controller
      */
     public function revise(Request $request)
     {
+        // Only Desain division can request revision
+        $userDivision = Auth::user()->division?->division_name ?? '';
+        if (str_contains($userDivision, 'Supply')) {
+            return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses untuk mengubah data evatek.'], 403);
+        }
+
         $revision = EvatekRevision::findOrFail($request->revision_id);
 
         if (!$revision->evatek_id) {

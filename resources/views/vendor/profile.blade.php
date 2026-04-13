@@ -286,15 +286,20 @@
                 Informasi Perusahaan
             </div>
 
+            <div class="alert-success-custom" style="background: #fff3cd; color:#664d03; border-left-color:#ffc107;">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Untuk menghindari kebingungan, data perusahaan & kontak hanya dapat diubah oleh admin. Vendor hanya bisa mengubah password.
+            </div>
+
             <div class="form-group">
                 <label for="name_vendor">Nama Perusahaan (PT) <span class="text-danger">*</span></label>
                 <input type="text"
-                    class="form-control @error('name_vendor') is-invalid @enderror"
+                    class="form-control"
                     id="name_vendor"
-                    name="name_vendor"
-                    value="{{ old('name_vendor', $vendor->name_vendor) }}"
-                    required>
-                <div class="form-hint">Masukkan nama lengkap perusahaan, contoh: PT Mega Persada Indonesia</div>
+                    value="{{ $vendor->name_vendor }}"
+                    readonly
+                    disabled>
+                <div class="form-hint">Nama perusahaan tidak dapat diubah dari akun vendor</div>
             </div>
 
             <div class="row">
@@ -302,20 +307,22 @@
                     <div class="form-group">
                         <label for="address">Alamat</label>
                         <input type="text"
-                            class="form-control @error('address') is-invalid @enderror"
+                            class="form-control"
                             id="address"
-                            name="address"
-                            value="{{ old('address', $vendor->address) }}">
+                            value="{{ $vendor->address }}"
+                            readonly
+                            disabled>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
                         <label for="phone_number">Nomor Telepon</label>
                         <input type="text"
-                            class="form-control @error('phone_number') is-invalid @enderror"
+                            class="form-control"
                             id="phone_number"
-                            name="phone_number"
-                            value="{{ old('phone_number', $vendor->phone_number) }}">
+                            value="{{ $vendor->phone_number }}"
+                            readonly
+                            disabled>
                     </div>
                 </div>
             </div>
@@ -342,12 +349,12 @@
             <div class="form-group">
                 <label for="email">Email Kontak <span class="text-danger">*</span></label>
                 <input type="email"
-                    class="form-control @error('email') is-invalid @enderror"
+                    class="form-control"
                     id="email"
-                    name="email"
-                    value="{{ old('email', $vendor->email) }}"
-                    required>
-                <div class="form-hint">Email ini digunakan untuk menerima notifikasi dan komunikasi</div>
+                    value="{{ $vendor->email }}"
+                    readonly
+                    disabled>
+                <div class="form-hint">Email kontak tidak dapat diubah dari akun vendor</div>
             </div>
 
             <div class="divider"></div>
@@ -365,12 +372,12 @@
                         class="form-control @error('current_password') is-invalid @enderror"
                         id="current_password"
                         name="current_password"
-                        placeholder="Masukkan password saat ini">
+                        placeholder="Masukkan password saat ini" required>
                     <button type="button" class="toggle-btn" onclick="togglePassword('current_password', this)">
                         <i class="bi bi-eye"></i>
                     </button>
                 </div>
-                <div class="form-hint">Kosongkan jika tidak ingin mengubah password</div>
+                <div class="form-hint">Wajib diisi untuk mengubah password</div>
             </div>
 
             <div class="row">
@@ -382,7 +389,7 @@
                                 class="form-control @error('new_password') is-invalid @enderror"
                                 id="new_password"
                                 name="new_password"
-                                placeholder="Minimal 6 karakter">
+                                placeholder="Minimal 6 karakter" required>
                             <button type="button" class="toggle-btn" onclick="togglePassword('new_password', this)">
                                 <i class="bi bi-eye"></i>
                             </button>
@@ -397,7 +404,7 @@
                                 class="form-control"
                                 id="new_password_confirmation"
                                 name="new_password_confirmation"
-                                placeholder="Ketik ulang password baru">
+                                placeholder="Ketik ulang password baru" required>
                             <button type="button" class="toggle-btn" onclick="togglePassword('new_password_confirmation', this)">
                                 <i class="bi bi-eye"></i>
                             </button>
@@ -413,7 +420,7 @@
                 <a href="{{ route('vendor.index') }}" class="btn btn-cancel">Batal</a>
                 <button type="submit" class="btn btn-save">
                     <i class="bi bi-check-lg"></i>
-                    Simpan Perubahan
+                    Ubah Password
                 </button>
             </div>
         </form>

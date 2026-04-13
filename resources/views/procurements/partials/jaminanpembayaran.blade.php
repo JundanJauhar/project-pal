@@ -1,4 +1,3 @@
-<div id="jaminan-pembayaran">
     <h5 class="section-title">Jaminan Pembayaran</h5>
 
     {{-- Alert Error (LUAR TABLE) --}}

@@ -261,8 +261,14 @@
 
 {{-- ACTION BUTTON --}}
 <div class="detail-actions">
-    <button class="btn-edit" id="btnEdit">Edit</button>
-    <button class="btn-save" id="btnSave">Simpan</button>
+    @if($allInspected)
+        {{-- Already inspected: show Edit button only --}}
+        <button class="btn-edit" id="btnEdit">Edit</button>
+    @else
+        {{-- First visit: show Batal + Selesai --}}
+        <a href="{{ route('inspections.index') }}" class="btn-edit">Batal</a>
+        <button class="btn-save" id="btnSave">Selesai</button>
+    @endif
 </div>
 
 @endsection
@@ -274,6 +280,8 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     const csrf = document.querySelector('meta[name="csrf-token"]').content;
+    const allInspected = @json($allInspected);
+    const actionsContainer = document.querySelector('.detail-actions');
 
     /* ======== INITIALIZE TOGGLES ======== */
     document.querySelectorAll('.row-item').forEach(row => {
@@ -287,12 +295,14 @@ document.addEventListener('DOMContentLoaded', function () {
         else notes.style.display = 'none';
 
         pass.addEventListener('click', () => {
+            if (!editMode) return;
             pass.classList.toggle('pass');
             fail.classList.remove('fail');
             notes.style.display = pass.classList.contains('pass') ? 'none' : 'block';
         });
 
         fail.addEventListener('click', () => {
+            if (!editMode) return;
             fail.classList.toggle('fail');
             pass.classList.remove('pass');
             notes.style.display = fail.classList.contains('fail') ? 'block' : 'none';
@@ -301,36 +311,84 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 
-    /* ======== EDIT MODE ======== */
-    let editMode = true;
-    const btnEdit = document.getElementById('btnEdit');
+    /* ======== EDIT MODE MANAGEMENT ======== */
+    let editMode = false;
 
     function setEditMode(flag) {
         editMode = flag;
-        btnEdit.textContent = editMode ? "Batal" : "Edit";
 
         document.querySelectorAll('.toggle-box').forEach(el => {
-            el.style.pointerEvents = editMode ? "auto" : "none";
+            el.style.pointerEvents = editMode ? 'auto' : 'none';
+            el.style.opacity = editMode ? '1' : '0.7';
         });
 
-        document.querySelectorAll(".notes-input, .ata-input").forEach(el => {
+        document.querySelectorAll('.notes-input, .ata-input').forEach(el => {
             el.readOnly = !editMode;
-            el.style.pointerEvents = editMode ? "auto" : "none";
+            el.style.pointerEvents = editMode ? 'auto' : 'none';
+            el.style.opacity = editMode ? '1' : '0.7';
         });
     }
 
-    setEditMode(true);
+    /* ======== RENDER BUTTONS BASED ON STATE ======== */
+    function renderButtons(state) {
+        // state: 'first-visit' | 'saved' | 'editing'
+        actionsContainer.innerHTML = '';
 
-    btnEdit.addEventListener('click', () => {
-        setEditMode(!editMode);
-    });
+        if (state === 'first-visit') {
+            // Batal (go back) + Selesai (save)
+            const btnBatal = document.createElement('a');
+            btnBatal.href = "{{ route('inspections.index') }}";
+            btnBatal.className = 'btn-edit';
+            btnBatal.textContent = 'Batal';
+
+            const btnSelesai = document.createElement('button');
+            btnSelesai.className = 'btn-save';
+            btnSelesai.id = 'btnSave';
+            btnSelesai.textContent = 'Selesai';
+            btnSelesai.addEventListener('click', handleSave);
+
+            actionsContainer.appendChild(btnBatal);
+            actionsContainer.appendChild(btnSelesai);
+        }
+        else if (state === 'saved') {
+            // Only Edit button
+            const btnEdit = document.createElement('button');
+            btnEdit.className = 'btn-edit';
+            btnEdit.id = 'btnEdit';
+            btnEdit.textContent = 'Edit';
+            btnEdit.addEventListener('click', () => {
+                setEditMode(true);
+                renderButtons('editing');
+            });
+
+            actionsContainer.appendChild(btnEdit);
+        }
+        else if (state === 'editing') {
+            // Batal (cancel edit) + Simpan
+            const btnBatal = document.createElement('button');
+            btnBatal.className = 'btn-edit';
+            btnBatal.textContent = 'Batal';
+            btnBatal.addEventListener('click', () => {
+                // Reload page to revert any changes
+                window.location.reload();
+            });
+
+            const btnSimpan = document.createElement('button');
+            btnSimpan.className = 'btn-save';
+            btnSimpan.id = 'btnSave';
+            btnSimpan.textContent = 'Simpan';
+            btnSimpan.addEventListener('click', handleSave);
+
+            actionsContainer.appendChild(btnBatal);
+            actionsContainer.appendChild(btnSimpan);
+        }
+    }
 
 
     /* ======== SAVE DATA ======== */
-    const btnSave = document.getElementById('btnSave');
+    async function handleSave() {
 
-    btnSave.addEventListener('click', async () => {
-
+        const btnSave = document.getElementById('btnSave');
         const payloadItems = [];
         let valid = true;
 
@@ -344,19 +402,19 @@ document.addEventListener('DOMContentLoaded', function () {
             const ataInput = row.querySelector('.ata-input');
 
             let result = null;
-            if (passActive) result = "passed";
-            if (failActive) result = "failed";
+            if (passActive) result = 'passed';
+            if (failActive) result = 'failed';
 
             if (!result) return;
 
             const notes = notesInput.value.trim();
-            if (result === "failed" && notes === "") {
-                alert("Keterangan wajib diisi untuk item yang tidak lolos.");
+            if (result === 'failed' && notes === '') {
+                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Keterangan wajib diisi untuk item yang tidak lolos.' });
                 valid = false;
             }
 
             payloadItems.push({
-                item_id: itemId,
+                item_id: parseInt(itemId, 10),
                 result,
                 notes,
                 arrival_date: ataInput.value
@@ -366,38 +424,77 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (!valid) return;
         if (payloadItems.length === 0)
-            return alert("Pilih hasil inspeksi untuk minimal 1 item.");
+            return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Pilih hasil inspeksi untuk minimal 1 item.' });
+
+        /* ===== VERIFIKASI ===== */
+        const step1 = await Swal.fire({
+            title: 'Simpan Hasil Inspeksi?',
+            text: `Anda akan menyimpan ${payloadItems.length} item inspeksi.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#138a33',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal'
+        });
+        if (!step1.isConfirmed) return;
 
         btnSave.disabled = true;
-        btnSave.textContent = "Menyimpan...";
+        btnSave.textContent = 'Menyimpan...';
 
         try {
             const response = await fetch("{{ route('qa.detail-approval.save', ['procurement_id' => $procurement->procurement_id]) }}", {
-                method: "POST",
+                method: 'POST',
                 headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": csrf
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf
                 },
                 body: JSON.stringify({ items: payloadItems })
             });
 
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                const msg = errorData?.message || `Server error (${response.status})`;
+                Swal.fire({ icon: 'error', title: 'Gagal', text: msg });
+                btnSave.disabled = false;
+                btnSave.textContent = 'Simpan';
+                return;
+            }
+
             const json = await response.json();
 
             if (!json.success) {
-                alert(json.message || "Gagal menyimpan.");
+                Swal.fire({ icon: 'error', title: 'Gagal', text: json.message || 'Gagal menyimpan.' });
+                btnSave.disabled = false;
+                btnSave.textContent = 'Simpan';
             } else {
-                alert("Hasil inspeksi berhasil disimpan.");
+                await Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Hasil inspeksi berhasil disimpan.' });
+                // Switch to saved state — read-only with Edit button
                 setEditMode(false);
+                renderButtons('saved');
             }
 
         } catch (error) {
             console.error(error);
-            alert("Terjadi kesalahan saat menyimpan.");
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan saat menyimpan.' });
+            btnSave.disabled = false;
+            btnSave.textContent = 'Simpan';
         }
+    }
 
-        btnSave.disabled = false;
-        btnSave.textContent = "Simpan";
-    });
+
+    /* ======== INITIAL STATE ======== */
+    if (allInspected) {
+        // Already inspected: read-only with Edit button
+        setEditMode(false);
+        renderButtons('saved');
+    } else {
+        // First visit: editable with Batal + Selesai
+        setEditMode(true);
+        renderButtons('first-visit');
+    }
+
 });
 </script>
 @endpush

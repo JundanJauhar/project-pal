@@ -101,7 +101,7 @@
         position: relative;
         background: white;
     }
-    
+
     /* When generating PDF, remove scroll constraint */
     .pdf-generating #reportContent {
         max-height: none !important;
@@ -109,7 +109,8 @@
     }
 
     /* Ensure gradients render in PDF */
-    .pdf-header, .analytics-card {
+    .pdf-header,
+    .analytics-card {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
         color-adjust: exact;
@@ -127,11 +128,12 @@
         page-break-after: avoid;
         page-break-inside: avoid;
     }
-    
-    .analytics-card, .chart-card {
+
+    .analytics-card,
+    .chart-card {
         page-break-inside: avoid;
     }
-    
+
     .mb-4 {
         page-break-inside: avoid;
     }
@@ -143,7 +145,8 @@
             margin: 10mm;
         }
 
-        html, body {
+        html,
+        body {
             margin: 0 !important;
             padding: 0 !important;
             height: auto !important;
@@ -172,7 +175,9 @@
             align-items: flex-start !important;
         }
 
-        .modal-header, .modal-footer, .btn {
+        .modal-header,
+        .modal-footer,
+        .btn {
             display: none !important;
         }
 
@@ -180,11 +185,16 @@
         body * {
             visibility: hidden;
         }
-        #summaryReportModal, #summaryReportModal * {
+
+        #summaryReportModal,
+        #summaryReportModal *,
+        #summaryReportTableModal,
+        #summaryReportTableModal * {
             visibility: visible;
         }
 
-        #reportContent {
+        #reportContent,
+        #summaryTableContent {
             /* Pin printable content to top of the page */
             position: fixed !important;
             left: 0 !important;
@@ -196,10 +206,18 @@
         }
 
         /* PRINT output uses simplified table template */
-        #reportContent > :not(#reportPrint) {
+        #reportContent> :not(#reportPrint) {
             display: none !important;
         }
+
         #reportPrint {
+            display: block !important;
+            font-size: 10px !important;
+            line-height: 1.25 !important;
+        }
+
+        /* Summary Report table print */
+        #summaryTablePrint {
             display: block !important;
             font-size: 10px !important;
             line-height: 1.25 !important;
@@ -211,9 +229,14 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold mb-0">Daftar Item</h2>
-    <button class="btn btn-primary" id="btnSummaryReport" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 10px 24px; border-radius: 10px; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-        <i class="fas fa-chart-bar me-2"></i>Summary Report
-    </button>
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary" id="btnDashboard" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 10px 24px; border-radius: 10px; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+            <i class="fas fa-chart-pie me-2"></i>Dashboard
+        </button>
+        <button class="btn btn-primary" id="btnSummaryReport" style="background: linear-gradient(135deg, #1a5276 0%, #1f6f8b 100%); border: none; padding: 10px 24px; border-radius: 10px; font-weight: 600; box-shadow: 0 4px 15px rgba(26, 82, 118, 0.4);">
+            <i class="fas fa-table me-2"></i>Summary Report
+        </button>
+    </div>
 </div>
 
 <!-- Summary Report Modal with Analytics Dashboard -->
@@ -322,8 +345,10 @@
                         </div>
                     </div>
 
+
+
                     <div style="margin-top: 8px;">
-                        <div style="font-weight: 700; margin-bottom: 4px;">D. Keterangan</div>
+                        <div style="font-weight: 700; margin-bottom: 4px;">E. Keterangan</div>
                         <div style="border: 1px solid #333; padding: 6px; font-size: 9px; color: #222;">
                             <div>1) <strong>Approved</strong> = item disetujui dan proses selesai.</div>
                             <div>2) <strong>On Progress</strong> = item masih dikerjakan / menunggu review.</div>
@@ -333,7 +358,7 @@
                     </div>
 
                     <div style="margin-top: 8px;">
-                        <div style="font-weight: 700; margin-bottom: 4px;">E. Catatan (Ringkas)</div>
+                        <div style="font-weight: 700; margin-bottom: 4px;">F. Catatan (Ringkas)</div>
                         <div id="printNotes" style="border: 1px solid #333; padding: 6px; min-height: 26px; font-size: 10px; white-space: pre-wrap;">Tidak ada catatan.</div>
                         <div style="margin-top: 3px; font-size: 8.5px; color: #333;">Catatan panjang otomatis diringkas untuk menjaga 1 halaman.</div>
                     </div>
@@ -391,7 +416,7 @@
                     <i class="fas fa-info-circle me-1" style="color: #003d82;"></i>
                     <strong>Keterangan:</strong> Total Items adalah jumlah keseluruhan item Evatek. Approved = item yang sudah disetujui, On Progress = item dalam proses review, Not Approved = item yang ditolak dan perlu revisi.
                 </div>
-                
+
                 <!-- Interpretasi Otomatis -->
                 <div id="autoInterpretation" class="mb-4" style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-radius: 10px; padding: 15px 20px; border-left: 4px solid #1976D2;">
                     <h6 class="fw-bold mb-2" style="color: #1565C0; font-size: 13px;"><i class="fas fa-lightbulb me-2"></i>Interpretasi Data</h6>
@@ -427,7 +452,7 @@
                     <i class="fas fa-info-circle me-1" style="color: #003d82;"></i>
                     <strong>Keterangan:</strong> Diagram kiri (Doughnut Chart) menunjukkan proporsi status item dalam persentase dari total - semakin besar area warna hijau, semakin tinggi tingkat penyelesaian. Diagram kanan (Bar Chart) menampilkan distribusi beban kerja per PIC divisi - tinggi bar menunjukkan jumlah item yang menjadi tanggung jawab masing-masing PIC.
                 </div>
-                
+
                 <!-- Data Numerik Chart -->
                 <div class="mb-4" style="background: #fff9e6; border-radius: 10px; padding: 15px 20px; border-left: 4px solid #FF9500;">
                     <h6 class="fw-bold mb-2" style="color: #F57C00; font-size: 12px;"><i class="fas fa-calculator me-2"></i>Ringkasan Numerik Visualisasi</h6>
@@ -457,7 +482,7 @@
                     <i class="fas fa-info-circle me-1" style="color: #003d82;"></i>
                     <strong>Keterangan:</strong> Progress bar menunjukkan persentase dari total item. Warna hijau (Approved) menunjukkan item selesai, kuning (On Progress) sedang diproses, merah (Not Approved) perlu tindak lanjut.
                 </div>
-                
+
                 <!-- Status Progress Detail -->
                 <div class="mb-4" style="background: #e8f5e9; border-radius: 10px; padding: 15px 20px; border-left: 4px solid #28AC00;">
                     <h6 class="fw-bold mb-2" style="color: #2E7D32; font-size: 12px;"><i class="fas fa-tasks me-2"></i>Analisis Tingkat Penyelesaian</h6>
@@ -489,7 +514,7 @@
                     <i class="fas fa-info-circle me-1" style="color: #003d82;"></i>
                     <strong>Keterangan:</strong> Breakdown PIC menunjukkan distribusi item per divisi penanggung jawab. Breakdown Vendor menampilkan jumlah item yang dikerjakan oleh masing-masing vendor/supplier.
                 </div>
-                
+
                 <!-- Vendor & PIC Summary -->
                 <div class="mb-4" style="background: #fce4ec; border-radius: 10px; padding: 15px 20px; border-left: 4px solid #C2185B;">
                     <h6 class="fw-bold mb-2" style="color: #AD1457; font-size: 12px;"><i class="fas fa-users-cog me-2"></i>Ringkasan Distribusi Kerja</h6>
@@ -520,6 +545,107 @@
                     </div>
                     <div class="text-center mt-2" style="font-size: 10px; color: #999;">
                         © 2026 PT PAL Indonesia (Persero) - Divisi Desain | Dokumen Rahasia Perusahaan
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #eee; padding: 15px 30px;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px;">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Report Modal (Detail Table Only) -->
+<div class="modal fade" id="summaryReportTableModal" tabindex="-1" aria-labelledby="summaryReportTableModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 18px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1a5276 0%, #1f6f8b 100%); border-radius: 18px 18px 0 0; padding: 20px 30px;">
+                <h5 class="modal-title text-white fw-bold" id="summaryReportTableModalLabel">
+                    <i class="fas fa-table me-2"></i>Summary Report - Detail Item
+                </h5>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-light btn-sm" id="btnDownloadSummaryPDF" style="border-radius: 8px; font-weight: 600;">
+                        <i class="fas fa-download me-1"></i>Download PDF
+                    </button>
+                    <button type="button" class="btn btn-outline-light btn-sm" id="btnPrintSummaryTable" style="border-radius: 8px; font-weight: 600;">
+                        <i class="fas fa-print me-1"></i>Print
+                    </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body" style="padding: 30px; max-height: 80vh; overflow-y: auto;" id="summaryTableContent">
+                <!-- Print template for Summary Report -->
+                <div id="summaryTablePrint" style="display: none; font-family: Arial, sans-serif; color: #111; font-size: 10px; line-height: 1.25;">
+                    <div style="text-align:center; margin-bottom: 8px;">
+                        <div style="font-size: 11px; letter-spacing: 1px;">PT PAL INDONESIA (PERSERO)</div>
+                        <div style="font-size: 16px; font-weight: 800; margin-top: 2px;">SUMMARY REPORT - DETAIL ITEM EVATEK</div>
+                        <div style="font-size: 10px; margin-top: 2px;">Divisi Desain - Project Pal System</div>
+                        <div style="font-size: 9px; margin-top: 4px;">Generated: <span id="printSummaryTableDate">-</span></div>
+                    </div>
+                    <div style="border-top: 1px solid #333; margin: 6px 0 8px;"></div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 8px;">
+                        <thead>
+                            <tr style="background: #1a5276; color: white;">
+                                <th style="border: 1px solid #333; padding: 3px; text-align: center; width: 20px;">NO.</th>
+                                <th style="border: 1px solid #333; padding: 3px; text-align: left;">PERMASALAHAN</th>
+                                <th style="border: 1px solid #333; padding: 3px; text-align: left;">HASIL RAPAT</th>
+                                <th style="border: 1px solid #333; padding: 3px; text-align: center; width: 55px;">USED DATE</th>
+                                <th style="border: 1px solid #333; padding: 3px; text-align: center; width: 55px;">STATUS PENGADAAN</th>
+                                <th style="border: 1px solid #333; padding: 3px; text-align: center; width: 45px;">AKSI</th>
+                                <th style="border: 1px solid #333; padding: 3px; text-align: center; width: 55px;">TARGET</th>
+                                <th style="border: 1px solid #333; padding: 3px; text-align: center; width: 40px;">STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="printDetailRows">
+                            <tr>
+                                <td style="border: 1px solid #333; padding: 3px;" colspan="8">Tidak ada data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 6px; font-size: 9px; color: #333; text-align:center;">
+                        Dokumen ini digenerate otomatis oleh sistem Project Pal
+                    </div>
+                </div>
+
+                <!-- Header -->
+                <div class="mb-4" style="background: linear-gradient(135deg, #1a5276 0%, #154360 100%); border-radius: 14px; padding: 25px 30px; color: white; text-align: center;">
+                    <div style="font-size: 12px; opacity: 0.8; letter-spacing: 2px;">PT PAL INDONESIA (PERSERO)</div>
+                    <div style="font-size: 24px; font-weight: 800; margin-top: 5px;">SUMMARY REPORT - DETAIL ITEM</div>
+                    <div style="font-size: 13px; opacity: 0.9; margin-top: 8px;">Divisi Desain - Project Pal System</div>
+                </div>
+
+                <!-- Detail Table -->
+                <div class="mb-2" style="background: #fff; border-radius: 14px; padding: 20px; border: 1px solid #eee; overflow-x: auto;">
+                    <table id="summaryDetailTable" style="width: 100%; border-collapse: collapse; font-size: 12px; min-width: 800px;">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #1a5276, #1f6f8b); color: white;">
+                                <th style="border: 1px solid #154360; padding: 10px 8px; text-align: center; width: 40px; font-weight: 700;">NO.</th>
+                                <th style="border: 1px solid #154360; padding: 10px 8px; text-align: left; min-width: 150px; font-weight: 700;">PERMASALAHAN</th>
+                                <th style="border: 1px solid #154360; padding: 10px 8px; text-align: left; min-width: 220px; font-weight: 700;">HASIL RAPAT</th>
+                                <th style="border: 1px solid #154360; padding: 10px 8px; text-align: center; width: 90px; font-weight: 700;">USED DATE<br><span style="font-size: 9px; font-weight: 400; opacity: 0.8;">(INSTALASI)</span></th>
+                                <th style="border: 1px solid #154360; padding: 10px 8px; text-align: center; width: 100px; font-weight: 700;">STATUS PENGADAAN</th>
+                                <th style="border: 1px solid #154360; padding: 10px 8px; text-align: center; width: 80px; font-weight: 700;">AKSI</th>
+                                <th style="border: 1px solid #154360; padding: 10px 8px; text-align: center; width: 90px; font-weight: 700;">TARGET</th>
+                                <th style="border: 1px solid #154360; padding: 10px 8px; text-align: center; width: 70px; font-weight: 700;">STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryDetailBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 20px; color: #999;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mb-4" style="background: #f0f4f8; border-radius: 8px; padding: 10px 15px; font-size: 11px; color: #555;">
+                    <i class="fas fa-info-circle me-1" style="color: #003d82;"></i>
+                    <strong>Keterangan:</strong> Tabel ini menampilkan detail setiap item Evatek. Kolom "Hasil Rapat" berisi catatan log dan revisi terkini. Status "Open" berarti item masih dalam proses, "Closed" berarti sudah selesai (Approved/Not Approved).
+                </div>
+
+                <!-- Footer -->
+                <div style="background: #f8f9fa; border-radius: 10px; padding: 15px 20px;">
+                    <div class="d-flex justify-content-between align-items-center" style="font-size: 11px; color: #666;">
+                        <div><i class="fas fa-file-pdf me-1"></i>Dokumen ini digenerate otomatis oleh sistem Project Pal</div>
+                        <div><i class="fas fa-clock me-1"></i>Report Generated: <span id="summaryTableDate"></span></div>
                     </div>
                 </div>
             </div>
@@ -598,7 +724,19 @@
             $catatan = $latestRevision ? ($latestRevision->catatan_approval ?? $latestRevision->alasan_reject ?? '-') : '-';
             @endphp
 
-            <tr data-status="{{ $evatek->status }}" data-pic="{{ $evatek->pic_evatek }}" data-target="{{ $evatek->target_date }}" class="evatek-row">
+            @php
+            $revisionsData = $evatek->revisions->map(function($rev) {
+            return [
+            'code' => $rev->revision_code ?? '-',
+            'status' => $rev->status ?? '-',
+            'date' => $rev->date ? \Carbon\Carbon::parse($rev->date)->format('d/m/Y') : '-',
+            'log' => $rev->log ?? '-',
+            'approved_at' => $rev->approved_at ? \Carbon\Carbon::parse($rev->approved_at)->format('d/m/Y H:i') : null,
+            'not_approved_at' => $rev->not_approved_at ? \Carbon\Carbon::parse($rev->not_approved_at)->format('d/m/Y H:i') : null,
+            ];
+            })->toArray();
+            @endphp
+            <tr data-status="{{ $evatek->status }}" data-pic="{{ $evatek->pic_evatek }}" data-target="{{ $evatek->target_date }}" data-revisions='@json($revisionsData)' data-log="{{ $evatek->log ?? '' }}" class="evatek-row">
                 <td style="padding: 12px 8px; text-align: left;">
                     <a href="{{ route('desain.review-evatek', $evatek->evatek_id) }}"
                         data-evatek-id="{{ $evatek->evatek_id }}"
@@ -673,7 +811,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="text-center py-5">Belum ada item evatek untuk project ini.</td>
+                <td colspan="10" class="text-center py-5">Belum ada item evatek untuk project ini.</td>
             </tr>
             @endforelse
         </tbody>
@@ -783,16 +921,196 @@
         picFilter.addEventListener('change', filterTable);
 
         // ===============================
-        // SUMMARY REPORT FUNCTIONALITY
+        // DASHBOARD & SUMMARY REPORT
         // ===============================
+        const btnDashboard = document.getElementById('btnDashboard');
         const btnSummaryReport = document.getElementById('btnSummaryReport');
         let statusChartInstance = null;
         let picChartInstance = null;
 
-        btnSummaryReport.addEventListener('click', function() {
+        // Dashboard button: opens analytics modal
+        btnDashboard.addEventListener('click', function() {
             generateSummaryReport();
             const modal = new bootstrap.Modal(document.getElementById('summaryReportModal'));
             modal.show();
+        });
+
+        // Summary Report button: opens detail table modal
+        btnSummaryReport.addEventListener('click', function() {
+            const rows = document.querySelectorAll('#items-tbody tr.evatek-row');
+            generateDetailTable(rows);
+            const dateStr = new Date().toLocaleString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const summaryTableDate = document.getElementById('summaryTableDate');
+            if (summaryTableDate) summaryTableDate.textContent = dateStr;
+            const modal = new bootstrap.Modal(document.getElementById('summaryReportTableModal'));
+            modal.show();
+        });
+
+        // Print for Summary Report table modal
+        document.getElementById('btnPrintSummaryTable').addEventListener('click', function() {
+            const dateStr = new Date().toLocaleString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const printDate = document.getElementById('printSummaryTableDate');
+            if (printDate) printDate.textContent = dateStr;
+
+            // Temporarily show print template and hide visual content for printing
+            const printDiv = document.getElementById('summaryTablePrint');
+            const contentDiv = document.getElementById('summaryTableContent');
+            if (printDiv) printDiv.style.display = 'block';
+
+            // Hide all other content in the modal body except print template
+            const children = contentDiv.children;
+            const hiddenEls = [];
+            for (let i = 0; i < children.length; i++) {
+                if (children[i].id !== 'summaryTablePrint' && children[i].style.display !== 'none') {
+                    children[i].dataset.wasVisible = 'true';
+                    children[i].style.display = 'none';
+                    hiddenEls.push(children[i]);
+                }
+            }
+
+            window.print();
+
+            // Restore visibility
+            setTimeout(() => {
+                if (printDiv) printDiv.style.display = 'none';
+                hiddenEls.forEach(el => {
+                    el.style.display = '';
+                    delete el.dataset.wasVisible;
+                });
+            }, 500);
+        });
+
+        // Download PDF for Summary Report table modal
+        document.getElementById('btnDownloadSummaryPDF').addEventListener('click', function() {
+            const btn = this;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
+            btn.disabled = true;
+
+            const reportRoot = document.getElementById('summaryTableContent');
+
+            setTimeout(async () => {
+                let captureHost = null;
+                try {
+                    const jsPDFConstructor = (window.jspdf && window.jspdf.jsPDF) ? window.jspdf.jsPDF : window.jsPDF;
+                    if (typeof html2canvas === 'undefined' || !jsPDFConstructor) {
+                        throw new Error('Library PDF belum siap (html2canvas/jsPDF). Coba refresh (Ctrl+F5).');
+                    }
+
+                    captureHost = document.createElement('div');
+                    captureHost.style.cssText = [
+                        'position: fixed', 'left: -9999px', 'top: 0', 'width: 1200px',
+                        'background: #ffffff', 'pointer-events: none',
+                        'z-index: -1', 'padding: 0', 'margin: 0'
+                    ].join(';');
+
+                    const clone = reportRoot.cloneNode(true);
+                    clone.style.display = 'block';
+                    clone.style.width = '1200px';
+                    clone.style.maxWidth = '1200px';
+                    clone.style.background = '#ffffff';
+                    clone.style.padding = '20px';
+                    clone.style.margin = '0';
+                    clone.style.overflow = 'visible';
+                    clone.style.maxHeight = 'none';
+
+                    // Remove print template from captured output
+                    const printTemplate = clone.querySelector('#summaryTablePrint');
+                    if (printTemplate && printTemplate.parentNode) printTemplate.parentNode.removeChild(printTemplate);
+
+                    captureHost.appendChild(clone);
+                    document.body.appendChild(captureHost);
+                    document.body.classList.add('pdf-generating');
+
+                    const canvas = await html2canvas(captureHost, {
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                        backgroundColor: '#ffffff',
+                        width: captureHost.scrollWidth,
+                        height: captureHost.scrollHeight,
+                        windowWidth: captureHost.scrollWidth
+                    });
+
+                    // Portrait A4 — scale wide capture to fit
+                    const pageWidth = 210;
+                    const pageHeight = 297;
+                    const margin = 8;
+                    const contentWidth = pageWidth - margin * 2;
+                    const pxPerMm = canvas.width / contentWidth;
+                    const maxContentHeightMm = pageHeight - margin * 2;
+                    const maxContentHeightPx = maxContentHeightMm * pxPerMm;
+
+                    const pdf = new jsPDFConstructor({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+
+                    let renderedHeightPx = 0;
+                    let pageIndex = 0;
+                    while (renderedHeightPx < canvas.height) {
+                        const sliceHeightPx = Math.min(maxContentHeightPx, canvas.height - renderedHeightPx);
+                        const pageCanvas = document.createElement('canvas');
+                        pageCanvas.width = canvas.width;
+                        pageCanvas.height = sliceHeightPx;
+                        const pageCtx = pageCanvas.getContext('2d');
+                        pageCtx.fillStyle = '#ffffff';
+                        pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+                        pageCtx.drawImage(canvas, 0, renderedHeightPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
+                        const imgData = pageCanvas.toDataURL('image/jpeg', 0.92);
+                        const sliceHeightMm = sliceHeightPx / pxPerMm;
+                        if (pageIndex > 0) pdf.addPage();
+                        pdf.addImage(imgData, 'JPEG', margin, margin, contentWidth, sliceHeightMm);
+                        renderedHeightPx += sliceHeightPx;
+                        pageIndex++;
+                    }
+
+                    const totalPages = pdf.getNumberOfPages();
+                    for (let i = 1; i <= totalPages; i++) {
+                        pdf.setPage(i);
+                        pdf.setFontSize(9);
+                        pdf.setTextColor(150);
+                        pdf.text(`Halaman ${i} dari ${totalPages}`, pageWidth / 2, pageHeight - 6, {
+                            align: 'center'
+                        });
+                    }
+
+                    const filename = 'Summary_Report_Detail_' + new Date().toISOString().slice(0, 10) + '.pdf';
+                    pdf.save(filename);
+
+                    btn.innerHTML = '<i class="fas fa-check me-1"></i>PDF Downloaded';
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="fas fa-download me-1"></i>Download PDF';
+                        btn.disabled = false;
+                    }, 2000);
+                } catch (err) {
+                    console.error('PDF Error:', err);
+                    alert(err?.message ? `Gagal generate PDF: ${err.message}` : 'Gagal generate PDF.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-download me-1"></i>Download PDF';
+                } finally {
+                    document.body.classList.remove('pdf-generating');
+                    if (captureHost && captureHost.parentNode) captureHost.parentNode.removeChild(captureHost);
+                    if (btn.disabled) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-download me-1"></i>Download PDF';
+                    }
+                }
+            }, 300);
         });
 
         // Download PDF functionality
@@ -823,11 +1141,10 @@
                     captureHost = document.createElement('div');
                     captureHost.style.cssText = [
                         'position: fixed',
-                        'left: 0',
+                        'left: -9999px',
                         'top: 0',
                         'width: 210mm',
                         'background: #ffffff',
-                        'opacity: 0',
                         'pointer-events: none',
                         'z-index: -1',
                         'padding: 0',
@@ -882,6 +1199,45 @@
                     document.body.appendChild(captureHost);
 
                     document.body.classList.add('pdf-generating');
+
+                    // Prevent Section 3 header from being cut by fixed canvas slicing
+                    // If Section 3 starts too close to the bottom of a PDF page, push it to the next page.
+                    try {
+                        const section3Header = Array.from(clone.querySelectorAll('.section-header h6'))
+                            .find(h => (h.textContent || '').trim().startsWith('3.') && (h.textContent || '').toUpperCase().includes('PROGRESS'));
+                        const section3 = section3Header ? section3Header.closest('.section-header') : null;
+                        if (section3) {
+                            // Match the PDF slicing math used below (contentWidth/contentHeight in mm)
+                            const pageWidthMm = 210;
+                            const pageHeightMm = 297;
+                            const marginMm = 10;
+                            const contentWidthMm = pageWidthMm - marginMm * 2; // 190
+                            const contentHeightMm = pageHeightMm - marginMm * 2; // 277
+                            const minSpaceBeforeSectionMm = 35; // keep enough room so header + some content won't be split
+
+                            // Layout must be measurable in DOM
+                            const cloneRect = clone.getBoundingClientRect();
+                            const sectionRect = section3.getBoundingClientRect();
+
+                            const pxPerMmForSlice = cloneRect.width / contentWidthMm;
+                            const pageHeightPx = contentHeightMm * pxPerMmForSlice;
+                            const offsetY = sectionRect.top - cloneRect.top;
+                            const withinPageY = ((offsetY % pageHeightPx) + pageHeightPx) % pageHeightPx;
+                            const spaceLeftPx = pageHeightPx - withinPageY;
+                            const minSpacePx = minSpaceBeforeSectionMm * pxPerMmForSlice;
+
+                            // Only push when we're too close to the bottom of the page.
+                            if (spaceLeftPx > 0 && spaceLeftPx < minSpacePx) {
+                                const spacer = document.createElement('div');
+                                spacer.style.height = `${spaceLeftPx}px`;
+                                spacer.style.width = '100%';
+                                spacer.style.background = '#ffffff';
+                                section3.parentNode.insertBefore(spacer, section3);
+                            }
+                        }
+                    } catch (e) {
+                        // ignore layout/page-break helper errors
+                    }
 
                     const canvas = await html2canvas(clone, {
                         scale: 2,
@@ -948,8 +1304,9 @@
                         pdf.text(
                             `Halaman ${i} dari ${totalPages}`,
                             pageWidth / 2,
-                            pageHeight - 6,
-                            { align: 'center' }
+                            pageHeight - 6, {
+                                align: 'center'
+                            }
                         );
                     }
 
@@ -1131,15 +1488,18 @@
 
             // Generate Automatic Interpretation
             generateInterpretation(totalItems, statusCount, approvedPct, onProgressPct, notApprovedPct);
-            
+
             // Generate Chart Numeric Summary
             generateChartSummary(statusCount, picCount);
-            
+
             // Generate Progress Analysis
             generateProgressAnalysis(approvedPct, onProgressPct, notApprovedPct, totalItems, statusCount);
-            
+
             // Generate Distribution Summary
             generateDistributionSummary(picCount, vendorCount);
+
+
+
 
             // Status Pie Chart
             const statusCtx = document.getElementById('statusChart').getContext('2d');
@@ -1269,7 +1629,7 @@
                 interpretation = 'Belum ada data item Evatek yang tercatat dalam sistem.';
             } else {
                 interpretation = `Dari total <strong>${totalItems} item</strong> Evatek yang tercatat: `;
-                
+
                 // Approval rate analysis
                 if (parseFloat(approvedPct) >= 70) {
                     interpretation += `Tingkat approval sangat baik (<strong class="text-success">${approvedPct}%</strong> approved). `;
@@ -1306,7 +1666,7 @@
             const summaryEl = document.getElementById('chartNumericSummary');
             const totalPics = Object.keys(picCount).length;
             const picEntries = Object.entries(picCount).sort((a, b) => b[1] - a[1]);
-            
+
             let summary = '<div class="row">';
             summary += '<div class="col-md-6">';
             summary += '<strong>Status Distribution:</strong><br>';
@@ -1314,13 +1674,13 @@
             summary += `• On Progress: <span class="badge bg-warning">${statusCount.on_progress} items</span><br>`;
             summary += `• Not Approved: <span class="badge bg-danger">${statusCount.not_approve} items</span>`;
             summary += '</div>';
-            
+
             summary += '<div class="col-md-6">';
             summary += `<strong>Distribusi PIC (${totalPics} PIC aktif):</strong><br>`;
             if (picEntries.length > 0) {
                 const topPic = picEntries[0];
                 summary += `• PIC dengan item terbanyak: <strong>${topPic[0]}</strong> (${topPic[1]} items)<br>`;
-                
+
                 if (picEntries.length > 1) {
                     const avgItems = picEntries.reduce((sum, p) => sum + p[1], 0) / picEntries.length;
                     summary += `• Rata-rata item per PIC: <strong>${avgItems.toFixed(1)}</strong> items`;
@@ -1330,7 +1690,7 @@
             }
             summary += '</div>';
             summary += '</div>';
-            
+
             summaryEl.innerHTML = summary;
         }
 
@@ -1338,11 +1698,11 @@
         function generateProgressAnalysis(approvedPct, onProgressPct, notApprovedPct, totalItems, statusCount) {
             const analysisEl = document.getElementById('progressAnalysis');
             let analysis = '';
-            
+
             const completionRate = parseFloat(approvedPct);
             const pendingRate = parseFloat(onProgressPct);
             const rejectionRate = parseFloat(notApprovedPct);
-            
+
             // Overall status
             if (completionRate >= 80) {
                 analysis += '✅ <strong>Status: Sangat Baik</strong> - Mayoritas item telah diselesaikan.<br>';
@@ -1353,28 +1713,28 @@
             } else {
                 analysis += '⚠️ <strong>Status: Perlu Perhatian</strong> - Tingkat penyelesaian masih rendah.<br>';
             }
-            
+
             // Recommendations
             analysis += '<br><strong>Rekomendasi:</strong><br>';
-            
+
             if (rejectionRate > 20) {
                 analysis += `• <span class="text-danger">Prioritas Tinggi:</span> ${statusCount.not_approve} item ditolak memerlukan revisi segera.<br>`;
             }
-            
+
             if (pendingRate > 40) {
                 analysis += `• <span class="text-warning">Perlu Percepatan:</span> ${statusCount.on_progress} item dalam proses review perlu dipercepat.<br>`;
             }
-            
+
             if (completionRate < 50) {
                 analysis += '• Tingkatkan koordinasi dengan vendor dan PIC untuk mempercepat proses approval.<br>';
             }
-            
+
             if (totalItems < 5) {
                 analysis += '• Volume item masih sedikit, pertimbangkan untuk menambah item yang perlu di-review.';
             } else {
                 analysis += `• Lanjutkan monitoring ${totalItems} item secara berkala untuk memastikan progress tetap on-track.`;
             }
-            
+
             analysisEl.innerHTML = analysis;
         }
 
@@ -1383,52 +1743,166 @@
             const summaryEl = document.getElementById('distributionSummary');
             const totalPics = Object.keys(picCount).length;
             const totalVendors = Object.keys(vendorCount).length;
-            
+
             let summary = '<div class="row">';
-            
+
             // PIC Summary
             summary += '<div class="col-md-6">';
             summary += `<strong><i class="fas fa-user-tie me-1"></i> Ringkasan PIC:</strong><br>`;
             summary += `• Total PIC aktif: <strong>${totalPics}</strong> divisi<br>`;
-            
+
             if (totalPics > 0) {
                 const picEntries = Object.entries(picCount).sort((a, b) => b[1] - a[1]);
                 const maxLoad = picEntries[0][1];
                 const minLoad = picEntries[picEntries.length - 1][1];
                 const avgLoad = picEntries.reduce((sum, p) => sum + p[1], 0) / picEntries.length;
-                
+
                 summary += `• Beban tertinggi: <strong>${maxLoad}</strong> items (${picEntries[0][0]})<br>`;
                 summary += `• Beban terendah: <strong>${minLoad}</strong> items (${picEntries[picEntries.length - 1][0]})<br>`;
                 summary += `• Rata-rata beban: <strong>${avgLoad.toFixed(1)}</strong> items per PIC`;
-                
+
                 if (maxLoad > avgLoad * 2) {
                     summary += '<br><span class="text-warning">⚠️ Distribusi tidak merata - pertimbangkan redistribusi beban kerja.</span>';
                 }
             }
             summary += '</div>';
-            
+
             // Vendor Summary
             summary += '<div class="col-md-6">';
             summary += `<strong><i class="fas fa-building me-1"></i> Ringkasan Vendor:</strong><br>`;
             summary += `• Total vendor terlibat: <strong>${totalVendors}</strong> vendor<br>`;
-            
+
             if (totalVendors > 0) {
                 const vendorEntries = Object.entries(vendorCount).sort((a, b) => b[1] - a[1]);
                 const topVendor = vendorEntries[0];
                 const totalVendorItems = vendorEntries.reduce((sum, v) => sum + v[1], 0);
                 const avgVendorItems = totalVendorItems / totalVendors;
-                
+
                 summary += `• Vendor utama: <strong>${topVendor[0]}</strong> (${topVendor[1]} items)<br>`;
                 summary += `• Rata-rata item per vendor: <strong>${avgVendorItems.toFixed(1)}</strong> items`;
-                
+
                 if (totalVendors >= 5) {
                     summary += '<br><span class="text-info">ℹ️ Diversifikasi vendor baik untuk risk management.</span>';
                 }
             }
             summary += '</div>';
-            
+
             summary += '</div>';
             summaryEl.innerHTML = summary;
+        }
+
+        // Generate detail table for Section 5
+        function generateDetailTable(rows) {
+            const tableBody = document.getElementById('summaryDetailBody');
+            const printBody = document.getElementById('printDetailRows');
+            if (!tableBody) return;
+
+            // Step 1: Group rows by item name
+            const groupedItems = new Map();
+            rows.forEach(row => {
+                const itemLink = row.querySelector('a');
+                const itemName = itemLink ? itemLink.textContent.replace(/Baru/g, '').trim() : '-';
+                if (!groupedItems.has(itemName)) groupedItems.set(itemName, []);
+                groupedItems.get(itemName).push(row);
+            });
+
+            let modalHtml = '';
+            let printHtml = '';
+            let no = 0;
+
+            groupedItems.forEach((groupRows, itemName) => {
+                no++;
+                const rowCount = groupRows.length;
+
+                groupRows.forEach((row, index) => {
+                    const cells = row.querySelectorAll('td');
+                    const vendorName = cells[1] ? cells[1].textContent.trim() : '-';
+                    const pic = row.getAttribute('data-pic') || '-';
+                    const targetDate = cells[4] ? cells[4].textContent.trim() : '-';
+                    const lastUpdate = cells[9] ? cells[9].textContent.trim() : '-';
+                    const statusRaw = row.getAttribute('data-status') || 'on_progress';
+
+                    // Logika Status Pengadaan & Posisi
+                    const posisiEl = cells[7] ? cells[7].querySelector('.badge') : null;
+                    const posisi = posisiEl ? posisiEl.textContent.trim() : '-';
+
+                    let statusPengadaan = '-';
+                    if (statusRaw === 'approve') statusPengadaan = 'Completed';
+                    else if (posisi.includes('Vendor')) statusPengadaan = 'Evatek Vendor';
+                    else if (posisi.includes('Desain')) statusPengadaan = 'Evatek Desain';
+                    else if (statusRaw === 'not_approve') statusPengadaan = 'Not Approved';
+
+                    const statusLabel = statusRaw === 'approve' ? 'Closed' : 'Open';
+                    const statusColor = statusRaw === 'approve' ? '#28AC00' : '#FF9500';
+
+                    //ambli log revisi
+                    let revisions = [];
+                    try {
+                        revisions = JSON.parse(row.getAttribute('data-revisions') || '[]');
+                    } catch (e) {}
+
+                    let logText = '';
+                    let logTextPrint = '';
+
+                    // HANYA AMBIL R TERAKHIR
+                    if (revisions.length > 0) {
+                        const latestRev = revisions[revisions.length - 1]; // Mengambil data paling baru
+                        const code = latestRev.code || 'R' + (revisions.length - 1);
+                        const log = (latestRev.log && latestRev.log !== '-') ? latestRev.log : 'No log entry';
+                        const date = latestRev.date ? `<small class="text-muted">[${latestRev.date}]</small>` : '';
+
+                        logText = `<div style="line-height: 1.4;">
+                <span class="badge bg-primary" style="font-size: 10px;">${code}</span> 
+                ${date} <span>${log}</span>
+               </div>`;
+
+                        logTextPrint = `[${code}] ${log}`;
+                    } else {
+                        const mainLog = row.getAttribute('data-log') || 'Belum ada catatan';
+                        logText = `<div class="text-muted italic">${mainLog}</div>`;
+                        logTextPrint = mainLog;
+                    }
+
+                    // --- RENDER MODAL ROW ---
+                    const isLastInGroup = (index === rowCount - 1);
+                    const cellBorderBottom = isLastInGroup ? 'border-bottom: 2px solid #333;' : 'border-bottom: 1px solid #ccc;';
+                    modalHtml += `<tr>`;
+                    if (index === 0) {
+                        modalHtml += `<td rowspan="${rowCount}" style="text-align: center; font-weight: bold; vertical-align: middle; border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; border-bottom: 2px solid #333; background: #fdfdfd;">${no}</td>`;
+                        modalHtml += `<td rowspan="${rowCount}" style="font-weight: 600; color: #1a5276; vertical-align: middle; border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; border-bottom: 2px solid #333; background: #fdfdfd;">${itemName}</td>`;
+                    }
+                    modalHtml += `<td style="border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; ${cellBorderBottom} padding: 12px 10px; font-size: 11px;">
+                <div style="font-weight: 700; color: #444; margin-bottom: 5px;">
+                    <i class="fas fa-building me-1"></i>${vendorName}
+                </div>
+                ${logText}
+              </td>`;
+                    modalHtml += `<td style="border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; ${cellBorderBottom} text-align: center; font-size: 11px; vertical-align: middle;">${lastUpdate}</td>`;
+                    modalHtml += `<td style="border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; ${cellBorderBottom} text-align: center; vertical-align: middle;"><span class="badge" style="background: #e3f2fd; color: #1565C0; font-size: 9px;">${statusPengadaan}</span></td>`;
+                    modalHtml += `<td style="border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; ${cellBorderBottom} text-align: center; font-weight: 600; vertical-align: middle;">${pic}</td>`;
+                    modalHtml += `<td style="border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; ${cellBorderBottom} text-align: center; font-size: 11px; vertical-align: middle;">${targetDate}</td>`;
+                    modalHtml += `<td style="border-left: 1px solid #bbb; border-right: 1px solid #bbb; border-top: 1px solid #bbb; ${cellBorderBottom} text-align: center; vertical-align: middle;"><span style="color: ${statusColor}; font-weight: bold; font-size: 10px;">${statusLabel}</span></td>`;
+                    modalHtml += `</tr>`;
+
+                    // --- RENDER PRINT ROW (Sama seperti modal, hanya R terakhir) ---
+                    const printCellBorder = isLastInGroup ? 'border-bottom: 2px solid #333;' : 'border-bottom: 1px solid #aaa;';
+                    printHtml += `<tr>`;
+                    if (index === 0) {
+                        printHtml += `<td rowspan="${rowCount}" style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; border-bottom: 2px solid #333; text-align: center; vertical-align: middle;">${no}</td>`;
+                        printHtml += `<td rowspan="${rowCount}" style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; border-bottom: 2px solid #333; vertical-align: middle;">${itemName}</td>`;
+                    }
+                    printHtml += `<td style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; ${printCellBorder} font-size: 7px; padding: 3px;"><strong>${vendorName}:</strong> ${logTextPrint}</td>`;
+                    printHtml += `<td style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; ${printCellBorder} text-align: center;">${lastUpdate}</td>`;
+                    printHtml += `<td style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; ${printCellBorder} text-align: center;">${statusPengadaan}</td>`;
+                    printHtml += `<td style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; ${printCellBorder} text-align: center;">${pic}</td>`;
+                    printHtml += `<td style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; ${printCellBorder} text-align: center;">${targetDate}</td>`;
+                    printHtml += `<td style="border-left: 1px solid #333; border-right: 1px solid #333; border-top: 1px solid #333; ${printCellBorder} text-align: center;">${statusLabel}</td>`;
+                    printHtml += `</tr>`;
+                });
+            });
+
+            tableBody.innerHTML = modalHtml || '<tr><td colspan="8" class="text-center">Tidak ada data</td></tr>';
+            if (printBody) printBody.innerHTML = printHtml || '<tr><td colspan="8" class="text-center">Tidak ada data</td></tr>';
         }
     });
 </script>

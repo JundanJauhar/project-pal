@@ -195,8 +195,8 @@ class CheckpointTransitionService
     /** 5 → 6: Usulan Pengadaan / OC → Pengesahan Kontrak (WAJIB vendor) */
     protected function validateCheckpoint5To6(): void
     {
-        if (!$this->procurement->pengadaanOcs()->exists()) {
-            $this->errors[] = 'Minimal 1 pengadaanOC.';
+        if (!$this->procurement->UsulanPengadaan()->exists()) {
+            $this->errors[] = 'Minimal 1 UsulanPengadaan.';
         }
     }
 
@@ -387,6 +387,16 @@ class CheckpointTransitionService
                     3,
                     'DP Payment Ready',
                     'Pembayaran DP siap diproses'
+                );
+                break;
+
+            case 8: // Pengiriman Material → Kedatangan Material (QA)
+                $actionUrl = route('qa.detail-approval', $this->procurement->procurement_id);
+                $this->notifyDivision(
+                    5, // Quality Assurance Division ID
+                    'Material Tiba — Inspeksi Diperlukan',
+                    "Material untuk procurement '{$this->procurement->name_procurement}' (Kode: {$this->procurement->code_procurement}) telah tiba. Silakan lakukan inspeksi dan verifikasi kualitas material.",
+                    $actionUrl
                 );
                 break;
 

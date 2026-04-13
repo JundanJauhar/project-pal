@@ -50,7 +50,27 @@
 .btn-save { background: #007bff; } /* Blue for Save Status */
 
 /* Default state: Gray for decision buttons */
-.btn-approve, .btn-reject, .btn-revisi { background: #e0e0e0; color: #555; height: 60px; align-items: center; justify-content: center; }
+.btn-approve,
+    .btn-reject,
+    .btn-revisi {
+        background: #e0e0e0;
+        color: #555;
+        height: 60px;
+        width: 110px;
+        /* Slightly wider */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    .decision-group {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 10px;
+    }
 
 /* Active states */
 .btn-approve.active { background: #28a745; color: white; }
@@ -64,6 +84,10 @@
     background: #e0e0e0;
     color: #999;
 }
+
+/* save input */
+.save-input { width: 30%; }
+.save-status { font-size: 12px; color: #ffffff; }
 
 /* checkbox */
 .rev-check {
@@ -146,12 +170,14 @@
                             </td>
                             <td><strong>{{ $rev->revision_code }}</strong></td>
                             <td>
-                                <input type="text" class="link-input vendor-link" value="{{ $rev->vendor_link }}">
-                                <div class="link-status"></div>
+                                <input type="text" class="link-input vendor-link" value="{{ $rev->vendor_link }}" readonly>
+                                <!-- <div class="link-status"></div> -->
                             </td>
-                            <td>
-                                <input type="text" class="link-input design-link" value="{{ $rev->design_link }}">
+                            <td class="save-input">
+                                <input type="text" class="link-input design-link" value="{{ $rev->design_link }}" {{ $isReadOnly ? 'readonly' : '' }}>
+                                @if(!$isReadOnly)
                                 <button class="action-btn btn-upload save-link">Save</button>
+                                @endif
                                 <div class="link-status"></div>
                             </td>
                             <td>
@@ -169,10 +195,16 @@
                                         </span>
                                     </div>
                                 @else
-                                    <button class="action-btn btn-approve approve-btn">Approve</button>
-                                    <button class="action-btn btn-revisi revisi-btn">Approve With Comment</button>
-                                    <button class="action-btn btn-reject reject-btn">Not Approve</button>
+                                    @if(!$isReadOnly)
+                                    <div class="decision-group">
+                                        <button class="action-btn btn-approve approve-btn">Approve</button>
+                                        <button class="action-btn btn-revisi revisi-btn">Approve With Comment</button>
+                                        <button class="action-btn btn-reject reject-btn">Not Approve</button>
+                                    </div>
                                     <button class="action-btn btn-save save-status" style="display:none;">Save Status</button>
+                                    @else
+                                    <span class="text-muted" style="font-size: 13px;">Pending</span>
+                                    @endif
                                 @endif
                             </td>
                         </tr>
@@ -188,6 +220,7 @@
         <textarea id="logText" class="log-textarea" readonly></textarea>
         
         {{-- ✅ Desain Message Input --}}
+        @if(!$isReadOnly)
         <div style="margin-top: 15px;">
             <textarea id="desainMessageInput" 
                       placeholder="Tulis pesan untuk vendor..." 
@@ -197,6 +230,7 @@
                 Send Message
             </button>
         </div>
+        @endif
     </div>
 </div>
 
@@ -205,6 +239,7 @@
 <script>
 const CSRF = "{{ csrf_token() }}";
 const EVATEK_ID = "{{ $evatek->evatek_id }}";
+const IS_READONLY = {{ $isReadOnly ? 'true' : 'false' }};
 
 document.addEventListener('DOMContentLoaded', function() {
     const existingLog = {!! json_encode($evatek->log ?? '') !!};
@@ -269,17 +304,17 @@ function sendDesainMessage() {
         });
         return;
     }
-    
-    // Explicitly identify as Desain Team
-    const userName = "{{ auth()->user()->name ?? 'Desain Team' }}";
-    const logMessage = `[Desain - ${userName}]: ${message}`;
-    
-    addLog(logMessage);
-    saveLogToDatabase(logMessage);
-    
-    // Clear input
-    messageInput.value = '';
-    
+
+        // Explicitly identify as Desain Team
+        const userName = "{{ auth()->user()->name ?? 'Desain Team' }}";
+        const logMessage = `[Desain - ${userName}]: ${message}`;
+        
+        addLog(logMessage);
+        saveLogToDatabase(logMessage);
+        
+        // Clear input
+        messageInput.value = '';
+        
     // Optional: Show brief success feedback
     const btn = document.querySelector('button[onclick="sendDesainMessage()"]');
     const originalText = btn.innerText;
@@ -289,6 +324,7 @@ function sendDesainMessage() {
 
 /* SAVE LINK */
 document.addEventListener("click", function(e) {
+    if (IS_READONLY) return;
     if (e.target.classList.contains("save-link")) {
         let row = e.target.closest("tr");
         saveLink(row);
@@ -296,27 +332,49 @@ document.addEventListener("click", function(e) {
 });
 
 function saveLink(row) {
-    fetch("{{ route('desain.evatek.save-link') }}", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": CSRF
-        },
-        body: JSON.stringify({
-            revision_id: row.dataset.revisionId,
-            vendor_link: row.querySelector(".vendor-link").value,
-            design_link: row.querySelector(".design-link").value
+    const revCode = row.dataset.rev || 'revision';
+
+    Swal.fire({
+        title: 'Simpan Link?',
+        text: `Apakah Anda yakin ingin menyimpan link untuk ${revCode}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Simpan!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+
+        Swal.fire({
+            title: 'Menyimpan...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        fetch("{{ route('desain.evatek.save-link') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": CSRF
+            },
+            body: JSON.stringify({
+                revision_id: row.dataset.revisionId,
+                // vendor_link: row.querySelector(".vendor-link").value,
+                design_link: row.querySelector(".design-link").value
+            })
         })
-    })
-    .then(r => r.json())
-    .then(r => {
-        if (r.success) {
-            row.querySelectorAll(".link-status").forEach(el => el.innerText = "Saved");
+        .then(r => r.json())
+        .then(r => {
+            if (r.success) {
+                Swal.fire('Berhasil!', 'Link berhasil disimpan.', 'success');
+                row.querySelectorAll(".link-status").forEach(el => el.innerText = "Saved");
             
-            const logMessage = `✓ Link saved for ${row.dataset.rev}`;
-            addLog(logMessage);
-            saveLogToDatabase(logMessage);
-        }
+                const logMessage = `✓ Link saved for ${row.dataset.rev}`;
+                addLog(logMessage);
+                saveLogToDatabase(logMessage);
+            }
+        });
     });
 }
 
@@ -344,6 +402,7 @@ function saveLogToDatabase(message) {
 
 /* SELECTION LOGIC */
 document.addEventListener("click", function(e) {
+    if (IS_READONLY) return;
     if(e.target.classList.contains("approve-btn")) selectStatus(e.target.closest("tr"), e.target, 'approve');
     if(e.target.classList.contains("reject-btn")) selectStatus(e.target.closest("tr"), e.target, 'reject');
     if(e.target.classList.contains("revisi-btn")) selectStatus(e.target.closest("tr"), e.target, 'revisi');
