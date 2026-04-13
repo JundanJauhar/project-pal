@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PengadaanOC;
+use App\Models\UsulanPengadaan;
 use App\Models\Procurement;
 use App\Models\RequestProcurement;
 use App\Models\Vendor;
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\ActivityLogger;
 
-class PengadaanOcController extends Controller
+class UsulanPengadaanController extends Controller
 {
     public function store(Request $request, $procurementId)
     {
@@ -68,7 +68,7 @@ class PengadaanOcController extends Controller
 
             $procurement = Procurement::findOrFail($procurementId);
 
-            $pengadaanOc = PengadaanOC::create([
+            $UsulanPengadaan = UsulanPengadaan::create([
                 'procurement_id' => $procurement->procurement_id,
                 'vendor_id' => $validated['vendor_id'],
                 'currency' => $validated['currency'] ?? 'IDR',
@@ -90,9 +90,9 @@ class PengadaanOcController extends Controller
             DB::commit();
 
             ActivityLogger::log(
-                module: 'Pengadaan OC',
-                action: 'create_pengadaan_oc',
-                targetId: $pengadaanOc->pengadaan_oc_id,
+                module: 'Usulan Pengadaan',
+                action: 'create_usulan_pengadaan',
+                targetId: $UsulanPengadaan->usulan_pengadaan_id,
                 details: [
                     'procurement_id' => $procurement->procurement_id,
                     'vendor_id' => $validated['vendor_id'],
@@ -105,11 +105,11 @@ class PengadaanOcController extends Controller
 
             return redirect()
                 ->route('procurements.show', $procurement->procurement_id)
-                ->with('success', "Pengadaan OC untuk vendor {$vendor->name_vendor} berhasil disimpan dan tersinkronisasi.")
+                ->with('success', "Usulan Pengadaan untuk vendor {$vendor->name_vendor} berhasil disimpan dan tersinkronisasi.")
                 ->withFragment('pengadaan-oc');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error storing PengadaanOc', [
+            Log::error('Error storing UsulanPengadaan', [
                 'user_id' => $user->id,
                 'procurement_id' => $procurementId,
                 'error' => $e->getMessage(),
@@ -130,8 +130,8 @@ class PengadaanOcController extends Controller
             abort(403, 'Anda tidak punya role pengadaan.');
         }
 
-        // === STEP 2: Load PENGADAAN OC + PROCUREMENT ===
-        $po = PengadaanOC::with('procurement')->findOrFail($id);
+        // === STEP 2: Load USULAN PENGADAAN + PROCUREMENT ===
+        $po = UsulanPengadaan::with('procurement')->findOrFail($id);
         $procurement = $po->procurement;
 
         // === STEP 3: Get CURRENT CHECKPOINT ===
@@ -171,7 +171,7 @@ class PengadaanOcController extends Controller
         try {
             DB::beginTransaction();
 
-            $po = PengadaanOC::findOrFail($id);
+            $po = UsulanPengadaan::findOrFail($id);
 
             $validated['currency'] = $validated['currency'] ?? 'IDR';
 
@@ -192,9 +192,9 @@ class PengadaanOcController extends Controller
             DB::commit();
 
             ActivityLogger::log(
-                module: 'Pengadaan OC',
-                action: 'update_pengadaan_oc',
-                targetId: $po->pengadaan_oc_id,
+                module: 'Usulan Pengadaan',
+                action: 'update_usulan_pengadaan',
+                targetId: $po->usulan_pengadaan_id,
                 details: [
                     'procurement_id' => $procurement->procurement_id,
                     'vendor_id' => $validated['vendor_id'],
@@ -206,18 +206,18 @@ class PengadaanOcController extends Controller
             );
 
             return redirect()->route('procurements.show', $po->procurement_id)
-                ->with('success', "Pengadaan OC berhasil diperbarui dan vendor {$vendor->name_vendor} tersinkronisasi.")
+                ->with('success', "Usulan Pengadaan berhasil diperbarui dan vendor {$vendor->name_vendor} tersinkronisasi.")
                 ->withFragment('pengadaan-oc');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error updating PengadaanOc', [
+            Log::error('Error updating UsulanPengadaan', [
                 'user_id' => $user->id,
-                'pengadaan_oc_id' => $id,
+                'usulan_pengadaan_id' => $id,
                 'error' => $e->getMessage(),
             ]);
 
             return back()
-                ->with('error', 'Gagal update Pengadaan OC: ' . $e->getMessage())
+                ->with('error', 'Gagal update Usulan Pengadaan: ' . $e->getMessage())
                 ->withInput();
         }
     }
@@ -233,8 +233,8 @@ class PengadaanOcController extends Controller
             abort(403, 'Anda tidak punya role pengadaan.');
         }
 
-        // === STEP 2: Load PENGADAAN OC + PROCUREMENT ===
-        $po = PengadaanOC::with(['procurement'])->findOrFail($id);
+        // === STEP 2: Load USULAN PENGADAAN + PROCUREMENT ===
+        $po = UsulanPengadaan::with(['procurement'])->findOrFail($id);
         $procurement = $po->procurement;
 
         // === STEP 3: Get CURRENT CHECKPOINT ===
@@ -258,15 +258,15 @@ class PengadaanOcController extends Controller
         }
 
         try {
-            $po = PengadaanOC::findOrFail($id);
+            $po = UsulanPengadaan::findOrFail($id);
             $procId = $po->procurement_id;
             $vendorName = $po->vendor->name_vendor ?? 'Unknown';
 
             $po->delete();
 
             ActivityLogger::log(
-                module: 'Pengadaan OC',
-                action: 'delete_pengadaan_oc',
+                module: 'Usulan Pengadaan',
+                action: 'delete_usulan_pengadaan',
                 targetId: $id,
                 details: [
                     'procurement_id' => $procId,
@@ -277,12 +277,12 @@ class PengadaanOcController extends Controller
             );
 
             return redirect()->route('procurements.show', $procId)
-                ->with('success', 'Pengadaan OC berhasil dihapus.')
+                ->with('success', 'Usulan Pengadaan berhasil dihapus.')
                 ->withFragment('pengadaan-oc');
         } catch (\Exception $e) {
-            Log::error('Error deleting PengadaanOc', [
+            Log::error('Error deleting UsulanPengadaan', [
                 'user_id' => $user->id,
-                'pengadaan_oc_id' => $id,
+                'usulan_pengadaan_id' => $id,
                 'error' => $e->getMessage(),
             ]);
             return back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
@@ -299,13 +299,13 @@ class PengadaanOcController extends Controller
         try {
             $procurement = Procurement::findOrFail($procurementId);
 
-            $pengadaanOcs = PengadaanOC::where('procurement_id', $procurementId)
+            $UsulanPengadaan = UsulanPengadaan::where('procurement_id', $procurementId)
                 ->with(['vendor'])
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($po) {
                     return [
-                        'pengadaan_oc_id' => $po->pengadaan_oc_id,
+                        'usulan_pengadaan_id' => $po->usulan_pengadaan_id,
                         'vendor_id' => $po->vendor_id,
                         'vendor_name' => $po->vendor->name_vendor ?? '-',
                         'nilai' => $po->nilai ? $po->currency . ' ' . number_format($po->nilai, 0, ',', '.') : '-',
@@ -320,11 +320,11 @@ class PengadaanOcController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $pengadaanOcs,
-                'count' => $pengadaanOcs->count()
+                'data' => $UsulanPengadaan,
+                'count' => $UsulanPengadaan->count()
             ]);
         } catch (\Exception $e) {
-            Log::error('Error getting pengadaan ocs', [
+            Log::error('Error getting usulan pengadaan', [
                 'user_id' => $user->id,
                 'procurement_id' => $procurementId,
                 'error' => $e->getMessage(),

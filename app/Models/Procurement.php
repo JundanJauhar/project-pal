@@ -82,9 +82,9 @@ class Procurement extends Model
         return $this->hasMany(EvatekItem::class, 'procurement_id', 'procurement_id');
     }
 
-    public function pengadaanOcs()
+    public function UsulanPengadaan()
     {
-        return $this->hasMany(PengadaanOC::class, 'procurement_id', 'procurement_id');
+        return $this->hasMany(UsulanPengadaan::class, 'procurement_id', 'procurement_id');
     }
 
     public function pengesahanKontraks()

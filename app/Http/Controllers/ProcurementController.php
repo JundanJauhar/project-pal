@@ -16,7 +16,7 @@ use App\Models\Vendor;
 use App\Models\EvatekItem;
 use App\Models\InquiryQuotation;
 use App\Models\Negotiation;
-use App\Models\PengadaanOC;
+use App\Models\UsulanPengadaan;
 use App\Models\PengesahanKontrak;
 use App\Models\Kontrak;
 use App\Models\MaterialDelivery;
@@ -202,7 +202,7 @@ class ProcurementController extends Controller
             'evatekItems',
             'inquiryQuotations',
             'negotiations',
-            'pengadaanOcs',
+            'UsulanPengadaan',
             'pengesahanKontraks',
             'kontraks',
             'pembayarans',
@@ -258,13 +258,13 @@ class ProcurementController extends Controller
             ->orderBy('start_date', 'desc')
             ->get();
 
-        $pengadaanOcs = PengadaanOC::where('procurement_id', $procurement->procurement_id)
+        $UsulanPengadaan = UsulanPengadaan::where('procurement_id', $procurement->procurement_id)
             ->with('vendor')
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Check if any Pengadaan OC exists (tidak perlu tgl_acc)
-        $hasPengadaanOcCompleted = $pengadaanOcs->count() > 0;
+        // Check if any Usulan Pengadaan exists (tidak perlu tgl_acc)
+        $hasUsulanPengadaanCompleted = $UsulanPengadaan->count() > 0;
 
         if ($currentCheckpointSequence == 6) {
 
@@ -275,14 +275,14 @@ class ProcurementController extends Controller
 
             if (!$pkExists) {
 
-                $pengadaanOc = $pengadaanOcs->first();
+                $firstUsulan = $UsulanPengadaan->first();
 
-                if ($pengadaanOc) {
+                if ($firstUsulan) {
                     PengesahanKontrak::create([
                         'procurement_id' => $procurement->procurement_id,
-                        'vendor_id'      => $pengadaanOc->vendor_id,
-                        'currency'       => $pengadaanOc->currency ?? 'IDR',
-                        'nilai'          => $pengadaanOc->nilai,
+                        'vendor_id'      => $firstUsulan->vendor_id,
+                        'currency'       => $firstUsulan->currency ?? 'IDR',
+                        'nilai'          => $firstUsulan->nilai,
                     ]);
                 }
             }
@@ -297,24 +297,24 @@ class ProcurementController extends Controller
 
             if (!$kontrakExists) {
 
-                // Ambil Pengadaan OC (single source of truth)
-                $pengadaanOc = $pengadaanOcs->first();
+                // Ambil Usulan Pengadaan (single source of truth)
+                $firstUsulan = $UsulanPengadaan->first();
 
-                if ($pengadaanOc) {
+                if ($firstUsulan) {
                     Kontrak::create([
                         'procurement_id' => $procurement->procurement_id,
-                        'vendor_id'      => $pengadaanOc->vendor_id,
-                        'currency'       => $pengadaanOc->currency ?? 'IDR',
-                        'nilai'          => $pengadaanOc->nilai,
+                        'vendor_id'      => $firstUsulan->vendor_id,
+                        'currency'       => $firstUsulan->currency ?? 'IDR',
+                        'nilai'          => $firstUsulan->nilai,
                         // item_id DISENGAJA NULL (diisi dari modal)
                     ]);
                 }
             }
         }
 
-        // Get vendors from all Pengadaan OC for contract review
-        $pengadaanOcVendorIds = $pengadaanOcs->pluck('vendor_id')->unique()->toArray();
-        $pengadaanOcVendors = Vendor::whereIn('id_vendor', $pengadaanOcVendorIds)
+        // Get vendors from all Usulan Pengadaan for contract review
+        $UsulanPengadaanVendorIds = $UsulanPengadaan->pluck('vendor_id')->unique()->toArray();
+        $UsulanPengadaanVendors = Vendor::whereIn('id_vendor', $UsulanPengadaanVendorIds)
             ->orderBy('name_vendor', 'asc')
             ->get();
 
@@ -362,9 +362,9 @@ class ProcurementController extends Controller
             'inquiryQuotations',
             'negotiations',
             'contractReviews',
-            'pengadaanOcs',
-            'pengadaanOcVendors',
-            'hasPengadaanOcCompleted',
+            'UsulanPengadaan',
+            'UsulanPengadaanVendors',
+            'hasUsulanPengadaanCompleted',
             'hasApprovedContractReview',
             'pengesahanKontraks',
             'kontraks',

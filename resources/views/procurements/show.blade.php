@@ -547,13 +547,13 @@
     compact('procurement','negotiations','vendors','currentCheckpointSequence')
     )
 
-    {{-- ================= Pengadaan OC ================= --}}
+    {{-- ================= Usulan Pengadaan ================= --}}
     @includeWhen(
     $division === 'Supply Chain'
     && $user->hasRole('pengadaan')
     && $currentCheckpointSequence >= 5,
-    'procurements.partials.pengadaan_oc',
-    compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence')
+    'procurements.partials.usulan_pengadaan',
+    compact('procurement', 'UsulanPengadaan', 'vendors', 'currentCheckpointSequence')
     )
 
     {{-- ================= Review Kontrak ================= --}}
@@ -562,7 +562,7 @@
     && $user->hasRole('contract')
     && $currentCheckpointSequence >= 6,
     'procurements.partials.contract_review',
-    compact('procurement', 'contractReviews', 'pengadaanOcVendors', 'currentCheckpointSequence')
+    compact('procurement', 'contractReviews', 'UsulanPengadaanVendors', 'currentCheckpointSequence')
     )
 
     {{-- ================= Pengesahan Kontrak ================= --}}
@@ -571,7 +571,7 @@
     && $user->hasRole('contract')
     && $currentCheckpointSequence >= 6,
     'procurements.partials.pengesahan_kontrak',
-    compact('procurement', 'pengadaanOcs', 'vendors', 'currentCheckpointSequence')
+    compact('procurement', 'UsulanPengadaan', 'vendors', 'currentCheckpointSequence')
     )
 
     {{-- ================= Kontrak ================= --}}
@@ -710,7 +710,7 @@
 
     /**
      * ===============================
-     * PENGADAAN OC
+     * USULAN PENGADAAN
      * ===============================
      */
     function selectCurrencyEditPO(cur, id) {
@@ -765,7 +765,7 @@
     document.addEventListener('DOMContentLoaded', function() {
 
         /* ============================================
-         * AUTO POPULATE NILAI PO (Pengadaan OC)
+         * AUTO POPULATE NILAI PO (Usulan Pengadaan)
          * ============================================ */
         const vendorSelectPO = document.getElementById('vendorSelectPO');
         if (vendorSelectPO) {

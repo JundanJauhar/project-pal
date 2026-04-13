@@ -811,7 +811,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="text-center py-5">Belum ada item evatek untuk project ini.</td>
+                <td colspan="10" class="text-center py-5">Belum ada item evatek untuk project ini.</td>
             </tr>
             @endforelse
         </tbody>
