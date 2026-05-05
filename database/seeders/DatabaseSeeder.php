@@ -22,8 +22,8 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             CheckpointSeeder::class,
             UserSeeder::class,
-            ProjectSeeder::class,
             VendorSeeder::class,
+            ProjectSeeder::class,
         ]);
     }
 }
